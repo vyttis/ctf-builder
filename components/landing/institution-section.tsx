@@ -16,6 +16,26 @@ export function InstitutionSection() {
           susipažinti su mokslo pagrindais penkių laboratorijų erdvėse.
         </p>
 
+        {/* Photo strip */}
+        <div className="grid grid-cols-2 gap-4 mt-10 max-w-2xl mx-auto">
+          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+            <img
+              src="/photos/steam-lab.jpg"
+              alt="STEAM centro laboratorija — moksleiviai dirba su mikroskopais"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-steam-dark/20 to-transparent" />
+          </div>
+          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+            <img
+              src="/photos/steam-robot.jpg"
+              alt="Pepper robotas STEAM centre"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-steam-dark/20 to-transparent" />
+          </div>
+        </div>
+
         {/* Contact details */}
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mt-8 text-sm text-muted-foreground">
           <span className="flex items-center gap-1.5">

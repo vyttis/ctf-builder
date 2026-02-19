@@ -37,11 +37,11 @@ export function HowItWorksSection() {
           <div key={index} className="relative">
             {/* Connector line for desktop */}
             {index < steps.length - 1 && (
-              <div className="hidden lg:block absolute top-6 left-[calc(50%+32px)] w-[calc(100%-32px)] h-px bg-border/60" />
+              <div className="hidden lg:block absolute top-6 left-[calc(50%+32px)] w-[calc(100%-64px)] h-px bg-border/60" />
             )}
 
-            <div className="text-center lg:text-left">
-              <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center mx-auto lg:mx-0 mb-4">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
                 <span className="text-lg font-extrabold text-primary">
                   {step.number}
                 </span>
@@ -49,7 +49,7 @@ export function HowItWorksSection() {
               <h3 className="font-semibold text-steam-dark text-[15px] mb-1.5">
                 {step.title}
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-[200px] mx-auto">
                 {step.description}
               </p>
             </div>

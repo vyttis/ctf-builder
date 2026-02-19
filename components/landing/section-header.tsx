@@ -25,7 +25,12 @@ export function SectionHeader({
         {title}
       </h2>
       {subtitle && (
-        <p className="text-muted-foreground mt-3 max-w-2xl leading-relaxed text-[15px]">
+        <p
+          className={cn(
+            "text-muted-foreground mt-3 max-w-2xl leading-relaxed text-[15px]",
+            align === "center" && "mx-auto"
+          )}
+        >
           {subtitle}
         </p>
       )}
