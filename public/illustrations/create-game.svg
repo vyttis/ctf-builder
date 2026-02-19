@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Puzzle pieces arrangement -->
+  <!-- Piece 1 - top left (green) -->
+  <g transform="translate(100, 100)">
+    <path d="M0 10 Q0 0 10 0 L50 0 L50 20 Q60 20 60 30 Q60 40 50 40 L50 60 Q50 70 40 70 L20 70 Q20 60 10 60 Q0 60 0 50 L0 10 Z" fill="#00D296" opacity="0.8"/>
+    <animateTransform attributeName="transform" type="translate" values="100,100;98,98;100,100" dur="4s" repeatCount="indefinite"/>
+  </g>
+  <!-- Piece 2 - top right (blue) -->
+  <g transform="translate(165, 100)">
+    <path d="M10 0 L50 0 Q60 0 60 10 L60 50 Q50 50 50 40 Q50 30 40 30 Q40 20 50 20 L10 20 L10 0 Z" fill="#008CB4" opacity="0.8"/>
+    <animateTransform attributeName="transform" type="translate" values="165,100;167,98;165,100" dur="4s" repeatCount="indefinite"/>
+  </g>
+  <!-- Piece 3 - bottom left (pink) -->
+  <g transform="translate(100, 175)">
+    <path d="M0 0 L20 0 Q20 10 30 10 Q40 10 40 0 L60 0 L60 50 Q60 60 50 60 L10 60 Q0 60 0 50 Z" fill="#FA2864" opacity="0.8"/>
+    <animateTransform attributeName="transform" type="translate" values="100,175;98,177;100,175" dur="4s" repeatCount="indefinite"/>
+  </g>
+  <!-- Piece 4 - bottom right (yellow) -->
+  <g transform="translate(165, 175)">
+    <path d="M0 0 L40 0 Q50 0 50 10 L50 50 Q50 60 40 60 L10 60 Q0 60 0 50 L0 10 Q10 10 10 20 Q10 30 0 30 Z" fill="#FAC846" opacity="0.8"/>
+    <animateTransform attributeName="transform" type="translate" values="165,175;167,177;165,175" dur="4s" repeatCount="indefinite"/>
+  </g>
+  <!-- Wand/pen creating -->
+  <g transform="translate(260, 80)">
+    <line x1="0" y1="60" x2="50" y2="0" stroke="#00323C" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="50" cy="0" r="5" fill="#FAC846"/>
+    <!-- Sparkles from wand tip -->
+    <circle cx="55" cy="-10" r="2" fill="#00D296" opacity="0.6">
+      <animate attributeName="opacity" values="0.6;0;0.6" dur="1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="60" cy="5" r="1.5" fill="#FA2864" opacity="0.5">
+      <animate attributeName="opacity" values="0;0.5;0" dur="1.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="45" cy="-15" r="1.5" fill="#FAC846" opacity="0.7">
+      <animate attributeName="opacity" values="0.7;0.2;0.7" dur="0.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <!-- Plus icon -->
+  <g transform="translate(290, 200)">
+    <circle cx="25" cy="25" r="22" fill="#00D296" opacity="0.15"/>
+    <line x1="25" y1="14" x2="25" y2="36" stroke="#00D296" stroke-width="3" stroke-linecap="round"/>
+    <line x1="14" y1="25" x2="36" y2="25" stroke="#00D296" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- Text label -->
+  <rect x="120" y="280" width="160" height="36" rx="18" fill="#00323C" opacity="0.1"/>
+  <text x="200" y="303" font-family="system-ui" font-size="13" fill="#00323C" opacity="0.6" text-anchor="middle" font-weight="600">Kurk savo žaidimą</text>
+  <!-- Floating elements -->
+  <rect x="60" y="200" width="24" height="18" rx="3" fill="#008CB4" opacity="0.2"/>
+  <text x="66" y="213" font-family="monospace" font-size="8" fill="#008CB4" opacity="0.5">{...}</text>
+</svg>
