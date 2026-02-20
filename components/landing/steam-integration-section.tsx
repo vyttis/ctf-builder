@@ -1,6 +1,9 @@
+"use client"
+
 import { SectionWrapper } from "./section-wrapper"
 import { SectionHeader } from "./section-header"
 import { FlaskConical, Monitor, Cog, Palette, Calculator } from "lucide-react"
+import { motion } from "framer-motion"
 
 const disciplines = [
   {
@@ -8,40 +11,45 @@ const disciplines = [
     letter: "S",
     name: "Mokslai",
     description: "Duomenų analizė, eksperimentų interpretavimas",
-    color: "text-secondary bg-secondary/8",
-    letterColor: "text-secondary",
+    gradient: "from-secondary/20 to-secondary/5 hover:from-secondary/30 hover:to-secondary/10",
+    color: "text-secondary",
+    border: "border-secondary/20",
   },
   {
     icon: Monitor,
     letter: "T",
     name: "Technologijos",
     description: "Skaitmeninės užduotys, loginiai sprendimai",
-    color: "text-primary bg-primary/8",
-    letterColor: "text-primary",
+    gradient: "from-primary/20 to-primary/5 hover:from-primary/30 hover:to-primary/10",
+    color: "text-primary",
+    border: "border-primary/20",
   },
   {
     icon: Cog,
     letter: "E",
     name: "Inžinerija",
     description: "Problemų sprendimas realiomis sąlygomis",
-    color: "text-steam-dark bg-steam-dark/8",
-    letterColor: "text-steam-dark",
+    gradient: "from-steam-dark/15 to-steam-dark/5 hover:from-steam-dark/25 hover:to-steam-dark/8",
+    color: "text-steam-dark",
+    border: "border-steam-dark/15",
   },
   {
     icon: Palette,
     letter: "A",
     name: "Menas",
     description: "Vizualinės mįslės ir kūrybiniai iššūkiai",
-    color: "text-accent bg-accent/8",
-    letterColor: "text-accent",
+    gradient: "from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/10",
+    color: "text-accent",
+    border: "border-accent/20",
   },
   {
     icon: Calculator,
     letter: "M",
     name: "Matematika",
     description: "Skaičiavimai, modeliavimas, logika",
-    color: "text-highlight bg-highlight/8",
-    letterColor: "text-highlight",
+    gradient: "from-highlight/20 to-highlight/5 hover:from-highlight/30 hover:to-highlight/10",
+    color: "text-highlight",
+    border: "border-highlight/20",
   },
 ]
 
@@ -57,17 +65,20 @@ export function SteamIntegrationSection() {
         {disciplines.map((d, index) => {
           const Icon = d.icon
           return (
-            <div
+            <motion.div
               key={index}
-              className="rounded-2xl border border-border/40 bg-white p-5 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.08, duration: 0.4 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className={`rounded-2xl border ${d.border} bg-gradient-to-b ${d.gradient} p-5 text-center cursor-default transition-colors`}
             >
-              <div
-                className={`w-10 h-10 rounded-xl ${d.color} flex items-center justify-center mx-auto mb-3`}
-              >
-                <Icon className="h-5 w-5" />
-              </div>
-              <div className={`text-xs font-bold ${d.letterColor} mb-1`}>
+              <div className={`text-3xl font-extrabold ${d.color} mb-2 opacity-30`}>
                 {d.letter}
+              </div>
+              <div className={`w-10 h-10 rounded-xl bg-white/60 ${d.color} flex items-center justify-center mx-auto mb-3`}>
+                <Icon className="h-5 w-5" />
               </div>
               <h3 className="font-semibold text-steam-dark text-sm mb-1">
                 {d.name}
@@ -75,7 +86,7 @@ export function SteamIntegrationSection() {
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {d.description}
               </p>
-            </div>
+            </motion.div>
           )
         })}
       </div>

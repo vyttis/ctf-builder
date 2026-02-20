@@ -124,6 +124,8 @@ export async function POST(request: Request) {
         hints: c.hints,
         options: c.options,
         order_index: c.order_index,
+        image_url: c.image_url || null,
+        maps_url: c.maps_url || null,
       }))
 
     const { data: libraryItem, error: insertError } = await supabase

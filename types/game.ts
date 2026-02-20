@@ -34,6 +34,8 @@ export interface Challenge {
   answer_hash: string
   hints: string[]
   options: string[] | null
+  image_url: string | null
+  maps_url: string | null
   order_index: number
   created_at: string
   updated_at: string
@@ -123,6 +125,8 @@ export interface ChallengeSnapshot {
   points: number
   hints: string[]
   options: string[] | null
+  image_url: string | null
+  maps_url: string | null
   order_index: number
 }
 

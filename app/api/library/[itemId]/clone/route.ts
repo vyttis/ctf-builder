@@ -74,6 +74,8 @@ export async function POST(
         hints: c.hints || [],
         options: c.options || null,
         order_index: c.order_index || 0,
+        image_url: c.image_url || null,
+        maps_url: c.maps_url || null,
       }))
 
       const { error: challengeError } = await supabase

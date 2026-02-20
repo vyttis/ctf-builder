@@ -12,6 +12,8 @@ const updateChallengeSchema = z.object({
   hints: z.array(z.string()).optional(),
   options: z.array(z.string()).nullable().optional(),
   order_index: z.number().optional(),
+  image_url: z.string().url().nullable().optional(),
+  maps_url: z.string().url().nullable().optional(),
 })
 
 export async function PATCH(

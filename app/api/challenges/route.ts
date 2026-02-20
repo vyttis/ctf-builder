@@ -13,6 +13,8 @@ const createChallengeSchema = z.object({
   hints: z.array(z.string()).default([]),
   options: z.array(z.string()).nullable().default(null),
   order_index: z.number().default(0),
+  image_url: z.string().url().nullable().optional(),
+  maps_url: z.string().url().nullable().optional(),
 })
 
 export async function POST(request: Request) {
@@ -73,6 +75,8 @@ export async function POST(request: Request) {
       hints: parsed.data.hints,
       options: parsed.data.options,
       order_index: orderIndex,
+      image_url: parsed.data.image_url ?? null,
+      maps_url: parsed.data.maps_url ?? null,
     })
     .select()
     .single()

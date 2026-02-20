@@ -1,6 +1,8 @@
+"use client"
+
 import { SectionWrapper } from "./section-wrapper"
-import { SectionHeader } from "./section-header"
 import { Flag, Users, BarChart3, Puzzle } from "lucide-react"
+import { motion } from "framer-motion"
 
 const features = [
   {
@@ -9,7 +11,7 @@ const features = [
   },
   {
     icon: Flag,
-    text: 'Atsakymas — „flag", kurį reikia surasti',
+    text: `Atsakymas \u2014 \u201Eflag\u201C, kur\u012F reikia surasti`,
   },
   {
     icon: Users,
@@ -24,37 +26,62 @@ const features = [
 export function CtfExplanationSection() {
   return (
     <SectionWrapper background="muted">
-      <div className="max-w-3xl mx-auto">
-        <SectionHeader
-          title="CTF — struktūruotas iššūkis mokymuisi"
-          align="center"
-        />
+      <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+        {/* Left — text */}
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-steam-dark leading-tight mb-4">
+            CTF — struktūruotas iššūkis mokymuisi
+          </h2>
+          <p className="text-[15px] text-muted-foreground leading-relaxed mb-8">
+            CTF (Capture The Flag) — tai problemų sprendimo metodas, kai mokiniai
+            sprendžia temines užduotis ir už teisingus atsakymus gauna taškus.
+            Edukacijoje tai tampa aiškiai struktūruotu, komandiniu mokymosi
+            formatu.
+          </p>
 
-        <p className="text-[15px] text-muted-foreground leading-relaxed text-center -mt-8 mb-10 max-w-2xl mx-auto">
-          CTF (Capture The Flag) — tai problemų sprendimo metodas, kai mokiniai
-          sprendžia temines užduotis ir už teisingus atsakymus gauna taškus.
-          Edukacijoje tai tampa aiškiai struktūruotu, komandiniu mokymosi
-          formatu.
-        </p>
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          {features.map((feature, index) => {
-            const Icon = feature.icon
-            return (
-              <div
-                key={index}
-                className="flex items-start gap-3.5 rounded-xl border border-border/40 bg-white p-5"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
-                  <Icon className="h-4.5 w-4.5 text-primary" />
-                </div>
-                <span className="text-sm font-medium text-steam-dark leading-relaxed pt-1.5">
-                  {feature.text}
-                </span>
-              </div>
-            )
-          })}
+          <div className="space-y-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.4 }}
+                  className="flex items-center gap-3.5"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium text-steam-dark leading-relaxed">
+                    {feature.text}
+                  </span>
+                </motion.div>
+              )
+            })}
+          </div>
         </div>
+
+        {/* Right — illustration photo */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative"
+        >
+          <div className="rounded-2xl overflow-hidden shadow-xl shadow-steam-dark/5">
+            <img
+              src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=700&h=500&fit=crop"
+              alt="Komandinis darbas klasėje"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Decorative accent */}
+          <div className="absolute -bottom-3 -right-3 w-24 h-24 bg-primary/10 rounded-2xl -z-10" />
+          <div className="absolute -top-3 -left-3 w-16 h-16 bg-secondary/10 rounded-xl -z-10" />
+        </motion.div>
       </div>
     </SectionWrapper>
   )

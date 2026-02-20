@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -19,8 +19,13 @@ import {
   XCircle,
   Star,
   BarChart3,
+  Clock,
+  Play,
+  AlertTriangle,
 } from "lucide-react"
-import type { PlayerSession, SubmissionResult, ChallengeType } from "@/types/game"
+import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings } from "@/types/game"
+import { MapsEmbed } from "@/components/shared/maps-embed"
+import Link from "next/link"
 
 interface PlayerChallenge {
   id: string
@@ -31,8 +36,16 @@ interface PlayerChallenge {
   hints: string[]
   options: string[] | null
   order_index: number
+  image_url: string | null
+  maps_url: string | null
 }
-import Link from "next/link"
+
+function formatTime(seconds: number): string {
+  if (seconds <= 0) return "00:00"
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
+}
 
 export default function PlayPage() {
   const params = useParams()
@@ -51,6 +64,63 @@ export default function PlayPage() {
   const [showHint, setShowHint] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
 
+  // Timer state
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null)
+  const [gameStarted, setGameStarted] = useState(false)
+  const [timeExpired, setTimeExpired] = useState(false)
+  const [remainingSeconds, setRemainingSeconds] = useState(0)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const startTimeRef = useRef<number | null>(null)
+
+  const handleTimeExpired = useCallback(() => {
+    setTimeExpired(true)
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+  }, [])
+
+  // Timer tick effect
+  useEffect(() => {
+    if (!gameStarted || !timeLimitMinutes || timeExpired || gameFinished) return
+
+    const storageKey = `ctf_start_${gameCode}`
+    let startTime = startTimeRef.current
+
+    if (!startTime) {
+      const stored = localStorage.getItem(storageKey)
+      if (stored) {
+        startTime = parseInt(stored, 10)
+      } else {
+        startTime = Date.now()
+        localStorage.setItem(storageKey, startTime.toString())
+      }
+      startTimeRef.current = startTime
+    }
+
+    const totalMs = timeLimitMinutes * 60 * 1000
+    const endTime = startTime + totalMs
+
+    function tick() {
+      const now = Date.now()
+      const remaining = Math.max(0, Math.ceil((endTime - now) / 1000))
+      setRemainingSeconds(remaining)
+
+      if (remaining <= 0) {
+        handleTimeExpired()
+      }
+    }
+
+    tick() // initial
+    timerRef.current = setInterval(tick, 1000)
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [gameStarted, timeLimitMinutes, timeExpired, gameFinished, gameCode, handleTimeExpired])
+
   useEffect(() => {
     const stored = localStorage.getItem(`ctf_session_${gameCode}`)
     if (!stored) {
@@ -65,6 +135,7 @@ export default function PlayPage() {
     } catch {
       router.replace(`/play/${gameCode}`)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameCode, router])
 
   async function loadChallenges(s: PlayerSession) {
@@ -72,15 +143,36 @@ export default function PlayPage() {
 
     const { data: game } = await supabase
       .from("games")
-      .select("id")
+      .select("id, settings")
       .eq("game_code", gameCode)
       .single()
 
     if (!game) return
 
+    // Check time limit
+    const settings = game.settings as GameSettings | null
+    const timeLimit = settings?.time_limit_minutes ?? null
+    setTimeLimitMinutes(timeLimit)
+
+    // If no time limit, or if already started (has start time in localStorage), auto-start
+    const storageKey = `ctf_start_${gameCode}`
+    const existingStart = localStorage.getItem(storageKey)
+    if (!timeLimit || existingStart) {
+      setGameStarted(true)
+
+      // Check if time already expired
+      if (timeLimit && existingStart) {
+        const startTime = parseInt(existingStart, 10)
+        const totalMs = timeLimit * 60 * 1000
+        if (Date.now() > startTime + totalMs) {
+          setTimeExpired(true)
+        }
+      }
+    }
+
     const { data } = await supabase
       .from("challenges")
-      .select("id, title, description, type, points, hints, options, order_index")
+      .select("id, title, description, type, points, hints, options, order_index, image_url, maps_url")
       .eq("game_id", game.id)
       .order("order_index", { ascending: true })
 
@@ -108,9 +200,17 @@ export default function PlayPage() {
     }
   }
 
+  function handleStart() {
+    const storageKey = `ctf_start_${gameCode}`
+    const now = Date.now()
+    localStorage.setItem(storageKey, now.toString())
+    startTimeRef.current = now
+    setGameStarted(true)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!answer.trim() || !session || !challenges[currentIndex]) return
+    if (!answer.trim() || !session || !challenges[currentIndex] || timeExpired) return
 
     setLoading(true)
     setFeedback(null)
@@ -169,6 +269,7 @@ export default function PlayPage() {
     }
   }
 
+  // Loading state
   if (!session || challenges.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -177,6 +278,112 @@ export default function PlayPage() {
     )
   }
 
+  // Time expired screen
+  if (timeExpired && !gameFinished) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm text-center"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center">
+            <AlertTriangle className="h-10 w-10 text-accent" />
+          </div>
+          <h1 className="text-2xl font-bold text-steam-dark mb-2">
+            Laikas baigėsi!
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            Žaidimui skirtas laikas pasibaigė. Jūsų rezultatai buvo išsaugoti.
+          </p>
+
+          <div className="bg-primary/5 rounded-2xl p-6 mb-6">
+            <Trophy className="h-8 w-8 text-highlight mx-auto mb-2" />
+            <p className="text-3xl font-bold text-steam-dark">{totalPoints}</p>
+            <p className="text-sm text-muted-foreground">surinktų taškų</p>
+          </div>
+
+          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-6">
+            <span>{solvedIds.size} iš {challenges.length} išspręsta</span>
+          </div>
+
+          <p className="text-sm font-medium text-steam-dark mb-1">
+            Komanda: {session.team_name}
+          </p>
+
+          <Link href={`/play/${gameCode}/leaderboard`}>
+            <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Rezultatų lentelė
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // "Ready to start?" screen (only when time limit exists and not yet started)
+  if (timeLimitMinutes && !gameStarted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm text-center"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+            <Clock className="h-10 w-10 text-primary" />
+          </div>
+
+          <h1 className="text-2xl font-bold text-steam-dark mb-2">
+            Pasiruošę?
+          </h1>
+          <p className="text-muted-foreground mb-2">
+            Šis žaidimas turi laiko limitą.
+          </p>
+
+          <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 mb-6">
+            <p className="text-lg font-bold text-steam-dark">
+              {timeLimitMinutes} min.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Paspaudus &quot;Pradėti&quot;, laikas pradės skaičiuotis atgal.
+            </p>
+          </div>
+
+          <div className="space-y-3 text-left mb-6 text-sm text-muted-foreground">
+            <div className="flex items-start gap-2">
+              <span className="text-primary font-bold mt-0.5">•</span>
+              <span>Užduočių skaičius: <strong className="text-steam-dark">{challenges.length}</strong></span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-primary font-bold mt-0.5">•</span>
+              <span>Pasibaigus laikui, žaidimas bus automatiškai sustabdytas</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-primary font-bold mt-0.5">•</span>
+              <span>Jūsų rezultatai bus išsaugoti</span>
+            </div>
+          </div>
+
+          <Button
+            size="lg"
+            onClick={handleStart}
+            className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/25 gap-3"
+          >
+            <Play className="h-6 w-6" />
+            Pradėti žaidimą
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground mt-4">
+            Komanda: <span className="font-medium text-steam-dark">{session.team_name}</span>
+          </p>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Game finished screen
   if (gameFinished) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -219,8 +426,9 @@ export default function PlayPage() {
   }
 
   const currentChallenge = challenges[currentIndex]
-  const progress = (solvedIds.size / challenges.length) * 100
-  const hints = (currentChallenge.hints as string[]) || []
+  const progressValue = (solvedIds.size / challenges.length) * 100
+  const challengeHints = (currentChallenge.hints as string[]) || []
+  const isTimerWarning = timeLimitMinutes && remainingSeconds > 0 && remainingSeconds <= 60
 
   return (
     <div className="min-h-screen p-4 pb-8">
@@ -236,12 +444,26 @@ export default function PlayPage() {
               {totalPoints} tšk.
             </Badge>
           </div>
-          <Link href={`/play/${gameCode}/leaderboard`}>
-            <Button variant="ghost" size="sm" className="gap-1 text-xs">
-              <BarChart3 className="h-3.5 w-3.5" />
-              Lentelė
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {/* Timer badge */}
+            {timeLimitMinutes && remainingSeconds > 0 && (
+              <Badge
+                variant={isTimerWarning ? "destructive" : "outline"}
+                className={`gap-1 font-mono text-xs tabular-nums ${
+                  isTimerWarning ? "animate-pulse" : ""
+                }`}
+              >
+                <Clock className="h-3 w-3" />
+                {formatTime(remainingSeconds)}
+              </Badge>
+            )}
+            <Link href={`/play/${gameCode}/leaderboard`}>
+              <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                <BarChart3 className="h-3.5 w-3.5" />
+                Lentelė
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Progress */}
@@ -250,7 +472,7 @@ export default function PlayPage() {
             <span>Užduotis {currentIndex + 1} iš {challenges.length}</span>
             <span>{solvedIds.size} išspręsta</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progressValue} className="h-2" />
         </div>
 
         {/* Challenge card */}
@@ -283,7 +505,25 @@ export default function PlayPage() {
                   </div>
                 )}
 
-                {hints.length > 0 && !showHint && (
+                {/* Paveiksliukas */}
+                {currentChallenge.image_url && (
+                  <div className="mb-4 rounded-xl overflow-hidden border border-border/30">
+                    <img
+                      src={currentChallenge.image_url}
+                      alt={currentChallenge.title}
+                      className="w-full max-h-64 object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Google Maps */}
+                {currentChallenge.maps_url && (
+                  <div className="mb-4">
+                    <MapsEmbed url={currentChallenge.maps_url} className="rounded-xl overflow-hidden" />
+                  </div>
+                )}
+
+                {challengeHints.length > 0 && !showHint && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -296,7 +536,7 @@ export default function PlayPage() {
                 )}
 
                 <AnimatePresence>
-                  {showHint && hints.length > 0 && (
+                  {showHint && challengeHints.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -308,7 +548,7 @@ export default function PlayPage() {
                           <Lightbulb className="h-3.5 w-3.5" />
                           Užuomina
                         </div>
-                        {hints.map((hint, i) => (
+                        {challengeHints.map((hint, i) => (
                           <p key={i} className="text-steam-dark">{hint}</p>
                         ))}
                       </div>

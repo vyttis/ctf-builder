@@ -18,7 +18,9 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { motion } from "framer-motion"
-import { Loader2, Plus, Trash2, Lightbulb, Save } from "lucide-react"
+import { Loader2, Plus, Trash2, Lightbulb, Save, MapPin } from "lucide-react"
+import { ImageUpload } from "./image-upload"
+import { MapsEmbed } from "@/components/shared/maps-embed"
 
 const challengeFormSchema = z.object({
   title: z.string().min(1, "Pavadinimas privalomas"),
@@ -28,6 +30,8 @@ const challengeFormSchema = z.object({
   correct_answer: z.string().min(1, "Atsakymas privalomas"),
   hints: z.array(z.string()),
   options: z.array(z.string()).nullable(),
+  image_url: z.string().url().nullable().optional(),
+  maps_url: z.string().url().nullable().optional(),
 })
 
 type ChallengeFormData = z.infer<typeof challengeFormSchema>
@@ -48,6 +52,8 @@ export function ChallengeForm({
   const [loading, setLoading] = useState(false)
   const [hints, setHints] = useState<string[]>(challenge?.hints ?? [])
   const [options, setOptions] = useState<string[]>(challenge?.options ?? [])
+  const [imageUrl, setImageUrl] = useState<string | null>(challenge?.image_url ?? null)
+  const [mapsUrl, setMapsUrl] = useState(challenge?.maps_url ?? "")
   const { toast } = useToast()
 
   const {
@@ -66,6 +72,8 @@ export function ChallengeForm({
       correct_answer: "",
       hints: challenge?.hints || [],
       options: challenge?.options || null,
+      image_url: challenge?.image_url || null,
+      maps_url: challenge?.maps_url || null,
     },
   })
 
@@ -80,6 +88,8 @@ export function ChallengeForm({
         ...data,
         hints,
         options: data.type === "multiple_choice" ? options : null,
+        image_url: imageUrl || null,
+        maps_url: mapsUrl.trim() || null,
         ...(isEditing ? {} : { game_id: gameId }),
       }
 
@@ -168,6 +178,30 @@ export function ChallengeForm({
               rows={3}
               {...register("description")}
             />
+          </div>
+
+          {/* Paveiksliukas */}
+          <div className="sm:col-span-2">
+            <ImageUpload value={imageUrl} onChange={setImageUrl} />
+          </div>
+
+          {/* Google Maps */}
+          <div className="sm:col-span-2 space-y-2">
+            <Label className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              Google Maps nuoroda (neprivaloma)
+            </Label>
+            <Input
+              placeholder="https://maps.google.com/..."
+              value={mapsUrl}
+              onChange={(e) => setMapsUrl(e.target.value)}
+              className="bg-white"
+            />
+            {mapsUrl.trim() && (
+              <div className="mt-2">
+                <MapsEmbed url={mapsUrl.trim()} className="rounded-xl overflow-hidden" />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
