@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings } from "@/types/game"
 import { MapsEmbed } from "@/components/shared/maps-embed"
+import { ReflectionForm } from "@/components/player/reflection-form"
 import Link from "next/link"
 
 interface PlayerChallenge {
@@ -63,6 +64,13 @@ export default function PlayPage() {
   const [solvedIds, setSolvedIds] = useState<Set<string>>(new Set())
   const [showHint, setShowHint] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
+  const [reflectionDone, setReflectionDone] = useState(false)
+
+  // Check if reflection already done
+  useEffect(() => {
+    const stored = localStorage.getItem(`ctf_reflection_${gameCode}`)
+    if (stored) setReflectionDone(true)
+  }, [gameCode])
 
   // Timer state
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null)
@@ -285,7 +293,7 @@ export default function PlayPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm text-center"
+          className="w-full max-w-md text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center">
             <AlertTriangle className="h-10 w-10 text-accent" />
@@ -317,6 +325,15 @@ export default function PlayPage() {
               Rezultatų lentelė
             </Button>
           </Link>
+
+          {!reflectionDone && (
+            <ReflectionForm
+              challenges={challenges.map(c => ({ id: c.id, title: c.title }))}
+              sessionToken={session.session_token}
+              gameCode={gameCode}
+              onDone={() => setReflectionDone(true)}
+            />
+          )}
         </motion.div>
       </div>
     )
@@ -390,7 +407,7 @@ export default function PlayPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm text-center"
+          className="w-full max-w-md text-center"
         >
           <img
             src="/illustrations/celebration.svg"
@@ -420,6 +437,15 @@ export default function PlayPage() {
               Rezultatų lentelė
             </Button>
           </Link>
+
+          {!reflectionDone && (
+            <ReflectionForm
+              challenges={challenges.map(c => ({ id: c.id, title: c.title }))}
+              sessionToken={session.session_token}
+              gameCode={gameCode}
+              onDone={() => setReflectionDone(true)}
+            />
+          )}
         </motion.div>
       </div>
     )

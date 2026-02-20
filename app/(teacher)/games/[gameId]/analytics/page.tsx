@@ -4,10 +4,21 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { AnalyticsCards } from "@/components/teacher/analytics-cards"
 import { ChallengeStatsTable } from "@/components/teacher/challenge-stats-table"
+import { ReflectionsTable } from "@/components/teacher/reflections-table"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GameStats } from "@/types/game"
-import { ArrowLeft, BarChart3, Loader2 } from "lucide-react"
+import { ArrowLeft, BarChart3, Loader2, MessageSquare } from "lucide-react"
 import Link from "next/link"
+
+interface Reflection {
+  id: string
+  team_name: string
+  hardest_challenge_title: string | null
+  improvement_text: string
+  liked_text: string | null
+  created_at: string
+}
 
 export default function GameAnalyticsPage() {
   const params = useParams()
@@ -15,6 +26,12 @@ export default function GameAnalyticsPage() {
   const [stats, setStats] = useState<GameStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+
+  // Reflections state (lazy-loaded)
+  const [reflections, setReflections] = useState<Reflection[] | null>(null)
+  const [totalTeams, setTotalTeams] = useState(0)
+  const [reflectionsLoading, setReflectionsLoading] = useState(false)
+  const [reflectionsError, setReflectionsError] = useState("")
 
   useEffect(() => {
     async function fetchStats() {
@@ -33,6 +50,25 @@ export default function GameAnalyticsPage() {
     }
     fetchStats()
   }, [gameId])
+
+  async function loadReflections() {
+    if (reflections !== null) return // Already loaded
+    setReflectionsLoading(true)
+    setReflectionsError("")
+    try {
+      const res = await fetch(`/api/games/${gameId}/reflections`)
+      if (!res.ok) {
+        throw new Error("Nepavyko gauti refleksijų")
+      }
+      const data = await res.json()
+      setReflections(data.reflections || [])
+      setTotalTeams(data.total_teams || 0)
+    } catch (err: unknown) {
+      setReflectionsError(err instanceof Error ? err.message : "Nežinoma klaida")
+    } finally {
+      setReflectionsLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -80,12 +116,48 @@ export default function GameAnalyticsPage() {
         </div>
       </div>
 
-      {stats && (
-        <div className="space-y-6">
-          <AnalyticsCards stats={stats} />
-          <ChallengeStatsTable stats={stats.challenge_stats || []} />
-        </div>
-      )}
+      <Tabs defaultValue="stats" onValueChange={(v) => {
+        if (v === "reflections") loadReflections()
+      }}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="stats" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Statistika
+          </TabsTrigger>
+          <TabsTrigger value="reflections" className="gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Refleksijos
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="stats">
+          {stats && (
+            <div className="space-y-6">
+              <AnalyticsCards stats={stats} />
+              <ChallengeStatsTable stats={stats.challenge_stats || []} />
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="reflections">
+          {reflectionsLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          )}
+          {reflectionsError && (
+            <div className="text-center py-12">
+              <p className="text-accent text-sm">{reflectionsError}</p>
+            </div>
+          )}
+          {reflections !== null && !reflectionsLoading && !reflectionsError && (
+            <ReflectionsTable
+              reflections={reflections}
+              totalTeams={totalTeams}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
