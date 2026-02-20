@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SteamLogo } from "@/components/steam-logo"
 import { useToast } from "@/hooks/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, KeyRound, ArrowRight, Loader2 } from "lucide-react"
+import { Mail, KeyRound, ArrowRight, ArrowLeft, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -280,9 +281,17 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          CTF Builder &middot; STEAM LT Klaipėda
-        </p>
+        <div className="flex flex-col items-center gap-3 mt-6">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-steam-dark">
+              <ArrowLeft className="h-4 w-4" />
+              Grįžti į titulinį
+            </Button>
+          </Link>
+          <p className="text-xs text-muted-foreground">
+            CTF Builder &middot; STEAM LT Klaipėda
+          </p>
+        </div>
       </motion.div>
     </div>
   )
