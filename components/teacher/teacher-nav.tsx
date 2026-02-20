@@ -4,15 +4,19 @@ import { SteamLogo } from "@/components/steam-logo"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { LogOut, Plus, LayoutDashboard } from "lucide-react"
+import { LogOut, Plus, LayoutDashboard, BookOpen, Shield } from "lucide-react"
 import Link from "next/link"
+import { UserRole } from "@/types/game"
+import { canViewAdminDashboard } from "@/lib/auth/roles"
 
 interface TeacherNavProps {
   email: string
   fullName: string
+  role?: UserRole
+  avatarUrl?: string | null
 }
 
-export function TeacherNav({ email, fullName }: TeacherNavProps) {
+export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: TeacherNavProps) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -39,6 +43,20 @@ export function TeacherNav({ email, fullName }: TeacherNavProps) {
                   Žaidimai
                 </Button>
               </Link>
+              <Link href="/library">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Biblioteka
+                </Button>
+              </Link>
+              {canViewAdminDashboard(role) && (
+                <Link href="/admin">
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
+                    <Shield className="h-4 w-4" />
+                    Administravimas
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -51,13 +69,22 @@ export function TeacherNav({ email, fullName }: TeacherNavProps) {
               </Button>
             </Link>
 
-            <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-steam-dark leading-none">
-                {fullName || email}
-              </p>
-              {fullName && (
-                <p className="text-xs text-muted-foreground">{email}</p>
-              )}
+            <div className="hidden sm:flex items-center gap-3">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  className="w-8 h-8 rounded-full"
+                />
+              ) : null}
+              <div className="text-right">
+                <p className="text-sm font-medium text-steam-dark leading-none">
+                  {fullName || email}
+                </p>
+                {fullName && (
+                  <p className="text-xs text-muted-foreground">{email}</p>
+                )}
+              </div>
             </div>
 
             <Button

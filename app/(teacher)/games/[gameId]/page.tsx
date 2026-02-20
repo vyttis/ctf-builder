@@ -6,6 +6,7 @@ import { GameStatusActions } from "@/components/teacher/game-status-actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { PublishDialog } from "@/components/teacher/publish-dialog"
 import {
   ArrowLeft,
   Puzzle,
@@ -13,6 +14,7 @@ import {
   Users,
   Clock,
   Trophy,
+  BarChart3,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -63,11 +65,31 @@ export default async function GameDetailPage({
             <p className="text-muted-foreground mt-1">{game.description}</p>
           )}
         </div>
-        <GameStatusActions
-          gameId={game.id}
-          status={game.status as GameStatus}
-          challengeCount={challenges.length}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <GameStatusActions
+            gameId={game.id}
+            status={game.status as GameStatus}
+            challengeCount={challenges.length}
+          />
+          <Link href={`/games/${game.id}/analytics`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Analitika
+            </Button>
+          </Link>
+          {(game.status === "active" || game.status === "finished") &&
+            challenges.length > 0 && (
+              <PublishDialog
+                gameId={game.id}
+                gameTitle={game.title}
+                gameDescription={game.description}
+              />
+            )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

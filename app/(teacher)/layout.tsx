@@ -27,6 +27,8 @@ export default async function TeacherLayout({
       <TeacherNav
         email={user.email || ""}
         fullName={profile?.full_name || ""}
+        role={profile?.role || "teacher"}
+        avatarUrl={profile?.avatar_url}
       />
       <main className="container mx-auto px-4 py-6 max-w-6xl">{children}</main>
     </div>
