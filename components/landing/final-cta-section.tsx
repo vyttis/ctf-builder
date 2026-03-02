@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Mail, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 export function FinalCtaSection() {
+  const prefersReduced = useReducedMotion()
+
   return (
     <motion.section
-      initial={{ opacity: 0, y: 40 }}
+      initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
@@ -19,19 +22,21 @@ export function FinalCtaSection() {
           <div className="bg-gradient-to-br from-steam-dark via-steam-dark to-[#004D55] rounded-3xl p-8 sm:p-12 md:p-16 text-white relative overflow-hidden">
             {/* Animated glow accents */}
             <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
+              animate={prefersReduced ? {} : { scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               className="absolute -top-20 -right-20 w-64 h-64 bg-primary rounded-full blur-3xl"
+              style={{ opacity: 0.15 }}
             />
             <motion.div
-              animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
+              animate={prefersReduced ? {} : { scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
               className="absolute -bottom-20 -left-20 w-56 h-56 bg-secondary rounded-full blur-3xl"
+              style={{ opacity: 0.1 }}
             />
 
             <div className="relative">
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-6"

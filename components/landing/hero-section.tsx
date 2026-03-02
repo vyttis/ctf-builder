@@ -2,7 +2,8 @@
 
 import { SteamLogo } from "@/components/steam-logo"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, ArrowDown, Lock, GraduationCap, UserX, Puzzle, Trophy, QrCode } from "lucide-react"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
+import { ArrowRight, ArrowDown, Lock, GraduationCap, UserX, Puzzle, Trophy, QrCode, Zap, Users, ListChecks, Radio } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
@@ -15,20 +16,31 @@ const fadeUp = {
   }),
 }
 
+const kpiItems = [
+  { icon: Zap, label: "Sukurti iššūkiai", value: "120+" },
+  { icon: Users, label: "Aktyvios komandos", value: "45" },
+  { icon: ListChecks, label: "Vid. užduočių", value: "8.3" },
+  { icon: Radio, label: "Realiu laiku", value: "Live" },
+]
+
 export function HeroSection() {
+  const prefersReduced = useReducedMotion()
+
   return (
     <section className="relative overflow-hidden min-h-[90vh] flex flex-col">
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#F8FAFB] to-primary/[0.03]" />
       <motion.div
-        animate={{ scale: [1, 1.15, 1], opacity: [0.04, 0.07, 0.04] }}
+        animate={prefersReduced ? {} : { scale: [1, 1.15, 1], opacity: [0.04, 0.07, 0.04] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary rounded-full blur-3xl -translate-y-1/3 translate-x-1/4"
+        style={{ opacity: 0.04 }}
       />
       <motion.div
-        animate={{ scale: [1, 1.1, 1], opacity: [0.03, 0.06, 0.03] }}
+        animate={prefersReduced ? {} : { scale: [1, 1.1, 1], opacity: [0.03, 0.06, 0.03] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"
+        style={{ opacity: 0.03 }}
       />
 
       <div className="relative container mx-auto px-5 max-w-[1140px] flex-1 flex flex-col">
@@ -123,9 +135,35 @@ export function HeroSection() {
                   Be registracijos mokiniams
                 </span>
               </motion.div>
+
+              {/* Mini KPI row */}
+              <motion.div
+                custom={4}
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                className="grid grid-cols-4 gap-2 mt-8 p-3 rounded-xl bg-white/80 border border-border/30 shadow-sm backdrop-blur-sm"
+              >
+                {kpiItems.map((item, i) => {
+                  const Icon = item.icon
+                  return (
+                    <div key={i} className="text-center px-1">
+                      <div className="flex items-center justify-center mb-1">
+                        <Icon className="h-3 w-3 text-primary/60" />
+                      </div>
+                      <div className="text-sm font-bold text-steam-dark leading-none">
+                        {item.value}
+                      </div>
+                      <div className="text-[9px] text-muted-foreground/60 mt-0.5 leading-tight">
+                        {item.label}
+                      </div>
+                    </div>
+                  )
+                })}
+              </motion.div>
             </div>
 
-            {/* Right — app mockup placeholder */}
+            {/* Right — app mockup */}
             <motion.div
               custom={2}
               initial="hidden"
@@ -134,6 +172,9 @@ export function HeroSection() {
               className="hidden md:block"
             >
               <div className="relative">
+                {/* Glow effect behind device */}
+                <div className="absolute -inset-4 bg-gradient-to-br from-primary/10 via-secondary/5 to-primary/10 rounded-3xl blur-2xl opacity-60" />
+
                 {/* Device frame */}
                 <div className="relative bg-white rounded-2xl shadow-2xl shadow-steam-dark/10 border border-border/40 overflow-hidden">
                   {/* Top bar */}
@@ -196,7 +237,7 @@ export function HeroSection() {
 
                 {/* Floating QR badge */}
                 <motion.div
-                  animate={{ y: [0, -6, 0] }}
+                  animate={prefersReduced ? {} : { y: [0, -6, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg shadow-steam-dark/10 border border-border/30 p-3 flex items-center gap-2"
                 >
