@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+// Safe columns to return for challenges (never include answer_hash)
+const SAFE_CHALLENGE_SELECT = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
+
 const updateGameSchema = z.object({
   title: z.string().min(3).optional(),
   description: z.string().optional(),
@@ -31,7 +34,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("games")
-    .select("*, challenges(*)")
+    .select(`*, challenges(${SAFE_CHALLENGE_SELECT})`)
     .eq("id", params.gameId)
     .eq("teacher_id", user.id)
     .single()
@@ -59,12 +62,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
-  const body = await request.json()
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+  }
+
   const parsed = updateGameSchema.safeParse(body)
 
   if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message || "Neteisingi duomenys"
     return NextResponse.json(
-      { error: parsed.error.flatten() },
+      { error: firstError },
       { status: 400 }
     )
   }
@@ -84,9 +94,40 @@ export async function PATCH(
     }
   }
 
+  // Build update payload carefully
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateData: Record<string, any> = {}
+  if (parsed.data.title !== undefined) updateData.title = parsed.data.title
+  if (parsed.data.description !== undefined) updateData.description = parsed.data.description
+  if (parsed.data.status !== undefined) updateData.status = parsed.data.status
+
+  // Deep merge settings to avoid destroying unmentioned fields
+  if (parsed.data.settings) {
+    const { data: currentGame } = await supabase
+      .from("games")
+      .select("settings")
+      .eq("id", params.gameId)
+      .eq("teacher_id", user.id)
+      .single()
+
+    if (!currentGame) {
+      return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
+    }
+
+    const currentSettings = (currentGame.settings as Record<string, unknown>) || {}
+    updateData.settings = {
+      ...currentSettings,
+      ...parsed.data.settings,
+    }
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return NextResponse.json({ error: "Nėra ką atnaujinti" }, { status: 400 })
+  }
+
   const { data, error } = await supabase
     .from("games")
-    .update(parsed.data)
+    .update(updateData)
     .eq("id", params.gameId)
     .eq("teacher_id", user.id)
     .select()

@@ -3,6 +3,9 @@ import { normalizeAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+// Safe columns to return (never include answer_hash)
+const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
+
 const updateChallengeSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
@@ -52,12 +55,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
-  const body = await request.json()
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+  }
+
   const parsed = updateChallengeSchema.safeParse(body)
 
   if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message || "Neteisingi duomenys"
     return NextResponse.json(
-      { error: parsed.error.flatten() },
+      { error: firstError },
       { status: 400 }
     )
   }
@@ -84,7 +94,7 @@ export async function PATCH(
     .from("challenges")
     .update(updateData)
     .eq("id", params.challengeId)
-    .select()
+    .select(SAFE_CHALLENGE_COLUMNS)
     .single()
 
   if (error) {

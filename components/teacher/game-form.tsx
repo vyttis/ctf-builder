@@ -73,7 +73,8 @@ export function GameForm() {
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || "Nepavyko sukurti žaidimo")
+        const errorMessage = typeof err.error === "string" ? err.error : "Nepavyko sukurti žaidimo"
+        throw new Error(errorMessage)
       }
 
       const game = await res.json()

@@ -9,12 +9,19 @@ const submitAnswerSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const body = await request.json()
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+  }
+
   const parsed = submitAnswerSchema.safeParse(body)
 
   if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message || "Neteisingi duomenys"
     return NextResponse.json(
-      { error: parsed.error.flatten() },
+      { error: firstError },
       { status: 400 }
     )
   }
@@ -32,6 +39,25 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Sesija nerasta. Prisijunkite iš naujo." },
       { status: 401 }
+    )
+  }
+
+  // Check game is still active before accepting submissions
+  const { data: game } = await supabase
+    .from("games")
+    .select("id, status")
+    .eq("id", team.game_id)
+    .single()
+
+  if (!game || game.status !== "active") {
+    const statusMessages: Record<string, string> = {
+      draft: "Žaidimas dar neprasidėjo.",
+      paused: "Žaidimas pristabdytas. Palaukite, kol mokytojas tęs.",
+      finished: "Žaidimas baigtas!",
+    }
+    return NextResponse.json(
+      { error: statusMessages[game?.status ?? ""] || "Žaidimas nepasiekiamas" },
+      { status: 403 }
     )
   }
 
@@ -71,7 +97,7 @@ export async function POST(request: Request) {
   // Get challenge details
   const { data: challenge } = await supabase
     .from("challenges")
-    .select("id, points, answer_hash, game_id")
+    .select("id, points, game_id")
     .eq("id", parsed.data.challenge_id)
     .single()
 
@@ -100,25 +126,25 @@ export async function POST(request: Request) {
     points_awarded: pointsAwarded,
   })
 
-  // If correct, update team score
+  // If correct, update team score atomically via RPC
   if (isCorrect) {
-    await supabase
-      .from("teams")
-      .update({
-        total_points: team.total_points + pointsAwarded,
-        current_challenge_index: team.current_challenge_index + 1,
-      })
-      .eq("id", team.id)
+    await supabase.rpc("increment_team_score", {
+      p_team_id: team.id,
+      p_points: pointsAwarded,
+    })
   }
+
+  // Fetch updated team score for accurate response
+  const newTotalPoints = isCorrect
+    ? team.total_points + pointsAwarded
+    : team.total_points
 
   return NextResponse.json({
     is_correct: isCorrect,
     points_awarded: pointsAwarded,
     message: isCorrect
-      ? `Teisingai! +${pointsAwarded} taškų 🎉`
+      ? `Teisingai! +${pointsAwarded} taškų`
       : "Neteisingai. Bandykite dar kartą!",
-    total_points: isCorrect
-      ? team.total_points + pointsAwarded
-      : team.total_points,
+    total_points: newTotalPoints,
   })
 }

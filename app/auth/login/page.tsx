@@ -30,10 +30,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const { toast } = useToast()
-  const supabase = createClient()
 
   async function handleGoogleLogin() {
     setGoogleLoading(true)
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -55,6 +55,7 @@ export default function LoginPage() {
     if (!email) return
 
     setLoading(true)
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -84,6 +85,7 @@ export default function LoginPage() {
     if (!otp) return
 
     setLoading(true)
+    const supabase = createClient()
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,

@@ -9,12 +9,19 @@ const createTeamSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const body = await request.json()
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+  }
+
   const parsed = createTeamSchema.safeParse(body)
 
   if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message || "Neteisingi duomenys"
     return NextResponse.json(
-      { error: parsed.error.flatten() },
+      { error: firstError },
       { status: 400 }
     )
   }
