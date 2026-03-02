@@ -86,8 +86,14 @@ export default function JoinGamePage() {
       })
 
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "Nepavyko prisijungti")
+        let errorMsg = "Nepavyko prisijungti"
+        try {
+          const err = await res.json()
+          errorMsg = err.error || errorMsg
+        } catch {
+          // Response was not JSON (e.g. server error)
+        }
+        throw new Error(errorMsg)
       }
 
       const data = await res.json()
