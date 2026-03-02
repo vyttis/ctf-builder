@@ -17,9 +17,6 @@ interface QRDisplayProps {
 }
 
 function getPlayUrl(gameCode: string): string {
-  if (process.env.NEXT_PUBLIC_PLAY_URL) {
-    return `${process.env.NEXT_PUBLIC_PLAY_URL}/play/${gameCode}`
-  }
   if (typeof window !== "undefined") {
     return `${window.location.origin}/play/${gameCode}`
   }
