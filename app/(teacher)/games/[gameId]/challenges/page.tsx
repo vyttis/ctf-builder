@@ -17,7 +17,16 @@ import {
   Puzzle,
   ChevronUp,
   ChevronDown,
+  AlertCircle,
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import Link from "next/link"
 
 export default function ChallengesPage() {
@@ -29,6 +38,8 @@ export default function ChallengesPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Challenge | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchChallenges()
@@ -43,14 +54,18 @@ export default function ChallengesPage() {
     setLoading(false)
   }
 
-  async function deleteChallenge(challengeId: string) {
-    const res = await fetch(`/api/challenges/${challengeId}`, {
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const res = await fetch(`/api/challenges/${deleteTarget.id}`, {
       method: "DELETE",
     })
     if (res.ok) {
       toast({ title: "Užduotis pašalinta" })
       fetchChallenges()
     }
+    setDeleting(false)
+    setDeleteTarget(null)
   }
 
   async function moveChallenge(challengeId: string, direction: "up" | "down") {
@@ -102,7 +117,11 @@ export default function ChallengesPage() {
           </h1>
           <p className="text-muted-foreground mt-1">
             {challenges.length}{" "}
-            {challenges.length === 1 ? "užduotis" : "užduotys"}
+            {challenges.length === 1
+              ? "užduotis"
+              : challenges.length >= 10 && challenges.length <= 20
+              ? "užduočių"
+              : "užduotys"}
           </p>
         </div>
         {!showForm && (
@@ -151,6 +170,38 @@ export default function ChallengesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-accent" />
+              Pašalinti užduotį?
+            </DialogTitle>
+            <DialogDescription>
+              Ar tikrai norite pašalinti užduotį &ldquo;{deleteTarget?.title}&rdquo;?
+              Šis veiksmas negrįžtamas — visi susiję pateikimai bus ištrinti.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={deleting}
+            >
+              Atšaukti
+            </Button>
+            <Button
+              onClick={confirmDelete}
+              disabled={deleting}
+              className="bg-accent hover:bg-accent/90 text-white gap-2"
+            >
+              {deleting ? "Šalinama..." : "Pašalinti"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Challenges list */}
       {loading ? (
@@ -252,7 +303,7 @@ export default function ChallengesPage() {
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 text-muted-foreground hover:text-accent"
-                        onClick={() => deleteChallenge(challenge.id)}
+                        onClick={() => setDeleteTarget(challenge)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

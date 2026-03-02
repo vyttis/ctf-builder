@@ -16,6 +16,29 @@ const updateChallengeSchema = z.object({
   maps_url: z.string().url().nullable().optional(),
 })
 
+async function verifyChallengeOwnership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  challengeId: string,
+  userId: string
+) {
+  const { data: challenge } = await supabase
+    .from("challenges")
+    .select("id, game_id")
+    .eq("id", challengeId)
+    .single()
+
+  if (!challenge) return false
+
+  const { data: game } = await supabase
+    .from("games")
+    .select("id")
+    .eq("id", challenge.game_id)
+    .eq("teacher_id", userId)
+    .single()
+
+  return !!game
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: { challengeId: string } }
@@ -36,6 +59,15 @@ export async function PATCH(
     return NextResponse.json(
       { error: parsed.error.flatten() },
       { status: 400 }
+    )
+  }
+
+  // Verify the challenge belongs to a game owned by this teacher
+  const isOwner = await verifyChallengeOwnership(supabase, params.challengeId, user.id)
+  if (!isOwner) {
+    return NextResponse.json(
+      { error: "Užduotis nerasta arba neturite teisės" },
+      { status: 404 }
     )
   }
 
@@ -73,6 +105,15 @@ export async function DELETE(
 
   if (!user) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
+  }
+
+  // Verify the challenge belongs to a game owned by this teacher
+  const isOwner = await verifyChallengeOwnership(supabase, params.challengeId, user.id)
+  if (!isOwner) {
+    return NextResponse.json(
+      { error: "Užduotis nerasta arba neturite teisės" },
+      { status: 404 }
+    )
   }
 
   const { error } = await supabase

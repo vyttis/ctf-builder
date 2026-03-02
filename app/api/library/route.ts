@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
+import { getUserRole, canApproveLibrary } from "@/lib/auth/roles"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+
+// Sanitize search input for PostgREST ilike filter
+function sanitizeSearch(input: string): string {
+  return input.replace(/[%_\\,().]/g, "")
+}
 
 // GET /api/library — list approved library items (+ own items for teachers)
 export async function GET(request: Request) {
@@ -19,6 +25,17 @@ export async function GET(request: Request) {
     const gradeLevel = searchParams.get("grade_level")
     const search = searchParams.get("search")
     const status = searchParams.get("status") // for admin: pending_review, rejected
+
+    // Only admins can filter by non-approved status
+    if (status && status !== "approved") {
+      const role = await getUserRole(supabase)
+      if (!canApproveLibrary(role)) {
+        return NextResponse.json(
+          { error: "Neturite teisės peržiūrėti šį statusą" },
+          { status: 403 }
+        )
+      }
+    }
 
     let query = supabase
       .from("library_items")
@@ -39,7 +56,10 @@ export async function GET(request: Request) {
     }
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+      const safeSearch = sanitizeSearch(search)
+      if (safeSearch.length > 0) {
+        query = query.or(`title.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%`)
+      }
     }
 
     const { data, error } = await query.limit(50)

@@ -2,7 +2,6 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { GameWithChallengeCount, GameStatus } from "@/types/game"
 import { motion } from "framer-motion"
 import {
@@ -12,7 +11,6 @@ import {
   FileEdit,
   QrCode,
   Puzzle,
-  Eye,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -87,7 +85,11 @@ export function GameCard({ game, index }: GameCardProps) {
                 <Puzzle className="h-3.5 w-3.5" />
                 <span>
                   {challengeCount}{" "}
-                  {challengeCount === 1 ? "užduotis" : "užduotys"}
+                  {challengeCount === 1
+                    ? "užduotis"
+                    : challengeCount >= 10 && challengeCount <= 20
+                    ? "užduočių"
+                    : "užduotys"}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 font-mono text-xs bg-muted/50 px-2 py-0.5 rounded">
@@ -96,22 +98,8 @@ export function GameCard({ game, index }: GameCardProps) {
               </div>
             </div>
 
-            {/* Quick actions */}
+            {/* Footer */}
             <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/30">
-              {game.status === "active" && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs gap-1 text-secondary hover:text-secondary"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    // TODO: open monitor
-                  }}
-                >
-                  <Eye className="h-3 w-3" />
-                  Stebėti
-                </Button>
-              )}
               <div className="flex-1" />
               <span className="text-xs text-muted-foreground">
                 {new Date(game.created_at).toLocaleDateString("lt-LT")}
