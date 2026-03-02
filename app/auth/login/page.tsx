@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,6 +31,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const { toast } = useToast()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const error = searchParams.get("error")
+    if (error === "auth_failed") {
+      toast({
+        title: "Prisijungimas nepavyko",
+        description: "Bandykite dar kartą arba naudokite kitą prisijungimo būdą.",
+        variant: "destructive",
+      })
+    }
+  }, [searchParams, toast])
 
   async function handleGoogleLogin() {
     setGoogleLoading(true)
