@@ -22,6 +22,7 @@ import {
   Clock,
   Play,
   AlertTriangle,
+  LogOut,
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings } from "@/types/game"
 import { MapsEmbed } from "@/components/shared/maps-embed"
@@ -668,6 +669,18 @@ export default function PlayPage() {
         <div className="text-center text-sm text-muted-foreground">
           <span>Komanda: </span>
           <span className="font-medium text-steam-dark">{session.team_name}</span>
+          <span className="mx-2">&middot;</span>
+          <button
+            onClick={() => {
+              localStorage.removeItem(`ctf_session_${gameCode}`)
+              localStorage.removeItem(`ctf_start_${gameCode}`)
+              router.replace(`/play/${gameCode}`)
+            }}
+            className="text-xs text-muted-foreground/60 hover:text-accent transition-colors inline-flex items-center gap-1"
+          >
+            <LogOut className="h-3 w-3" />
+            Išeiti
+          </button>
         </div>
       </div>
     </div>
