@@ -35,10 +35,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     const error = searchParams.get("error")
-    if (error === "auth_failed") {
+    if (error) {
       toast({
         title: "Prisijungimas nepavyko",
-        description: "Bandykite dar kartą arba naudokite kitą prisijungimo būdą.",
+        description: error === "auth_failed"
+          ? "Bandykite dar kartą arba naudokite kitą prisijungimo būdą."
+          : error,
         variant: "destructive",
       })
     }
