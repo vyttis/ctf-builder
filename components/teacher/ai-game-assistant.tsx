@@ -97,10 +97,10 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
             </div>
             <div className="text-left">
               <p className="font-medium text-steam-dark text-sm">
-                AI Padėjėjas
+                DI Padėjėjas
               </p>
               <p className="text-xs text-muted-foreground">
-                Leiskite AI sugeneruoti žaidimo idėją
+                Leiskite DI sugeneruoti žaidimo idėją
               </p>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { AiSuggestRequest, AiGameSuggestRequest } from "./types"
 
 export function buildSystemPrompt(): string {
-  return `Tu esi AI asistentas, padedantis Lietuvos mokytojams kurti CTF (Capture The Flag) edukacinius žaidimus mokiniams. Tu kuri įdomias, edukacines užduotis.
+  return `Tu esi DI asistentas, padedantis Lietuvos mokytojams kurti CTF (Capture The Flag) edukacinius žaidimus mokiniams. Tu kuri įdomias, edukacines užduotis.
 
 TAISYKLĖS:
 - VISAS užduočių turinys (pavadinimas, aprašymas, užuominos, atsakymo variantai, atsakymai) PRIVALO būti lietuvių kalba su teisingomis raidėmis (ąčęėįšųūž).
@@ -58,7 +58,7 @@ export function buildUserMessage(request: AiSuggestRequest): string {
 }
 
 export function buildGameSystemPrompt(): string {
-  return `Tu esi AI asistentas, padedantis Lietuvos mokytojams sugalvoti CTF (Capture The Flag) edukacinių žaidimų idėjas.
+  return `Tu esi DI asistentas, padedantis Lietuvos mokytojams sugalvoti CTF (Capture The Flag) edukacinių žaidimų idėjas.
 
 TAISYKLĖS:
 - VISAS turinys PRIVALO būti lietuvių kalba su teisingomis raidėmis (ąčęėįšųūž).

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 // Safe columns to return (never include answer_hash)
-const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
+const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, generated_by_di, verification_verdict, verification_issues, verification_confidence, created_at, updated_at"
 
 const updateChallengeSchema = z.object({
   title: z.string().min(1).optional(),
