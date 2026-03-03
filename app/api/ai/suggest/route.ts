@@ -2,8 +2,18 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import Anthropic from "@anthropic-ai/sdk"
-import { buildSystemPrompt, buildUserMessage } from "@/lib/ai/prompt"
-import type { AiSuggestResponse } from "@/lib/ai/types"
+import {
+  buildSystemPrompt,
+  buildUserMessage,
+  buildVerifySystemPrompt,
+  buildVerifyUserMessage,
+} from "@/lib/ai/prompt"
+import type {
+  AiSuggestion,
+  AiSuggestResponse,
+  VerificationResult,
+} from "@/lib/ai/types"
+import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 
 const suggestSchema = z.object({
   game_id: z.string().uuid(),
@@ -38,6 +48,46 @@ function checkRateLimit(userId: string): boolean {
   if (entry.count >= RATE_LIMIT) return false
   entry.count++
   return true
+}
+
+async function verifySuggestionWithLLM(
+  anthropic: Anthropic,
+  suggestion: AiSuggestion
+): Promise<VerificationResult> {
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      system: buildVerifySystemPrompt(),
+      messages: [
+        { role: "user", content: buildVerifyUserMessage(suggestion) },
+      ],
+    })
+
+    const textBlock = message.content.find((b) => b.type === "text")
+    if (!textBlock || textBlock.type !== "text") {
+      return { verdict: "uncertain", issues: ["Patikra negrąžino rezultato"], confidence: 0.0 }
+    }
+
+    let jsonText = textBlock.text.trim()
+    if (jsonText.startsWith("```")) {
+      jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
+    }
+
+    const parsed = JSON.parse(jsonText)
+    return {
+      verdict: parsed.verdict || "uncertain",
+      issues: Array.isArray(parsed.issues) ? parsed.issues : [],
+      confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.5,
+    }
+  } catch (error) {
+    console.error("Verification LLM error:", error)
+    return {
+      verdict: "uncertain",
+      issues: ["Nepavyko atlikti DI patikros"],
+      confidence: 0.0,
+    }
+  }
 }
 
 export async function POST(request: Request) {
@@ -89,13 +139,15 @@ export async function POST(request: Request) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return NextResponse.json(
-      { error: "AI paslauga nepasiekiama. Susisiekite su administratoriumi." },
+      { error: "DI paslauga nepasiekiama. Susisiekite su administratoriumi." },
       { status: 503 }
     )
   }
 
   try {
     const anthropic = new Anthropic({ apiKey })
+
+    // Step 1: Generate suggestions
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
@@ -105,10 +157,9 @@ export async function POST(request: Request) {
 
     const textBlock = message.content.find((b) => b.type === "text")
     if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from AI")
+      throw new Error("No text response from DI")
     }
 
-    // Extract JSON from the response (handle markdown code blocks)
     let jsonText = textBlock.text.trim()
     if (jsonText.startsWith("```")) {
       jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
@@ -117,14 +168,36 @@ export async function POST(request: Request) {
     const parsedResponse: AiSuggestResponse = JSON.parse(jsonText)
 
     if (!Array.isArray(parsedResponse.suggestions)) {
-      throw new Error("Invalid AI response structure")
+      throw new Error("Invalid DI response structure")
     }
 
-    return NextResponse.json(parsedResponse)
+    // Step 2: Verify each suggestion (deterministic first, then LLM)
+    const verifiedSuggestions: AiSuggestion[] = await Promise.all(
+      parsedResponse.suggestions.map(async (suggestion) => {
+        // Try deterministic validation first
+        const deterministicResult = validateDeterministic(suggestion)
+
+        if (deterministicResult) {
+          return {
+            ...suggestion,
+            verification: deterministicResult,
+          }
+        }
+
+        // Fallback to LLM verification
+        const llmResult = await verifySuggestionWithLLM(anthropic, suggestion)
+        return {
+          ...suggestion,
+          verification: llmResult,
+        }
+      })
+    )
+
+    return NextResponse.json({ suggestions: verifiedSuggestions })
   } catch (error) {
-    console.error("AI suggest error:", error)
+    console.error("DI suggest error:", error)
     return NextResponse.json(
-      { error: "AI pasiūlymo generavimas nepavyko. Bandykite dar kartą." },
+      { error: "DI pasiūlymo generavimas nepavyko. Bandykite dar kartą." },
       { status: 500 }
     )
   }

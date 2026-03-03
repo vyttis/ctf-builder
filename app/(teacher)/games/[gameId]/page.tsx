@@ -166,7 +166,7 @@ export default async function GameDetailPage({
                     className="gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
-                    AI
+                    DI
                   </Button>
                 </Link>
                 <Link href={`/games/${game.id}/challenges`}>
@@ -248,7 +248,7 @@ export default async function GameDetailPage({
                         className="gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
                       >
                         <Sparkles className="h-3.5 w-3.5" />
-                        Generuoti su AI
+                        Generuoti su DI
                       </Button>
                     </Link>
                   </div>

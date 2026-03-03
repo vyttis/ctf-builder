@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { motion } from "framer-motion"
-import { Loader2, Plus, Trash2, Lightbulb, Save, MapPin, Sparkles } from "lucide-react"
+import { Loader2, Plus, Trash2, Lightbulb, Save, MapPin, Sparkles, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
 import { ImageUpload } from "./image-upload"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 
@@ -57,6 +57,7 @@ export function ChallengeForm({
   const [options, setOptions] = useState<string[]>(challenge?.options ?? [])
   const [imageUrl, setImageUrl] = useState<string | null>(challenge?.image_url ?? null)
   const [mapsUrl, setMapsUrl] = useState(challenge?.maps_url ?? "")
+  const [showExplanation, setShowExplanation] = useState(false)
   const { toast } = useToast()
 
   const {
@@ -181,7 +182,7 @@ export function ChallengeForm({
         {prefillData && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20 text-sm text-steam-dark">
             <Sparkles className="h-4 w-4 text-highlight shrink-0" />
-            <span>Užpildyta pagal AI pasiūlymą. Peržiūrėkite ir patvirtinkite.</span>
+            <span>Užpildyta pagal DI pasiūlymą. Peržiūrėkite ir patvirtinkite.</span>
           </div>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
@@ -261,30 +262,63 @@ export function ChallengeForm({
             />
           </div>
 
-          {/* Multiple choice options */}
+          {/* Multiple choice options with radio-button correct answer */}
           {challengeType === "multiple_choice" && (
             <div className="sm:col-span-2 space-y-2">
-              <Label>Atsakymų variantai</Label>
+              <Label>Atsakymų variantai (pasirinkite teisingą)</Label>
               <div className="space-y-2">
-                {options.map((option, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={option}
-                      onChange={(e) => updateOption(index, e.target.value)}
-                      placeholder={`Variantas ${index + 1}`}
-                      className="bg-white"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeOption(index)}
-                      className="text-accent shrink-0"
+                {options.map((option, index) => {
+                  const correctAnswer = watch("correct_answer")
+                  const isCorrect = option.trim() !== "" && option.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
+                        isCorrect
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border/30"
+                      }`}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (option.trim()) {
+                            setValue("correct_answer", option.trim())
+                          }
+                        }}
+                        className="shrink-0"
+                      >
+                        {isCorrect ? (
+                          <CheckCircle2 className="h-5 w-5 text-primary" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30" />
+                        )}
+                      </button>
+                      <Input
+                        value={option}
+                        onChange={(e) => {
+                          const oldVal = option.trim()
+                          updateOption(index, e.target.value)
+                          // If this was the correct answer, update it
+                          if (oldVal && oldVal.toLowerCase() === correctAnswer.trim().toLowerCase()) {
+                            setValue("correct_answer", e.target.value.trim())
+                          }
+                        }}
+                        placeholder={`Variantas ${index + 1}`}
+                        className="bg-white border-0 shadow-none focus-visible:ring-0 p-0 h-auto"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeOption(index)}
+                        className="text-accent shrink-0 h-7 w-7 p-0"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )
+                })}
                 <Button
                   type="button"
                   variant="outline"
@@ -296,26 +330,36 @@ export function ChallengeForm({
                   Pridėti variantą
                 </Button>
               </div>
+              {errors.correct_answer && (
+                <p className="text-xs text-accent">
+                  Pasirinkite teisingą atsakymą paspaudę apskritimą
+                </p>
+              )}
+              {/* Hidden input to track correct_answer */}
+              <input type="hidden" {...register("correct_answer")} />
             </div>
           )}
 
-          <div className="sm:col-span-2 space-y-2">
-            <Label>Teisingas atsakymas *</Label>
-            <Input
-              type={challengeType === "number" ? "number" : "text"}
-              placeholder="Tikslus teisingas atsakymas"
-              className="bg-white border-primary/30 focus:border-primary"
-              {...register("correct_answer")}
-            />
-            {errors.correct_answer && (
-              <p className="text-xs text-accent">
-                {errors.correct_answer.message}
+          {/* Text/number correct answer input */}
+          {challengeType !== "multiple_choice" && (
+            <div className="sm:col-span-2 space-y-2">
+              <Label>Teisingas atsakymas *</Label>
+              <Input
+                type={challengeType === "number" ? "number" : "text"}
+                placeholder="Tikslus teisingas atsakymas"
+                className="bg-white border-primary/30 focus:border-primary"
+                {...register("correct_answer")}
+              />
+              {errors.correct_answer && (
+                <p className="text-xs text-accent">
+                  {errors.correct_answer.message}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Atsakymas bus automatiškai normalizuotas (be didžiųjų raidžių, be tarpų)
               </p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Atsakymas bus automatiškai normalizuotas (be didžiųjų raidžių, be tarpų)
-            </p>
-          </div>
+            </div>
+          )}
 
           {/* Hints */}
           <div className="sm:col-span-2 space-y-2">
@@ -357,8 +401,45 @@ export function ChallengeForm({
           </div>
         </div>
 
+        {/* DI explanation (collapsible) */}
+        {prefillData?.explanation && (
+          <div className="border-t border-border/30 pt-3">
+            <button
+              type="button"
+              onClick={() => setShowExplanation(!showExplanation)}
+              className="flex items-center gap-1 text-xs text-secondary hover:text-secondary/80 transition-colors"
+            >
+              {showExplanation ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+              DI paaiškinimas
+            </button>
+            {showExplanation && (
+              <p className="text-xs text-muted-foreground mt-1.5 pl-4 border-l-2 border-secondary/20">
+                {prefillData.explanation}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex gap-3 pt-2">
+          {prefillData && (
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-highlight hover:bg-highlight/90 text-steam-dark gap-2 font-medium"
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
+              Patvirtinti kaip yra
+            </Button>
+          )}
           <Button
             type="submit"
             disabled={loading}
@@ -369,7 +450,7 @@ export function ChallengeForm({
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {challenge ? "Atnaujinti" : "Pridėti užduotį"}
+            {challenge ? "Atnaujinti" : prefillData ? "Pridėti su pakeitimais" : "Pridėti užduotį"}
           </Button>
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>

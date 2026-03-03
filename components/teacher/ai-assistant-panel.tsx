@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Challenge } from "@/types/game"
 import { AiSuggestion, AiSuggestResponse } from "@/lib/ai/types"
 import {
@@ -13,9 +13,28 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { AiSuggestionCard } from "./ai-suggestion-card"
+import { DiSuggestionCard } from "./di-suggestion-card"
 import { AnimatePresence } from "framer-motion"
-import { Sparkles, Loader2, Wand2, AlertCircle, Puzzle } from "lucide-react"
+import {
+  Sparkles,
+  Loader2,
+  Wand2,
+  AlertCircle,
+  Puzzle,
+  CheckSquare,
+  Square,
+  Plus,
+  RefreshCw,
+} from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface AiAssistantPanelProps {
   open: boolean
@@ -25,12 +44,19 @@ interface AiAssistantPanelProps {
   gameDescription: string | null
   existingChallenges: Challenge[]
   onAcceptSuggestion: (suggestion: AiSuggestion) => void
+  onMassAdd?: (suggestions: AiSuggestion[]) => void
 }
 
 const quickActions = [
   { label: "3 klausimus", prompt: "Sugeneruok 3 įvairius klausimus" },
-  { label: "Sunkesnių", prompt: "Sugeneruok sunkesnių užduočių, vertų daugiau taškų" },
-  { label: "Pasirinkimo", prompt: "Sugeneruok tik multiple_choice tipo užduotis" },
+  {
+    label: "Sunkesnių",
+    prompt: "Sugeneruok sunkesnių užduočių, vertų daugiau taškų",
+  },
+  {
+    label: "Pasirinkimo",
+    prompt: "Sugeneruok tik multiple_choice tipo užduotis",
+  },
 ]
 
 export function AiAssistantPanel({
@@ -41,13 +67,22 @@ export function AiAssistantPanel({
   gameDescription,
   existingChallenges,
   onAcceptSuggestion,
+  onMassAdd,
 }: AiAssistantPanelProps) {
   const [suggestions, setSuggestions] = useState<AiSuggestion[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [teacherPrompt, setTeacherPrompt] = useState("")
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [addedIds, setAddedIds] = useState<Set<number>>(new Set())
+  const [addingMass, setAddingMass] = useState(false)
+  const [confirmRegenerate, setConfirmRegenerate] = useState(false)
+  const { toast } = useToast()
 
-  async function handleGenerate(promptOverride?: string) {
+  async function handleGenerate(
+    promptOverride?: string,
+    mode: "replace" | "append" = "replace"
+  ) {
     setLoading(true)
     setError(null)
 
@@ -76,7 +111,14 @@ export function AiAssistantPanel({
       }
 
       const data: AiSuggestResponse = await res.json()
-      setSuggestions(data.suggestions)
+
+      if (mode === "append") {
+        setSuggestions((prev) => [...prev, ...data.suggestions])
+      } else {
+        setSuggestions(data.suggestions)
+        setSelectedIds(new Set())
+        setAddedIds(new Set())
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Nežinoma klaida")
     } finally {
@@ -86,171 +128,380 @@ export function AiAssistantPanel({
 
   function handleReject(index: number) {
     setSuggestions((prev) => prev.filter((_, i) => i !== index))
+    setSelectedIds((prev) => {
+      const next = new Set<number>()
+      prev.forEach((id) => {
+        if (id < index) next.add(id)
+        else if (id > index) next.add(id - 1)
+      })
+      return next
+    })
+    setAddedIds((prev) => {
+      const next = new Set<number>()
+      prev.forEach((id) => {
+        if (id < index) next.add(id)
+        else if (id > index) next.add(id - 1)
+      })
+      return next
+    })
   }
 
   function handleAccept(suggestion: AiSuggestion) {
+    const index = suggestions.indexOf(suggestion)
     onAcceptSuggestion(suggestion)
-    setSuggestions((prev) => prev.filter((s) => s !== suggestion))
+    setAddedIds((prev) => new Set(prev).add(index))
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.delete(index)
+      return next
+    })
   }
 
+  const toggleSelect = useCallback(
+    (index: number) => {
+      // Don't allow selecting already added or failed tasks
+      if (addedIds.has(index)) return
+      const suggestion = suggestions[index]
+      if (suggestion?.verification?.verdict === "fail") return
+
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(index)) {
+          next.delete(index)
+        } else {
+          next.add(index)
+        }
+        return next
+      })
+    },
+    [addedIds, suggestions]
+  )
+
+  function selectAll() {
+    const newSelected = new Set<number>()
+    suggestions.forEach((s, i) => {
+      if (!addedIds.has(i) && s.verification?.verdict !== "fail") {
+        newSelected.add(i)
+      }
+    })
+    setSelectedIds(newSelected)
+  }
+
+  function deselectAll() {
+    setSelectedIds(new Set())
+  }
+
+  async function handleMassAdd() {
+    const selected = Array.from(selectedIds)
+      .filter((i) => !addedIds.has(i))
+      .map((i) => suggestions[i])
+      .filter(Boolean)
+
+    if (selected.length === 0) return
+
+    setAddingMass(true)
+
+    if (onMassAdd) {
+      onMassAdd(selected)
+      const newAdded = new Set(addedIds)
+      selectedIds.forEach((i) => newAdded.add(i))
+      setAddedIds(newAdded)
+      setSelectedIds(new Set())
+      toast({
+        title: `Pridėta ${selected.length} užduočių`,
+      })
+    } else {
+      // Fallback: add one by one
+      let addedCount = 0
+      for (const suggestion of selected) {
+        try {
+          onAcceptSuggestion(suggestion)
+          const idx = suggestions.indexOf(suggestion)
+          setAddedIds((prev) => new Set(prev).add(idx))
+          addedCount++
+        } catch {
+          // continue with next
+        }
+      }
+      setSelectedIds(new Set())
+      toast({
+        title: `Pridėta ${addedCount} užduočių`,
+        description:
+          addedCount < selected.length
+            ? `${selected.length - addedCount} nepavyko pridėti`
+            : undefined,
+      })
+    }
+
+    setAddingMass(false)
+  }
+
+  function handleRegenerateConfirm() {
+    setConfirmRegenerate(false)
+    handleGenerate(undefined, "replace")
+  }
+
+  const selectableCount = suggestions.filter(
+    (s, i) => !addedIds.has(i) && s.verification?.verdict !== "fail"
+  ).length
+  const selectedCount = selectedIds.size
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full sm:w-[440px] sm:max-w-[440px] flex flex-col overflow-hidden p-0"
-      >
-        {/* Header */}
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border/30 shrink-0">
-          <SheetTitle className="flex items-center gap-2 text-steam-dark">
-            <Sparkles className="h-5 w-5 text-highlight" />
-            AI Padėjėjas
-          </SheetTitle>
-          <SheetDescription>
-            AI sugeneruos užduočių pasiūlymus pagal jūsų žaidimo temą
-          </SheetDescription>
-        </SheetHeader>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="right"
+          className="w-full sm:w-[480px] sm:max-w-[480px] flex flex-col overflow-hidden p-0"
+        >
+          {/* Header */}
+          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border/30 shrink-0">
+            <SheetTitle className="flex items-center gap-2 text-steam-dark">
+              <Sparkles className="h-5 w-5 text-highlight" />
+              DI Padėjėjas
+            </SheetTitle>
+            <SheetDescription>
+              DI sugeneruos užduočių pasiūlymus pagal jūsų žaidimo temą
+            </SheetDescription>
+          </SheetHeader>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {/* Game context */}
-          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-            <div className="flex items-center gap-2 mb-1">
-              <Puzzle className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-medium text-steam-dark">
-                {gameTitle}
-              </span>
-            </div>
-            {gameDescription && (
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {gameDescription}
-              </p>
-            )}
-            <Badge variant="outline" className="text-xs mt-2">
-              {existingChallenges.length} užduotys jau sukurta
-            </Badge>
-          </div>
-
-          {/* Quick actions */}
-          <div>
-            <p className="text-xs text-muted-foreground mb-2 font-medium">
-              Greiti veiksmai
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {quickActions.map((action) => (
-                <Button
-                  key={action.label}
-                  variant="outline"
-                  size="sm"
-                  disabled={loading}
-                  onClick={() => handleGenerate(action.prompt)}
-                  className="text-xs h-7 gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
-                >
-                  <Wand2 className="h-3 w-3" />
-                  {action.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Custom prompt */}
-          <div className="space-y-2">
-            <Textarea
-              placeholder="Aprašykite kokių užduočių norite... (neprivaloma)"
-              value={teacherPrompt}
-              onChange={(e) => setTeacherPrompt(e.target.value)}
-              className="resize-none bg-white text-sm"
-              rows={3}
-              disabled={loading}
-            />
-            <Button
-              onClick={() => handleGenerate()}
-              disabled={loading}
-              className="w-full bg-highlight hover:bg-highlight/90 text-steam-dark font-medium gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generuojama...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Generuoti pasiūlymus
-                </>
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            {/* Game context */}
+            <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Puzzle className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-steam-dark">
+                  {gameTitle}
+                </span>
+              </div>
+              {gameDescription && (
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {gameDescription}
+                </p>
               )}
-            </Button>
-          </div>
+              <Badge variant="outline" className="text-xs mt-2">
+                {existingChallenges.length} užduotys jau sukurta
+              </Badge>
+            </div>
 
-          {/* Error */}
-          {error && (
-            <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm text-accent font-medium">{error}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleGenerate()}
-                  className="text-xs text-accent mt-1 h-6 px-0 hover:bg-transparent hover:text-accent/80"
-                >
-                  Bandyti dar kartą
-                </Button>
+            {/* Quick actions */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 font-medium">
+                Greiti veiksmai
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {quickActions.map((action) => (
+                  <Button
+                    key={action.label}
+                    variant="outline"
+                    size="sm"
+                    disabled={loading}
+                    onClick={() => handleGenerate(action.prompt)}
+                    className="text-xs h-7 gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
+                  >
+                    <Wand2 className="h-3 w-3" />
+                    {action.label}
+                  </Button>
+                ))}
               </div>
             </div>
-          )}
 
-          {/* Loading skeletons */}
-          {loading && (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border border-border/30 p-4 space-y-2"
+            {/* Custom prompt */}
+            <div className="space-y-2">
+              <Textarea
+                placeholder="Aprašykite kokių užduočių norite... (neprivaloma)"
+                value={teacherPrompt}
+                onChange={(e) => setTeacherPrompt(e.target.value)}
+                className="resize-none bg-white text-sm"
+                rows={3}
+                disabled={loading}
+              />
+              <Button
+                onClick={() => handleGenerate()}
+                disabled={loading}
+                className="w-full bg-highlight hover:bg-highlight/90 text-steam-dark font-medium gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generuojama ir tikrinama...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Generuoti pasiūlymus
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-accent font-medium">{error}</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleGenerate()}
+                    className="text-xs text-accent mt-1 h-6 px-0 hover:bg-transparent hover:text-accent/80"
+                  >
+                    Bandyti dar kartą
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Loading skeletons */}
+            {loading && (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border border-border/30 p-4 space-y-2"
+                  >
+                    <div className="h-4 w-3/4 bg-muted/50 rounded animate-pulse" />
+                    <div className="h-3 w-full bg-muted/30 rounded animate-pulse" />
+                    <div className="h-3 w-1/2 bg-muted/30 rounded animate-pulse" />
+                    <div className="flex gap-2 pt-1">
+                      <div className="h-6 w-16 bg-muted/30 rounded animate-pulse" />
+                      <div className="h-6 w-16 bg-muted/30 rounded animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Selection toolbar */}
+            {!loading && suggestions.length > 0 && (
+              <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/30 border border-border/30">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={selectAll}
+                    disabled={selectableCount === 0}
+                    className="text-xs h-7 gap-1"
+                  >
+                    <CheckSquare className="h-3.5 w-3.5" />
+                    Pasirinkti visas
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={deselectAll}
+                    disabled={selectedCount === 0}
+                    className="text-xs h-7 gap-1"
+                  >
+                    <Square className="h-3.5 w-3.5" />
+                    Atžymėti
+                  </Button>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={handleMassAdd}
+                  disabled={selectedCount === 0 || addingMass}
+                  className="bg-primary hover:bg-primary/90 text-white gap-1.5 text-xs h-8"
                 >
-                  <div className="h-4 w-3/4 bg-muted/50 rounded animate-pulse" />
-                  <div className="h-3 w-full bg-muted/30 rounded animate-pulse" />
-                  <div className="h-3 w-1/2 bg-muted/30 rounded animate-pulse" />
-                  <div className="flex gap-2 pt-1">
-                    <div className="h-6 w-16 bg-muted/30 rounded animate-pulse" />
-                    <div className="h-6 w-16 bg-muted/30 rounded animate-pulse" />
+                  {addingMass ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" />
+                  )}
+                  Pridėti pasirinktas ({selectedCount})
+                </Button>
+              </div>
+            )}
+
+            {/* Suggestions list */}
+            {!loading && suggestions.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Pasiūlymai ({suggestions.length})
+                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={loading}
+                      onClick={() => handleGenerate(undefined, "append")}
+                      className="text-xs h-6 gap-1 text-highlight"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Generuoti dar
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={loading}
+                      onClick={() => setConfirmRegenerate(true)}
+                      className="text-xs h-6 gap-1 text-muted-foreground"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      Regeneruoti
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <AnimatePresence>
+                  {suggestions.map((suggestion, index) => (
+                    <DiSuggestionCard
+                      key={`${suggestion.title}-${index}`}
+                      suggestion={suggestion}
+                      index={index}
+                      selected={selectedIds.has(index)}
+                      added={addedIds.has(index)}
+                      onToggleSelect={toggleSelect}
+                      onAccept={handleAccept}
+                      onReject={handleReject}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
 
-          {/* Suggestions list */}
-          {!loading && suggestions.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground font-medium">
-                Pasiūlymai ({suggestions.length})
-              </p>
-              <AnimatePresence>
-                {suggestions.map((suggestion, index) => (
-                  <AiSuggestionCard
-                    key={`${suggestion.title}-${index}`}
-                    suggestion={suggestion}
-                    index={index}
-                    onAccept={handleAccept}
-                    onReject={handleReject}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          )}
+            {/* Empty state */}
+            {!loading && suggestions.length === 0 && !error && (
+              <div className="text-center py-6">
+                <Sparkles className="h-8 w-8 text-highlight/30 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  Paspauskite mygtuką arba pasirinkite greitą veiksmą, kad DI
+                  sugeneruotų užduočių pasiūlymus pagal jūsų žaidimo temą.
+                </p>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
-          {/* Empty state */}
-          {!loading && suggestions.length === 0 && !error && (
-            <div className="text-center py-6">
-              <Sparkles className="h-8 w-8 text-highlight/30 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">
-                Paspauskite mygtuką arba pasirinkite greitą veiksmą, kad AI
-                sugeneruotų užduočių pasiūlymus pagal jūsų žaidimo temą.
-              </p>
-            </div>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+      {/* Regenerate confirmation dialog */}
+      <Dialog open={confirmRegenerate} onOpenChange={setConfirmRegenerate}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Regeneruoti pasiūlymus?</DialogTitle>
+            <DialogDescription>
+              Visi esami pasiūlymai bus pakeisti naujais. Nepridėti pasiūlymai
+              bus prarasti.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmRegenerate(false)}
+            >
+              Atšaukti
+            </Button>
+            <Button
+              onClick={handleRegenerateConfirm}
+              className="bg-highlight hover:bg-highlight/90 text-steam-dark gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Regeneruoti
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

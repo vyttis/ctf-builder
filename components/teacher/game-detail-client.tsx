@@ -46,7 +46,7 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
           className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
         >
           <Sparkles className="h-4 w-4" />
-          AI Padėjėjas
+          DI Padėjėjas
         </Button>
         {game.status === "draft" && (
           <>
@@ -72,7 +72,7 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
         )}
       </div>
 
-      {/* AI Assistant Panel */}
+      {/* DI Assistant Panel */}
       <AiAssistantPanel
         open={aiSheetOpen}
         onOpenChange={setAiSheetOpen}

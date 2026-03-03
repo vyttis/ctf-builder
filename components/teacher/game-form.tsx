@@ -115,12 +115,12 @@ export function GameForm({ prefillData }: GameFormProps) {
       transition={{ duration: 0.4 }}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* AI prefill banner */}
+        {/* DI prefill banner */}
         {prefillData && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20">
             <Sparkles className="h-4 w-4 text-highlight shrink-0" />
             <p className="text-sm text-steam-dark">
-              Užpildyta pagal AI pasiūlymą. Peržiūrėkite ir patvirtinkite.
+              Užpildyta pagal DI pasiūlymą. Peržiūrėkite ir patvirtinkite.
             </p>
           </div>
         )}

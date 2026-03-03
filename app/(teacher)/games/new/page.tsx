@@ -46,7 +46,7 @@ export default function NewGamePage() {
         </div>
       </div>
 
-      {/* AI Assistant */}
+      {/* DI Assistant */}
       <div className="mb-6">
         <AiGameAssistant onAcceptIdea={handleAcceptIdea} />
       </div>

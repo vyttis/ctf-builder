@@ -59,7 +59,7 @@ export default function ChallengesPage() {
     fetchGameData()
   }, [gameId])
 
-  // Check for AI prefill from game detail page navigation
+  // Check for DI prefill from game detail page navigation
   useEffect(() => {
     if (searchParams.get("ai_prefill") === "1") {
       try {
@@ -74,7 +74,7 @@ export default function ChallengesPage() {
         // ignore parse errors
       }
     }
-    // Auto-open AI panel when navigated with ai_open=1
+    // Auto-open DI panel when navigated with ai_open=1
     if (searchParams.get("ai_open") === "1") {
       setAiSheetOpen(true)
     }
@@ -145,6 +145,40 @@ export default function ChallengesPage() {
     setShowForm(true)
   }
 
+  async function handleMassAdd(suggestions: AiSuggestion[]) {
+    let addedCount = 0
+    for (const suggestion of suggestions) {
+      try {
+        const res = await fetch("/api/challenges", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            game_id: gameId,
+            title: suggestion.title,
+            description: suggestion.description,
+            type: suggestion.type,
+            points: suggestion.points,
+            correct_answer: suggestion.correct_answer,
+            hints: suggestion.hints,
+            options: suggestion.type === "multiple_choice" ? suggestion.options : null,
+          }),
+        })
+        if (res.ok) addedCount++
+      } catch {
+        // continue with next
+      }
+    }
+    if (addedCount > 0) {
+      toast({
+        title: `Pridėta ${addedCount} užduočių`,
+        description: addedCount < suggestions.length
+          ? `${suggestions.length - addedCount} nepavyko pridėti`
+          : undefined,
+      })
+      fetchChallenges()
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
@@ -181,7 +215,7 @@ export default function ChallengesPage() {
             className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
           >
             <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">AI Padėjėjas</span>
+            <span className="hidden sm:inline">DI Padėjėjas</span>
           </Button>
           {!showForm && (
             <Button
@@ -235,7 +269,7 @@ export default function ChallengesPage() {
         )}
       </AnimatePresence>
 
-      {/* AI Assistant Panel */}
+      {/* DI Assistant Panel */}
       {gameData && (
         <AiAssistantPanel
           open={aiSheetOpen}
@@ -245,6 +279,7 @@ export default function ChallengesPage() {
           gameDescription={gameData.description}
           existingChallenges={challenges}
           onAcceptSuggestion={handleAcceptSuggestion}
+          onMassAdd={handleMassAdd}
         />
       )}
 
@@ -419,7 +454,7 @@ export default function ChallengesPage() {
               className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
             >
               <Sparkles className="h-4 w-4" />
-              AI Padėjėjas
+              DI Padėjėjas
             </Button>
           </div>
         </div>
