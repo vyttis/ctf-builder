@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Challenge } from "@/types/game"
+import { AiSuggestion } from "@/lib/ai/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { motion } from "framer-motion"
-import { Loader2, Plus, Trash2, Lightbulb, Save, MapPin } from "lucide-react"
+import { Loader2, Plus, Trash2, Lightbulb, Save, MapPin, Sparkles } from "lucide-react"
 import { ImageUpload } from "./image-upload"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 
@@ -39,6 +40,7 @@ type ChallengeFormData = z.infer<typeof challengeFormSchema>
 interface ChallengeFormProps {
   gameId: string
   challenge?: Challenge
+  prefillData?: AiSuggestion
   onSuccess: () => void
   onCancel?: () => void
 }
@@ -46,6 +48,7 @@ interface ChallengeFormProps {
 export function ChallengeForm({
   gameId,
   challenge,
+  prefillData,
   onSuccess,
   onCancel,
 }: ChallengeFormProps) {
@@ -78,6 +81,23 @@ export function ChallengeForm({
   })
 
   const challengeType = watch("type")
+
+  // Apply AI suggestion prefill
+  useEffect(() => {
+    if (prefillData) {
+      setValue("title", prefillData.title)
+      setValue("description", prefillData.description)
+      setValue("type", prefillData.type)
+      setValue("points", prefillData.points)
+      setValue("correct_answer", prefillData.correct_answer)
+      setHints(prefillData.hints)
+      if (prefillData.type === "multiple_choice" && prefillData.options) {
+        setOptions(prefillData.options)
+      } else {
+        setOptions([])
+      }
+    }
+  }, [prefillData, setValue])
 
   async function onSubmit(data: ChallengeFormData) {
     setLoading(true)
@@ -158,6 +178,12 @@ export function ChallengeForm({
       animate={{ opacity: 1, y: 0 }}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {prefillData && (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20 text-sm text-steam-dark">
+            <Sparkles className="h-4 w-4 text-highlight shrink-0" />
+            <span>Užpildyta pagal AI pasiūlymą. Peržiūrėkite ir patvirtinkite.</span>
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
             <Label>Užduoties pavadinimas *</Label>

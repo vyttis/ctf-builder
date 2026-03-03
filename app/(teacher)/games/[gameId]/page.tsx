@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { GameStatus, GameSettings, Challenge } from "@/types/game"
 import { QRDisplay } from "@/components/teacher/qr-display"
 import { GameStatusActions } from "@/components/teacher/game-status-actions"
+import { GameDetailClient } from "@/components/teacher/game-detail-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -89,6 +90,17 @@ export default async function GameDetailPage({
                 gameDescription={game.description}
               />
             )}
+          <GameDetailClient
+            game={{
+              id: game.id,
+              title: game.title,
+              description: game.description,
+              status: game.status as GameStatus,
+              settings: settings || { max_teams: 50, time_limit_minutes: null, show_leaderboard: true, shuffle_challenges: false },
+              game_code: game.game_code,
+            }}
+            challenges={challenges}
+          />
         </div>
       </div>
 

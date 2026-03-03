@@ -1,8 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { GameWithChallengeCount, GameStatus } from "@/types/game"
+import { GameEditDialog } from "./game-edit-dialog"
+import { GameDeleteDialog } from "./game-delete-dialog"
 import { motion } from "framer-motion"
 import {
   Play,
@@ -11,6 +15,8 @@ import {
   FileEdit,
   QrCode,
   Puzzle,
+  Edit3,
+  Trash2,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -43,11 +49,16 @@ const statusConfig: Record<
 interface GameCardProps {
   game: GameWithChallengeCount
   index: number
+  onUpdate?: () => void
 }
 
-export function GameCard({ game, index }: GameCardProps) {
+export function GameCard({ game, index, onUpdate }: GameCardProps) {
   const status = statusConfig[game.status as GameStatus]
   const challengeCount = game.challenges?.[0]?.count || 0
+  const isDraft = game.status === "draft"
+
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   return (
     <motion.div
@@ -100,6 +111,34 @@ export function GameCard({ game, index }: GameCardProps) {
 
             {/* Footer */}
             <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/30">
+              {isDraft && (
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setEditOpen(true)
+                    }}
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-accent"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setDeleteOpen(true)
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
               <div className="flex-1" />
               <span className="text-xs text-muted-foreground">
                 {new Date(game.created_at).toLocaleDateString("lt-LT")}
@@ -108,6 +147,36 @@ export function GameCard({ game, index }: GameCardProps) {
           </CardContent>
         </Card>
       </Link>
+
+      {/* Edit/Delete dialogs (rendered outside Link to avoid navigation) */}
+      {isDraft && (
+        <>
+          <GameEditDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            game={{
+              id: game.id,
+              title: game.title,
+              description: game.description,
+              settings: game.settings,
+            }}
+            onSuccess={() => {
+              setEditOpen(false)
+              onUpdate?.()
+            }}
+          />
+          <GameDeleteDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            gameId={game.id}
+            gameTitle={game.title}
+            onSuccess={() => {
+              setDeleteOpen(false)
+              onUpdate?.()
+            }}
+          />
+        </>
+      )}
     </motion.div>
   )
 }
