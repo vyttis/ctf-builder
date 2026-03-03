@@ -16,6 +16,7 @@ import {
   Clock,
   Trophy,
   BarChart3,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -157,15 +158,27 @@ export default async function GameDetailPage({
                 <Puzzle className="h-5 w-5 text-primary" />
                 Užduotys
               </CardTitle>
-              <Link href={`/games/${game.id}/challenges`}>
-                <Button
-                  size="sm"
-                  className="bg-primary hover:bg-primary/90 text-white gap-1"
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  Valdyti
-                </Button>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link href={`/games/${game.id}/challenges?ai_open=1`}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    AI
+                  </Button>
+                </Link>
+                <Link href={`/games/${game.id}/challenges`}>
+                  <Button
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 text-white gap-1"
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                    Valdyti
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent>
               {challenges.length > 0 ? (
@@ -216,15 +229,29 @@ export default async function GameDetailPage({
                     alt=""
                     className="w-32 h-32 mx-auto mb-3 opacity-50"
                   />
-                  <p className="text-muted-foreground text-sm">
-                    Dar nėra užduočių.{" "}
-                    <Link
-                      href={`/games/${game.id}/challenges`}
-                      className="text-primary hover:underline"
-                    >
-                      Pridėkite pirmąją
-                    </Link>
+                  <p className="text-muted-foreground text-sm mb-3">
+                    Dar nėra užduočių
                   </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Link href={`/games/${game.id}/challenges`}>
+                      <Button
+                        size="sm"
+                        className="bg-primary hover:bg-primary/90 text-white gap-1"
+                      >
+                        Pridėti užduotį
+                      </Button>
+                    </Link>
+                    <Link href={`/games/${game.id}/challenges?ai_open=1`}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Generuoti su AI
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               )}
             </CardContent>

@@ -27,3 +27,20 @@ export interface AiSuggestRequest {
 export interface AiSuggestResponse {
   suggestions: AiSuggestion[]
 }
+
+// Game creation AI types
+export interface AiGameIdea {
+  title: string
+  description: string
+  theme: string
+}
+
+export interface AiGameSuggestRequest {
+  teacher_prompt?: string
+  theme?: string
+  count?: number
+}
+
+export interface AiGameSuggestResponse {
+  ideas: AiGameIdea[]
+}

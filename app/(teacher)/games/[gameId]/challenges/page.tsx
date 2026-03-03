@@ -74,6 +74,10 @@ export default function ChallengesPage() {
         // ignore parse errors
       }
     }
+    // Auto-open AI panel when navigated with ai_open=1
+    if (searchParams.get("ai_open") === "1") {
+      setAiSheetOpen(true)
+    }
   }, [searchParams])
 
   async function fetchChallenges() {

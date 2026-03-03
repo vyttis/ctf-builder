@@ -1,9 +1,22 @@
+"use client"
+
+import { useState } from "react"
 import { GameForm } from "@/components/teacher/game-form"
+import { AiGameAssistant } from "@/components/teacher/ai-game-assistant"
+import { AiGameIdea } from "@/lib/ai/types"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 export default function NewGamePage() {
+  const [prefillData, setPrefillData] = useState<AiGameIdea | undefined>(
+    undefined
+  )
+
+  function handleAcceptIdea(idea: AiGameIdea) {
+    setPrefillData(idea)
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       {/* Back button */}
@@ -33,7 +46,12 @@ export default function NewGamePage() {
         </div>
       </div>
 
-      <GameForm />
+      {/* AI Assistant */}
+      <div className="mb-6">
+        <AiGameAssistant onAcceptIdea={handleAcceptIdea} />
+      </div>
+
+      <GameForm prefillData={prefillData} />
     </div>
   )
 }

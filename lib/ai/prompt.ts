@@ -1,4 +1,4 @@
-import { AiSuggestRequest } from "./types"
+import { AiSuggestRequest, AiGameSuggestRequest } from "./types"
 
 export function buildSystemPrompt(): string {
   return `Tu esi AI asistentas, padedantis Lietuvos mokytojams kurti CTF (Capture The Flag) edukacinius žaidimus mokiniams. Tu kuri įdomias, edukacines užduotis.
@@ -53,6 +53,44 @@ export function buildUserMessage(request: AiSuggestRequest): string {
   }
 
   parts.push(`\nSugeneruok ${count} naujas užduotis šiam žaidimui.`)
+
+  return parts.join("\n")
+}
+
+export function buildGameSystemPrompt(): string {
+  return `Tu esi AI asistentas, padedantis Lietuvos mokytojams sugalvoti CTF (Capture The Flag) edukacinių žaidimų idėjas.
+
+TAISYKLĖS:
+- VISAS turinys PRIVALO būti lietuvių kalba su teisingomis raidėmis (ąčęėįšųūž).
+- Siūlyk kūrybiškas, edukacines žaidimų temas, tinkamas mokyklinio amžiaus mokiniams.
+- Kiekviena idėja turi turėti: title (trumpas, įsimintinas pavadinimas), description (2-3 sakinių aprašymas mokiniams), theme (temos kategorija).
+- Pavadinimai turi būti trumpi, kūrybiški ir patrauklūs mokiniams.
+- Aprašymai turi aiškiai paaiškinti žaidimo temą ir tikslą.
+- Atsakyk TIK validžiu JSON formatu:
+{
+  "ideas": [
+    {
+      "title": "string",
+      "description": "string",
+      "theme": "string"
+    }
+  ]
+}`
+}
+
+export function buildGameUserMessage(request: AiGameSuggestRequest): string {
+  const parts: string[] = []
+  const count = request.count || 3
+
+  if (request.theme) {
+    parts.push(`Tema/sritis: ${request.theme}`)
+  }
+
+  if (request.teacher_prompt) {
+    parts.push(`Mokytojo nurodymai: ${request.teacher_prompt}`)
+  }
+
+  parts.push(`Sugeneruok ${count} CTF žaidimo idėjas.`)
 
   return parts.join("\n")
 }
