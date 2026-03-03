@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return NextResponse.json(
-      { error: "AI paslauga nepasiekiama. Susisiekite su administratoriumi." },
+      { error: "DI paslauga nepasiekiama. Susisiekite su administratoriumi." },
       { status: 503 }
     )
   }
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("AI suggest error:", error)
     return NextResponse.json(
-      { error: "AI pasiūlymo generavimas nepavyko. Bandykite dar kartą." },
+      { error: "DI pasiūlymo generavimas nepavyko. Bandykite dar kartą." },
       { status: 500 }
     )
   }

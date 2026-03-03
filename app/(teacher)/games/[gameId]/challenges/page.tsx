@@ -138,12 +138,10 @@ export default function ChallengesPage() {
     fetchChallenges()
   }
 
-  function handleAcceptSuggestion(suggestion: AiSuggestion) {
-    setAiSheetOpen(false)
-    setEditingChallenge(null)
-    setPrefillData(suggestion)
-    setShowForm(true)
+  function handleSuggestionsAdded() {
+    fetchChallenges()
   }
+
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -181,7 +179,7 @@ export default function ChallengesPage() {
             className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
           >
             <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">AI Padėjėjas</span>
+            <span className="hidden sm:inline">DI Padėjėjas</span>
           </Button>
           {!showForm && (
             <Button
@@ -235,7 +233,7 @@ export default function ChallengesPage() {
         )}
       </AnimatePresence>
 
-      {/* AI Assistant Panel */}
+      {/* DI Assistant Panel */}
       {gameData && (
         <AiAssistantPanel
           open={aiSheetOpen}
@@ -244,7 +242,7 @@ export default function ChallengesPage() {
           gameTitle={gameData.title}
           gameDescription={gameData.description}
           existingChallenges={challenges}
-          onAcceptSuggestion={handleAcceptSuggestion}
+          onSuggestionsAdded={handleSuggestionsAdded}
         />
       )}
 
@@ -419,7 +417,7 @@ export default function ChallengesPage() {
               className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
             >
               <Sparkles className="h-4 w-4" />
-              AI Padėjėjas
+              DI Padėjėjas
             </Button>
           </div>
         </div>

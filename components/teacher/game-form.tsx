@@ -120,7 +120,7 @@ export function GameForm({ prefillData }: GameFormProps) {
           <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20">
             <Sparkles className="h-4 w-4 text-highlight shrink-0" />
             <p className="text-sm text-steam-dark">
-              Užpildyta pagal AI pasiūlymą. Peržiūrėkite ir patvirtinkite.
+              Užpildyta pagal DI pasiūlymą. Peržiūrėkite ir patvirtinkite.
             </p>
           </div>
         )}

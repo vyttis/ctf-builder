@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Challenge, GameStatus, GameSettings } from "@/types/game"
-import { AiSuggestion } from "@/lib/ai/types"
 import { AiAssistantPanel } from "./ai-assistant-panel"
 import { GameEditDialog } from "./game-edit-dialog"
 import { GameDeleteDialog } from "./game-delete-dialog"
@@ -28,11 +27,9 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  function handleAcceptSuggestion(suggestion: AiSuggestion) {
+  function handleSuggestionsAdded() {
     setAiSheetOpen(false)
-    // Navigate to challenges page with suggestion data via sessionStorage
-    sessionStorage.setItem("ai_prefill", JSON.stringify(suggestion))
-    router.push(`/games/${game.id}/challenges?ai_prefill=1`)
+    router.refresh()
   }
 
   return (
@@ -46,7 +43,7 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
           className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
         >
           <Sparkles className="h-4 w-4" />
-          AI Padėjėjas
+          DI Padėjėjas
         </Button>
         {game.status === "draft" && (
           <>
@@ -72,7 +69,7 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
         )}
       </div>
 
-      {/* AI Assistant Panel */}
+      {/* DI Assistant Panel */}
       <AiAssistantPanel
         open={aiSheetOpen}
         onOpenChange={setAiSheetOpen}
@@ -80,7 +77,7 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
         gameTitle={game.title}
         gameDescription={game.description}
         existingChallenges={challenges}
-        onAcceptSuggestion={handleAcceptSuggestion}
+        onSuggestionsAdded={handleSuggestionsAdded}
       />
 
       {/* Edit Dialog */}

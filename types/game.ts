@@ -37,6 +37,10 @@ export interface Challenge {
   image_url: string | null
   maps_url: string | null
   order_index: number
+  generated_by_di: boolean
+  verification_verdict: "pass" | "fail" | "uncertain" | null
+  verification_issues: string[]
+  verification_confidence: number | null
   created_at: string
   updated_at: string
 }

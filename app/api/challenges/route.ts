@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 // Safe columns to return (never include answer_hash)
-const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
+const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, generated_by_di, verification_verdict, verification_issues, verification_confidence, created_at, updated_at"
 
 const createChallengeSchema = z.object({
   game_id: z.string().uuid(),
@@ -18,6 +18,10 @@ const createChallengeSchema = z.object({
   order_index: z.number().default(0),
   image_url: z.string().url().nullable().optional(),
   maps_url: z.string().url().nullable().optional(),
+  generated_by_di: z.boolean().default(false),
+  verification_verdict: z.enum(["pass", "fail", "uncertain"]).nullable().optional(),
+  verification_issues: z.array(z.string()).default([]),
+  verification_confidence: z.number().min(0).max(1).nullable().optional(),
 })
 
 export async function POST(request: Request) {
@@ -93,6 +97,10 @@ export async function POST(request: Request) {
       order_index: orderIndex,
       image_url: parsed.data.image_url ?? null,
       maps_url: parsed.data.maps_url ?? null,
+      generated_by_di: parsed.data.generated_by_di,
+      verification_verdict: parsed.data.verification_verdict ?? null,
+      verification_issues: parsed.data.verification_issues,
+      verification_confidence: parsed.data.verification_confidence ?? null,
     })
     .select(SAFE_CHALLENGE_COLUMNS)
     .single()

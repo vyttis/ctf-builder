@@ -1,5 +1,14 @@
 import { ChallengeType } from "@/types/game"
 
+// Verification types
+export type VerificationVerdict = "pass" | "fail" | "uncertain"
+
+export interface VerificationResult {
+  verdict: VerificationVerdict
+  issues: string[]
+  confidence: number
+}
+
 export interface AiSuggestion {
   title: string
   description: string
@@ -8,6 +17,7 @@ export interface AiSuggestion {
   correct_answer: string
   hints: string[]
   options: string[] | null
+  verification?: VerificationResult
 }
 
 export interface AiSuggestRequest {
@@ -28,7 +38,7 @@ export interface AiSuggestResponse {
   suggestions: AiSuggestion[]
 }
 
-// Game creation AI types
+// Game creation DI types
 export interface AiGameIdea {
   title: string
   description: string
@@ -43,4 +53,23 @@ export interface AiGameSuggestRequest {
 
 export interface AiGameSuggestResponse {
   ideas: AiGameIdea[]
+}
+
+// DI pipeline types
+export interface DiGenerateRequest {
+  game_id: string
+  game_title: string
+  game_description: string | null
+  existing_challenges: {
+    title: string
+    description: string | null
+    type: ChallengeType
+    points: number
+  }[]
+  teacher_prompt?: string
+  count?: number
+}
+
+export interface DiGenerateResponse {
+  suggestions: AiSuggestion[]
 }
