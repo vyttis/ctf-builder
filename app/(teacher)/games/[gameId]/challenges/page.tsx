@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { Challenge } from "@/types/game"
+import { AiSuggestion } from "@/lib/ai/types"
 import { ChallengeForm } from "@/components/teacher/challenge-form"
+import { AiAssistantPanel } from "@/components/teacher/ai-assistant-panel"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +20,7 @@ import {
   ChevronUp,
   ChevronDown,
   AlertCircle,
+  Sparkles,
 } from "lucide-react"
 import {
   Dialog,
@@ -29,8 +32,15 @@ import {
 } from "@/components/ui/dialog"
 import Link from "next/link"
 
+interface GameData {
+  id: string
+  title: string
+  description: string | null
+}
+
 export default function ChallengesPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const gameId = params.gameId as string
 
@@ -40,10 +50,35 @@ export default function ChallengesPage() {
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Challenge | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [aiSheetOpen, setAiSheetOpen] = useState(false)
+  const [prefillData, setPrefillData] = useState<AiSuggestion | null>(null)
+  const [gameData, setGameData] = useState<GameData | null>(null)
 
   useEffect(() => {
     fetchChallenges()
+    fetchGameData()
   }, [gameId])
+
+  // Check for AI prefill from game detail page navigation
+  useEffect(() => {
+    if (searchParams.get("ai_prefill") === "1") {
+      try {
+        const stored = sessionStorage.getItem("ai_prefill")
+        if (stored) {
+          const suggestion: AiSuggestion = JSON.parse(stored)
+          sessionStorage.removeItem("ai_prefill")
+          setPrefillData(suggestion)
+          setShowForm(true)
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
+    // Auto-open AI panel when navigated with ai_open=1
+    if (searchParams.get("ai_open") === "1") {
+      setAiSheetOpen(true)
+    }
+  }, [searchParams])
 
   async function fetchChallenges() {
     const res = await fetch(`/api/challenges?game_id=${gameId}`)
@@ -52,6 +87,14 @@ export default function ChallengesPage() {
       setChallenges(data)
     }
     setLoading(false)
+  }
+
+  async function fetchGameData() {
+    const res = await fetch(`/api/games/${gameId}`)
+    if (res.ok) {
+      const data = await res.json()
+      setGameData({ id: data.id, title: data.title, description: data.description })
+    }
   }
 
   async function confirmDelete() {
@@ -95,6 +138,13 @@ export default function ChallengesPage() {
     fetchChallenges()
   }
 
+  function handleAcceptSuggestion(suggestion: AiSuggestion) {
+    setAiSheetOpen(false)
+    setEditingChallenge(null)
+    setPrefillData(suggestion)
+    setShowForm(true)
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
@@ -124,18 +174,29 @@ export default function ChallengesPage() {
               : "užduotys"}
           </p>
         </div>
-        {!showForm && (
+        <div className="flex items-center gap-2">
           <Button
-            onClick={() => {
-              setEditingChallenge(null)
-              setShowForm(true)
-            }}
-            className="bg-primary hover:bg-primary/90 text-white gap-2"
+            onClick={() => setAiSheetOpen(true)}
+            variant="outline"
+            className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
           >
-            <Plus className="h-4 w-4" />
-            Nauja užduotis
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">AI Padėjėjas</span>
           </Button>
-        )}
+          {!showForm && (
+            <Button
+              onClick={() => {
+                setEditingChallenge(null)
+                setPrefillData(null)
+                setShowForm(true)
+              }}
+              className="bg-primary hover:bg-primary/90 text-white gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Nauja užduotis
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Challenge form */}
@@ -155,14 +216,17 @@ export default function ChallengesPage() {
                 <ChallengeForm
                   gameId={gameId}
                   challenge={editingChallenge ?? undefined}
+                  prefillData={prefillData ?? undefined}
                   onSuccess={() => {
                     setShowForm(false)
                     setEditingChallenge(null)
+                    setPrefillData(null)
                     fetchChallenges()
                   }}
                   onCancel={() => {
                     setShowForm(false)
                     setEditingChallenge(null)
+                    setPrefillData(null)
                   }}
                 />
               </CardContent>
@@ -170,6 +234,19 @@ export default function ChallengesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* AI Assistant Panel */}
+      {gameData && (
+        <AiAssistantPanel
+          open={aiSheetOpen}
+          onOpenChange={setAiSheetOpen}
+          gameId={gameId}
+          gameTitle={gameData.title}
+          gameDescription={gameData.description}
+          existingChallenges={challenges}
+          onAcceptSuggestion={handleAcceptSuggestion}
+        />
+      )}
 
       {/* Delete confirmation dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
@@ -294,6 +371,7 @@ export default function ChallengesPage() {
                         className="h-8 w-8 p-0 text-muted-foreground hover:text-secondary"
                         onClick={() => {
                           setEditingChallenge(challenge)
+                          setPrefillData(null)
                           setShowForm(true)
                         }}
                       >
@@ -327,13 +405,23 @@ export default function ChallengesPage() {
           <p className="text-muted-foreground mb-4">
             Pridėkite pirmąją užduotį savo žaidimui
           </p>
-          <Button
-            onClick={() => setShowForm(true)}
-            className="bg-primary hover:bg-primary/90 text-white gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Pridėti užduotį
-          </Button>
+          <div className="flex items-center justify-center gap-3">
+            <Button
+              onClick={() => setShowForm(true)}
+              className="bg-primary hover:bg-primary/90 text-white gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Pridėti užduotį
+            </Button>
+            <Button
+              onClick={() => setAiSheetOpen(true)}
+              variant="outline"
+              className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Padėjėjas
+            </Button>
+          </div>
         </div>
       )}
     </div>

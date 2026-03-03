@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { motion } from "framer-motion"
 import { Loader2, Sparkles, ArrowRight, GamepadIcon } from "lucide-react"
+import { AiGameIdea } from "@/lib/ai/types"
 
 const gameFormSchema = z.object({
   title: z.string().min(3, "Pavadinimas turi būti bent 3 simbolių"),
@@ -26,7 +27,11 @@ const gameFormSchema = z.object({
 
 type GameFormData = z.infer<typeof gameFormSchema>
 
-export function GameForm() {
+interface GameFormProps {
+  prefillData?: AiGameIdea
+}
+
+export function GameForm({ prefillData }: GameFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
@@ -51,6 +56,13 @@ export function GameForm() {
 
   const showLeaderboard = watch("show_leaderboard")
   const shuffleChallenges = watch("shuffle_challenges")
+
+  useEffect(() => {
+    if (prefillData) {
+      setValue("title", prefillData.title)
+      setValue("description", prefillData.description)
+    }
+  }, [prefillData, setValue])
 
   async function onSubmit(data: GameFormData) {
     setLoading(true)
@@ -103,6 +115,16 @@ export function GameForm() {
       transition={{ duration: 0.4 }}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* AI prefill banner */}
+        {prefillData && (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20">
+            <Sparkles className="h-4 w-4 text-highlight shrink-0" />
+            <p className="text-sm text-steam-dark">
+              Užpildyta pagal AI pasiūlymą. Peržiūrėkite ir patvirtinkite.
+            </p>
+          </div>
+        )}
+
         {/* Main info */}
         <Card className="border-border/50 bg-white shadow-sm">
           <CardHeader className="pb-4">

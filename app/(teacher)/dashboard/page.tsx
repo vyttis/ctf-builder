@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { GameCard } from "@/components/teacher/game-card"
+import { GamesGrid } from "@/components/teacher/games-grid"
 import { GameWithChallengeCount } from "@/types/game"
 import { Button } from "@/components/ui/button"
 import { Plus, Gamepad2 } from "lucide-react"
@@ -39,11 +39,7 @@ export default async function DashboardPage() {
 
       {/* Games grid */}
       {games && games.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {games.map((game, index) => (
-            <GameCard key={game.id} game={game as GameWithChallengeCount} index={index} />
-          ))}
-        </div>
+        <GamesGrid games={games as GameWithChallengeCount[]} />
       ) : (
         /* Empty state */
         <div className="flex flex-col items-center justify-center py-20 text-center">
