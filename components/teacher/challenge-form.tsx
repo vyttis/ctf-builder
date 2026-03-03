@@ -104,7 +104,8 @@ export function ChallengeForm({
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || "Nepavyko išsaugoti užduoties")
+        const errorMessage = typeof err.error === "string" ? err.error : "Nepavyko išsaugoti užduoties"
+        throw new Error(errorMessage)
       }
 
       toast({

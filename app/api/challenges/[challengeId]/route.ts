@@ -3,6 +3,9 @@ import { normalizeAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+// Safe columns to return (never include answer_hash)
+const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
+
 const updateChallengeSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
@@ -15,6 +18,29 @@ const updateChallengeSchema = z.object({
   image_url: z.string().url().nullable().optional(),
   maps_url: z.string().url().nullable().optional(),
 })
+
+async function verifyChallengeOwnership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  challengeId: string,
+  userId: string
+) {
+  const { data: challenge } = await supabase
+    .from("challenges")
+    .select("id, game_id")
+    .eq("id", challengeId)
+    .single()
+
+  if (!challenge) return false
+
+  const { data: game } = await supabase
+    .from("games")
+    .select("id")
+    .eq("id", challenge.game_id)
+    .eq("teacher_id", userId)
+    .single()
+
+  return !!game
+}
 
 export async function PATCH(
   request: Request,
@@ -29,13 +55,29 @@ export async function PATCH(
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
-  const body = await request.json()
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+  }
+
   const parsed = updateChallengeSchema.safeParse(body)
 
   if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message || "Neteisingi duomenys"
     return NextResponse.json(
-      { error: parsed.error.flatten() },
+      { error: firstError },
       { status: 400 }
+    )
+  }
+
+  // Verify the challenge belongs to a game owned by this teacher
+  const isOwner = await verifyChallengeOwnership(supabase, params.challengeId, user.id)
+  if (!isOwner) {
+    return NextResponse.json(
+      { error: "Užduotis nerasta arba neturite teisės" },
+      { status: 404 }
     )
   }
 
@@ -52,7 +94,7 @@ export async function PATCH(
     .from("challenges")
     .update(updateData)
     .eq("id", params.challengeId)
-    .select()
+    .select(SAFE_CHALLENGE_COLUMNS)
     .single()
 
   if (error) {
@@ -73,6 +115,15 @@ export async function DELETE(
 
   if (!user) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
+  }
+
+  // Verify the challenge belongs to a game owned by this teacher
+  const isOwner = await verifyChallengeOwnership(supabase, params.challengeId, user.id)
+  if (!isOwner) {
+    return NextResponse.json(
+      { error: "Užduotis nerasta arba neturite teisės" },
+      { status: 404 }
+    )
   }
 
   const { error } = await supabase

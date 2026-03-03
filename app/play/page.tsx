@@ -36,7 +36,7 @@ export default function PlayerLandingPage() {
           CTF žaidimas
         </h1>
         <p className="text-muted-foreground mb-6">
-          Įveskite žaidimo kodą arba nuskaitykite QR kodą
+          Įveskite žaidimo kodą, kurį gavote iš mokytojo
         </p>
 
         <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-xl">

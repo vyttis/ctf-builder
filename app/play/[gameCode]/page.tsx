@@ -2,13 +2,21 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { motion } from "framer-motion"
-import { Users, ArrowRight, Loader2, Gamepad2 } from "lucide-react"
+import { Users, ArrowRight, Loader2, Gamepad2, AlertCircle, ArrowLeft } from "lucide-react"
 import type { PlayerSession } from "@/types/game"
+import Link from "next/link"
+
+type GameState =
+  | { status: "loading" }
+  | { status: "not_found" }
+  | { status: "inactive"; gameStatus: string }
+  | { status: "ready"; title: string; description: string | null }
 
 export default function JoinGamePage() {
   const params = useParams()
@@ -18,9 +26,10 @@ export default function JoinGamePage() {
 
   const [teamName, setTeamName] = useState("")
   const [loading, setLoading] = useState(false)
-  const [checking, setChecking] = useState(true)
+  const [gameState, setGameState] = useState<GameState>({ status: "loading" })
 
   useEffect(() => {
+    // Check existing session
     const stored = localStorage.getItem(`ctf_session_${gameCode}`)
     if (stored) {
       try {
@@ -31,8 +40,35 @@ export default function JoinGamePage() {
         }
       } catch {}
     }
-    setChecking(false)
+    // Validate game exists and is active
+    validateGame()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameCode, router])
+
+  async function validateGame() {
+    const supabase = createClient()
+    const { data: game } = await supabase
+      .from("games")
+      .select("id, title, description, status")
+      .eq("game_code", gameCode)
+      .single()
+
+    if (!game) {
+      setGameState({ status: "not_found" })
+      return
+    }
+
+    if (game.status !== "active") {
+      setGameState({ status: "inactive", gameStatus: game.status })
+      return
+    }
+
+    setGameState({
+      status: "ready",
+      title: game.title,
+      description: game.description,
+    })
+  }
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
@@ -50,8 +86,14 @@ export default function JoinGamePage() {
       })
 
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "Nepavyko prisijungti")
+        let errorMsg = "Nepavyko prisijungti"
+        try {
+          const err = await res.json()
+          errorMsg = err.error || errorMsg
+        } catch {
+          // Response was not JSON (e.g. server error)
+        }
+        throw new Error(errorMsg)
       }
 
       const data = await res.json()
@@ -76,7 +118,8 @@ export default function JoinGamePage() {
     }
   }
 
-  if (checking) {
+  // Loading
+  if (gameState.status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -84,6 +127,73 @@ export default function JoinGamePage() {
     )
   }
 
+  // Game not found
+  if (gameState.status === "not_found") {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm text-center"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center">
+            <AlertCircle className="h-10 w-10 text-accent" />
+          </div>
+          <h1 className="text-xl font-bold text-steam-dark mb-2">
+            Žaidimas nerastas
+          </h1>
+          <p className="text-muted-foreground mb-2">
+            Kodas <span className="font-mono font-bold">{gameCode}</span> neatitinka jokio žaidimo.
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Patikrinkite kodą ir bandykite dar kartą.
+          </p>
+          <Link href="/play">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Įvesti kitą kodą
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Game inactive (draft, paused, finished)
+  if (gameState.status === "inactive") {
+    const messages: Record<string, string> = {
+      draft: "Šis žaidimas dar neaktyvuotas. Palaukite, kol mokytojas jį paleis.",
+      paused: "Šis žaidimas pristabdytas. Palaukite, kol mokytojas jį tęs.",
+      finished: "Šis žaidimas jau baigtas.",
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm text-center"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-highlight/10 flex items-center justify-center">
+            <AlertCircle className="h-10 w-10 text-highlight" />
+          </div>
+          <h1 className="text-xl font-bold text-steam-dark mb-2">
+            Žaidimas nepasiekiamas
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            {messages[gameState.gameStatus] || "Žaidimas šiuo metu nepasiekiamas."}
+          </p>
+          <Link href="/play">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Įvesti kitą kodą
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Game ready — show join form with game title
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -113,8 +223,13 @@ export default function JoinGamePage() {
               </span>
             </div>
             <CardTitle className="text-xl font-bold text-steam-dark">
-              Prisijunk prie žaidimo!
+              {gameState.title}
             </CardTitle>
+            {gameState.description && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {gameState.description}
+              </p>
+            )}
           </CardHeader>
 
           <CardContent>

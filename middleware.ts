@@ -52,8 +52,13 @@ export async function middleware(request: NextRequest) {
 
   // Teacher routes: require auth
   if (subdomain === "app") {
-    const isAuthPage =
-      url.pathname.startsWith("/auth") || url.pathname === "/auth/login"
+    const isAuthCallback = url.pathname === "/auth/callback"
+    const isAuthPage = url.pathname.startsWith("/auth")
+
+    // Always let /auth/callback through — it exchanges the OAuth code
+    if (isAuthCallback) {
+      return response
+    }
 
     if (!user && !isAuthPage) {
       url.pathname = "/auth/login"
@@ -74,12 +79,18 @@ export async function middleware(request: NextRequest) {
   }
 
   // No subdomain: path-based routing
+  const isAuthCallback = url.pathname === "/auth/callback"
   const isAuthPage = url.pathname.startsWith("/auth")
   const isPlayPage = url.pathname.startsWith("/play")
   const isApiRoute = url.pathname.startsWith("/api")
   const isTeacherRoute =
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/games")
+
+  // Always let /auth/callback through — it exchanges the OAuth code
+  if (isAuthCallback) {
+    return response
+  }
 
   // Teacher routes require auth
   if (isTeacherRoute && !user) {

@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 interface SectionWrapperProps {
   children: React.ReactNode
@@ -16,6 +17,8 @@ export function SectionWrapper({
   id,
   background = "white",
 }: SectionWrapperProps) {
+  const prefersReduced = useReducedMotion()
+
   const bgClasses = {
     white: "bg-white",
     muted: "bg-[#F8FAFB]",
@@ -25,7 +28,7 @@ export function SectionWrapper({
   return (
     <motion.section
       id={id}
-      initial={{ opacity: 0, y: 40 }}
+      initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6, ease: "easeOut" }}
