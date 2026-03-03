@@ -4,16 +4,18 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 // Safe columns to return (never include answer_hash)
-const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, generated_by_di, verification_verdict, verification_issues, verification_confidence, created_at, updated_at"
+const BASE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
+const DI_COLUMNS = ", generated_by_di, verification_verdict, verification_issues, verification_confidence"
+const SAFE_CHALLENGE_COLUMNS = BASE_CHALLENGE_COLUMNS + DI_COLUMNS
 
 const createChallengeSchema = z.object({
   game_id: z.string().uuid(),
   title: z.string().min(1, "Pavadinimas privalomas").max(200),
-  description: z.string().max(2000).default(""),
+  description: z.string().max(5000).default(""),
   type: z.enum(["text", "number", "multiple_choice"]).default("text"),
   points: z.coerce.number().min(1).max(1000).default(100),
   correct_answer: z.coerce.string().min(1, "Atsakymas privalomas"),
-  hints: z.array(z.string()).max(5).default([]),
+  hints: z.array(z.string()).max(10).default([]),
   options: z.array(z.string()).nullable().default(null),
   order_index: z.number().default(0),
   image_url: z.string().url().nullable().optional(),
@@ -45,7 +47,7 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Neteisingi duomenys. Patikrinkite laukus." },
+      { error: parsed.error.issues[0]?.message || "Neteisingi duomenys" },
       { status: 400 }
     )
   }
@@ -83,33 +85,50 @@ export async function POST(request: Request) {
 
   const orderIndex = parsed.data.order_index || (count || 0)
 
-  const { data, error } = await supabase
+  const corePayload = {
+    game_id: parsed.data.game_id,
+    title: parsed.data.title,
+    description: parsed.data.description,
+    type: parsed.data.type,
+    points: parsed.data.points,
+    answer_hash: normalizeAnswer(parsed.data.correct_answer),
+    hints: parsed.data.hints,
+    options: parsed.data.options,
+    order_index: orderIndex,
+    image_url: parsed.data.image_url ?? null,
+    maps_url: parsed.data.maps_url ?? null,
+  }
+
+  const diPayload = {
+    generated_by_di: parsed.data.generated_by_di,
+    verification_verdict: parsed.data.verification_verdict ?? null,
+    verification_issues: parsed.data.verification_issues,
+    verification_confidence: parsed.data.verification_confidence ?? null,
+  }
+
+  // Try with DI columns first, fall back to core-only if columns don't exist
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let result: { data: any; error: any } = await supabase
     .from("challenges")
-    .insert({
-      game_id: parsed.data.game_id,
-      title: parsed.data.title,
-      description: parsed.data.description,
-      type: parsed.data.type,
-      points: parsed.data.points,
-      answer_hash: normalizeAnswer(parsed.data.correct_answer),
-      hints: parsed.data.hints,
-      options: parsed.data.options,
-      order_index: orderIndex,
-      image_url: parsed.data.image_url ?? null,
-      maps_url: parsed.data.maps_url ?? null,
-      generated_by_di: parsed.data.generated_by_di,
-      verification_verdict: parsed.data.verification_verdict ?? null,
-      verification_issues: parsed.data.verification_issues,
-      verification_confidence: parsed.data.verification_confidence ?? null,
-    })
+    .insert({ ...corePayload, ...diPayload })
     .select(SAFE_CHALLENGE_COLUMNS)
     .single()
 
-  if (error) {
-    return NextResponse.json({ error: "Nepavyko sukurti užduoties" }, { status: 500 })
+  if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
+    console.warn("DI columns missing, retrying without them:", result.error.message)
+    result = await supabase
+      .from("challenges")
+      .insert(corePayload)
+      .select(BASE_CHALLENGE_COLUMNS)
+      .single()
   }
 
-  return NextResponse.json(data, { status: 201 })
+  if (result.error) {
+    console.error("Challenge INSERT error:", result.error)
+    return NextResponse.json({ error: result.error.message }, { status: 500 })
+  }
+
+  return NextResponse.json(result.data, { status: 201 })
 }
 
 export async function GET(request: Request) {
@@ -144,15 +163,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
   }
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let result: { data: any; error: any } = await supabase
     .from("challenges")
     .select(SAFE_CHALLENGE_COLUMNS)
     .eq("game_id", gameId)
     .order("order_index", { ascending: true })
 
-  if (error) {
-    return NextResponse.json({ error: "Nepavyko gauti užduočių" }, { status: 500 })
+  // Fall back to base columns if DI columns don't exist yet
+  if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
+    result = await supabase
+      .from("challenges")
+      .select(BASE_CHALLENGE_COLUMNS)
+      .eq("game_id", gameId)
+      .order("order_index", { ascending: true })
   }
 
-  return NextResponse.json(data)
+  if (result.error) {
+    console.error("Challenge SELECT error:", result.error)
+    return NextResponse.json({ error: result.error.message }, { status: 500 })
+  }
+
+  return NextResponse.json(result.data)
 }

@@ -175,7 +175,7 @@ export function AiAssistantPanel({
           type: suggestion.type,
           points: Number(suggestion.points) || 100,
           correct_answer: String(suggestion.correct_answer),
-          hints: suggestion.hints || [],
+          hints: (suggestion.hints || []).slice(0, 10),
           options:
             suggestion.type === "multiple_choice"
               ? suggestion.options
@@ -244,7 +244,7 @@ export function AiAssistantPanel({
             type: suggestion.type,
             points: Number(suggestion.points) || 100,
             correct_answer: String(suggestion.correct_answer),
-            hints: suggestion.hints || [],
+            hints: (suggestion.hints || []).slice(0, 10),
             options:
               suggestion.type === "multiple_choice"
                 ? suggestion.options
