@@ -197,6 +197,15 @@ export async function POST(request: Request) {
       throw new Error("Invalid DI response structure")
     }
 
+    // Normalize LLM output: coerce correct_answer to string, points to number
+    for (const s of generatedResponse.suggestions) {
+      s.correct_answer = String(s.correct_answer ?? "")
+      s.points =
+        typeof s.points === "number"
+          ? s.points
+          : parseInt(String(s.points), 10) || 100
+    }
+
     // Step 2: Verify each suggestion in parallel
     const enrichedSuggestions = await Promise.all(
       generatedResponse.suggestions.map(async (suggestion) => {

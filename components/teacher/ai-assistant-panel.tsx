@@ -159,6 +159,65 @@ export function AiAssistantPanel({
     setSelectedIds(new Set())
   }
 
+  async function handleAddSingle(index: number) {
+    const suggestion = suggestions[index]
+    if (!suggestion || addedIds.has(index)) return
+
+    setAdding(true)
+    try {
+      const res = await fetch("/api/challenges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          game_id: gameId,
+          title: suggestion.title,
+          description: suggestion.description || "",
+          type: suggestion.type,
+          points: Number(suggestion.points) || 100,
+          correct_answer: String(suggestion.correct_answer),
+          hints: suggestion.hints || [],
+          options:
+            suggestion.type === "multiple_choice"
+              ? suggestion.options
+              : null,
+          generated_by_di: true,
+          verification_verdict:
+            suggestion.verification?.verdict ?? null,
+          verification_issues:
+            suggestion.verification?.issues ?? [],
+          verification_confidence:
+            suggestion.verification?.confidence ?? null,
+        }),
+      })
+
+      if (res.ok) {
+        setAddedIds((prev) => new Set(prev).add(index))
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          next.delete(index)
+          return next
+        })
+        toast({ title: "Užduotis pridėta" })
+        onSuggestionsAdded()
+      } else {
+        const err = await res.json().catch(() => null)
+        toast({
+          title: "Nepavyko pridėti",
+          description: err?.error || "Nežinoma klaida",
+          variant: "destructive",
+        })
+      }
+    } catch {
+      toast({
+        title: "Tinklo klaida",
+        description: "Nepavyko susisiekti su serveriu",
+        variant: "destructive",
+      })
+    } finally {
+      setAdding(false)
+    }
+  }
+
   async function handleBulkAdd() {
     const toAdd = Array.from(selectedIds)
       .filter((i) => !addedIds.has(i))
@@ -169,6 +228,8 @@ export function AiAssistantPanel({
     setAdding(true)
     let successCount = 0
     let failCount = 0
+    const failedErrors: string[] = []
+    const successfulIds: number[] = []
 
     for (const i of toAdd) {
       const suggestion = suggestions[i]
@@ -179,11 +240,11 @@ export function AiAssistantPanel({
           body: JSON.stringify({
             game_id: gameId,
             title: suggestion.title,
-            description: suggestion.description,
+            description: suggestion.description || "",
             type: suggestion.type,
-            points: suggestion.points,
-            correct_answer: suggestion.correct_answer,
-            hints: suggestion.hints,
+            points: Number(suggestion.points) || 100,
+            correct_answer: String(suggestion.correct_answer),
+            hints: suggestion.hints || [],
             options:
               suggestion.type === "multiple_choice"
                 ? suggestion.options
@@ -200,20 +261,28 @@ export function AiAssistantPanel({
 
         if (res.ok) {
           successCount++
+          successfulIds.push(i)
         } else {
           failCount++
+          const err = await res.json().catch(() => null)
+          failedErrors.push(
+            `"${suggestion.title}": ${err?.error || "klaida"}`
+          )
         }
       } catch {
         failCount++
+        failedErrors.push(`"${suggestion.title}": tinklo klaida`)
       }
     }
 
-    // Mark as added
-    setAddedIds((prev) => {
-      const next = new Set(prev)
-      toAdd.forEach((i) => next.add(i))
-      return next
-    })
+    // Mark only successful ones as added
+    if (successfulIds.length > 0) {
+      setAddedIds((prev) => {
+        const next = new Set(prev)
+        successfulIds.forEach((i) => next.add(i))
+        return next
+      })
+    }
     setSelectedIds(new Set())
 
     if (successCount > 0) {
@@ -221,14 +290,17 @@ export function AiAssistantPanel({
         title: `Pridėta ${successCount} ${successCount === 1 ? "užduotis" : "užduotys"}`,
         description:
           failCount > 0
-            ? `${failCount} nepavyko pridėti`
+            ? `${failCount} nepavyko: ${failedErrors.join("; ")}`
             : undefined,
       })
       onSuggestionsAdded()
     } else {
       toast({
         title: "Klaida",
-        description: "Nepavyko pridėti užduočių",
+        description:
+          failedErrors.length > 0
+            ? failedErrors.join("; ")
+            : "Nepavyko pridėti užduočių",
         variant: "destructive",
       })
     }
@@ -420,7 +492,9 @@ export function AiAssistantPanel({
                     index={index}
                     selected={selectedIds.has(index)}
                     added={addedIds.has(index)}
+                    adding={adding}
                     onToggleSelect={handleToggleSelect}
+                    onAdd={handleAddSingle}
                     onReject={handleReject}
                   />
                 ))}

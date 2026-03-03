@@ -57,7 +57,9 @@ interface AiSuggestionCardProps {
   index: number
   selected: boolean
   added: boolean
+  adding: boolean
   onToggleSelect: (index: number) => void
+  onAdd: (index: number) => void
   onReject: (index: number) => void
 }
 
@@ -66,7 +68,9 @@ export function AiSuggestionCard({
   index,
   selected,
   added,
+  adding,
   onToggleSelect,
+  onAdd,
   onReject,
 }: AiSuggestionCardProps) {
   const [showDetails, setShowDetails] = useState(false)
@@ -227,6 +231,18 @@ export function AiSuggestionCard({
 
           {/* Actions */}
           <div className="flex gap-2 pt-1 pl-7">
+            {!added && !isFailed && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onAdd(index)}
+                disabled={adding}
+                className="text-primary hover:text-primary/80 gap-1.5 text-xs h-8"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Pridėti
+              </Button>
+            )}
             {!added && (
               <Button
                 size="sm"
