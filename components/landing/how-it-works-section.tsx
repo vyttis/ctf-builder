@@ -10,29 +10,29 @@ const steps = [
   {
     number: "01",
     icon: Pencil,
-    title: "Sukuriate temą ir užduotis",
-    description: "Pasirinkite pamokos temą ir sukurkite klausimus pagal savo dalyką.",
+    title: "Sukurkite žaidimą ir pridėkite užduotis",
+    description: "Pasirinkite pamokos temą, pridėkite iššūkius ir leiskite DI sugeneruoti užduotis už jus.",
     color: "bg-primary/10 text-primary",
   },
   {
     number: "02",
     icon: Settings,
-    title: "Nustatote atsakymus ir taškų sistemą",
-    description: "Kiekvienai užduočiai priskiriate teisingą atsakymą ir taškus.",
+    title: "Nustatykite atsakymus, taškus ir užuominas",
+    description: "Kiekvienai užduočiai priskiriate teisingą atsakymą, taškus ir progresinias užuominas.",
     color: "bg-secondary/10 text-secondary",
   },
   {
     number: "03",
     icon: QrCode,
-    title: "Pasidalinate QR kodu su mokiniais",
-    description: "Mokiniai nuskaito kodą telefonu ir iškart prisijungia prie žaidimo.",
+    title: "Pasidalinkite QR kodu su mokiniais",
+    description: "Mokiniai nuskaito kodą telefonu ir per sekundes prisijungia prie žaidimo.",
     color: "bg-highlight/10 text-highlight",
   },
   {
     number: "04",
     icon: BarChart3,
-    title: "Stebite progresą realiu laiku",
-    description: "Matote, kaip komandos sprendžia užduotis ir renkasi taškus.",
+    title: "Stebėkite progresą ir rezultatus realiu laiku",
+    description: "Matote, kaip komandos sprendžia užduotis, renkasi taškus ir naudoja užuominas.",
     color: "bg-accent/10 text-accent",
   },
 ]
@@ -72,7 +72,7 @@ export function HowItWorksSection() {
   return (
     <SectionWrapper background="white" id="how-it-works">
       <SectionHeader
-        title="Keturi žingsniai iki interaktyvios pamokos"
+        title="Nuo idėjos iki pamokos — per 10 minučių"
         align="center"
       />
 

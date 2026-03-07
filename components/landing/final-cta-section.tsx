@@ -45,11 +45,11 @@ export function FinalCtaSection() {
               </motion.div>
 
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                Prisijunkite prie STEAM bendruomenės platformos
+                Paruoškite kitą pamoką per 10 minučių
               </h2>
               <p className="text-white/60 text-[15px] mb-8 max-w-md mx-auto leading-relaxed">
-                Jei dalyvavote STEAM centro veiklose, galite prisijungti ir
-                pradėti kurti interaktyvias pamokas.
+                Prisijunkite ir sukurkite pirmąjį interaktyvų iššūkį savo
+                mokiniams — su DI pagalba ir be jokios registracijos mokiniams.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -58,7 +58,7 @@ export function FinalCtaSection() {
                     size="lg"
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30 gap-2 h-12 text-sm px-8 font-semibold"
                   >
-                    Prisijungti
+                    Pradėti kurti pamoką
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>

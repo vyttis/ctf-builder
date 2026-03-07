@@ -3,7 +3,19 @@
 import { SteamLogo } from "@/components/steam-logo"
 import { Button } from "@/components/ui/button"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
-import { ArrowRight, ArrowDown, Lock, GraduationCap, UserX, Puzzle, Trophy, QrCode, Zap, Users, ListChecks, Radio } from "lucide-react"
+import {
+  ArrowRight,
+  ArrowDown,
+  Lock,
+  GraduationCap,
+  UserX,
+  Puzzle,
+  Trophy,
+  QrCode,
+  BarChart3,
+  Sparkles,
+  Flag,
+} from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
@@ -12,16 +24,13 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.12, duration: 0.5, ease: [0, 0, 0.2, 1] as const },
+    transition: {
+      delay: i * 0.12,
+      duration: 0.5,
+      ease: [0, 0, 0.2, 1] as const,
+    },
   }),
 }
-
-const kpiItems = [
-  { icon: Zap, label: "Sukurti iššūkiai", value: "120+" },
-  { icon: Users, label: "Aktyvios komandos", value: "45" },
-  { icon: ListChecks, label: "Vid. užduočių", value: "8.3" },
-  { icon: Radio, label: "Realiu laiku", value: "Live" },
-]
 
 export function HeroSection() {
   const prefersReduced = useReducedMotion()
@@ -31,14 +40,27 @@ export function HeroSection() {
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#F8FAFB] to-primary/[0.03]" />
       <motion.div
-        animate={prefersReduced ? {} : { scale: [1, 1.15, 1], opacity: [0.04, 0.07, 0.04] }}
+        animate={
+          prefersReduced
+            ? {}
+            : { scale: [1, 1.15, 1], opacity: [0.04, 0.07, 0.04] }
+        }
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary rounded-full blur-3xl -translate-y-1/3 translate-x-1/4"
         style={{ opacity: 0.04 }}
       />
       <motion.div
-        animate={prefersReduced ? {} : { scale: [1, 1.1, 1], opacity: [0.03, 0.06, 0.03] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        animate={
+          prefersReduced
+            ? {}
+            : { scale: [1, 1.1, 1], opacity: [0.03, 0.06, 0.03] }
+        }
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2,
+        }}
         className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"
         style={{ opacity: 0.03 }}
       />
@@ -64,11 +86,11 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-3xl sm:text-4xl md:text-[44px] font-extrabold text-steam-dark leading-[1.12] tracking-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-extrabold text-steam-dark leading-[1.08] tracking-tight"
               >
-                Interaktyvių STEAM pamokų{" "}
+                Pamoką paverskite{" "}
                 <span className="text-transparent bg-clip-text gradient-primary">
-                  kūrimo platforma
+                  komandiniu iššūkiu
                 </span>
               </motion.h1>
 
@@ -77,11 +99,11 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-[15px] text-muted-foreground mt-5 leading-relaxed max-w-lg"
+                className="text-base text-muted-foreground mt-5 leading-relaxed max-w-lg"
               >
-                CTF formatas leidžia pamoką paversti struktūruotu komandiniu
-                iššūkiu, kuriame mokiniai aktyviai sprendžia užduotis,
-                bendradarbiauja ir mokosi per patirtį.
+                Interaktyvi STEAM pamokų platforma, kur mokiniai mokosi
+                spręsdami struktūruotas užduotis komandomis — o mokytojas viską
+                stebi realiu laiku.
               </motion.p>
 
               {/* CTAs */}
@@ -97,7 +119,7 @@ export function HeroSection() {
                     size="lg"
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/15 gap-2 h-12 text-sm px-7 font-semibold"
                   >
-                    Prisijungti prie platformos
+                    Pradėti kurti pamoką
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -106,7 +128,9 @@ export function HeroSection() {
                   variant="outline"
                   className="w-full sm:w-auto gap-2 h-12 text-sm px-7 border-border/60"
                   onClick={() => {
-                    document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })
+                    document
+                      .getElementById("how-it-works")
+                      ?.scrollIntoView({ behavior: "smooth" })
                   }}
                 >
                   <ArrowDown className="h-4 w-4" />
@@ -134,32 +158,6 @@ export function HeroSection() {
                   <UserX className="h-3.5 w-3.5" />
                   Be registracijos mokiniams
                 </span>
-              </motion.div>
-
-              {/* Mini KPI row */}
-              <motion.div
-                custom={4}
-                initial="hidden"
-                animate="visible"
-                variants={fadeUp}
-                className="grid grid-cols-4 gap-2 mt-8 p-3 rounded-xl bg-white/80 border border-border/30 shadow-sm backdrop-blur-sm"
-              >
-                {kpiItems.map((item, i) => {
-                  const Icon = item.icon
-                  return (
-                    <div key={i} className="text-center px-1">
-                      <div className="flex items-center justify-center mb-1">
-                        <Icon className="h-3 w-3 text-primary/60" />
-                      </div>
-                      <div className="text-sm font-bold text-steam-dark leading-none">
-                        {item.value}
-                      </div>
-                      <div className="text-[9px] text-muted-foreground/60 mt-0.5 leading-tight">
-                        {item.label}
-                      </div>
-                    </div>
-                  )
-                })}
               </motion.div>
             </div>
 
@@ -191,24 +189,60 @@ export function HeroSection() {
                     </div>
                   </div>
 
-                  {/* Content preview */}
+                  {/* Content preview — builder view */}
                   <div className="p-5 space-y-4">
-                    {/* Mini dashboard header */}
+                    {/* Builder header */}
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="h-3 w-32 bg-steam-dark/10 rounded-full" />
-                        <div className="h-2 w-20 bg-muted-foreground/10 rounded-full mt-2" />
+                        <div className="text-xs font-semibold text-steam-dark">
+                          Jūros tyrinėtojas
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          5 iššūkiai &middot; 3 komandos
+                        </div>
                       </div>
-                      <div className="h-8 w-24 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <span className="text-[10px] font-semibold text-primary">+ Naujas</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 px-2 py-1 bg-primary/8 rounded-lg">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                          <span className="text-[9px] font-semibold text-primary">
+                            Aktyvus
+                          </span>
+                        </div>
+                        <div className="h-7 px-2 bg-primary/10 rounded-lg flex items-center gap-1">
+                          <Sparkles className="h-3 w-3 text-primary" />
+                          <span className="text-[9px] font-semibold text-primary">
+                            DI
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Challenge cards */}
                     {[
-                      { icon: Puzzle, title: "Demografinis detektyvas", points: "200", color: "bg-primary/8 text-primary" },
-                      { icon: Trophy, title: "Jūros tyrinėtojas", points: "150", color: "bg-secondary/8 text-secondary" },
-                      { icon: QrCode, title: "Kodų medžioklė", points: "300", color: "bg-highlight/8 text-highlight" },
+                      {
+                        icon: Puzzle,
+                        title: "Demografinis detektyvas",
+                        points: "200",
+                        difficulty: "Vidutinis",
+                        diffColor: "bg-highlight/10 text-highlight",
+                        color: "bg-primary/8 text-primary",
+                      },
+                      {
+                        icon: Flag,
+                        title: "Jūros ekspedicija",
+                        points: "150",
+                        difficulty: "Lengvas",
+                        diffColor: "bg-primary/10 text-primary",
+                        color: "bg-secondary/8 text-secondary",
+                      },
+                      {
+                        icon: Trophy,
+                        title: "Kodų medžioklė",
+                        points: "300",
+                        difficulty: "Sunkus",
+                        diffColor: "bg-accent/10 text-accent",
+                        color: "bg-highlight/8 text-highlight",
+                      },
                     ].map((item, i) => {
                       const Icon = item.icon
                       return (
@@ -219,32 +253,77 @@ export function HeroSection() {
                           transition={{ delay: 0.8 + i * 0.15 }}
                           className="flex items-center gap-3 p-3 rounded-xl bg-[#F8FAFB] border border-border/30"
                         >
-                          <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center`}>
+                          <div
+                            className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center`}
+                          >
                             <Icon className="h-4 w-4" />
                           </div>
-                          <div className="flex-1">
-                            <div className="text-xs font-medium text-steam-dark">{item.title}</div>
-                            <div className="text-[10px] text-muted-foreground">{item.points} taškų</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium text-steam-dark">
+                              {item.title}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {item.points} taškų
+                            </div>
                           </div>
-                          <div className="w-12 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-[9px] font-semibold text-primary">Aktyvus</span>
+                          <div
+                            className={`text-[8px] font-medium px-1.5 py-0.5 rounded-full ${item.diffColor}`}
+                          >
+                            {item.difficulty}
                           </div>
                         </motion.div>
                       )
                     })}
+
+                    {/* Mini leaderboard strip */}
+                    <div className="rounded-xl border border-border/30 bg-white p-3 space-y-1.5">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <BarChart3 className="h-3 w-3 text-muted-foreground/40" />
+                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                          Lyderių lentelė
+                        </span>
+                      </div>
+                      {[
+                        { name: "Bangų medžiotojai", pct: 85 },
+                        { name: "Kodo meistrai", pct: 60 },
+                      ].map((team, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-steam-dark w-3">
+                            {i + 1}
+                          </span>
+                          <span className="text-[9px] text-steam-dark w-24 truncate">
+                            {team.name}
+                          </span>
+                          <div className="flex-1 h-1.5 bg-border/20 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-primary/40"
+                              style={{ width: `${team.pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {/* Floating QR badge */}
                 <motion.div
                   animate={prefersReduced ? {} : { y: [0, -6, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                   className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg shadow-steam-dark/10 border border-border/30 p-3 flex items-center gap-2"
                 >
                   <QrCode className="h-5 w-5 text-primary" />
                   <div>
-                    <div className="text-[10px] font-semibold text-steam-dark">QR kodas</div>
-                    <div className="text-[9px] text-muted-foreground">Prisijungk akimirksniu</div>
+                    <div className="text-[10px] font-semibold text-steam-dark">
+                      QR kodas
+                    </div>
+                    <div className="text-[9px] text-muted-foreground">
+                      Prisijungk akimirksniu
+                    </div>
                   </div>
                 </motion.div>
               </div>
