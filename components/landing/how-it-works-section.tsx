@@ -18,7 +18,7 @@ const steps = [
     number: "02",
     icon: Settings,
     title: "Nustatykite atsakymus, taškus ir užuominas",
-    description: "Kiekvienai užduočiai priskiriate teisingą atsakymą, taškus ir progresinias užuominas.",
+    description: "DI pasiūlo atsakymus ir užuominas — jūs tik peržiūrite ir patvirtinate.",
     color: "bg-secondary/10 text-secondary",
   },
   {

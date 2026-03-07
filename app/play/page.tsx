@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { motion } from "framer-motion"
 import { ArrowRight, Gamepad2 } from "lucide-react"
+import { QRScanner } from "@/components/player/qr-scanner"
 
 export default function PlayerLandingPage() {
   const [code, setCode] = useState("")
@@ -17,6 +18,10 @@ export default function PlayerLandingPage() {
     if (code.trim().length >= 6) {
       router.push(`/play/${code.trim().toUpperCase()}`)
     }
+  }
+
+  function handleQRScan(gameCode: string) {
+    router.push(`/play/${gameCode}`)
   }
 
   return (
@@ -36,11 +41,11 @@ export default function PlayerLandingPage() {
           CTF žaidimas
         </h1>
         <p className="text-muted-foreground mb-6">
-          Įveskite žaidimo kodą, kurį gavote iš mokytojo
+          Įveskite žaidimo kodą arba nuskaitykite QR kodą
         </p>
 
         <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-5 space-y-4">
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="relative">
                 <Gamepad2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -64,6 +69,17 @@ export default function PlayerLandingPage() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border/50" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-3 text-muted-foreground">arba</span>
+              </div>
+            </div>
+
+            <QRScanner onScan={handleQRScan} />
           </CardContent>
         </Card>
 

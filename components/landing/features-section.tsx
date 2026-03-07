@@ -2,7 +2,7 @@
 
 import { SectionWrapper } from "./section-wrapper"
 import { SectionHeader } from "./section-header"
-import { Sparkles, Users, Trophy, QrCode, Lightbulb, BarChart3 } from "lucide-react"
+import { Sparkles, Users, Trophy, FileText, Lightbulb, BarChart3 } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
@@ -29,10 +29,10 @@ const features = [
     color: "bg-highlight/10 text-highlight",
   },
   {
-    icon: QrCode,
-    title: "Prisijungimas per QR kodą",
+    icon: FileText,
+    title: "Importas iš dokumento",
     description:
-      "Mokiniai nuskaito kodą ir per sekundes atsiduria žaidime — jokios registracijos.",
+      "Įkelkite PDF, DOCX ar TXT failą — DI sugeneruos užduotis pagal jūsų mokomąją medžiagą.",
     color: "bg-accent/10 text-accent",
   },
   {

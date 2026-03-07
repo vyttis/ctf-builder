@@ -8,14 +8,14 @@ export function InstitutionSection() {
   return (
     <SectionWrapper background="muted">
       <div className="relative rounded-3xl overflow-hidden">
-        {/* Background image with overlay */}
+        {/* Background image — building exterior */}
         <div className="absolute inset-0">
           <img
-            src="/photos/steam-lab.jpg"
+            src="/photos/steam-building.jpg"
             alt=""
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-steam-dark/90 via-steam-dark/80 to-steam-dark/70" />
+          <div className="absolute inset-0 bg-gradient-to-r from-steam-dark/95 via-steam-dark/85 to-steam-dark/60" />
         </div>
 
         <div className="relative p-8 sm:p-12 md:p-16">
@@ -42,7 +42,7 @@ export function InstitutionSection() {
               susipažinti su mokslo pagrindais penkių laboratorijų erdvėse.
             </motion.p>
 
-            {/* Photos */}
+            {/* Activity photos strip */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -50,20 +50,23 @@ export function InstitutionSection() {
               transition={{ delay: 0.2 }}
               className="flex gap-3 mt-8"
             >
-              <div className="w-24 h-24 rounded-xl overflow-hidden border-2 border-white/20">
-                <img
-                  src="/photos/steam-lab.jpg"
-                  alt="STEAM centro laboratorija"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="w-24 h-24 rounded-xl overflow-hidden border-2 border-white/20">
-                <img
-                  src="/photos/steam-robot.jpg"
-                  alt="Pepper robotas STEAM centre"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              {[
+                { src: "/photos/steam-lab.jpg", alt: "STEAM centro laboratorija" },
+                { src: "/photos/steam-robot.jpg", alt: "Pepper robotas STEAM centre" },
+                { src: "/photos/activity-vr.jpg", alt: "VR technologijos" },
+                { src: "/photos/activity-teachers.jpg", alt: "Mokytojų veiklos" },
+              ].map((photo, i) => (
+                <div
+                  key={i}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white/20 shrink-0 group"
+                >
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
+              ))}
             </motion.div>
 
             {/* Contact details */}

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PublishDialog } from "@/components/teacher/publish-dialog"
+import { LiveActivityFeed } from "@/components/teacher/live-activity-feed"
 import {
   ArrowLeft,
   Puzzle,
@@ -151,6 +152,11 @@ export default async function GameDetailPage({
             </Card>
           </div>
 
+          {/* Live activity feed — visible when game is active or paused */}
+          {(game.status === "active" || game.status === "paused") && (
+            <LiveActivityFeed gameId={game.id} />
+          )}
+
           {/* Challenges section */}
           <Card className="border-border/50 bg-white">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -158,27 +164,15 @@ export default async function GameDetailPage({
                 <Puzzle className="h-5 w-5 text-primary" />
                 Užduotys
               </CardTitle>
-              <div className="flex items-center gap-2">
-                <Link href={`/games/${game.id}/challenges?ai_open=1`}>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    DI
-                  </Button>
-                </Link>
-                <Link href={`/games/${game.id}/challenges`}>
-                  <Button
-                    size="sm"
-                    className="bg-primary hover:bg-primary/90 text-white gap-1"
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                    Valdyti
-                  </Button>
-                </Link>
-              </div>
+              <Link href={`/games/${game.id}/builder`}>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-white gap-1"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Valdyti
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent>
               {challenges.length > 0 ? (
@@ -232,26 +226,15 @@ export default async function GameDetailPage({
                   <p className="text-muted-foreground text-sm mb-3">
                     Dar nėra užduočių
                   </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <Link href={`/games/${game.id}/challenges`}>
-                      <Button
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90 text-white gap-1"
-                      >
-                        Pridėti užduotį
-                      </Button>
-                    </Link>
-                    <Link href={`/games/${game.id}/challenges?ai_open=1`}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
-                      >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Generuoti su DI
-                      </Button>
-                    </Link>
-                  </div>
+                  <Link href={`/games/${game.id}/builder`}>
+                    <Button
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90 text-white gap-1"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Kurti užduotis
+                    </Button>
+                  </Link>
                 </div>
               )}
             </CardContent>

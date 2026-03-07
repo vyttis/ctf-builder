@@ -166,4 +166,5 @@ export interface ChallengeStatItem {
   attempts: number
   solves: number
   avg_attempts_to_solve: number
+  difficulty?: "easy" | "medium" | "hard" | null
 }
