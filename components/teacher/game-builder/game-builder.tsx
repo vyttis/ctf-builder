@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
   DndContext,
@@ -23,6 +23,7 @@ import { Challenge, GameStatus, GameSettings } from "@/types/game"
 import { AiSuggestion, DiGenerateResponse, ScenarioPreset } from "@/lib/ai/types"
 import { BuilderHeader } from "./builder-header"
 import { BuilderSettings } from "./builder-settings"
+import { OnboardingBanner } from "./onboarding-banner"
 import { TaskListPanel } from "./task-list-panel"
 import { TaskWorkspace } from "./task-workspace"
 import { TaskCardOverlay } from "./sortable-task-card"
@@ -86,6 +87,18 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
 
   // Mobile sheet
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
+
+  // Generation success feedback
+  const [generationSuccess, setGenerationSuccess] = useState<number | null>(null)
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Onboarding
+  const [onboardingDismissed, setOnboardingDismissed] = useState(true)
+  useEffect(() => {
+    setOnboardingDismissed(
+      localStorage.getItem("ctf-builder-onboarding-dismissed") === "true"
+    )
+  }, [])
 
   // Sensors
   const sensors = useSensors(
@@ -153,6 +166,10 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
         } else {
           setSuggestions(data.suggestions)
         }
+        // Show success banner
+        if (successTimerRef.current) clearTimeout(successTimerRef.current)
+        setGenerationSuccess(data.suggestions.length)
+        successTimerRef.current = setTimeout(() => setGenerationSuccess(null), 3000)
       } catch (err) {
         setDiError(err instanceof Error ? err.message : "Nežinoma klaida")
       } finally {
@@ -281,6 +298,18 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
       toast({ title: "Nepavyko pridėti užduočių", description: lastError || undefined, variant: "destructive" })
     }
     setAdding(false)
+  }
+
+  // ========== Edit suggestion (open in manual editor) ==========
+  function handleEditSuggestion(index: number) {
+    const suggestion = suggestions[index]
+    if (!suggestion) return
+    setPrefillData(suggestion)
+    setEditingChallenge(null)
+    setIsCreatingNew(true)
+    setSelectedChallengeId(null)
+    setPreviewChallenge(null)
+    setActiveTab("manual")
   }
 
   // ========== Challenge actions ==========
@@ -444,19 +473,15 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
     : -1
   const activeChallenge =
     activeChallengeIndex >= 0 ? challenges[activeChallengeIndex] : null
+  const totalPoints = challenges.reduce((sum, c) => sum + (c.points || 0), 0)
 
   return (
     <div className="min-h-screen bg-muted/20">
       <BuilderHeader
         game={game}
         challengeCount={challenges.length}
+        totalPoints={totalPoints}
         onOpenSettings={() => setSettingsOpen(true)}
-        onOpenQr={() => {
-          window.open(
-            `/play/${game.game_code}`,
-            "_blank"
-          )
-        }}
       />
 
       <BuilderSettings
@@ -470,6 +495,15 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
           router.refresh()
         }}
       />
+
+      {challenges.length === 0 && !onboardingDismissed && (
+        <OnboardingBanner
+          onDismiss={() => {
+            setOnboardingDismissed(true)
+            localStorage.setItem("ctf-builder-onboarding-dismissed", "true")
+          }}
+        />
+      )}
 
       <DndContext
         sensors={sensors}
@@ -535,10 +569,12 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
                   onSelectAll={handleSelectAll}
                   onDeselectAll={handleDeselectAll}
                   onAddSuggestion={handleAddSingle}
+                  onEditSuggestion={handleEditSuggestion}
                   onBulkAdd={handleBulkAdd}
                   onReject={handleReject}
                   selectedScenario={selectedScenario}
                   onScenarioChange={setSelectedScenario}
+                  generationSuccess={generationSuccess}
                   onTaskAdded={refreshChallenges}
                   activeTab={activeTab}
                   onTabChange={setActiveTab}
@@ -594,10 +630,12 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
                 onSelectAll={handleSelectAll}
                 onDeselectAll={handleDeselectAll}
                 onAddSuggestion={handleAddSingle}
+                onEditSuggestion={handleEditSuggestion}
                 onBulkAdd={handleBulkAdd}
                 onReject={handleReject}
                 selectedScenario={selectedScenario}
                 onScenarioChange={setSelectedScenario}
+                generationSuccess={generationSuccess}
                 onTaskAdded={refreshChallenges}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}

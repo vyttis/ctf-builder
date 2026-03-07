@@ -62,10 +62,12 @@ interface DiWorkspaceProps {
   onSelectAll: () => void
   onDeselectAll: () => void
   onAdd: (index: number) => void
+  onEdit?: (index: number) => void
   onBulkAdd: () => void
   onReject: (index: number) => void
   selectedScenario: ScenarioPreset | null
   onScenarioChange: (scenario: ScenarioPreset | null) => void
+  generationSuccess?: number | null
 }
 
 export function DiWorkspace({
@@ -85,10 +87,12 @@ export function DiWorkspace({
   onSelectAll,
   onDeselectAll,
   onAdd,
+  onEdit,
   onBulkAdd,
   onReject,
   selectedScenario,
   onScenarioChange,
+  generationSuccess,
 }: DiWorkspaceProps) {
   return (
     <div className="space-y-4">
@@ -164,8 +168,10 @@ export function DiWorkspace({
         onSelectAll={onSelectAll}
         onDeselectAll={onDeselectAll}
         onAdd={onAdd}
+        onEdit={onEdit}
         onBulkAdd={onBulkAdd}
         onReject={onReject}
+        generationSuccess={generationSuccess}
       />
     </div>
   )

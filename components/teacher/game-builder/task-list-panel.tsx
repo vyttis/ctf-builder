@@ -7,7 +7,7 @@ import {
 } from "@dnd-kit/sortable"
 import { Challenge } from "@/types/game"
 import { SortableTaskCard } from "./sortable-task-card"
-import { Plus, Puzzle } from "lucide-react"
+import { Plus, Puzzle, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface TaskListPanelProps {
@@ -86,28 +86,38 @@ export function TaskListPanel({
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/5 flex items-center justify-center">
-                <Puzzle className="h-8 w-8 text-primary/30" />
-              </div>
-              <h3 className="text-sm font-semibold text-steam-dark mb-1">
-                {isOverPanel
-                  ? "Paleiskite užduotį čia"
-                  : "Dar nėra užduočių"}
-              </h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                {isOverPanel
-                  ? "Atleiskite, kad pridėtumėte"
-                  : "Sukurkite rankiniu būdu arba generuokite su DI"}
-              </p>
-              {!isOverPanel && (
-                <Button
-                  onClick={onAddNew}
-                  size="sm"
-                  className="bg-primary hover:bg-primary/90 text-white gap-1.5"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Pridėti užduotį
-                </Button>
+              {isOverPanel ? (
+                <>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Plus className="h-8 w-8 text-primary animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-primary mb-1">
+                    Paleiskite užduotį čia
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Atleiskite, kad pridėtumėte
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-highlight/10 flex items-center justify-center">
+                    <ArrowRight className="h-7 w-7 text-highlight animate-[nudge_1.5s_ease-in-out_infinite]" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-steam-dark mb-1">
+                    Nutempkite DI užduotis čia
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    arba sukurkite rankiniu būdu
+                  </p>
+                  <Button
+                    onClick={onAddNew}
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 text-white gap-1.5"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Pridėti rankiniu būdu
+                  </Button>
+                </>
               )}
             </div>
           )}

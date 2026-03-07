@@ -37,10 +37,12 @@ interface TaskWorkspaceProps {
   onSelectAll: () => void
   onDeselectAll: () => void
   onAddSuggestion: (index: number) => void
+  onEditSuggestion?: (index: number) => void
   onBulkAdd: () => void
   onReject: (index: number) => void
   selectedScenario: ScenarioPreset | null
   onScenarioChange: (scenario: ScenarioPreset | null) => void
+  generationSuccess?: number | null
   // Library
   onTaskAdded: () => void
   // Active tab
@@ -73,10 +75,12 @@ export function TaskWorkspace({
   onSelectAll,
   onDeselectAll,
   onAddSuggestion,
+  onEditSuggestion,
   onBulkAdd,
   onReject,
   selectedScenario,
   onScenarioChange,
+  generationSuccess,
   onTaskAdded,
   activeTab,
   onTabChange,
@@ -153,10 +157,12 @@ export function TaskWorkspace({
           onSelectAll={onSelectAll}
           onDeselectAll={onDeselectAll}
           onAdd={onAddSuggestion}
+          onEdit={onEditSuggestion}
           onBulkAdd={onBulkAdd}
           onReject={onReject}
           selectedScenario={selectedScenario}
           onScenarioChange={onScenarioChange}
+          generationSuccess={generationSuccess}
         />
       </TabsContent>
 

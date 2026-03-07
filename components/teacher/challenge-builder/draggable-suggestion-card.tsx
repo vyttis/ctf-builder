@@ -13,6 +13,7 @@ interface DraggableSuggestionCardProps {
   adding: boolean
   onToggleSelect: (index: number) => void
   onAdd: (index: number) => void
+  onEdit?: (index: number) => void
   onReject: (index: number) => void
 }
 
@@ -24,6 +25,7 @@ export function DraggableSuggestionCard({
   adding,
   onToggleSelect,
   onAdd,
+  onEdit,
   onReject,
 }: DraggableSuggestionCardProps) {
   const isFailed = suggestion.verification?.verdict === "fail"
@@ -59,6 +61,7 @@ export function DraggableSuggestionCard({
         adding={adding}
         onToggleSelect={onToggleSelect}
         onAdd={onAdd}
+        onEdit={onEdit}
         onReject={onReject}
       />
     </div>
