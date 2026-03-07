@@ -158,27 +158,15 @@ export default async function GameDetailPage({
                 <Puzzle className="h-5 w-5 text-primary" />
                 Užduotys
               </CardTitle>
-              <div className="flex items-center gap-2">
-                <Link href={`/games/${game.id}/challenges?ai_open=1`}>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    DI
-                  </Button>
-                </Link>
-                <Link href={`/games/${game.id}/challenges`}>
-                  <Button
-                    size="sm"
-                    className="bg-primary hover:bg-primary/90 text-white gap-1"
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                    Valdyti
-                  </Button>
-                </Link>
-              </div>
+              <Link href={`/games/${game.id}/builder`}>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-white gap-1"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Valdyti
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent>
               {challenges.length > 0 ? (
@@ -232,26 +220,15 @@ export default async function GameDetailPage({
                   <p className="text-muted-foreground text-sm mb-3">
                     Dar nėra užduočių
                   </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <Link href={`/games/${game.id}/challenges`}>
-                      <Button
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90 text-white gap-1"
-                      >
-                        Pridėti užduotį
-                      </Button>
-                    </Link>
-                    <Link href={`/games/${game.id}/challenges?ai_open=1`}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
-                      >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Generuoti su DI
-                      </Button>
-                    </Link>
-                  </div>
+                  <Link href={`/games/${game.id}/builder`}>
+                    <Button
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90 text-white gap-1"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Kurti užduotis
+                    </Button>
+                  </Link>
                 </div>
               )}
             </CardContent>

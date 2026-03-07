@@ -7,7 +7,15 @@ interface ChallengeStatsTableProps {
   stats: ChallengeStatItem[]
 }
 
+const difficultyLabels: Record<string, { label: string; className: string }> = {
+  easy: { label: "Lengva", className: "text-primary border-primary/30 bg-primary/5" },
+  medium: { label: "Vidutinė", className: "text-highlight border-highlight/30 bg-highlight/5" },
+  hard: { label: "Sunki", className: "text-accent border-accent/30 bg-accent/5" },
+}
+
 export function ChallengeStatsTable({ stats }: ChallengeStatsTableProps) {
+  const hasDifficulty = stats.some((s) => s.difficulty)
+
   return (
     <Card className="border-border/50 bg-white">
       <CardHeader>
@@ -43,6 +51,11 @@ export function ChallengeStatsTable({ stats }: ChallengeStatsTableProps) {
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-2">
                     Vid. bandymų
                   </th>
+                  {hasDifficulty && (
+                    <th className="text-center text-xs font-medium text-muted-foreground py-3 px-2">
+                      Sunkumas
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -51,6 +64,10 @@ export function ChallengeStatsTable({ stats }: ChallengeStatsTableProps) {
                     stat.attempts > 0
                       ? Math.round((stat.solves / stat.attempts) * 100)
                       : 0
+
+                  const diffInfo = stat.difficulty
+                    ? difficultyLabels[stat.difficulty]
+                    : null
 
                   return (
                     <tr
@@ -94,6 +111,20 @@ export function ChallengeStatsTable({ stats }: ChallengeStatsTableProps) {
                       <td className="py-3 px-2 text-center text-sm text-muted-foreground">
                         {stat.avg_attempts_to_solve || "—"}
                       </td>
+                      {hasDifficulty && (
+                        <td className="py-3 px-2 text-center">
+                          {diffInfo ? (
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] ${diffInfo.className}`}
+                            >
+                              {diffInfo.label}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   )
                 })}

@@ -10,7 +10,7 @@ const rows = [
   {
     label: "Formatas",
     quiz: "Greiti klausimai su laikmačiu",
-    ctf: "Struktūruotos užduotys be laiko spaudimo",
+    ctf: "Struktūruotos užduotys su lanksčiu laiko valdymu",
   },
   {
     label: "Darbo būdas",
@@ -20,7 +20,7 @@ const rows = [
   {
     label: "Atsakymai",
     quiz: "Pasirinkimas iš variantų",
-    ctf: "Laisvas atsakymas (flag)",
+    ctf: "Laisvas atsakymas arba pasirinkimas",
   },
   {
     label: "Užuominos",
