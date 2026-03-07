@@ -8,15 +8,8 @@ export function InstitutionSection() {
   return (
     <SectionWrapper background="muted">
       <div className="relative rounded-3xl overflow-hidden">
-        {/* Background image — building exterior */}
-        <div className="absolute inset-0">
-          <img
-            src="/photos/steam-building.jpg"
-            alt=""
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-steam-dark/95 via-steam-dark/85 to-steam-dark/60" />
-        </div>
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#00323C] via-[#004D5C] to-[#008CB4]" />
 
         <div className="relative p-8 sm:p-12 md:p-16">
           <div className="max-w-2xl">

@@ -3,7 +3,12 @@
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
-const photos = [
+const photos: {
+  src: string
+  alt: string
+  span: string
+  gradient?: string
+}[] = [
   {
     src: "/photos/activity-beavers.jpg",
     alt: "STEAM centro maskotai prie kompiuterių",
@@ -30,9 +35,10 @@ const photos = [
     span: "col-span-1 row-span-1",
   },
   {
-    src: "/photos/steam-building.jpg",
+    src: "",
     alt: "STEAM Klaipėda centras",
     span: "col-span-2 row-span-1",
+    gradient: "from-[#008CB4] via-[#00D296] to-[#00323C]",
   },
 ]
 
@@ -75,11 +81,15 @@ export function PhotoGallerySection() {
               }
               className={`${photo.span} rounded-2xl overflow-hidden relative group cursor-default`}
             >
-              <img
-                src={photo.src}
-                alt={photo.alt}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              {photo.src ? (
+                <img
+                  src={photo.src}
+                  alt={photo.alt}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div className={`w-full h-full bg-gradient-to-br ${photo.gradient}`} />
+              )}
               {/* Gradient overlay on hover */}
               <div className="absolute inset-0 bg-gradient-to-t from-steam-dark/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">

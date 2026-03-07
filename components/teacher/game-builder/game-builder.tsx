@@ -104,7 +104,8 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
       const res = await fetch(`/api/challenges?game_id=${game.id}`)
       if (res.ok) {
         const data = await res.json()
-        const sorted = (data.challenges || []).sort(
+        const list = Array.isArray(data) ? data : (data.challenges || [])
+        const sorted = list.sort(
           (a: Challenge, b: Challenge) => a.order_index - b.order_index
         )
         setChallenges(sorted)
@@ -203,9 +204,9 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
     setSelectedIds(new Set())
   }
 
-  async function addSuggestion(index: number): Promise<boolean> {
+  async function addSuggestion(index: number): Promise<string | null> {
     const suggestion = suggestions[index]
-    if (!suggestion || addedIds.has(index)) return false
+    if (!suggestion || addedIds.has(index)) return "Pasiūlymas jau pridėtas"
     try {
       const res = await fetch("/api/challenges", {
         method: "POST",
@@ -234,22 +235,26 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
           next.delete(index)
           return next
         })
-        return true
+        return null
       }
-      return false
-    } catch {
-      return false
+      const errBody = await res.json().catch(() => null)
+      const msg = errBody?.error || `HTTP ${res.status}`
+      console.error("addSuggestion failed:", msg, { status: res.status, suggestion: suggestion.title })
+      return msg
+    } catch (err) {
+      console.error("addSuggestion network error:", err)
+      return "Tinklo klaida"
     }
   }
 
   async function handleAddSingle(index: number) {
     setAdding(true)
-    const ok = await addSuggestion(index)
-    if (ok) {
+    const error = await addSuggestion(index)
+    if (!error) {
       toast({ title: "Užduotis pridėta" })
       refreshChallenges()
     } else {
-      toast({ title: "Nepavyko pridėti", variant: "destructive" })
+      toast({ title: "Nepavyko pridėti", description: error, variant: "destructive" })
     }
     setAdding(false)
   }
@@ -262,16 +267,18 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
 
     setAdding(true)
     let count = 0
+    let lastError: string | null = null
     for (const i of toAdd) {
-      const ok = await addSuggestion(i)
-      if (ok) count++
+      const error = await addSuggestion(i)
+      if (!error) count++
+      else lastError = error
     }
     setSelectedIds(new Set())
     if (count > 0) {
       toast({ title: `Pridėta užduočių: ${count}` })
       refreshChallenges()
     } else {
-      toast({ title: "Nepavyko pridėti užduočių", variant: "destructive" })
+      toast({ title: "Nepavyko pridėti užduočių", description: lastError || undefined, variant: "destructive" })
     }
     setAdding(false)
   }
@@ -412,12 +419,12 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
       const idx = parseInt(activeStr.replace("suggestion-", ""), 10)
       if (isNaN(idx)) return
       setAdding(true)
-      const ok = await addSuggestion(idx)
-      if (ok) {
+      const error = await addSuggestion(idx)
+      if (!error) {
         toast({ title: "Užduotis pridėta" })
         refreshChallenges()
       } else {
-        toast({ title: "Nepavyko pridėti", variant: "destructive" })
+        toast({ title: "Nepavyko pridėti", description: error, variant: "destructive" })
       }
       setAdding(false)
     }
