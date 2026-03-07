@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PublishDialog } from "@/components/teacher/publish-dialog"
+import { LiveActivityFeed } from "@/components/teacher/live-activity-feed"
 import {
   ArrowLeft,
   Puzzle,
@@ -150,6 +151,11 @@ export default async function GameDetailPage({
               </CardContent>
             </Card>
           </div>
+
+          {/* Live activity feed — visible when game is active or paused */}
+          {(game.status === "active" || game.status === "paused") && (
+            <LiveActivityFeed gameId={game.id} />
+          )}
 
           {/* Challenges section */}
           <Card className="border-border/50 bg-white">

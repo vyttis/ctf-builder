@@ -241,6 +241,7 @@ export default function PlayPage() {
           session_token: session.session_token,
           challenge_id: challenges[currentIndex].id,
           answer: answer.trim(),
+          hints_used: revealedHintCount,
         }),
       })
 

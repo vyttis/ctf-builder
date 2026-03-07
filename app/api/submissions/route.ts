@@ -6,6 +6,7 @@ const submitAnswerSchema = z.object({
   session_token: z.string().min(1),
   challenge_id: z.string().uuid(),
   answer: z.string().min(1, "Atsakymas privalomas"),
+  hints_used: z.number().int().min(0).max(20).default(0),
 })
 
 export async function POST(request: Request) {
@@ -95,10 +96,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // Get challenge details
+    // Get challenge details (include hints to validate hints_used count)
     const { data: challenge } = await supabase
       .from("challenges")
-      .select("id, points, game_id, explanation, hint_penalty")
+      .select("id, points, game_id, explanation, hint_penalty, hints")
       .eq("id", parsed.data.challenge_id)
       .single()
 
@@ -116,15 +117,21 @@ export async function POST(request: Request) {
     })
 
     const isCorrect = isCorrectResult === true
-    const pointsAwarded = isCorrect ? challenge.points : 0
 
-    // Record submission
+    // Server-side hint penalty: cap hints_used to actual available hints
+    const availableHints = Array.isArray(challenge.hints) ? challenge.hints.length : 0
+    const hintsUsed = Math.min(parsed.data.hints_used, availableHints)
+    const hintPenalty = hintsUsed * (challenge.hint_penalty || 0)
+    const pointsAwarded = isCorrect ? Math.max(0, challenge.points - hintPenalty) : 0
+
+    // Record submission with hints_used
     await supabase.from("submissions").insert({
       team_id: team.id,
       challenge_id: parsed.data.challenge_id,
       answer: parsed.data.answer,
       is_correct: isCorrect,
       points_awarded: pointsAwarded,
+      hints_used: hintsUsed,
     })
 
     // If correct, update team score atomically via RPC
