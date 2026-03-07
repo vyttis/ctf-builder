@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
@@ -39,35 +39,9 @@ export default function LeaderboardPage() {
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
-  useEffect(() => {
-    const stored = localStorage.getItem(`ctf_session_${gameCode}`)
-    if (stored) {
-      try {
-        const session: PlayerSession = JSON.parse(stored)
-        setMyTeamId(session.team_id)
-      } catch {}
-    }
-    fetchLeaderboard()
-  }, [gameCode])
-
-  useEffect(() => {
-    if (!gameId) return
-
-    const channel = supabase
-      .channel(`leaderboard_${gameId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "teams", filter: `game_id=eq.${gameId}` },
-        () => fetchLeaderboard()
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [gameId])
-
-  async function fetchLeaderboard() {
+  const fetchLeaderboard = useCallback(async () => {
     const { data: game } = await supabase
       .from("games")
       .select("id")
@@ -86,7 +60,33 @@ export default function LeaderboardPage() {
 
     if (data) setTeams(data)
     setLoading(false)
-  }
+  }, [gameCode, supabase])
+
+  useEffect(() => {
+    const stored = localStorage.getItem(`ctf_session_${gameCode}`)
+    if (stored) {
+      try {
+        const session: PlayerSession = JSON.parse(stored)
+        setMyTeamId(session.team_id)
+      } catch {}
+    }
+    fetchLeaderboard()
+  }, [gameCode, fetchLeaderboard])
+
+  useEffect(() => {
+    if (!gameId) return
+
+    const channel = supabase
+      .channel(`leaderboard_${gameId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "teams", filter: `game_id=eq.${gameId}` },
+        () => fetchLeaderboard()
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [gameId, supabase, fetchLeaderboard])
 
   if (loading) {
     return (

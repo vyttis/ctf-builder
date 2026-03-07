@@ -7,7 +7,8 @@ import {
   buildVerificationUserMessage,
 } from "@/lib/ai/verify-prompt"
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
-import type { AiSuggestion, VerificationResult } from "@/lib/ai/types"
+import { verificationResultSchema } from "@/lib/ai/schemas"
+import type { AiSuggestion } from "@/lib/ai/types"
 
 const verifySchema = z.object({
   suggestion: z.object({
@@ -92,13 +93,15 @@ export async function POST(request: Request) {
         .replace(/\n?```$/, "")
     }
 
-    const result: VerificationResult = JSON.parse(jsonText)
-    return NextResponse.json({
-      verdict: result.verdict,
-      issues: Array.isArray(result.issues) ? result.issues : [],
-      confidence:
-        typeof result.confidence === "number" ? result.confidence : 0.5,
-    })
+    const rawResult = JSON.parse(jsonText)
+    const validated = verificationResultSchema.safeParse(rawResult)
+    if (!validated.success) {
+      return NextResponse.json(
+        { verdict: "uncertain", issues: ["Netikėtas patikros formatas"], confidence: 0 },
+        { status: 200 }
+      )
+    }
+    return NextResponse.json(validated.data)
   } catch (error) {
     console.error("DI verify error:", error)
     return NextResponse.json(

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 // GET /api/games/[gameId]/reflections — teacher gets game reflections
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { gameId: string } }
 ) {
   try {
@@ -21,7 +21,7 @@ export async function GET(
       .from("games")
       .select("id, teacher_id")
       .eq("id", params.gameId)
-      .single()
+      .maybeSingle()
 
     if (!game) {
       return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })

@@ -40,7 +40,14 @@ export async function PATCH(request: Request) {
     await requireRole(supabase, "super_admin")
 
     const body = await request.json()
-    const { userId, role } = updateRoleSchema.parse(body)
+    const parsed = updateRoleSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || "Neteisingi duomenys" },
+        { status: 400 }
+      )
+    }
+    const { userId, role } = parsed.data
 
     // Prevent self-demotion
     const {
@@ -66,12 +73,6 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Neteisingi duomenys" },
-        { status: 400 }
-      )
-    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Prieiga uždrausta" },
       { status: 403 }

@@ -81,8 +81,6 @@ export async function middleware(request: NextRequest) {
   // No subdomain: path-based routing
   const isAuthCallback = url.pathname === "/auth/callback"
   const isAuthPage = url.pathname.startsWith("/auth")
-  const isPlayPage = url.pathname.startsWith("/play")
-  const isApiRoute = url.pathname.startsWith("/api")
   const isTeacherRoute =
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/games")

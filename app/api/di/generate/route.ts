@@ -8,9 +8,12 @@ import {
   buildVerificationUserMessage,
 } from "@/lib/ai/verify-prompt"
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
+import {
+  aiSuggestResponseSchema,
+  verificationResultSchema,
+} from "@/lib/ai/schemas"
 import type {
   AiSuggestion,
-  AiSuggestResponse,
   VerificationResult,
 } from "@/lib/ai/types"
 
@@ -89,22 +92,17 @@ async function verifySuggestion(
         .replace(/\n?```$/, "")
     }
 
-    const parsed = JSON.parse(jsonText) as VerificationResult
-
-    if (!["pass", "fail", "uncertain"].includes(parsed.verdict)) {
+    const rawParsed = JSON.parse(jsonText)
+    const validated = verificationResultSchema.safeParse(rawParsed)
+    if (!validated.success) {
       return {
-        verdict: "uncertain",
+        verdict: "uncertain" as const,
         issues: ["Netikėtas patikros formatas"],
         confidence: 0,
       }
     }
 
-    return {
-      verdict: parsed.verdict,
-      issues: Array.isArray(parsed.issues) ? parsed.issues : [],
-      confidence:
-        typeof parsed.confidence === "number" ? parsed.confidence : 0.5,
-    }
+    return validated.data
   } catch {
     return {
       verdict: "uncertain",
@@ -192,19 +190,12 @@ export async function POST(request: Request) {
         .replace(/\n?```$/, "")
     }
 
-    const generatedResponse: AiSuggestResponse = JSON.parse(jsonText)
-    if (!Array.isArray(generatedResponse.suggestions)) {
-      throw new Error("Invalid DI response structure")
+    const rawGenerated = JSON.parse(jsonText)
+    const validatedResponse = aiSuggestResponseSchema.safeParse(rawGenerated)
+    if (!validatedResponse.success) {
+      throw new Error("Invalid DI response structure: " + validatedResponse.error.message)
     }
-
-    // Normalize LLM output: coerce correct_answer to string, points to number
-    for (const s of generatedResponse.suggestions) {
-      s.correct_answer = String(s.correct_answer ?? "")
-      s.points =
-        typeof s.points === "number"
-          ? s.points
-          : parseInt(String(s.points), 10) || 100
-    }
+    const generatedResponse = validatedResponse.data
 
     // Step 2: Verify each suggestion in parallel
     const enrichedSuggestions = await Promise.all(

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import Anthropic from "@anthropic-ai/sdk"
 import { buildSystemPrompt, buildUserMessage } from "@/lib/ai/prompt"
-import type { AiSuggestResponse } from "@/lib/ai/types"
+import { aiSuggestResponseSchema } from "@/lib/ai/schemas"
 
 const suggestSchema = z.object({
   game_id: z.string().uuid(),
@@ -114,13 +114,13 @@ export async function POST(request: Request) {
       jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
     }
 
-    const parsedResponse: AiSuggestResponse = JSON.parse(jsonText)
-
-    if (!Array.isArray(parsedResponse.suggestions)) {
-      throw new Error("Invalid AI response structure")
+    const rawParsed = JSON.parse(jsonText)
+    const validated = aiSuggestResponseSchema.safeParse(rawParsed)
+    if (!validated.success) {
+      throw new Error("Invalid AI response structure: " + validated.error.message)
     }
 
-    return NextResponse.json(parsedResponse)
+    return NextResponse.json(validated.data)
   } catch (error) {
     console.error("AI suggest error:", error)
     return NextResponse.json(

@@ -107,13 +107,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const parsed = publishSchema.parse(body)
+    const parsed = publishSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || "Neteisingi duomenys" },
+        { status: 400 }
+      )
+    }
 
     // Verify game ownership
     const { data: game, error: gameError } = await supabase
       .from("games")
       .select("*, challenges(*)")
-      .eq("id", parsed.game_id)
+      .eq("id", parsed.data.game_id)
       .eq("teacher_id", user.id)
       .single()
 
@@ -152,11 +158,11 @@ export async function POST(request: Request) {
       .from("library_items")
       .insert({
         source_game_id: game.id,
-        title: parsed.title,
-        description: parsed.description || game.description,
-        subject: parsed.subject,
-        grade_level: parsed.grade_level,
-        tags: parsed.tags || [],
+        title: parsed.data.title,
+        description: parsed.data.description || game.description,
+        subject: parsed.data.subject,
+        grade_level: parsed.data.grade_level,
+        tags: parsed.data.tags || [],
         challenge_data: challengeData,
         settings: game.settings,
         published_by: user.id,
@@ -171,12 +177,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(libraryItem, { status: 201 })
   } catch (error: unknown) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Neteisingi duomenys" },
-        { status: 400 }
-      )
-    }
     return NextResponse.json({ error: error instanceof Error ? error.message : "Vidinė klaida" }, { status: 500 })
   }
 }

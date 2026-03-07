@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import Anthropic from "@anthropic-ai/sdk"
 import { buildGameSystemPrompt, buildGameUserMessage } from "@/lib/ai/prompt"
-import type { AiGameSuggestResponse } from "@/lib/ai/types"
+import { aiGameSuggestResponseSchema } from "@/lib/ai/schemas"
 
 const suggestGameSchema = z.object({
   teacher_prompt: z.string().max(500).optional(),
@@ -89,13 +89,13 @@ export async function POST(request: Request) {
       jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
     }
 
-    const parsedResponse: AiGameSuggestResponse = JSON.parse(jsonText)
-
-    if (!Array.isArray(parsedResponse.ideas)) {
-      throw new Error("Invalid AI response structure")
+    const rawParsed = JSON.parse(jsonText)
+    const validated = aiGameSuggestResponseSchema.safeParse(rawParsed)
+    if (!validated.success) {
+      throw new Error("Invalid AI response structure: " + validated.error.message)
     }
 
-    return NextResponse.json(parsedResponse)
+    return NextResponse.json(validated.data)
   } catch (error) {
     console.error("AI suggest-game error:", error)
     return NextResponse.json(
