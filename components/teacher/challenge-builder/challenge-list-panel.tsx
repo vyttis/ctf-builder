@@ -43,12 +43,7 @@ export function ChallengeListPanel({
             Užduotys
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {challenges.length}{" "}
-            {challenges.length === 1
-              ? "užduotis"
-              : challenges.length >= 10 && challenges.length <= 20
-              ? "užduočių"
-              : "užduotys"}
+            Užduočių: {challenges.length}
           </p>
         </div>
         <div className="flex items-center gap-2">

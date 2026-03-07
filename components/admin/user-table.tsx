@@ -44,7 +44,7 @@ export function UserTable({ users, currentUserRole, currentUserId }: UserTablePr
       )
 
       toast({
-        title: "Rolė pakeista",
+        title: "Rolė pakeista!",
         description: `Vartotojo rolė pakeista į ${getRoleLabel(newRole)}`,
       })
     } catch (error: unknown) {

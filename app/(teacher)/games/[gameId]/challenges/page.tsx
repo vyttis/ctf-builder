@@ -94,7 +94,7 @@ export default function ChallengesPage() {
       method: "DELETE",
     })
     if (res.ok) {
-      toast({ title: "Užduotis pašalinta" })
+      toast({ title: "Užduotis pašalinta!" })
       fetchChallenges()
     }
     setDeleting(false)

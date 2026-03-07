@@ -55,7 +55,7 @@ export function GameDeleteDialog({
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Klaida",
+        description: error instanceof Error ? error.message : "Nepavyko ištrinti žaidimo",
         variant: "destructive",
       })
     } finally {

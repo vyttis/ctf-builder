@@ -256,7 +256,7 @@ export function ChallengeBuilder({
 
     if (successCount > 0) {
       toast({
-        title: `Pridėta ${successCount} ${successCount === 1 ? "užduotis" : "užduotys"}`,
+        title: `Pridėta užduočių: ${successCount}`,
       })
       onRefreshChallenges()
     } else {

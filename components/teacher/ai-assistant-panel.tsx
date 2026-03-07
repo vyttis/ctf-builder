@@ -287,7 +287,7 @@ export function AiAssistantPanel({
 
     if (successCount > 0) {
       toast({
-        title: `Pridėta ${successCount} ${successCount === 1 ? "užduotis" : "užduotys"}`,
+        title: `Pridėta užduočių: ${successCount}`,
         description:
           failCount > 0
             ? `${failCount} nepavyko: ${failedErrors.join("; ")}`
@@ -346,7 +346,7 @@ export function AiAssistantPanel({
               </p>
             )}
             <Badge variant="outline" className="text-xs mt-2">
-              {existingChallenges.length} užduotys jau sukurta
+              Jau sukurta užduočių: {existingChallenges.length}
             </Badge>
           </div>
 

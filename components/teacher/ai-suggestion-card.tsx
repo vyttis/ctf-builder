@@ -113,7 +113,7 @@ export function AiSuggestionCard({
                 </h4>
                 <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                   <Badge variant="outline" className="text-xs">
-                    {suggestion.points} tšk.
+                    {suggestion.points} taškų
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
                     {typeLabels[suggestion.type] || suggestion.type}

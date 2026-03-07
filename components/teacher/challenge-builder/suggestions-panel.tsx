@@ -99,7 +99,7 @@ export function SuggestionsPanel({
           </p>
         )}
         <Badge variant="outline" className="text-xs mt-2">
-          {existingChallenges.length} užduotys jau sukurta
+          Jau sukurta užduočių: {existingChallenges.length}
         </Badge>
       </div>
 
