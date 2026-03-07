@@ -4,7 +4,9 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 // Safe columns to return (never include answer_hash)
-const BASE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, created_at, updated_at"
+const MINIMAL_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
+const EXTRA_COLUMNS = ", explanation, difficulty, hint_penalty"
+const BASE_CHALLENGE_COLUMNS = MINIMAL_CHALLENGE_COLUMNS + EXTRA_COLUMNS
 const DI_COLUMNS = ", generated_by_di, verification_verdict, verification_issues, verification_confidence"
 const SAFE_CHALLENGE_COLUMNS = BASE_CHALLENGE_COLUMNS + DI_COLUMNS
 
@@ -88,7 +90,7 @@ export async function POST(request: Request) {
 
   const orderIndex = parsed.data.order_index || (count || 0)
 
-  const corePayload = {
+  const minimalPayload = {
     game_id: parsed.data.game_id,
     title: parsed.data.title,
     description: parsed.data.description,
@@ -100,6 +102,9 @@ export async function POST(request: Request) {
     order_index: orderIndex,
     image_url: parsed.data.image_url ?? null,
     maps_url: parsed.data.maps_url ?? null,
+  }
+
+  const extraPayload = {
     explanation: parsed.data.explanation ?? null,
     difficulty: parsed.data.difficulty ?? null,
     hint_penalty: parsed.data.hint_penalty,
@@ -112,25 +117,37 @@ export async function POST(request: Request) {
     verification_confidence: parsed.data.verification_confidence ?? null,
   }
 
-  // Try with DI columns first, fall back to core-only if columns don't exist
+  const isColumnError = (err: { message?: string; code?: string }) =>
+    err.message?.includes("column") || err.code === "42703"
+
+  // Try with all columns, progressively fall back if columns don't exist
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let result: { data: any; error: any } = await supabase
     .from("challenges")
-    .insert({ ...corePayload, ...diPayload })
+    .insert({ ...minimalPayload, ...extraPayload, ...diPayload })
     .select(SAFE_CHALLENGE_COLUMNS)
     .single()
 
-  if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
+  if (result.error && isColumnError(result.error)) {
     console.warn("DI columns missing, retrying without them:", result.error.message)
     result = await supabase
       .from("challenges")
-      .insert(corePayload)
+      .insert({ ...minimalPayload, ...extraPayload })
       .select(BASE_CHALLENGE_COLUMNS)
       .single()
   }
 
+  if (result.error && isColumnError(result.error)) {
+    console.warn("Extra columns missing, retrying with minimal:", result.error.message)
+    result = await supabase
+      .from("challenges")
+      .insert(minimalPayload)
+      .select(MINIMAL_CHALLENGE_COLUMNS)
+      .single()
+  }
+
   if (result.error) {
-    console.error("Challenge INSERT error:", result.error)
+    console.error("Challenge INSERT error:", result.error, "payload keys:", Object.keys({ ...minimalPayload, ...extraPayload, ...diPayload }))
     return NextResponse.json({ error: result.error.message }, { status: 500 })
   }
 
@@ -176,11 +193,19 @@ export async function GET(request: Request) {
     .eq("game_id", gameId)
     .order("order_index", { ascending: true })
 
-  // Fall back to base columns if DI columns don't exist yet
+  // Fall back progressively if columns don't exist yet
   if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
     result = await supabase
       .from("challenges")
       .select(BASE_CHALLENGE_COLUMNS)
+      .eq("game_id", gameId)
+      .order("order_index", { ascending: true })
+  }
+
+  if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
+    result = await supabase
+      .from("challenges")
+      .select(MINIMAL_CHALLENGE_COLUMNS)
       .eq("game_id", gameId)
       .order("order_index", { ascending: true })
   }
