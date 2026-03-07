@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   XCircle,
   ShieldCheck,
+  Edit3,
 } from "lucide-react"
 
 const typeLabels: Record<string, string> = {
@@ -60,6 +61,7 @@ interface AiSuggestionCardProps {
   adding: boolean
   onToggleSelect: (index: number) => void
   onAdd: (index: number) => void
+  onEdit?: (index: number) => void
   onReject: (index: number) => void
 }
 
@@ -71,6 +73,7 @@ export function AiSuggestionCard({
   adding,
   onToggleSelect,
   onAdd,
+  onEdit,
   onReject,
 }: AiSuggestionCardProps) {
   const [showDetails, setShowDetails] = useState(false)
@@ -241,6 +244,17 @@ export function AiSuggestionCard({
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Pridėti
+              </Button>
+            )}
+            {onEdit && !added && !isFailed && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onEdit(index)}
+                className="text-secondary hover:text-secondary/80 gap-1.5 text-xs h-8"
+              >
+                <Edit3 className="h-3.5 w-3.5" />
+                Redaguoti
               </Button>
             )}
             {!added && (

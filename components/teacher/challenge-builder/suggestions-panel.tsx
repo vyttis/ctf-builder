@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { AnimatePresence } from "framer-motion"
 import { DraggableSuggestionCard } from "./draggable-suggestion-card"
+import { motion } from "framer-motion"
 import {
   Sparkles,
   Loader2,
@@ -15,6 +16,7 @@ import {
   Puzzle,
   Plus,
   RefreshCw,
+  CheckCircle2,
 } from "lucide-react"
 
 const quickActions = [
@@ -46,8 +48,10 @@ interface SuggestionsPanelProps {
   onSelectAll: () => void
   onDeselectAll: () => void
   onAdd: (index: number) => void
+  onEdit?: (index: number) => void
   onBulkAdd: () => void
   onReject: (index: number) => void
+  generationSuccess?: number | null
 }
 
 export function SuggestionsPanel({
@@ -67,8 +71,10 @@ export function SuggestionsPanel({
   onSelectAll,
   onDeselectAll,
   onAdd,
+  onEdit,
   onBulkAdd,
   onReject,
+  generationSuccess,
 }: SuggestionsPanelProps) {
   const selectableCount = suggestions.filter(
     (s, i) => s.verification?.verdict !== "fail" && !addedIds.has(i)
@@ -172,25 +178,38 @@ export function SuggestionsPanel({
         </div>
       )}
 
-      {/* Loading skeletons */}
+      {/* Loading state */}
       {loading && (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="rounded-lg border border-border/30 p-4 space-y-2"
-            >
-              <div className="h-4 w-3/4 bg-muted/50 rounded animate-pulse" />
-              <div className="h-3 w-full bg-muted/30 rounded animate-pulse" />
-              <div className="h-3 w-1/2 bg-muted/30 rounded animate-pulse" />
-              <div className="flex gap-2 pt-1">
-                <div className="h-6 w-16 bg-muted/30 rounded animate-pulse" />
-                <div className="h-6 w-16 bg-muted/30 rounded animate-pulse" />
-              </div>
-            </div>
-          ))}
+        <div className="text-center py-8">
+          <div className="relative mx-auto w-16 h-16 mb-4">
+            <Sparkles className="h-8 w-8 text-highlight absolute inset-0 m-auto animate-pulse" />
+            <div className="absolute inset-0 border-2 border-highlight/20 border-t-highlight rounded-full animate-spin" />
+          </div>
+          <p className="text-sm font-medium text-steam-dark">
+            DI generuoja užduotis...
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Tai gali užtrukti kelias sekundes
+          </p>
         </div>
       )}
+
+      {/* Generation success banner */}
+      <AnimatePresence>
+        {generationSuccess && !loading && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-center gap-2"
+          >
+            <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+            <span className="text-sm font-medium text-steam-dark">
+              {generationSuccess} užduotys sugeneruotos
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Selection toolbar */}
       {!loading && suggestions.length > 0 && (
@@ -248,6 +267,7 @@ export function SuggestionsPanel({
                 adding={adding}
                 onToggleSelect={onToggleSelect}
                 onAdd={onAdd}
+                onEdit={onEdit}
                 onReject={onReject}
               />
             ))}

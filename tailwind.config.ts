@@ -109,6 +109,10 @@ const config: Config = {
           "0%": { transform: "translateY(0) rotate(0deg)", opacity: "1" },
           "100%": { transform: "translateY(-200px) rotate(720deg)", opacity: "0" },
         },
+        nudge: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "50%": { transform: "translateX(6px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
