@@ -235,7 +235,7 @@ export function SuggestionsPanel({
       {!loading && suggestions.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground font-medium">
-            Pasiūlymai ({suggestions.length}) — vilkite į kairę arba spauskite „Pridėti"
+            Pasiūlymai ({suggestions.length}) — vilkite į kairę arba spauskite &bdquo;Pridėti&ldquo;
           </p>
           <AnimatePresence>
             {suggestions.map((suggestion, index) => (
