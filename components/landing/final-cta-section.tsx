@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Mail, Sparkles } from "lucide-react"
+import { ArrowRight, Mail } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
@@ -15,22 +15,15 @@ export function FinalCtaSection() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
-      className="py-20 md:py-24 bg-white"
+      className="py-20 md:py-24 bg-[#F8FAFB]"
     >
       <div className="container mx-auto px-5 max-w-[1140px]">
         <div className="max-w-3xl mx-auto text-center">
           <div className="rounded-3xl p-8 sm:p-12 md:p-16 text-white relative overflow-hidden">
-            {/* Abstract background image */}
-            <div className="absolute inset-0">
-              <img
-                src="/photos/abstract-bg.jpg"
-                alt=""
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-steam-dark/70" />
-            </div>
+            {/* Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00323C] via-[#004D5C] to-[#008CB4]" />
 
-            {/* Animated glow accents */}
+            {/* Glow accents */}
             <motion.div
               animate={prefersReduced ? {} : { scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -45,21 +38,12 @@ export function FinalCtaSection() {
             />
 
             <div className="relative">
-              <motion.div
-                initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-6"
-              >
-                <Sparkles className="h-6 w-6 text-primary" />
-              </motion.div>
-
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                Paruoškite kitą pamoką per 10 minučių
+                Išbandykite platformą savo pamokoje
               </h2>
               <p className="text-white/60 text-[15px] mb-8 max-w-md mx-auto leading-relaxed">
-                Prisijunkite ir sukurkite pirmąjį interaktyvų iššūkį savo
-                mokiniams — su DI pagalba ir be jokios registracijos mokiniams.
+                Pamoką galima sukurti per kelias minutes ir iš karto naudoti
+                klasėje — mokiniams nereikia registracijos.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

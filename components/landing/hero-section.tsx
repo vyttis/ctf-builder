@@ -6,9 +6,9 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import {
   ArrowRight,
   ArrowDown,
-  Lock,
   GraduationCap,
   UserX,
+  Building2,
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -31,7 +31,7 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden min-h-[90vh] flex flex-col">
-      {/* Animated background */}
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#F8FAFB] to-primary/[0.03]" />
       <motion.div
         animate={
@@ -70,39 +70,53 @@ export function HeroSection() {
           </Link>
         </nav>
 
-        {/* Hero content — two columns */}
+        {/* Hero content */}
         <div className="flex-1 flex items-center pb-12 md:pb-16">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center w-full">
             {/* Left — text */}
             <div>
-              <motion.h1
+              {/* KU trust badge */}
+              <motion.div
                 custom={0}
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-extrabold text-steam-dark leading-[1.08] tracking-tight"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/8 border border-secondary/15 mb-6"
               >
-                Pamoką paverskite{" "}
+                <Building2 className="h-3.5 w-3.5 text-secondary" />
+                <span className="text-xs font-medium text-secondary">
+                  Klaipėdos universiteto STEAM centras
+                </span>
+              </motion.div>
+
+              <motion.h1
+                custom={1}
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-extrabold text-steam-dark leading-[1.08] tracking-tight"
+              >
+                Pamokos, kuriose mokiniai{" "}
                 <span className="text-transparent bg-clip-text gradient-primary">
-                  komandiniu iššūkiu
+                  sprendžia iššūkius
                 </span>
               </motion.h1>
 
               <motion.p
-                custom={1}
+                custom={2}
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
                 className="text-base text-muted-foreground mt-5 leading-relaxed max-w-lg"
               >
-                Interaktyvi STEAM pamokų platforma, kur mokiniai mokosi
-                spręsdami struktūruotas užduotis komandomis — o mokytojas viską
-                stebi realiu laiku.
+                Interaktyvi platforma, padedanti mokytojams kurti įtraukiančias
+                pamokas ir komandines mokymosi veiklas — o mokinių progresą
+                stebėti realiu laiku.
               </motion.p>
 
               {/* CTAs */}
               <motion.div
-                custom={2}
+                custom={3}
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
@@ -134,19 +148,15 @@ export function HeroSection() {
 
               {/* Trust indicators */}
               <motion.div
-                custom={3}
+                custom={4}
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
                 className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 text-xs text-muted-foreground/70"
               >
                 <span className="flex items-center gap-1.5">
-                  <Lock className="h-3.5 w-3.5" />
-                  STEAM centro dalyviams
-                </span>
-                <span className="flex items-center gap-1.5">
                   <GraduationCap className="h-3.5 w-3.5" />
-                  Nemokama
+                  Nemokama mokykloms
                 </span>
                 <span className="flex items-center gap-1.5">
                   <UserX className="h-3.5 w-3.5" />
@@ -155,7 +165,7 @@ export function HeroSection() {
               </motion.div>
             </div>
 
-            {/* Right — bento photo grid */}
+            {/* Right — photo grid */}
             <motion.div
               custom={2}
               initial="hidden"
@@ -164,12 +174,9 @@ export function HeroSection() {
               className="hidden md:block"
             >
               <div className="relative">
-                {/* Glow behind photos */}
                 <div className="absolute -inset-6 bg-gradient-to-br from-primary/10 via-secondary/5 to-highlight/10 rounded-3xl blur-2xl opacity-60" />
 
-                {/* Bento grid */}
                 <div className="relative grid grid-cols-2 gap-3">
-                  {/* Main large — beavers at computers */}
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -177,13 +184,12 @@ export function HeroSection() {
                     className="col-span-2 rounded-2xl overflow-hidden shadow-2xl shadow-steam-dark/10 border border-white/60 aspect-[16/9]"
                   >
                     <img
-                      src="/photos/activity-beavers.jpg"
-                      alt="STEAM centro veiklos"
+                      src="/photos/activity-students.jpg"
+                      alt="Mokiniai sprendžia užduotis komandomis"
                       className="w-full h-full object-cover"
                     />
                   </motion.div>
 
-                  {/* VR photo */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -191,13 +197,12 @@ export function HeroSection() {
                     className="rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
                   >
                     <img
-                      src="/photos/activity-vr.jpg"
-                      alt="VR technologijos STEAM centre"
+                      src="/photos/classroom-teacher.jpg"
+                      alt="Mokytoja padeda mokiniams klasėje"
                       className="w-full h-full object-cover"
                     />
                   </motion.div>
 
-                  {/* Students collaboration */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -205,49 +210,12 @@ export function HeroSection() {
                     className="rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
                   >
                     <img
-                      src="/photos/activity-students.jpg"
-                      alt="Moksleiviai sprendžia iššūkius"
+                      src="/photos/activity-beavers.jpg"
+                      alt="STEAM centro veiklos"
                       className="w-full h-full object-cover"
                     />
                   </motion.div>
                 </div>
-
-                {/* Floating stat badge */}
-                <motion.div
-                  animate={prefersReduced ? {} : { y: [0, -6, 0] }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg shadow-steam-dark/10 border border-border/30 p-3 flex items-center gap-2.5"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <GraduationCap className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-steam-dark leading-none">
-                      500+
-                    </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">
-                      mokinių jau dalyvavo
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Floating accent badge */}
-                <motion.div
-                  animate={prefersReduced ? {} : { y: [0, -4, 0] }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 1,
-                  }}
-                  className="absolute -top-3 -right-3 bg-accent text-white rounded-lg shadow-lg shadow-accent/20 px-3 py-1.5 text-xs font-bold"
-                >
-                  STEAM
-                </motion.div>
               </div>
             </motion.div>
           </div>

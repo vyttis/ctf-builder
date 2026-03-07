@@ -10,32 +10,32 @@ const rows = [
   {
     label: "Formatas",
     quiz: "Greiti klausimai su laikmačiu",
-    ctf: "Struktūruotos užduotys su lanksčiu laiko valdymu",
+    platform: "Struktūruotos užduotys su lanksčiu laiko valdymu",
   },
   {
     label: "Darbo būdas",
     quiz: "Individualus žaidimas",
-    ctf: "Komandinis darbas",
+    platform: "Komandinis darbas ir bendradarbiavimas",
   },
   {
     label: "Atsakymai",
     quiz: "Pasirinkimas iš variantų",
-    ctf: "Laisvas atsakymas arba pasirinkimas",
+    platform: "Laisvas atsakymas arba pasirinkimas",
   },
   {
-    label: "Užuominos",
-    quiz: "Nėra",
-    ctf: "Progresinės, su taškų mažinimu",
+    label: "Pagalba",
+    quiz: "Nėra užuominų",
+    platform: "Progresinės užuominos su taškų logika",
   },
   {
     label: "Stebėjimas",
     quiz: "Rezultatai po žaidimo",
-    ctf: "Progresas realiu laiku",
+    platform: "Progresas realiu laiku pamokos metu",
   },
   {
     label: "Kūrimas",
     quiz: "Rankinis klausimų vedimas",
-    ctf: "DI sugeneruoja pagal temą",
+    platform: "DI padėjėjas pasiūlo pagal temą",
   },
 ]
 
@@ -45,8 +45,8 @@ export function ComparisonSection() {
   return (
     <SectionWrapper background="white">
       <SectionHeader
-        title="Daugiau nei viktorina"
-        subtitle="Tradiciniai viktorinų įrankiai tinka greitam patikrinimui. CTF Builder sukurtas giliam, komandiniam mokymuisi."
+        title="Daugiau nei paprastas quiz"
+        subtitle="Daugelis platformų leidžia tik pateikti klausimus ir surinkti atsakymus. Ši sistema leidžia kurti visą mokymosi veiklą."
       />
 
       <motion.div
@@ -62,12 +62,12 @@ export function ComparisonSection() {
             <div className="hidden sm:block" />
             <div className="px-5 py-4 bg-muted/50 border-b border-r border-border/30">
               <p className="text-sm font-medium text-muted-foreground">
-                Tradicinės viktorinos
+                Tradiciniai quiz įrankiai
               </p>
             </div>
             <div className="px-5 py-4 bg-primary/5 border-b border-border/30">
               <p className="text-sm font-semibold text-steam-dark">
-                CTF Builder
+                Ši platforma
               </p>
             </div>
           </div>
@@ -92,7 +92,7 @@ export function ComparisonSection() {
               <div className="flex items-center gap-2 px-5 py-3.5 bg-primary/[0.03]">
                 <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span className="text-sm font-medium text-steam-dark">
-                  {row.ctf}
+                  {row.platform}
                 </span>
               </div>
             </div>
