@@ -19,7 +19,17 @@ export function FinalCtaSection() {
     >
       <div className="container mx-auto px-5 max-w-[1140px]">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="bg-gradient-to-br from-steam-dark via-steam-dark to-[#004D55] rounded-3xl p-8 sm:p-12 md:p-16 text-white relative overflow-hidden">
+          <div className="rounded-3xl p-8 sm:p-12 md:p-16 text-white relative overflow-hidden">
+            {/* Abstract background image */}
+            <div className="absolute inset-0">
+              <img
+                src="/photos/abstract-bg.jpg"
+                alt=""
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-steam-dark/70" />
+            </div>
+
             {/* Animated glow accents */}
             <motion.div
               animate={prefersReduced ? {} : { scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
