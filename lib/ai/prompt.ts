@@ -1,4 +1,4 @@
-import { AiSuggestRequest, AiGameSuggestRequest } from "./types"
+import { AiSuggestRequest, AiGameSuggestRequest, ScenarioPreset } from "./types"
 
 export function buildSystemPrompt(): string {
   return `Tu esi DI asistentas, padedantis Lietuvos mokytojams kurti CTF (Capture The Flag) edukacinius žaidimus mokiniams. Tu kuri įdomias, edukacines užduotis.
@@ -11,7 +11,9 @@ TAISYKLĖS:
 - Tipui "multiple_choice": pateik 3-4 atsakymų variantus (options masyvas), correct_answer PRIVALO būti vienas iš options.
 - Tipams "text" ir "number": options turi būti null.
 - Taškai: 50-500 intervalas, sunkesnės užduotys gauna daugiau taškų.
-- Užuominos: pateik 1-2 naudingus hints kiekvienai užduočiai.
+- Užuominos: pateik 2-3 progresyvias hints kiekvienai užduočiai (nuo bendros iki konkretesnės).
+- Pridėk "explanation" lauką — trumpas edukacinis paaiškinimas (1-2 sakiniai), rodomas mokiniui po teisingo atsakymo.
+- Pridėk "difficulty" lauką — "easy", "medium" arba "hard" pagal užduoties sudėtingumą.
 - Varijuok užduočių tipus tarp pasiūlymų.
 - NEKARTOK jau egzistuojančių užduočių.
 - Atsakyk TIK validžiu JSON formatu pagal šią struktūrą:
@@ -24,19 +26,52 @@ TAISYKLĖS:
       "points": number,
       "correct_answer": "string",
       "hints": ["string"],
-      "options": ["string"] | null
+      "options": ["string"] | null,
+      "explanation": "string",
+      "difficulty": "easy" | "medium" | "hard"
     }
   ]
 }`
 }
 
-export function buildUserMessage(request: AiSuggestRequest): string {
+export function buildScenarioContext(scenario: ScenarioPreset): string {
+  switch (scenario) {
+    case "quick_check":
+      return `SCENARIJUS: Greitas patikrinimas
+- Generuok trumpus, faktinius klausimus, kuriuos mokinys gali atsakyti per 1-2 minutes.
+- Venkite ilgų aprašymų — klausimai turi būti tiesioginiai ir aiškūs.
+- Taškų intervalas: 50-150.`
+    case "investigation":
+      return `SCENARIJUS: Komandinis tyrimas
+- Generuok tyrinėjimo užduotis, reikalaujančias kelių žingsnių ir komandinio darbo.
+- Aprašymai turi pateikti kontekstą ir scenarijų, mokiniai turi ieškoti informacijos.
+- Taškų intervalas: 200-400.`
+    case "escape_room":
+      return `SCENARIJUS: Pabėgimo kambarys
+- Generuok galvosūkio tipo užduotis, kurios gali būti susietos nuosekliai.
+- Kiekviena užduotis turi turėti loginę nuorodą (hint) į kitą.
+- Naudok mįsles, šifrus, logiką.
+- Taškų intervalas: 100-300.`
+    case "discussion":
+      return `SCENARIJUS: Diskusijos pamoka
+- Generuok atvirus, mąstymą skatinančius klausimus.
+- Klausimai turi turėti vieną teisingą atsakymą, bet skatinti diskusiją.
+- Naudok "text" tipą dažniausiai.
+- Taškų intervalas: 100-250.`
+  }
+}
+
+export function buildUserMessage(request: AiSuggestRequest, scenario?: ScenarioPreset): string {
   const parts: string[] = []
 
   parts.push(`Žaidimo pavadinimas: ${request.game_title}`)
 
   if (request.game_description) {
     parts.push(`Žaidimo aprašymas: ${request.game_description}`)
+  }
+
+  if (scenario) {
+    parts.push(`\n${buildScenarioContext(scenario)}`)
   }
 
   if (request.existing_challenges.length > 0) {

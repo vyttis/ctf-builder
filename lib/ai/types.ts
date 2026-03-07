@@ -17,6 +17,8 @@ export interface AiSuggestion {
   correct_answer: string
   hints: string[]
   options: string[] | null
+  explanation?: string
+  difficulty?: "easy" | "medium" | "hard"
   verification?: VerificationResult
 }
 
@@ -56,6 +58,8 @@ export interface AiGameSuggestResponse {
 }
 
 // DI pipeline types
+export type ScenarioPreset = "quick_check" | "investigation" | "escape_room" | "discussion"
+
 export interface DiGenerateRequest {
   game_id: string
   game_title: string
@@ -68,6 +72,7 @@ export interface DiGenerateRequest {
   }[]
   teacher_prompt?: string
   count?: number
+  scenario?: ScenarioPreset
 }
 
 export interface DiGenerateResponse {

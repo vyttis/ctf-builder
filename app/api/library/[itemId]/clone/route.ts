@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 
 // POST /api/library/[itemId]/clone — clone library item into a new game
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: { itemId: string } }
 ) {
   try {

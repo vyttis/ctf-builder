@@ -1,10 +1,12 @@
 import {
   HeroSection,
-  ProblemSection,
-  CtfExplanationSection,
+  ValueSection,
   HowItWorksSection,
+  FeaturesSection,
+  ProductVisualsSection,
+  ComparisonSection,
+  UseCasesSection,
   SteamIntegrationSection,
-  BenefitsSection,
   InstitutionSection,
   FinalCtaSection,
   Footer,
@@ -14,11 +16,13 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       <HeroSection />
-      <ProblemSection />
-      <CtfExplanationSection />
+      <ValueSection />
       <HowItWorksSection />
+      <FeaturesSection />
+      <ProductVisualsSection />
+      <ComparisonSection />
+      <UseCasesSection />
       <SteamIntegrationSection />
-      <BenefitsSection />
       <InstitutionSection />
       <FinalCtaSection />
       <Footer />

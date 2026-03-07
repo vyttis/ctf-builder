@@ -8,8 +8,33 @@ const createTeamSchema = z.object({
   team_name: z.string().min(1, "Komandos vardas privalomas").max(30),
 })
 
+// In-memory rate limiter by IP
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 5
+const RATE_WINDOW = 60_000
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW })
+    return true
+  }
+  if (entry.count >= RATE_LIMIT) return false
+  entry.count++
+  return true
+}
+
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Per daug užklausų. Palaukite minutę." },
+        { status: 429 }
+      )
+    }
+
     let body
     try {
       body = await request.json()

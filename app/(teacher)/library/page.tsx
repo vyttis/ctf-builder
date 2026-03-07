@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { LibraryCard } from "@/components/teacher/library-card"
 import { Input } from "@/components/ui/input"
 import {
@@ -40,11 +40,7 @@ export default function LibraryPage() {
   const [subject, setSubject] = useState("all")
   const [gradeLevel, setGradeLevel] = useState("all")
 
-  useEffect(() => {
-    fetchItems()
-  }, [subject, gradeLevel])
-
-  async function fetchItems() {
+  const fetchItems = useCallback(async () => {
     setLoading(true)
     const params = new URLSearchParams()
     if (subject !== "all") params.set("subject", subject)
@@ -58,7 +54,11 @@ export default function LibraryPage() {
       setItems(data.filter((i: LibraryItem) => i.status === "approved"))
     }
     setLoading(false)
-  }
+  }, [subject, gradeLevel, search])
+
+  useEffect(() => {
+    fetchItems()
+  }, [fetchItems])
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault()

@@ -7,6 +7,7 @@ TAVO UŽDUOTIS:
 - Patikrink, ar užuominos (hints) padeda, bet neatskleidžia atsakymo.
 - Jei tipas "multiple_choice": patikrink, ar correct_answer yra tarp options, ar kiti variantai yra tikėtini.
 - Jei tipas "number": patikrink, ar correct_answer yra teisingas skaičius (atlik skaičiavimą jei reikia).
+- Jei pateiktas "explanation": patikrink, ar jis tikslus, edukacinis ir nesikerta su atsakymu ar aprašymu.
 
 ATSAKYK TIK validžiu JSON:
 {
@@ -30,6 +31,7 @@ export function buildVerificationUserMessage(suggestion: {
   correct_answer: string
   hints: string[]
   options: string[] | null
+  explanation?: string
 }): string {
   const parts = [
     `Užduoties pavadinimas: ${suggestion.title}`,
@@ -41,6 +43,9 @@ export function buildVerificationUserMessage(suggestion: {
   ]
   if (suggestion.options) {
     parts.push(`Atsakymų variantai: ${JSON.stringify(suggestion.options)}`)
+  }
+  if (suggestion.explanation) {
+    parts.push(`Paaiškinimas: ${suggestion.explanation}`)
   }
   parts.push("\nPatikrink šią užduotį ir pateik verdiktą.")
   return parts.join("\n")

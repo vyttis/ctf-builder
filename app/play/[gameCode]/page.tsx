@@ -110,7 +110,7 @@ export default function JoinGamePage() {
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Klaida",
+        description: error instanceof Error ? error.message : "Nepavyko prisijungti prie žaidimo",
         variant: "destructive",
       })
     } finally {

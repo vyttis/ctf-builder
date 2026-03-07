@@ -8,9 +8,12 @@ import {
   buildVerificationUserMessage,
 } from "@/lib/ai/verify-prompt"
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
+import {
+  aiSuggestResponseSchema,
+  verificationResultSchema,
+} from "@/lib/ai/schemas"
 import type {
   AiSuggestion,
-  AiSuggestResponse,
   VerificationResult,
 } from "@/lib/ai/types"
 
@@ -30,6 +33,7 @@ const generateSchema = z.object({
     .default([]),
   teacher_prompt: z.string().max(500).optional(),
   count: z.number().min(1).max(5).default(3),
+  scenario: z.enum(["quick_check", "investigation", "escape_room", "discussion"]).optional(),
 })
 
 // Simple in-memory rate limiter
@@ -89,22 +93,17 @@ async function verifySuggestion(
         .replace(/\n?```$/, "")
     }
 
-    const parsed = JSON.parse(jsonText) as VerificationResult
-
-    if (!["pass", "fail", "uncertain"].includes(parsed.verdict)) {
+    const rawParsed = JSON.parse(jsonText)
+    const validated = verificationResultSchema.safeParse(rawParsed)
+    if (!validated.success) {
       return {
-        verdict: "uncertain",
+        verdict: "uncertain" as const,
         issues: ["Netikėtas patikros formatas"],
         confidence: 0,
       }
     }
 
-    return {
-      verdict: parsed.verdict,
-      issues: Array.isArray(parsed.issues) ? parsed.issues : [],
-      confidence:
-        typeof parsed.confidence === "number" ? parsed.confidence : 0.5,
-    }
+    return validated.data
   } catch {
     return {
       verdict: "uncertain",
@@ -177,7 +176,7 @@ export async function POST(request: Request) {
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
       system: buildSystemPrompt(),
-      messages: [{ role: "user", content: buildUserMessage(parsed.data) }],
+      messages: [{ role: "user", content: buildUserMessage(parsed.data, parsed.data.scenario) }],
     })
 
     const textBlock = message.content.find((b) => b.type === "text")
@@ -192,10 +191,12 @@ export async function POST(request: Request) {
         .replace(/\n?```$/, "")
     }
 
-    const generatedResponse: AiSuggestResponse = JSON.parse(jsonText)
-    if (!Array.isArray(generatedResponse.suggestions)) {
-      throw new Error("Invalid DI response structure")
+    const rawGenerated = JSON.parse(jsonText)
+    const validatedResponse = aiSuggestResponseSchema.safeParse(rawGenerated)
+    if (!validatedResponse.success) {
+      throw new Error("Invalid DI response structure: " + validatedResponse.error.message)
     }
+    const generatedResponse = validatedResponse.data
 
     // Step 2: Verify each suggestion in parallel
     const enrichedSuggestions = await Promise.all(

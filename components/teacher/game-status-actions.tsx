@@ -51,11 +51,11 @@ export function GameStatusActions({
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || "Nepavyko atnaujinti statuso")
+        throw new Error(err.error || "Nepavyko atnaujinti būsenos")
       }
 
       toast({
-        title: "Statusas atnaujintas",
+        title: "Būsena atnaujinta!",
         description:
           newStatus === "active"
             ? "Žaidimas aktyvuotas! Mokiniai gali prisijungti."
@@ -69,7 +69,7 @@ export function GameStatusActions({
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Klaida",
+        description: error instanceof Error ? error.message : "Nepavyko atnaujinti būsenos",
         variant: "destructive",
       })
     } finally {

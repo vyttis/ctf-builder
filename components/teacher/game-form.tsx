@@ -100,7 +100,7 @@ export function GameForm({ prefillData }: GameFormProps) {
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Klaida",
+        description: error instanceof Error ? error.message : "Nepavyko sukurti žaidimo",
         variant: "destructive",
       })
     } finally {

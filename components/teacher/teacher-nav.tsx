@@ -94,6 +94,7 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
               variant="ghost"
               size="sm"
               onClick={handleLogout}
+              aria-label="Atsijungti"
               className="hidden sm:flex text-muted-foreground hover:text-accent"
             >
               <LogOut className="h-4 w-4" />

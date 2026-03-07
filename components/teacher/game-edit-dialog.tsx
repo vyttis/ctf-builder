@@ -101,7 +101,7 @@ export function GameEditDialog({
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Klaida",
+        description: error instanceof Error ? error.message : "Nepavyko atnaujinti žaidimo",
         variant: "destructive",
       })
     } finally {

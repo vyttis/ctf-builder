@@ -278,7 +278,7 @@ export default async function GameDetailPage({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Leaderboard</span>
+                <span className="text-muted-foreground">Rezultatų lentelė</span>
                 <span className="text-steam-dark font-medium">
                   {settings?.show_leaderboard ? "Taip" : "Ne"}
                 </span>

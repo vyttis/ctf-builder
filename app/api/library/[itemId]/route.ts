@@ -5,7 +5,7 @@ import { z } from "zod"
 
 // GET /api/library/[itemId] — get single library item
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { itemId: string } }
 ) {
   try {
@@ -59,7 +59,14 @@ export async function PATCH(
     } = await supabase.auth.getUser()
 
     const body = await request.json()
-    const { status, review_notes } = reviewSchema.parse(body)
+    const parsed = reviewSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || "Neteisingi duomenys" },
+        { status: 400 }
+      )
+    }
+    const { status, review_notes } = parsed.data
 
     const { error } = await supabase
       .from("library_items")
@@ -77,12 +84,6 @@ export async function PATCH(
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Neteisingi duomenys" },
-        { status: 400 }
-      )
-    }
     return NextResponse.json(
       { error: (error instanceof Error ? error.message : undefined) || "Prieiga uždrausta" },
       { status: 403 }
@@ -92,7 +93,7 @@ export async function PATCH(
 
 // DELETE /api/library/[itemId] — delete (super_admin only)
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: { itemId: string } }
 ) {
   try {
