@@ -9,12 +9,6 @@ import {
   Lock,
   GraduationCap,
   UserX,
-  Puzzle,
-  Trophy,
-  QrCode,
-  BarChart3,
-  Sparkles,
-  Flag,
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -161,7 +155,7 @@ export function HeroSection() {
               </motion.div>
             </div>
 
-            {/* Right — app mockup */}
+            {/* Right — bento photo grid */}
             <motion.div
               custom={2}
               initial="hidden"
@@ -170,143 +164,55 @@ export function HeroSection() {
               className="hidden md:block"
             >
               <div className="relative">
-                {/* Glow effect behind device */}
-                <div className="absolute -inset-4 bg-gradient-to-br from-primary/10 via-secondary/5 to-primary/10 rounded-3xl blur-2xl opacity-60" />
+                {/* Glow behind photos */}
+                <div className="absolute -inset-6 bg-gradient-to-br from-primary/10 via-secondary/5 to-highlight/10 rounded-3xl blur-2xl opacity-60" />
 
-                {/* Device frame */}
-                <div className="relative bg-white rounded-2xl shadow-2xl shadow-steam-dark/10 border border-border/40 overflow-hidden">
-                  {/* Top bar */}
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30 bg-[#F8FAFB]">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-accent/40" />
-                      <div className="w-3 h-3 rounded-full bg-highlight/40" />
-                      <div className="w-3 h-3 rounded-full bg-primary/40" />
-                    </div>
-                    <div className="flex-1 mx-6">
-                      <div className="bg-white rounded-md h-6 flex items-center justify-center text-[10px] text-muted-foreground/50 font-mono border border-border/30">
-                        ctf-builder.vercel.app
-                      </div>
-                    </div>
-                  </div>
+                {/* Bento grid */}
+                <div className="relative grid grid-cols-2 gap-3">
+                  {/* Main large — beavers at computers */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                    className="col-span-2 rounded-2xl overflow-hidden shadow-2xl shadow-steam-dark/10 border border-white/60 aspect-[16/9]"
+                  >
+                    <img
+                      src="/photos/activity-beavers.jpg"
+                      alt="STEAM centro veiklos"
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
 
-                  {/* Content preview — builder view */}
-                  <div className="p-5 space-y-4">
-                    {/* Builder header */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-xs font-semibold text-steam-dark">
-                          Jūros tyrinėtojas
-                        </div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">
-                          5 iššūkiai &middot; 3 komandos
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex items-center gap-1 px-2 py-1 bg-primary/8 rounded-lg">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                          <span className="text-[9px] font-semibold text-primary">
-                            Aktyvus
-                          </span>
-                        </div>
-                        <div className="h-7 px-2 bg-primary/10 rounded-lg flex items-center gap-1">
-                          <Sparkles className="h-3 w-3 text-primary" />
-                          <span className="text-[9px] font-semibold text-primary">
-                            DI
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                  {/* VR photo */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, duration: 0.5 }}
+                    className="rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
+                  >
+                    <img
+                      src="/photos/activity-vr.jpg"
+                      alt="VR technologijos STEAM centre"
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
 
-                    {/* Challenge cards */}
-                    {[
-                      {
-                        icon: Puzzle,
-                        title: "Demografinis detektyvas",
-                        points: "200",
-                        difficulty: "Vidutinis",
-                        diffColor: "bg-highlight/10 text-highlight",
-                        color: "bg-primary/8 text-primary",
-                      },
-                      {
-                        icon: Flag,
-                        title: "Jūros ekspedicija",
-                        points: "150",
-                        difficulty: "Lengvas",
-                        diffColor: "bg-primary/10 text-primary",
-                        color: "bg-secondary/8 text-secondary",
-                      },
-                      {
-                        icon: Trophy,
-                        title: "Kodų medžioklė",
-                        points: "300",
-                        difficulty: "Sunkus",
-                        diffColor: "bg-accent/10 text-accent",
-                        color: "bg-highlight/8 text-highlight",
-                      },
-                    ].map((item, i) => {
-                      const Icon = item.icon
-                      return (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: 10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.8 + i * 0.15 }}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-[#F8FAFB] border border-border/30"
-                        >
-                          <div
-                            className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center`}
-                          >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-xs font-medium text-steam-dark">
-                              {item.title}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground">
-                              {item.points} taškų
-                            </div>
-                          </div>
-                          <div
-                            className={`text-[8px] font-medium px-1.5 py-0.5 rounded-full ${item.diffColor}`}
-                          >
-                            {item.difficulty}
-                          </div>
-                        </motion.div>
-                      )
-                    })}
-
-                    {/* Mini leaderboard strip */}
-                    <div className="rounded-xl border border-border/30 bg-white p-3 space-y-1.5">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <BarChart3 className="h-3 w-3 text-muted-foreground/40" />
-                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                          Lyderių lentelė
-                        </span>
-                      </div>
-                      {[
-                        { name: "Bangų medžiotojai", pct: 85 },
-                        { name: "Kodo meistrai", pct: 60 },
-                      ].map((team, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold text-steam-dark w-3">
-                            {i + 1}
-                          </span>
-                          <span className="text-[9px] text-steam-dark w-24 truncate">
-                            {team.name}
-                          </span>
-                          <div className="flex-1 h-1.5 bg-border/20 rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-primary/40"
-                              style={{ width: `${team.pct}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Students collaboration */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7, duration: 0.5 }}
+                    className="rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
+                  >
+                    <img
+                      src="/photos/activity-students.jpg"
+                      alt="Moksleiviai sprendžia iššūkius"
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
                 </div>
 
-                {/* Floating QR badge */}
+                {/* Floating stat badge */}
                 <motion.div
                   animate={prefersReduced ? {} : { y: [0, -6, 0] }}
                   transition={{
@@ -314,17 +220,33 @@ export function HeroSection() {
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
-                  className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg shadow-steam-dark/10 border border-border/30 p-3 flex items-center gap-2"
+                  className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg shadow-steam-dark/10 border border-border/30 p-3 flex items-center gap-2.5"
                 >
-                  <QrCode className="h-5 w-5 text-primary" />
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                  </div>
                   <div>
-                    <div className="text-[10px] font-semibold text-steam-dark">
-                      QR kodas
+                    <div className="text-sm font-bold text-steam-dark leading-none">
+                      500+
                     </div>
-                    <div className="text-[9px] text-muted-foreground">
-                      Prisijungk akimirksniu
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      mokinių jau dalyvavo
                     </div>
                   </div>
+                </motion.div>
+
+                {/* Floating accent badge */}
+                <motion.div
+                  animate={prefersReduced ? {} : { y: [0, -4, 0] }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1,
+                  }}
+                  className="absolute -top-3 -right-3 bg-accent text-white rounded-lg shadow-lg shadow-accent/20 px-3 py-1.5 text-xs font-bold"
+                >
+                  STEAM
                 </motion.div>
               </div>
             </motion.div>

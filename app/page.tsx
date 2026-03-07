@@ -6,6 +6,7 @@ import {
   ProductVisualsSection,
   ComparisonSection,
   UseCasesSection,
+  PhotoGallerySection,
   SteamIntegrationSection,
   InstitutionSection,
   FinalCtaSection,
@@ -22,6 +23,7 @@ export default function LandingPage() {
       <ProductVisualsSection />
       <ComparisonSection />
       <UseCasesSection />
+      <PhotoGallerySection />
       <SteamIntegrationSection />
       <InstitutionSection />
       <FinalCtaSection />
