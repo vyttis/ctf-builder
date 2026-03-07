@@ -8,6 +8,8 @@ export const aiSuggestionSchema = z.object({
   correct_answer: z.union([z.string(), z.number()]).transform(String),
   hints: z.array(z.string()),
   options: z.array(z.string()).nullable().default(null),
+  explanation: z.string().optional(),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
 })
 
 export const aiSuggestResponseSchema = z.object({
