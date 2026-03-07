@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 // Safe columns to return (never include answer_hash)
-const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, generated_by_di, verification_verdict, verification_issues, verification_confidence, created_at, updated_at"
+const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, created_at, updated_at"
 
 const updateChallengeSchema = z.object({
   title: z.string().min(1).optional(),
@@ -17,6 +17,9 @@ const updateChallengeSchema = z.object({
   order_index: z.number().optional(),
   image_url: z.string().url().nullable().optional(),
   maps_url: z.string().url().nullable().optional(),
+  explanation: z.string().nullable().optional(),
+  difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
+  hint_penalty: z.number().min(0).max(100).optional(),
 })
 
 async function verifyChallengeOwnership(

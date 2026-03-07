@@ -23,6 +23,8 @@ import {
   Play,
   AlertTriangle,
   LogOut,
+  BookOpen,
+  ChevronRight,
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings } from "@/types/game"
 import { MapsEmbed } from "@/components/shared/maps-embed"
@@ -40,6 +42,11 @@ interface PlayerChallenge {
   order_index: number
   image_url: string | null
   maps_url: string | null
+  hint_penalty: number
+}
+
+interface ExtendedSubmissionResult extends SubmissionResult {
+  explanation?: string | null
 }
 
 function formatTime(seconds: number): string {
@@ -60,10 +67,12 @@ export default function PlayPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answer, setAnswer] = useState("")
   const [loading, setLoading] = useState(false)
-  const [feedback, setFeedback] = useState<SubmissionResult | null>(null)
+  const [feedback, setFeedback] = useState<ExtendedSubmissionResult | null>(null)
   const [totalPoints, setTotalPoints] = useState(0)
   const [solvedIds, setSolvedIds] = useState<Set<string>>(new Set())
-  const [showHint, setShowHint] = useState(false)
+  const [revealedHintCount, setRevealedHintCount] = useState(0)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [currentExplanation, setCurrentExplanation] = useState<string | null>(null)
   const [gameFinished, setGameFinished] = useState(false)
   const [reflectionDone, setReflectionDone] = useState(false)
 
@@ -181,7 +190,7 @@ export default function PlayPage() {
 
     const { data } = await supabase
       .from("challenges")
-      .select("id, title, description, type, points, hints, options, order_index, image_url, maps_url")
+      .select("id, title, description, type, points, hints, options, order_index, image_url, maps_url, hint_penalty")
       .eq("game_id", game.id)
       .order("order_index", { ascending: true })
 
@@ -245,7 +254,7 @@ export default function PlayPage() {
         return
       }
 
-      const result: SubmissionResult = await res.json()
+      const result: ExtendedSubmissionResult = await res.json()
       setFeedback(result)
 
       if (result.is_correct) {
@@ -257,15 +266,22 @@ export default function PlayPage() {
         })
         setAnswer("")
 
-        setTimeout(() => {
-          setFeedback(null)
-          setShowHint(false)
-          if (currentIndex + 1 < challenges.length) {
-            setCurrentIndex(currentIndex + 1)
-          } else {
-            setGameFinished(true)
-          }
-        }, 2000)
+        // Show explanation if available
+        if (result.explanation) {
+          setCurrentExplanation(result.explanation)
+          setShowExplanation(true)
+          // Don't auto-advance — wait for user to click "Toliau"
+        } else {
+          setTimeout(() => {
+            setFeedback(null)
+            setRevealedHintCount(0)
+            if (currentIndex + 1 < challenges.length) {
+              setCurrentIndex(currentIndex + 1)
+            } else {
+              setGameFinished(true)
+            }
+          }, 2000)
+        }
       }
     } catch {
       toast({
@@ -550,38 +566,45 @@ export default function PlayPage() {
                   </div>
                 )}
 
-                {challengeHints.length > 0 && !showHint && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowHint(true)}
-                    className="text-highlight hover:text-highlight/80 gap-1 mb-3"
-                  >
-                    <Lightbulb className="h-3.5 w-3.5" />
-                    Reikia užuominos?
-                  </Button>
-                )}
-
-                <AnimatePresence>
-                  {showHint && challengeHints.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mb-4"
-                    >
-                      <div className="bg-highlight/5 border border-highlight/20 rounded-lg p-3 text-sm">
-                        <div className="flex items-center gap-1 text-highlight font-medium mb-1">
-                          <Lightbulb className="h-3.5 w-3.5" />
-                          Užuomina
-                        </div>
-                        {challengeHints.map((hint, i) => (
-                          <p key={i} className="text-steam-dark">{hint}</p>
+                {/* Progressive hints */}
+                {challengeHints.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {revealedHintCount > 0 && (
+                      <div className="space-y-1.5">
+                        {challengeHints.slice(0, revealedHintCount).map((hint, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                          >
+                            <div className="bg-highlight/5 border border-highlight/20 rounded-lg p-3 text-sm flex items-start gap-2">
+                              <Lightbulb className="h-3.5 w-3.5 text-highlight shrink-0 mt-0.5" />
+                              <p className="text-steam-dark">{hint}</p>
+                            </div>
+                          </motion.div>
                         ))}
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    )}
+                    {revealedHintCount < challengeHints.length && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setRevealedHintCount((prev) => prev + 1)}
+                        className="text-highlight hover:text-highlight/80 gap-1.5"
+                      >
+                        <Lightbulb className="h-3.5 w-3.5" />
+                        {revealedHintCount === 0
+                          ? "Reikia užuominos?"
+                          : `Kita užuomina (${revealedHintCount}/${challengeHints.length})`}
+                        {currentChallenge.hint_penalty > 0 && (
+                          <span className="text-accent text-[10px]">
+                            -{currentChallenge.hint_penalty} tšk.
+                          </span>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-3">
                   {currentChallenge.type === "multiple_choice" && currentChallenge.options ? (
@@ -637,27 +660,69 @@ export default function PlayPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className={`mt-4 p-4 rounded-lg flex items-center gap-3 ${
-                        feedback.is_correct
-                          ? "bg-primary/10 border border-primary/20"
-                          : "bg-accent/5 border border-accent/20"
-                      }`}
+                      className="mt-4 space-y-3"
                     >
-                      {feedback.is_correct ? (
-                        <CheckCircle2 className="h-6 w-6 text-primary shrink-0" />
-                      ) : (
-                        <XCircle className="h-6 w-6 text-accent shrink-0" />
-                      )}
-                      <div>
-                        <p className={`font-medium ${feedback.is_correct ? "text-primary" : "text-accent"}`}>
-                          {feedback.message}
-                        </p>
-                        {feedback.is_correct && (
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            Pereinama prie kitos užduoties...
-                          </p>
+                      <div
+                        className={`p-4 rounded-lg flex items-center gap-3 ${
+                          feedback.is_correct
+                            ? "bg-primary/10 border border-primary/20"
+                            : "bg-accent/5 border border-accent/20"
+                        }`}
+                      >
+                        {feedback.is_correct ? (
+                          <CheckCircle2 className="h-6 w-6 text-primary shrink-0" />
+                        ) : (
+                          <XCircle className="h-6 w-6 text-accent shrink-0" />
                         )}
+                        <div>
+                          <p className={`font-medium ${feedback.is_correct ? "text-primary" : "text-accent"}`}>
+                            {feedback.message}
+                          </p>
+                          {feedback.is_correct && !showExplanation && (
+                            <p className="text-sm text-muted-foreground mt-0.5">
+                              Pereinama prie kitos užduoties...
+                            </p>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Explanation after correct answer */}
+                      {showExplanation && currentExplanation && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-3"
+                        >
+                          <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
+                            <div className="flex items-center gap-2 mb-2">
+                              <BookOpen className="h-4 w-4 text-secondary" />
+                              <p className="text-sm font-semibold text-secondary">
+                                Ar žinojote?
+                              </p>
+                            </div>
+                            <p className="text-sm text-steam-dark/80 leading-relaxed">
+                              {currentExplanation}
+                            </p>
+                          </div>
+                          <Button
+                            onClick={() => {
+                              setFeedback(null)
+                              setShowExplanation(false)
+                              setCurrentExplanation(null)
+                              setRevealedHintCount(0)
+                              if (currentIndex + 1 < challenges.length) {
+                                setCurrentIndex(currentIndex + 1)
+                              } else {
+                                setGameFinished(true)
+                              }
+                            }}
+                            className="w-full bg-primary hover:bg-primary/90 text-white gap-2"
+                          >
+                            Toliau
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </motion.div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

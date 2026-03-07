@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     // Get challenge details
     const { data: challenge } = await supabase
       .from("challenges")
-      .select("id, points, game_id")
+      .select("id, points, game_id, explanation, hint_penalty")
       .eq("id", parsed.data.challenge_id)
       .single()
 
@@ -147,6 +147,7 @@ export async function POST(request: Request) {
         ? `Teisingai! +${pointsAwarded} taškų`
         : "Neteisingai. Bandykite dar kartą!",
       total_points: newTotalPoints,
+      explanation: isCorrect ? (challenge.explanation || null) : null,
     })
   } catch (err) {
     console.error("Submissions API error:", err)

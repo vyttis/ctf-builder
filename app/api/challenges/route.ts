@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 // Safe columns to return (never include answer_hash)
-const BASE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
+const BASE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, created_at, updated_at"
 const DI_COLUMNS = ", generated_by_di, verification_verdict, verification_issues, verification_confidence"
 const SAFE_CHALLENGE_COLUMNS = BASE_CHALLENGE_COLUMNS + DI_COLUMNS
 
@@ -20,6 +20,9 @@ const createChallengeSchema = z.object({
   order_index: z.number().default(0),
   image_url: z.string().url().nullable().optional(),
   maps_url: z.string().url().nullable().optional(),
+  explanation: z.string().nullable().optional(),
+  difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
+  hint_penalty: z.number().min(0).max(100).default(20),
   generated_by_di: z.boolean().default(false),
   verification_verdict: z.enum(["pass", "fail", "uncertain"]).nullable().optional(),
   verification_issues: z.array(z.string()).default([]),
@@ -97,6 +100,9 @@ export async function POST(request: Request) {
     order_index: orderIndex,
     image_url: parsed.data.image_url ?? null,
     maps_url: parsed.data.maps_url ?? null,
+    explanation: parsed.data.explanation ?? null,
+    difficulty: parsed.data.difficulty ?? null,
+    hint_penalty: parsed.data.hint_penalty,
   }
 
   const diPayload = {

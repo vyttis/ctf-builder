@@ -33,6 +33,7 @@ const generateSchema = z.object({
     .default([]),
   teacher_prompt: z.string().max(500).optional(),
   count: z.number().min(1).max(5).default(3),
+  scenario: z.enum(["quick_check", "investigation", "escape_room", "discussion"]).optional(),
 })
 
 // Simple in-memory rate limiter
@@ -175,7 +176,7 @@ export async function POST(request: Request) {
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
       system: buildSystemPrompt(),
-      messages: [{ role: "user", content: buildUserMessage(parsed.data) }],
+      messages: [{ role: "user", content: buildUserMessage(parsed.data, parsed.data.scenario) }],
     })
 
     const textBlock = message.content.find((b) => b.type === "text")
