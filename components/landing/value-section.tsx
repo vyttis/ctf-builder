@@ -2,34 +2,34 @@
 
 import { SectionWrapper } from "./section-wrapper"
 import { SectionHeader } from "./section-header"
-import { Users, Puzzle, BarChart3 } from "lucide-react"
+import { BookX, Lightbulb, Zap } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
-const values = [
+const problems = [
   {
-    icon: Users,
-    title: "Komandinis darbas",
+    icon: BookX,
+    title: "Pasyvus dalyvavimas",
     description:
-      "Mokiniai dirba grupėse, sprendžia užduotis kartu ir mokosi iš vienas kito.",
-    photo: "/photos/classroom-hands.jpg",
-    photoAlt: "Mokiniai kelia rankas pamokoje",
+      "Daugelis pamokų vis dar remiasi informacijos pateikimu ir individualiu atsakinėjimu. Mokiniai klauso, bet ne visada įsitraukia.",
+    photo: "/photos/classroom-lecture.jpg",
+    photoAlt: "Tradicinė paskaita auditorijoje",
   },
   {
-    icon: Puzzle,
-    title: "Struktūruoti iššūkiai",
+    icon: Lightbulb,
+    title: "Aktyvus mokymasis veikia",
     description:
-      "Kiekviena užduotis turi aiškų tikslą, atsakymą ir taškus — ne atviras klausimas, o konkretus iššūkis.",
+      "Mokiniai geriausiai mokosi spręsdami problemas, dirbdami komandoje ir ieškodami atsakymų patys — ne tik klausydami.",
+    photo: "/photos/classroom-hands.jpg",
+    photoAlt: "Mokiniai aktyviai dalyvauja pamokoje",
+  },
+  {
+    icon: Zap,
+    title: "Paprasta pritaikyti",
+    description:
+      "Ši platforma sukurta tam, kad aktyvaus mokymosi metodus būtų lengva integruoti į kasdienines pamokas — be sudėtingo pasiruošimo.",
     photo: "/photos/classroom-board.jpg",
     photoAlt: "Mokinė sprendžia uždavinį prie lentos",
-  },
-  {
-    icon: BarChart3,
-    title: "Realaus laiko stebėjimas",
-    description:
-      "Matote kiekvienos komandos progresą, atsakymus ir rezultatus pamokos metu.",
-    photo: "/photos/classroom-teacher.jpg",
-    photoAlt: "Mokytoja padeda mokiniams klasėje",
   },
 ]
 
@@ -39,13 +39,13 @@ export function ValueSection() {
   return (
     <SectionWrapper background="white">
       <SectionHeader
-        title="Ne viktorina. Ne testas. Struktūruotas komandinis iššūkis."
-        subtitle="CTF (Capture The Flag) formatas paverčia bet kurią pamoką aktyviu, komandiniu mokymosi procesu su aiškia struktūra."
+        title="Kodėl pamokoms reikia kitokių metodų"
+        subtitle="Aktyvus mokymasis, problemų sprendimas ir bendradarbiavimas — tai metodai, kurie įtraukia mokinius ir padeda jiems mokytis giliau."
       />
 
       <div className="grid sm:grid-cols-3 gap-6">
-        {values.map((value, index) => {
-          const Icon = value.icon
+        {problems.map((item, index) => {
+          const Icon = item.icon
           return (
             <motion.div
               key={index}
@@ -62,11 +62,10 @@ export function ValueSection() {
               }
               className="rounded-2xl border border-border/40 bg-[#F8FAFB] overflow-hidden group cursor-default"
             >
-              {/* Photo instead of mock */}
               <div className="aspect-[3/2] overflow-hidden border-b border-border/20 relative">
                 <img
-                  src={value.photo}
-                  alt={value.photoAlt}
+                  src={item.photo}
+                  alt={item.photoAlt}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -76,10 +75,10 @@ export function ValueSection() {
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="font-semibold text-steam-dark text-[15px] mb-2">
-                  {value.title}
+                  {item.title}
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {value.description}
+                  {item.description}
                 </p>
               </div>
             </motion.div>

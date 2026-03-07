@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 
 export function InstitutionSection() {
   return (
-    <SectionWrapper background="muted">
+    <SectionWrapper background="white">
       <div className="relative rounded-3xl overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#00323C] via-[#004D5C] to-[#008CB4]" />
@@ -19,7 +19,7 @@ export function InstitutionSection() {
               viewport={{ once: true }}
               className="text-2xl sm:text-3xl font-bold text-white leading-tight"
             >
-              Klaipėdos universiteto STEAM atviros prieigos centras
+              Sukurta Klaipėdos universitete
             </motion.h2>
 
             <motion.p
@@ -29,13 +29,23 @@ export function InstitutionSection() {
               transition={{ delay: 0.1 }}
               className="text-[15px] text-white/70 mt-4 leading-relaxed max-w-xl"
             >
-              Klaipėdos universiteto metodinis STEAM centras — Baltijos jūros
-              regiono tvarios mėlynosios ekonomikos sektoriaus augimą
-              populiarinantis centras, kviečiantis moksleivius inovatyviai
-              susipažinti su mokslo pagrindais penkių laboratorijų erdvėse.
+              Platforma kuriama Klaipėdos universiteto STEAM metodiniame centre.
+              Centras dirba su mokytojais ir mokiniais, kurdamas bei testuodamas
+              inovatyvius mokymo metodus.
             </motion.p>
 
-            {/* Activity photos strip */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 }}
+              className="text-[15px] text-white/70 mt-3 leading-relaxed max-w-xl"
+            >
+              Ši platforma yra viena iš priemonių, padedančių mokykloms
+              taikyti aktyvaus mokymosi principus kasdienėse pamokose.
+            </motion.p>
+
+            {/* Activity photos */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -62,7 +72,7 @@ export function InstitutionSection() {
               ))}
             </motion.div>
 
-            {/* Contact details */}
+            {/* Contact */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}

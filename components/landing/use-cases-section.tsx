@@ -2,46 +2,45 @@
 
 import { SectionWrapper } from "./section-wrapper"
 import { SectionHeader } from "./section-header"
-import { FlaskConical, MapPin, BookOpen, Trophy } from "lucide-react"
+import { Brain, Users, Lightbulb, Target, Puzzle } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
-const useCases = [
+const principles = [
   {
-    icon: FlaskConical,
-    title: "STEAM laboratorija",
-    description:
-      "Biologijos pamoka apie jūros ekosistemas — mokiniai tyrinėja duomenis ir ieško atsakymų komandomis.",
-    tag: "45 min \u2022 4\u20136 komandos",
-    accentColor: "border-l-secondary",
-    iconColor: "bg-secondary/10 text-secondary",
+    icon: Brain,
+    title: "Aktyvus mokymasis",
+    description: "Mokiniai ne tik gauna informaciją, bet patys ieško atsakymų ir sprendimų.",
+    color: "text-primary",
+    bg: "bg-primary/8",
   },
   {
-    icon: MapPin,
-    title: "Lauko veikla",
-    description:
-      "Ekskursija su QR kodais — kiekviena stotelė turi iššūkį, kurį reikia išspręsti vietoje.",
-    tag: "60 min \u2022 Lauke",
-    accentColor: "border-l-primary",
-    iconColor: "bg-primary/10 text-primary",
+    icon: Puzzle,
+    title: "Problemų sprendimas",
+    description: "Užduotys reikalauja mąstyti, analizuoti ir taikyti žinias konkrečiose situacijose.",
+    color: "text-secondary",
+    bg: "bg-secondary/8",
   },
   {
-    icon: BookOpen,
-    title: "Namų darbai",
-    description:
-      "Savaitinis iššūkis — mokiniai sprendžia savo tempu, o mokytojas mato progresą.",
-    tag: "Asinchroninis \u2022 Individualiai ar komandomis",
-    accentColor: "border-l-highlight",
-    iconColor: "bg-highlight/10 text-highlight",
+    icon: Users,
+    title: "Bendradarbiavimas",
+    description: "Komandinis darbas skatina diskusiją, komunikaciją ir bendrą atsakomybę.",
+    color: "text-highlight",
+    bg: "bg-highlight/8",
   },
   {
-    icon: Trophy,
-    title: "Varžybos tarp klasių",
-    description:
-      "STEAM savaitės renginys — kelios klasės varžosi tame pačiame žaidime.",
-    tag: "Renginys \u2022 Neribota komandų",
-    accentColor: "border-l-accent",
-    iconColor: "bg-accent/10 text-accent",
+    icon: Lightbulb,
+    title: "Kritinis mąstymas",
+    description: "Progresinės užuominos ir atviri klausimai skatina gilesnį supratimą.",
+    color: "text-accent",
+    bg: "bg-accent/8",
+  },
+  {
+    icon: Target,
+    title: "STEAM integravimas",
+    description: "Formatas tinka tiek atskiriems dalykams, tiek integruotoms STEAM pamokoms.",
+    color: "text-steam-dark",
+    bg: "bg-steam-dark/8",
   },
 ]
 
@@ -51,36 +50,38 @@ export function UseCasesSection() {
   return (
     <SectionWrapper background="muted">
       <SectionHeader
-        title="Kaip naudoja mokytojai"
-        subtitle="Nuo laboratorinių užsiėmimų iki lauko tyrimų — formatas prisitaiko prie jūsų pamokos."
+        title="Kodėl tai veikia mokymuisi"
+        subtitle="Platformos veiklos remiasi metodais, kurie skatina gilų mokymąsi — ne tik įsitraukimą."
       />
 
-      <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        {useCases.map((useCase, index) => {
-          const Icon = useCase.icon
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+        {principles.map((p, index) => {
+          const Icon = p.icon
           return (
             <motion.div
               key={index}
-              initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 24 }}
+              initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-              className={`rounded-2xl border border-border/40 border-l-4 ${useCase.accentColor} bg-white p-6 cursor-default`}
+              transition={{ delay: index * 0.08, duration: 0.4 }}
+              whileHover={
+                prefersReduced
+                  ? {}
+                  : { y: -4, transition: { duration: 0.25 } }
+              }
+              className="rounded-2xl border border-border/40 bg-white p-5 text-center cursor-default transition-shadow hover:shadow-md"
             >
               <div
-                className={`w-10 h-10 rounded-xl ${useCase.iconColor} flex items-center justify-center mb-4`}
+                className={`w-12 h-12 rounded-xl ${p.bg} ${p.color} flex items-center justify-center mx-auto mb-3`}
               >
                 <Icon className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-steam-dark text-[15px] mb-2">
-                {useCase.title}
+              <h3 className="font-semibold text-steam-dark text-sm mb-1.5">
+                {p.title}
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                {useCase.description}
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {p.description}
               </p>
-              <span className="inline-block text-[11px] font-medium text-muted-foreground/60 bg-muted/50 px-2.5 py-1 rounded-full">
-                {useCase.tag}
-              </span>
             </motion.div>
           )
         })}

@@ -2,52 +2,46 @@
 
 import { SectionWrapper } from "./section-wrapper"
 import { SectionHeader } from "./section-header"
-import { Sparkles, Users, Trophy, FileText, Lightbulb, BarChart3 } from "lucide-react"
+import { Zap, Users, Brain, Search } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
-const features = [
+const activities = [
   {
-    icon: Sparkles,
-    title: "DI užduočių generavimas",
+    icon: Zap,
+    title: "Greiti žinių patikrinimai",
     description:
-      "Aprašykite temą — DI sugeneruos užduotis su atsakymais, užuominomis ir paaiškinimais.",
+      "Trumpi klausimai naujai temai įtvirtinti ar pamokos pabaigai — atsakymai pateikiami per kelias minutes.",
+    tag: "5–10 min",
     color: "bg-primary/10 text-primary",
+    accentColor: "border-l-primary",
   },
   {
     icon: Users,
-    title: "Komandinis žaidimas",
+    title: "Komandiniai iššūkiai",
     description:
-      "Mokiniai jungiasi komandomis per QR kodą — be registracijos, be slaptažodžių.",
+      "Veiklos, kuriose mokiniai bendradarbiauja ir sprendžia užduotis kartu — skatina diskusiją ir komunikaciją.",
+    tag: "20–45 min",
     color: "bg-secondary/10 text-secondary",
+    accentColor: "border-l-secondary",
   },
   {
-    icon: Trophy,
-    title: "Realaus laiko lyderių lentelė",
+    icon: Brain,
+    title: "Loginės užduotys",
     description:
-      "Komandos mato savo vietą, taškus ir progresą — motyvacija per sveiką konkurenciją.",
+      "Problemos, kurias reikia išspręsti žingsnis po žingsnio — nuo paprastų iki sudėtingų, su progresinėmis užuominomis.",
+    tag: "Individualiai ar komandomis",
     color: "bg-highlight/10 text-highlight",
+    accentColor: "border-l-highlight",
   },
   {
-    icon: FileText,
-    title: "Importas iš dokumento",
+    icon: Search,
+    title: "Tyrimo veiklos",
     description:
-      "Įkelkite PDF, DOCX ar TXT failą — DI sugeneruos užduotis pagal jūsų mokomąją medžiagą.",
+      "Užduotys, kuriose mokiniai analizuoja, lygina ir ieško sprendimų — tinka integruotoms STEAM pamokoms.",
+    tag: "Komandinis tyrimas",
     color: "bg-accent/10 text-accent",
-  },
-  {
-    icon: Lightbulb,
-    title: "Progresinės užuominos",
-    description:
-      "Užuominos atskleidžiamos po vieną — kiekviena sumažina taškus, bet padeda mokytis.",
-    color: "bg-primary/10 text-primary",
-  },
-  {
-    icon: BarChart3,
-    title: "Mokytojo analitika",
-    description:
-      "Matykite kiekvienos užduoties tikslumą, komandų progresą ir sunkumo lygį.",
-    color: "bg-secondary/10 text-secondary",
+    accentColor: "border-l-accent",
   },
 ]
 
@@ -57,38 +51,36 @@ export function FeaturesSection() {
   return (
     <SectionWrapper background="white">
       <SectionHeader
-        title="Viskas, ko reikia interaktyviai pamokai"
-        subtitle="Nuo iššūkių kūrimo iki rezultatų analizės — viename įrankyje."
+        title="Ką galima sukurti"
+        subtitle="Nuo greitų klausimų iki komandinių iššūkių ir tyrimo scenarijų — formatas prisitaiko prie pamokos tikslų."
       />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {features.map((feature, index) => {
-          const Icon = feature.icon
+      <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        {activities.map((activity, index) => {
+          const Icon = activity.icon
           return (
             <motion.div
               key={index}
               initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.08, duration: 0.5 }}
-              whileHover={
-                prefersReduced
-                  ? {}
-                  : { y: -4, transition: { duration: 0.2 } }
-              }
-              className="rounded-2xl border border-border/40 bg-[#F8FAFB] p-6 cursor-default transition-shadow hover:shadow-md"
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+              className={`rounded-2xl border border-border/40 border-l-4 ${activity.accentColor} bg-[#F8FAFB] p-6 cursor-default transition-shadow hover:shadow-md`}
             >
               <div
-                className={`w-11 h-11 rounded-xl ${feature.color} flex items-center justify-center mb-4`}
+                className={`w-11 h-11 rounded-xl ${activity.color} flex items-center justify-center mb-4`}
               >
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="font-semibold text-steam-dark text-[15px] mb-2">
-                {feature.title}
+                {activity.title}
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {feature.description}
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                {activity.description}
               </p>
+              <span className="inline-block text-[11px] font-medium text-muted-foreground/60 bg-muted/50 px-2.5 py-1 rounded-full">
+                {activity.tag}
+              </span>
             </motion.div>
           )
         })}

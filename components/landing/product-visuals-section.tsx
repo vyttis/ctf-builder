@@ -4,14 +4,14 @@ import { SectionWrapper } from "./section-wrapper"
 import { SectionHeader } from "./section-header"
 import {
   Settings,
-  FileText,
   Users,
   BarChart3,
   Puzzle,
   Star,
   CheckCircle2,
-  Flag,
   Trophy,
+  Smartphone,
+  Monitor,
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
@@ -19,45 +19,28 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 function TeacherViewMock() {
   return (
     <div className="w-full bg-gradient-to-br from-[#F8FAFB] to-white p-3 space-y-2.5">
-      {/* Mini top bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
             <Settings className="h-3 w-3 text-primary" />
           </div>
           <span className="text-[9px] font-semibold text-steam-dark">
-            Mokytojo valdymo pultas
+            Mokytojo aplinka
           </span>
         </div>
         <div className="flex gap-1">
           <div className="h-4 px-1.5 bg-primary/8 rounded flex items-center">
             <span className="text-[8px] text-primary font-medium">
-              3 aktyvūs
+              3 komandos
             </span>
           </div>
         </div>
       </div>
-      {/* KPI cards */}
       <div className="grid grid-cols-3 gap-1.5">
         {[
-          {
-            label: "Užduotys",
-            value: "12",
-            icon: FileText,
-            color: "text-primary",
-          },
-          {
-            label: "Komandos",
-            value: "6",
-            icon: Users,
-            color: "text-secondary",
-          },
-          {
-            label: "Atsakymai",
-            value: "48",
-            icon: BarChart3,
-            color: "text-highlight",
-          },
+          { label: "Užduotys", value: "8", icon: Puzzle, color: "text-primary" },
+          { label: "Komandos", value: "3", icon: Users, color: "text-secondary" },
+          { label: "Atsakymai", value: "18", icon: BarChart3, color: "text-highlight" },
         ].map((kpi) => {
           const KIcon = kpi.icon
           return (
@@ -76,12 +59,11 @@ function TeacherViewMock() {
           )
         })}
       </div>
-      {/* Mini progress bars */}
       <div className="space-y-1.5">
         {[
-          { name: "Alfa komanda", pct: 85, color: "bg-primary" },
-          { name: "Beta komanda", pct: 60, color: "bg-secondary" },
-          { name: "Gama komanda", pct: 45, color: "bg-highlight" },
+          { name: "Saulės komanda", pct: 85, color: "bg-primary" },
+          { name: "Vėjo komanda", pct: 60, color: "bg-secondary" },
+          { name: "Jūros komanda", pct: 45, color: "bg-highlight" },
         ].map((team) => (
           <div key={team.name} className="flex items-center gap-2">
             <span className="text-[8px] text-muted-foreground w-16 truncate">
@@ -106,14 +88,13 @@ function TeacherViewMock() {
 function StudentViewMock() {
   return (
     <div className="w-full bg-gradient-to-br from-[#F8FAFB] to-white p-3 space-y-2.5">
-      {/* Mini game header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded bg-secondary/10 flex items-center justify-center">
             <Puzzle className="h-3 w-3 text-secondary" />
           </div>
           <span className="text-[9px] font-semibold text-steam-dark">
-            Žaidėjo vaizdas
+            Mokinio vaizdas
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -121,11 +102,10 @@ function StudentViewMock() {
           <span className="text-[9px] font-bold text-steam-dark">280 tšk</span>
         </div>
       </div>
-      {/* Challenge cards */}
       {[
-        { name: "Duomenų mįslė", pts: 100, done: true },
-        { name: "Kodų šifravimas", pts: 150, done: true },
-        { name: "Jūros ekspedicija", pts: 200, done: false },
+        { name: "Jūros ekosistema", pts: 100, done: true },
+        { name: "Klimato pokyčiai", pts: 150, done: true },
+        { name: "Energijos šaltiniai", pts: 200, done: false },
       ].map((ch) => (
         <div
           key={ch.name}
@@ -137,7 +117,7 @@ function StudentViewMock() {
             {ch.done ? (
               <CheckCircle2 className="h-3 w-3 text-primary" />
             ) : (
-              <Flag className="h-2.5 w-2.5 text-muted-foreground/40" />
+              <Puzzle className="h-2.5 w-2.5 text-muted-foreground/40" />
             )}
           </div>
           <div className="flex-1">
@@ -151,11 +131,10 @@ function StudentViewMock() {
           </div>
         </div>
       ))}
-      {/* Answer input mock */}
       <div className="flex gap-1.5">
         <div className="flex-1 h-7 rounded border border-border/30 bg-white flex items-center px-2">
           <span className="text-[9px] text-muted-foreground/40">
-            Įveskite flag...
+            Įveskite atsakymą...
           </span>
         </div>
         <div className="h-7 px-2.5 rounded bg-primary/10 flex items-center">
@@ -174,8 +153,8 @@ export function ProductVisualsSection() {
   return (
     <SectionWrapper background="muted">
       <SectionHeader
-        title="Du vaizdai. Viena pamoka."
-        subtitle="Mokytojas kuria ir stebi — mokiniai sprendžia ir bendradarbiauja."
+        title="Kaip atrodo pamoka klasėje"
+        subtitle="Mokytojas kuria ir stebi progresą — mokiniai sprendžia užduotis telefonais ar kompiuteriais."
       />
 
       <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -187,7 +166,8 @@ export function ProductVisualsSection() {
           transition={{ duration: 0.5 }}
           className="relative"
         >
-          <div className="mb-3">
+          <div className="mb-3 flex items-center gap-2">
+            <Monitor className="h-3.5 w-3.5 text-primary" />
             <span className="inline-block text-[11px] font-semibold text-primary bg-primary/8 px-2.5 py-1 rounded-full">
               Mokytojo aplinka
             </span>
@@ -195,7 +175,6 @@ export function ProductVisualsSection() {
           <div className="relative">
             <div className="absolute -inset-2 bg-gradient-to-br from-primary/8 via-transparent to-secondary/8 rounded-2xl blur-xl opacity-60" />
             <div className="relative rounded-2xl border border-border/40 bg-white overflow-hidden shadow-lg shadow-steam-dark/5">
-              {/* Browser chrome */}
               <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 bg-[#F8FAFB]">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 rounded-full bg-accent/40" />
@@ -204,13 +183,16 @@ export function ProductVisualsSection() {
                 </div>
                 <div className="flex-1 mx-3">
                   <div className="bg-white rounded h-4 flex items-center justify-center text-[8px] text-muted-foreground/40 font-mono border border-border/30">
-                    app.ctf-builder.app
+                    kusteam.app
                   </div>
                 </div>
               </div>
               <TeacherViewMock />
             </div>
           </div>
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            Realiu laiku matote komandų progresą ir rezultatus
+          </p>
         </motion.div>
 
         {/* Student view */}
@@ -221,15 +203,15 @@ export function ProductVisualsSection() {
           transition={{ delay: 0.15, duration: 0.5 }}
           className="relative"
         >
-          <div className="mb-3">
+          <div className="mb-3 flex items-center gap-2">
+            <Smartphone className="h-3.5 w-3.5 text-secondary" />
             <span className="inline-block text-[11px] font-semibold text-secondary bg-secondary/8 px-2.5 py-1 rounded-full">
-              Žaidėjo aplinka
+              Mokinio vaizdas
             </span>
           </div>
           <div className="relative">
             <div className="absolute -inset-2 bg-gradient-to-br from-secondary/8 via-transparent to-highlight/8 rounded-2xl blur-xl opacity-60" />
             <div className="relative rounded-2xl border border-border/40 bg-white overflow-hidden shadow-lg shadow-steam-dark/5">
-              {/* Browser chrome */}
               <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 bg-[#F8FAFB]">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 rounded-full bg-accent/40" />
@@ -238,13 +220,16 @@ export function ProductVisualsSection() {
                 </div>
                 <div className="flex-1 mx-3">
                   <div className="bg-white rounded h-4 flex items-center justify-center text-[8px] text-muted-foreground/40 font-mono border border-border/30">
-                    play.ctf-builder.app
+                    kusteam.app/play
                   </div>
                 </div>
               </div>
               <StudentViewMock />
             </div>
           </div>
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            Mokiniai sprendžia užduotis ir stebi savo progresą
+          </p>
         </motion.div>
       </div>
     </SectionWrapper>
