@@ -12,18 +12,25 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { Profile, UserRole } from "@/types/game"
 import { getRoleLabel, getRoleBadgeColor } from "@/lib/auth/roles"
+import { InviteUserDialog } from "@/components/admin/invite-user-dialog"
 import { Shield, ShieldCheck, GraduationCap, Loader2 } from "lucide-react"
 
 interface UserTableProps {
   users: Profile[]
   currentUserRole: UserRole
   currentUserId: string
+  onUserAdded?: (user: Profile) => void
 }
 
-export function UserTable({ users, currentUserRole, currentUserId }: UserTableProps) {
+export function UserTable({ users, currentUserRole, currentUserId, onUserAdded }: UserTableProps) {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [userList, setUserList] = useState(users)
   const { toast } = useToast()
+
+  function addUser(user: Profile) {
+    setUserList((prev) => [user, ...prev])
+    onUserAdded?.(user)
+  }
 
   async function handleRoleChange(userId: string, newRole: UserRole) {
     setUpdatingId(userId)
@@ -71,6 +78,12 @@ export function UserTable({ users, currentUserRole, currentUserId }: UserTablePr
 
   return (
     <div className="overflow-x-auto">
+      <div className="flex justify-end p-4 border-b border-border/30">
+        <InviteUserDialog
+          currentUserRole={currentUserRole}
+          onUserInvited={addUser}
+        />
+      </div>
       <table className="w-full">
         <thead>
           <tr className="border-b border-border/50">
@@ -79,6 +92,12 @@ export function UserTable({ users, currentUserRole, currentUserId }: UserTablePr
             </th>
             <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">
               El. paštas
+            </th>
+            <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4 hidden md:table-cell">
+              Mokykla
+            </th>
+            <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4 hidden lg:table-cell">
+              Telefonas
             </th>
             <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">
               Rolė
@@ -120,6 +139,16 @@ export function UserTable({ users, currentUserRole, currentUserId }: UserTablePr
               <td className="py-3 px-4">
                 <span className="text-sm text-muted-foreground">
                   {user.email}
+                </span>
+              </td>
+              <td className="py-3 px-4 hidden md:table-cell">
+                <span className="text-sm text-muted-foreground">
+                  {user.school || "—"}
+                </span>
+              </td>
+              <td className="py-3 px-4 hidden lg:table-cell">
+                <span className="text-sm text-muted-foreground">
+                  {user.phone || "—"}
                 </span>
               </td>
               <td className="py-3 px-4">

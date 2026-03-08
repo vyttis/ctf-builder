@@ -54,6 +54,8 @@ export async function middleware(request: NextRequest) {
   if (subdomain === "app") {
     const isAuthCallback = url.pathname === "/auth/callback"
     const isAuthPage = url.pathname.startsWith("/auth")
+    const isOnboarding = url.pathname === "/onboarding"
+    const isOnboardingApi = url.pathname === "/api/onboarding"
 
     // Always let /auth/callback through — it exchanges the OAuth code
     if (isAuthCallback) {
@@ -70,6 +72,20 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
+    // Check onboarding completion for authenticated users
+    if (user && !isOnboarding && !isOnboardingApi && !isAuthPage) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", user.id)
+        .single()
+
+      if (profile && !profile.onboarding_completed) {
+        url.pathname = "/onboarding"
+        return NextResponse.redirect(url)
+      }
+    }
+
     return response
   }
 
@@ -81,9 +97,12 @@ export async function middleware(request: NextRequest) {
   // No subdomain: path-based routing
   const isAuthCallback = url.pathname === "/auth/callback"
   const isAuthPage = url.pathname.startsWith("/auth")
+  const isOnboarding = url.pathname === "/onboarding"
+  const isOnboardingApi = url.pathname === "/api/onboarding"
   const isTeacherRoute =
     url.pathname.startsWith("/dashboard") ||
-    url.pathname.startsWith("/games")
+    url.pathname.startsWith("/games") ||
+    url.pathname.startsWith("/admin")
 
   // Always let /auth/callback through — it exchanges the OAuth code
   if (isAuthCallback) {
@@ -100,6 +119,20 @@ export async function middleware(request: NextRequest) {
   if (user && (url.pathname === "/" || isAuthPage)) {
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
+  }
+
+  // Check onboarding completion for authenticated users on teacher routes
+  if (user && isTeacherRoute && !isOnboarding && !isOnboardingApi) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("id", user.id)
+      .single()
+
+    if (profile && !profile.onboarding_completed) {
+      url.pathname = "/onboarding"
+      return NextResponse.redirect(url)
+    }
   }
 
   return response
