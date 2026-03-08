@@ -117,8 +117,8 @@ export function LoginForm() {
       return
     }
 
-    // Redirect will happen via middleware
-    window.location.href = "/"
+    // Redirect to dashboard after successful login
+    window.location.href = "/dashboard"
   }
 
   return (
