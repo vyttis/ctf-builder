@@ -5,7 +5,7 @@ import { NextResponse } from "next/server"
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
-  const nextParam = searchParams.get("next") ?? "/"
+  const nextParam = searchParams.get("next") ?? "/dashboard"
   // Prevent open redirect: must be relative path, not protocol-relative or absolute URL
   const next = nextParam.startsWith("/") && !nextParam.startsWith("//") && !nextParam.includes("://") ? nextParam : "/"
   const errorParam = searchParams.get("error")
