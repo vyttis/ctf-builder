@@ -27,8 +27,16 @@ ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read achievements"
   ON public.achievements FOR SELECT USING (true);
 
-CREATE POLICY "Service role inserts achievements"
-  ON public.achievements FOR INSERT WITH CHECK (true);
+-- No INSERT policy needed: achievements are inserted via service role (admin client)
+-- which bypasses RLS entirely. Leaving INSERT closed prevents client-side fabrication.
 
 -- Add to realtime publication
-ALTER PUBLICATION supabase_realtime ADD TABLE public.achievements;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'achievements'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.achievements;
+  END IF;
+END $$;

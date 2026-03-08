@@ -36,6 +36,15 @@ function formatTimeSince(timestamp: string): string {
   return `prieš ${diffHours} val.`
 }
 
+function komandaLabel(n: number): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 19) return "komandų"
+  if (mod10 === 1) return "komanda"
+  if (mod10 >= 2 && mod10 <= 9) return "komandos"
+  return "komandų"
+}
+
 export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
   const [teams, setTeams] = useState<Team[]>([])
   const [lastSubmissions, setLastSubmissions] = useState<Map<string, string>>(
@@ -184,7 +193,7 @@ export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Users className="h-4 w-4" />
         <span>
-          {teams.length} {teams.length === 1 ? "komanda" : "komandos"}
+          {teams.length} {komandaLabel(teams.length)}
         </span>
       </div>
 
@@ -213,7 +222,7 @@ export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
                   {stuck && (
                     <Badge className="shrink-0 bg-[#FAC846]/15 text-[#FAC846] border-[#FAC846]/30 hover:bg-[#FAC846]/20">
                       <AlertTriangle className="h-3 w-3 mr-1" />
-                      Strigo!
+                      Įstrigo!
                     </Badge>
                   )}
                 </div>
@@ -227,7 +236,7 @@ export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
                   </div>
                   <div>
                     <p className="text-muted-foreground mb-0.5">
-                      Užduotys išspręsta
+                      Užduočių išspręsta
                     </p>
                     <p className="font-bold text-lg text-[#00323C] leading-none">
                       {team.current_challenge_index}

@@ -88,7 +88,9 @@ export default function PlayPage() {
   const [gameId, setGameId] = useState<string | null>(null)
 
   // Achievement state
-  const [pendingAchievement, setPendingAchievement] = useState<{ type: AchievementType; metadata?: Record<string, unknown> } | null>(null)
+  const [achievementQueue, setAchievementQueue] = useState<{ type: AchievementType; metadata?: Record<string, unknown> }[]>([])
+  const pendingAchievement = achievementQueue.length > 0 ? achievementQueue[0] : null
+  const dismissAchievement = () => setAchievementQueue((q) => q.slice(1))
 
   // Check if reflection already done
   useEffect(() => {
@@ -230,6 +232,42 @@ export default function PlayPage() {
     }
   }
 
+  // Subscribe to game setting changes (time extensions, status changes)
+  useEffect(() => {
+    if (!gameId) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`game_settings_${gameId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "games", filter: `id=eq.${gameId}` },
+        (payload) => {
+          const updated = payload.new as { settings?: GameSettings; status?: string }
+          if (updated.settings?.time_limit_minutes !== undefined) {
+            setTimeLimitMinutes(updated.settings.time_limit_minutes)
+            // If time was expired but limit was extended, recheck
+            if (timeExpired && updated.settings.time_limit_minutes) {
+              const storageKey = `ctf_start_${gameCode}`
+              const stored = localStorage.getItem(storageKey)
+              if (stored) {
+                const startTime = parseInt(stored, 10)
+                const totalMs = updated.settings.time_limit_minutes * 60 * 1000
+                if (Date.now() < startTime + totalMs) {
+                  setTimeExpired(false)
+                }
+              }
+            }
+          }
+          if (updated.status === "paused" || updated.status === "finished") {
+            // Could show a notification, but at minimum stop accepting submissions
+          }
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [gameId, gameCode, timeExpired])
+
   function handleStart() {
     const storageKey = `ctf_start_${gameCode}`
     const now = Date.now()
@@ -271,7 +309,7 @@ export default function PlayPage() {
       })
       // Show achievement if earned
       if (result.achievements && result.achievements.length > 0) {
-        setPendingAchievement(result.achievements[0])
+        setAchievementQueue((q) => [...q, ...result.achievements])
       }
       // Check if all solved
       if (solvedIds.size + 1 >= challenges.length) {
@@ -320,7 +358,8 @@ export default function PlayPage() {
 
       // Show achievement toast if earned
       if (result.achievements && result.achievements.length > 0) {
-        setPendingAchievement(result.achievements[0])
+        const earned = result.achievements
+        setAchievementQueue((q) => [...q, ...earned])
       }
 
       if (result.is_correct) {
@@ -501,7 +540,7 @@ export default function PlayPage() {
             Sveikiname! 🎉
           </h1>
           <p className="text-muted-foreground mb-4">
-            Jūs atsakėte į visas užduotis!
+            Jūs išsprendėte visas užduotis!
           </p>
 
           <div className="bg-primary/5 rounded-2xl p-6 mb-6">
@@ -546,7 +585,7 @@ export default function PlayPage() {
           {pendingAchievement && (
             <AchievementToast
               achievement={pendingAchievement}
-              onDismiss={() => setPendingAchievement(null)}
+              onDismiss={dismissAchievement}
             />
           )}
 
@@ -626,7 +665,7 @@ export default function PlayPage() {
         {pendingAchievement && (
           <AchievementToast
             achievement={pendingAchievement}
-            onDismiss={() => setPendingAchievement(null)}
+            onDismiss={dismissAchievement}
           />
         )}
 

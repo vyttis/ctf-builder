@@ -56,7 +56,7 @@ export function AchievementToast({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -40 }}
         transition={{ type: "spring", damping: 20, stiffness: 300 }}
-        className="fixed top-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2"
+        className="fixed top-14 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2"
       >
         <div
           className="flex items-center gap-3 rounded-xl border border-[#FAC846]/30 bg-gradient-to-r from-[#FAC846]/15 to-[#FAC846]/5 px-4 py-3 shadow-lg backdrop-blur-sm"

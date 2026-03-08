@@ -90,9 +90,9 @@ export async function POST(
       )
     }
 
-    // Bulk insert challenges with all fields
+    // Bulk insert challenges, then remap prerequisite UUIDs to new IDs
     if (sourceChallenges && sourceChallenges.length > 0) {
-      const challenges = sourceChallenges.map((c) => ({
+      const challengePayloads = sourceChallenges.map((c) => ({
         game_id: newGame.id,
         title: c.title,
         description: c.description,
@@ -107,19 +107,47 @@ export async function POST(
         explanation: c.explanation,
         difficulty: c.difficulty,
         hint_penalty: c.hint_penalty,
-        generated_by_ai: c.generated_by_ai,
+        generated_by_di: c.generated_by_di,
         verification_verdict: c.verification_verdict,
         verification_issues: c.verification_issues,
         verification_confidence: c.verification_confidence,
+        // Insert without prerequisites first, remap after
       }))
 
-      const { error: insertError } = await supabase
+      const { data: newChallenges, error: insertError } = await supabase
         .from("challenges")
-        .insert(challenges)
+        .insert(challengePayloads)
+        .select("id, order_index")
 
       if (insertError) {
         console.error("Challenge duplication error:", insertError)
-        // Game was created but challenges failed — still return the game
+      } else if (newChallenges) {
+        // Build old ID → new ID mapping via order_index
+        const newIdByIndex = new Map(newChallenges.map((c: { id: string; order_index: number }) => [c.order_index, c.id]))
+        const idMap = new Map<string, string>()
+        sourceChallenges.forEach((c) => {
+          const newId = newIdByIndex.get(c.order_index)
+          if (newId) idMap.set(c.id, newId)
+        })
+
+        // Update prerequisites with remapped IDs
+        const hasPrereqs = sourceChallenges.some((c) => c.prerequisites?.length > 0)
+        if (hasPrereqs) {
+          await Promise.all(
+            sourceChallenges.map((src) => {
+              if (!src.prerequisites?.length) return Promise.resolve()
+              const newId = idMap.get(src.id)
+              if (!newId) return Promise.resolve()
+              const remapped = src.prerequisites
+                .map((oldPrereqId: string) => idMap.get(oldPrereqId))
+                .filter(Boolean) as string[]
+              return supabase
+                .from("challenges")
+                .update({ prerequisites: remapped })
+                .eq("id", newId)
+            })
+          )
+        }
       }
     }
 

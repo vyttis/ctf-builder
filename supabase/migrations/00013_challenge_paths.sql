@@ -73,3 +73,6 @@ BEGIN
   RETURN v_solved_count >= array_length(v_prereqs, 1);
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+-- Grant anon SELECT on prerequisites column (matches pattern from 00005/00007)
+GRANT SELECT (prerequisites) ON public.challenges TO anon;

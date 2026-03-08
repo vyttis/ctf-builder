@@ -152,7 +152,7 @@ export default function LeaderboardPage() {
           <h1 className="text-2xl font-bold text-steam-dark">Rezultatų lentelė</h1>
           <div className="flex items-center justify-center gap-2 mt-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
-            <span>{teams.length} {teams.length === 1 ? "komanda" : "komandos"}</span>
+            <span>{teams.length} {(() => { const m10 = teams.length % 10, m100 = teams.length % 100; if (m100 >= 11 && m100 <= 19) return "komandų"; if (m10 === 1) return "komanda"; if (m10 >= 2 && m10 <= 9) return "komandos"; return "komandų"; })()}</span>
           </div>
           <div className="flex items-center justify-center gap-1 mt-1">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />

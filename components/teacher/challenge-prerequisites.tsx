@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 interface ChallengePrerequisitesProps {
   challengeId: string
   gameId: string
-  allChallenges: Array<{ id: string; title: string; order_index: number }>
+  allChallenges: Array<{ id: string; title: string; order_index: number; prerequisites?: string[] }>
   currentPrerequisites: string[]
   onChange: (prerequisites: string[]) => void
 }
@@ -48,26 +48,37 @@ export function ChallengePrerequisites({
   }, [allChallenges, challengeId])
 
   // Build a set of IDs that would cause circular dependencies
-  // If challenge A requires B, then B cannot require A
+  // Uses BFS to find all challenges that transitively depend on this one
   const circularBlockedIds = useMemo(() => {
     const blocked = new Set<string>()
 
-    // Find all challenges that list THIS challenge as a prerequisite
+    // Build a prerequisite map: challengeId -> set of challenges that require it
+    const dependents = new Map<string, Set<string>>()
     for (const c of allChallenges) {
-      if (c.id === challengeId) continue
-      // We need to check if c already requires challengeId (directly or transitively)
-      // For simplicity, check direct: if any challenge X has challengeId in its prerequisites,
-      // then challengeId cannot have X in its prerequisites
-      // However, we only have currentPrerequisites for THIS challenge, not others.
-      // We can at least prevent selecting challenges that are already in our own prerequisite chain.
+      for (const prereqId of c.prerequisites || []) {
+        if (!dependents.has(prereqId)) dependents.set(prereqId, new Set())
+        dependents.get(prereqId)!.add(c.id)
+      }
     }
 
-    // Direct circular prevention: if challenge X requires this challenge,
-    // then this challenge cannot require X.
-    // Since we don't have other challenges' prerequisites loaded here,
-    // we prevent selecting any challenge that's already requiring us by checking
-    // if selecting it would create a direct cycle.
-    // The parent component should pass the full data if transitive checks are needed.
+    // BFS: find all challenges that transitively depend on this challenge
+    // These cannot be prerequisites (would create a cycle)
+    const queue = [challengeId]
+    const visited = new Set<string>()
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      if (visited.has(current)) continue
+      visited.add(current)
+      const deps = dependents.get(current)
+      if (deps) {
+        deps.forEach((depId) => {
+          if (depId !== challengeId) {
+            blocked.add(depId)
+            queue.push(depId)
+          }
+        })
+      }
+    }
 
     return blocked
   }, [allChallenges, challengeId])

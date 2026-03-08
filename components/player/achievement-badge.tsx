@@ -26,6 +26,8 @@ export function AchievementBadge({ type, size = "md" }: AchievementBadgeProps) {
   return (
     <div
       title={config.name}
+      role="img"
+      aria-label={config.name}
       className="inline-flex items-center justify-center rounded-full shrink-0"
       style={{
         width: circleSize,

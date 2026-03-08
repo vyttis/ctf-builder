@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Megaphone, Send, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface Announcement {
   id: string
@@ -33,6 +34,7 @@ function formatRelativeTime(timestamp: string): string {
 }
 
 export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
+  const { toast } = useToast()
   const [message, setMessage] = useState("")
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [sending, setSending] = useState(false)
@@ -71,7 +73,11 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
         setMessage("")
       }
     } catch {
-      // Silently fail on send error
+      toast({
+        title: "Klaida",
+        description: "Nepavyko išsiųsti pranešimo. Bandykite dar kartą.",
+        variant: "destructive",
+      })
     } finally {
       setSending(false)
     }

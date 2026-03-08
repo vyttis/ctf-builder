@@ -3,7 +3,7 @@ CREATE TABLE public.announcements (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   game_id uuid NOT NULL REFERENCES public.games(id) ON DELETE CASCADE,
   message text NOT NULL,
-  created_by uuid NOT NULL REFERENCES public.profiles(id),
+  created_by uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -40,4 +40,12 @@ BEGIN
   END IF;
 END $$;
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.announcements;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'announcements'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.announcements;
+  END IF;
+END $$;
