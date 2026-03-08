@@ -50,6 +50,17 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Safety net: if ?code= lands on the wrong page (e.g. due to www redirect),
+  // forward it to /auth/callback so the code exchange still happens
+  if (
+    url.searchParams.has("code") &&
+    url.pathname !== "/auth/callback" &&
+    !user
+  ) {
+    url.pathname = "/auth/callback"
+    return NextResponse.redirect(url)
+  }
+
   // Teacher routes: require auth
   if (subdomain === "app") {
     const isAuthCallback = url.pathname === "/auth/callback"
