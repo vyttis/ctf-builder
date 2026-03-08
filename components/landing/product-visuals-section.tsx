@@ -183,7 +183,7 @@ export function ProductVisualsSection() {
                 </div>
                 <div className="flex-1 mx-3">
                   <div className="bg-white rounded h-4 flex items-center justify-center text-[8px] text-muted-foreground/40 font-mono border border-border/30">
-                    kusteam.app
+                    www.kusteam.app
                   </div>
                 </div>
               </div>
@@ -220,7 +220,7 @@ export function ProductVisualsSection() {
                 </div>
                 <div className="flex-1 mx-3">
                   <div className="bg-white rounded h-4 flex items-center justify-center text-[8px] text-muted-foreground/40 font-mono border border-border/30">
-                    kusteam.app/play
+                    www.kusteam.app/play
                   </div>
                 </div>
               </div>
