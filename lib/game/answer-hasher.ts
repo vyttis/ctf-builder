@@ -1,16 +1,26 @@
-// Sprint 1: simple normalized comparison
-// Sprint 2: upgrade to bcrypt hashing
+import bcrypt from "bcryptjs"
+
+const BCRYPT_ROUNDS = 10
 
 export function normalizeAnswer(answer: string): string {
   return answer.trim().toLowerCase()
 }
 
-export function hashAnswer(answer: string): string {
-  // Sprint 1: store normalized plaintext
-  // Sprint 2: bcrypt.hashSync(normalizeAnswer(answer), 10)
-  return normalizeAnswer(answer)
+export async function hashAnswer(answer: string): Promise<string> {
+  const normalized = normalizeAnswer(answer)
+  return bcrypt.hash(normalized, BCRYPT_ROUNDS)
 }
 
-export function verifyAnswer(submitted: string, stored: string): boolean {
-  return normalizeAnswer(submitted) === stored
+export async function verifyAnswer(
+  submitted: string,
+  storedHash: string
+): Promise<boolean> {
+  const normalized = normalizeAnswer(submitted)
+
+  // Support legacy plaintext hashes (migration path)
+  if (!storedHash.startsWith("$2")) {
+    return normalized === storedHash
+  }
+
+  return bcrypt.compare(normalized, storedHash)
 }

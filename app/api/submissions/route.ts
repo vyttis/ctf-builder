@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { verifyAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -96,10 +97,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // Get challenge details (include hints to validate hints_used count)
+    // Get challenge details (include answer_hash for server-side bcrypt verification)
     const { data: challenge } = await supabase
       .from("challenges")
-      .select("id, points, game_id, explanation, hint_penalty, hints")
+      .select("id, points, game_id, explanation, hint_penalty, hints, answer_hash")
       .eq("id", parsed.data.challenge_id)
       .single()
 
@@ -110,13 +111,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check answer using Postgres function
-    const { data: isCorrectResult } = await supabase.rpc("check_answer", {
-      p_challenge_id: parsed.data.challenge_id,
-      p_answer: parsed.data.answer,
-    })
-
-    const isCorrect = isCorrectResult === true
+    // Verify answer server-side with bcrypt (supports legacy plaintext hashes)
+    const isCorrect = await verifyAnswer(parsed.data.answer, challenge.answer_hash)
 
     // Server-side hint penalty: cap hints_used to actual available hints
     const availableHints = Array.isArray(challenge.hints) ? challenge.hints.length : 0

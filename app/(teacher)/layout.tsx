@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { TeacherNav } from "@/components/teacher/teacher-nav"
+import { TeacherErrorBoundary } from "@/components/teacher/teacher-error-boundary"
 
 export default async function TeacherLayout({
   children,
@@ -30,7 +31,9 @@ export default async function TeacherLayout({
         role={profile?.role || "teacher"}
         avatarUrl={profile?.avatar_url}
       />
-      <main className="container mx-auto px-4 py-6 max-w-6xl">{children}</main>
+      <main className="container mx-auto px-4 py-6 max-w-6xl">
+        <TeacherErrorBoundary>{children}</TeacherErrorBoundary>
+      </main>
     </div>
   )
 }

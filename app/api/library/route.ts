@@ -25,6 +25,8 @@ export async function GET(request: Request) {
     const gradeLevel = searchParams.get("grade_level")
     const search = searchParams.get("search")
     const status = searchParams.get("status") // for admin: pending_review, rejected
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)))
 
     // Only admins can filter by non-approved status
     if (status && status !== "approved") {
@@ -39,7 +41,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("library_items")
-      .select("*, profiles!library_items_published_by_fkey(full_name, email)")
+      .select("*, profiles!library_items_published_by_fkey(full_name, email)", { count: "exact" })
       .order("created_at", { ascending: false })
 
     // Filter by status (admins can see pending_review)
@@ -62,15 +64,21 @@ export async function GET(request: Request) {
       }
     }
 
-    const { data, error } = await query.limit(50)
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+    const { data, error, count } = await query.range(from, to)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     // Enrich with publisher info and challenge count
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const items = (data || []).map((item: any) => ({
+    interface LibraryRow {
+      profiles?: { full_name?: string; email?: string } | null
+      challenge_data?: unknown[]
+      [key: string]: unknown
+    }
+    const items = (data || []).map((item: LibraryRow) => ({
       ...item,
       publisher_name: item.profiles?.full_name || item.profiles?.email || "—",
       publisher_email: item.profiles?.email,
@@ -79,7 +87,13 @@ export async function GET(request: Request) {
         : 0,
     }))
 
-    return NextResponse.json(items)
+    return NextResponse.json({
+      items,
+      page,
+      limit,
+      total: count ?? items.length,
+      total_pages: Math.ceil((count ?? items.length) / limit),
+    })
   } catch (error: unknown) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Vidinė klaida" }, { status: 500 })
   }
@@ -138,11 +152,20 @@ export async function POST(request: Request) {
     }
 
     // Create challenge snapshot (without answer_hash for security)
-    const challengeData = game.challenges
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .sort((a: any, b: any) => a.order_index - b.order_index)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((c: any) => ({
+    interface ChallengeRow {
+      title: string
+      description: string | null
+      type: string
+      points: number
+      hints: string[]
+      options: string[] | null
+      order_index: number
+      image_url: string | null
+      maps_url: string | null
+    }
+    const challengeData = (game.challenges as ChallengeRow[])
+      .sort((a, b) => a.order_index - b.order_index)
+      .map((c) => ({
         title: c.title,
         description: c.description,
         type: c.type,

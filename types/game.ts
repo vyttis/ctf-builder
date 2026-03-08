@@ -64,6 +64,7 @@ export interface PlayerSession {
   session_token: string
   game_code: string
   team_name: string
+  created_at?: number // Unix timestamp for session expiry
 }
 
 export interface LeaderboardEntry {
