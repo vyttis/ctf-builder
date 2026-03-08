@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { normalizeAnswer } from "@/lib/game/answer-hasher"
+import { hashAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -20,8 +20,14 @@ const createChallengeSchema = z.object({
   hints: z.array(z.string()).max(10).default([]),
   options: z.array(z.string()).nullable().default(null),
   order_index: z.number().default(0),
-  image_url: z.string().url().nullable().optional(),
-  maps_url: z.string().url().nullable().optional(),
+  image_url: z.string().url().refine(
+    (url) => url.startsWith("https://"),
+    { message: "Paveiksliuko URL turi prasidėti https://" }
+  ).nullable().optional(),
+  maps_url: z.string().url().refine(
+    (url) => url.startsWith("https://"),
+    { message: "Žemėlapio URL turi prasidėti https://" }
+  ).nullable().optional(),
   explanation: z.string().nullable().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
   hint_penalty: z.number().min(0).max(100).default(20),
@@ -96,7 +102,7 @@ export async function POST(request: Request) {
     description: parsed.data.description,
     type: parsed.data.type,
     points: parsed.data.points,
-    answer_hash: normalizeAnswer(parsed.data.correct_answer),
+    answer_hash: await hashAnswer(parsed.data.correct_answer),
     hints: parsed.data.hints,
     options: parsed.data.options,
     order_index: orderIndex,
@@ -121,6 +127,7 @@ export async function POST(request: Request) {
     err.message?.includes("column") || err.code === "42703"
 
   // Try with all columns, progressively fall back if columns don't exist
+  // Supabase dynamic select returns varying shapes, typed loosely for column fallback
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let result: { data: any; error: any } = await supabase
     .from("challenges")

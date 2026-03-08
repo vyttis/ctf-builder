@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { normalizeAnswer } from "@/lib/game/answer-hasher"
+import { hashAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -15,8 +15,14 @@ const updateChallengeSchema = z.object({
   hints: z.array(z.string()).optional(),
   options: z.array(z.string()).nullable().optional(),
   order_index: z.number().optional(),
-  image_url: z.string().url().nullable().optional(),
-  maps_url: z.string().url().nullable().optional(),
+  image_url: z.string().url().refine(
+    (url) => url.startsWith("https://"),
+    { message: "Paveiksliuko URL turi prasidėti https://" }
+  ).nullable().optional(),
+  maps_url: z.string().url().refine(
+    (url) => url.startsWith("https://"),
+    { message: "Žemėlapio URL turi prasidėti https://" }
+  ).nullable().optional(),
   explanation: z.string().nullable().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
   hint_penalty: z.number().min(0).max(100).optional(),
@@ -87,9 +93,9 @@ export async function PATCH(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateData: Record<string, any> = { ...parsed.data }
 
-  // If answer is being updated, normalize it
+  // If answer is being updated, hash it with bcrypt
   if (updateData.correct_answer) {
-    updateData.answer_hash = normalizeAnswer(updateData.correct_answer as string)
+    updateData.answer_hash = await hashAnswer(updateData.correct_answer as string)
     delete updateData.correct_answer
   }
 

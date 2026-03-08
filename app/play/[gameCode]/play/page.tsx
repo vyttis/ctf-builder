@@ -27,6 +27,7 @@ import {
   ChevronRight,
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings } from "@/types/game"
+import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ReflectionForm } from "@/components/player/reflection-form"
 import Link from "next/link"
@@ -140,19 +141,14 @@ export default function PlayPage() {
   }, [gameStarted, timeLimitMinutes, timeExpired, gameFinished, gameCode, handleTimeExpired])
 
   useEffect(() => {
-    const stored = localStorage.getItem(`ctf_session_${gameCode}`)
-    if (!stored) {
+    const s = getPlayerSession(gameCode)
+    if (!s) {
       router.replace(`/play/${gameCode}`)
       return
     }
 
-    try {
-      const s: PlayerSession = JSON.parse(stored)
-      setSession(s)
-      loadChallenges(s)
-    } catch {
-      router.replace(`/play/${gameCode}`)
-    }
+    setSession(s)
+    loadChallenges(s)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameCode, router])
 
@@ -607,7 +603,7 @@ export default function PlayPage() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form onSubmit={handleSubmit} className="space-y-3" aria-label="Atsakymo forma">
                   {currentChallenge.type === "multiple_choice" && currentChallenge.options ? (
                     <div className="space-y-2">
                       {(currentChallenge.options as string[]).map((option, i) => (
@@ -662,6 +658,8 @@ export default function PlayPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       className="mt-4 space-y-3"
+                      role="alert"
+                      aria-live="assertive"
                     >
                       <div
                         className={`p-4 rounded-lg flex items-center gap-3 ${
@@ -738,8 +736,7 @@ export default function PlayPage() {
           <span className="mx-2">&middot;</span>
           <button
             onClick={() => {
-              localStorage.removeItem(`ctf_session_${gameCode}`)
-              localStorage.removeItem(`ctf_start_${gameCode}`)
+              clearPlayerSession(gameCode)
               router.replace(`/play/${gameCode}`)
             }}
             className="text-xs text-muted-foreground/60 hover:text-accent transition-colors inline-flex items-center gap-1"

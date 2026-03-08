@@ -49,7 +49,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
           // Extract game code from URL or use as-is
           let gameCode = decodedText.trim()
 
-          // Handle full URLs like https://ctf.kusteam.app/play/ABC123
+          // Handle full URLs like https://www.kusteam.app/play/ABC123
           const urlMatch = gameCode.match(/\/play\/([A-Za-z0-9]{6})(?:[/?#]|$)/)
           if (urlMatch) {
             gameCode = urlMatch[1].toUpperCase()

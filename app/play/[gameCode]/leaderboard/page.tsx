@@ -16,7 +16,8 @@ import {
   Loader2,
 } from "lucide-react"
 import Link from "next/link"
-import type { LeaderboardEntry, PlayerSession } from "@/types/game"
+import type { LeaderboardEntry } from "@/types/game"
+import { getPlayerSession } from "@/lib/game/session"
 
 const podiumColors = [
   "from-yellow-400/20 to-yellow-500/5 border-yellow-400/30",
@@ -63,18 +64,18 @@ export default function LeaderboardPage() {
   }, [gameCode, supabase])
 
   useEffect(() => {
-    const stored = localStorage.getItem(`ctf_session_${gameCode}`)
-    if (stored) {
-      try {
-        const session: PlayerSession = JSON.parse(stored)
-        setMyTeamId(session.team_id)
-      } catch {}
+    const session = getPlayerSession(gameCode)
+    if (session) {
+      setMyTeamId(session.team_id)
     }
     fetchLeaderboard()
   }, [gameCode, fetchLeaderboard])
 
+  // Realtime subscription with fallback polling
   useEffect(() => {
     if (!gameId) return
+
+    let pollInterval: NodeJS.Timeout | null = null
 
     const channel = supabase
       .channel(`leaderboard_${gameId}`)
@@ -83,9 +84,28 @@ export default function LeaderboardPage() {
         { event: "*", schema: "public", table: "teams", filter: `game_id=eq.${gameId}` },
         () => fetchLeaderboard()
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          // Realtime working — clear fallback polling
+          if (pollInterval) {
+            clearInterval(pollInterval)
+            pollInterval = null
+          }
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          // Realtime failed — start fallback polling every 5s
+          if (!pollInterval) {
+            pollInterval = setInterval(fetchLeaderboard, 5000)
+          }
+        }
+      })
 
-    return () => { supabase.removeChannel(channel) }
+    // Start fallback polling as safety net (cleared once realtime connects)
+    pollInterval = setInterval(fetchLeaderboard, 10000)
+
+    return () => {
+      supabase.removeChannel(channel)
+      if (pollInterval) clearInterval(pollInterval)
+    }
   }, [gameId, supabase, fetchLeaderboard])
 
   if (loading) {

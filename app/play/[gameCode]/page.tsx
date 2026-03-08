@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast"
 import { motion } from "framer-motion"
 import { Users, ArrowRight, Loader2, Gamepad2, AlertCircle, ArrowLeft } from "lucide-react"
 import type { PlayerSession } from "@/types/game"
+import { getPlayerSession, savePlayerSession } from "@/lib/game/session"
 import Link from "next/link"
 
 type GameState =
@@ -29,16 +30,11 @@ export default function JoinGamePage() {
   const [gameState, setGameState] = useState<GameState>({ status: "loading" })
 
   useEffect(() => {
-    // Check existing session
-    const stored = localStorage.getItem(`ctf_session_${gameCode}`)
-    if (stored) {
-      try {
-        const session: PlayerSession = JSON.parse(stored)
-        if (session.session_token) {
-          router.replace(`/play/${gameCode}/play`)
-          return
-        }
-      } catch {}
+    // Check existing session (with expiry validation)
+    const existingSession = getPlayerSession(gameCode)
+    if (existingSession) {
+      router.replace(`/play/${gameCode}/play`)
+      return
     }
     // Validate game exists and is active
     validateGame()
@@ -104,7 +100,7 @@ export default function JoinGamePage() {
         game_code: gameCode,
         team_name: data.team_name,
       }
-      localStorage.setItem(`ctf_session_${gameCode}`, JSON.stringify(session))
+      savePlayerSession(gameCode, session)
 
       router.push(`/play/${gameCode}/play`)
     } catch (error: unknown) {

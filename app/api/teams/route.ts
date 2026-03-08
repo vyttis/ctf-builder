@@ -9,8 +9,9 @@ const createTeamSchema = z.object({
 })
 
 // In-memory rate limiter by IP
+// Higher limit for classroom environments where many teams share the same network
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 5
+const RATE_LIMIT = 30
 const RATE_WINDOW = 60_000
 
 function checkRateLimit(ip: string): boolean {
