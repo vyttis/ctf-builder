@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PublishDialog } from "@/components/teacher/publish-dialog"
 import { LiveActivityFeed } from "@/components/teacher/live-activity-feed"
+import { LiveControlCenter } from "@/components/teacher/live-control-center"
 import {
   ArrowLeft,
   Puzzle,
@@ -151,6 +152,18 @@ export default async function GameDetailPage({
               </CardContent>
             </Card>
           </div>
+
+          {/* Live control center — visible when game is active or paused */}
+          {(game.status === "active" || game.status === "paused") && (
+            <LiveControlCenter
+              gameId={game.id}
+              gameStatus={game.status}
+              settings={{
+                time_limit_minutes: settings?.time_limit_minutes ?? null,
+                max_teams: settings?.max_teams ?? 50,
+              }}
+            />
+          )}
 
           {/* Live activity feed — visible when game is active or paused */}
           {(game.status === "active" || game.status === "paused") && (

@@ -6,8 +6,9 @@ import { Challenge, GameStatus, GameSettings } from "@/types/game"
 import { AiAssistantPanel } from "./ai-assistant-panel"
 import { GameEditDialog } from "./game-edit-dialog"
 import { GameDeleteDialog } from "./game-delete-dialog"
+import { GameDuplicateDialog } from "./game-duplicate-dialog"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Edit3, Trash2 } from "lucide-react"
+import { Sparkles, Edit3, Trash2, Copy } from "lucide-react"
 
 interface GameDetailClientProps {
   game: {
@@ -26,6 +27,7 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
   const [aiSheetOpen, setAiSheetOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
 
   function handleSuggestionsAdded() {
     setAiSheetOpen(false)
@@ -44,6 +46,15 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
         >
           <Sparkles className="h-4 w-4" />
           DI Padėjėjas
+        </Button>
+        <Button
+          onClick={() => setDuplicateDialogOpen(true)}
+          variant="outline"
+          size="sm"
+          className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+        >
+          <Copy className="h-4 w-4" />
+          Dubliuoti
         </Button>
         {game.status === "draft" && (
           <>
@@ -102,6 +113,13 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
           gameTitle={game.title}
         />
       )}
+      {/* Duplicate Dialog */}
+      <GameDuplicateDialog
+        open={duplicateDialogOpen}
+        onOpenChange={setDuplicateDialogOpen}
+        gameId={game.id}
+        gameTitle={game.title}
+      />
     </>
   )
 }

@@ -26,10 +26,14 @@ import {
   BookOpen,
   ChevronRight,
 } from "lucide-react"
-import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings } from "@/types/game"
+import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
 import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ReflectionForm } from "@/components/player/reflection-form"
+import { AnnouncementBanner } from "@/components/player/announcement-banner"
+import { AchievementToast } from "@/components/player/achievement-toast"
+import { ChallengeGrid } from "@/components/player/challenge-grid"
+import { ChallengeDetailModal } from "@/components/player/challenge-detail-modal"
 import Link from "next/link"
 
 interface PlayerChallenge {
@@ -44,6 +48,7 @@ interface PlayerChallenge {
   image_url: string | null
   maps_url: string | null
   hint_penalty: number
+  prerequisites: string[]
 }
 
 interface ExtendedSubmissionResult extends SubmissionResult {
@@ -76,6 +81,14 @@ export default function PlayPage() {
   const [currentExplanation, setCurrentExplanation] = useState<string | null>(null)
   const [gameFinished, setGameFinished] = useState(false)
   const [reflectionDone, setReflectionDone] = useState(false)
+
+  // Free mode state
+  const [pathMode, setPathMode] = useState<"linear" | "free">("linear")
+  const [selectedChallengeIndex, setSelectedChallengeIndex] = useState<number | null>(null)
+  const [gameId, setGameId] = useState<string | null>(null)
+
+  // Achievement state
+  const [pendingAchievement, setPendingAchievement] = useState<{ type: AchievementType; metadata?: Record<string, unknown> } | null>(null)
 
   // Check if reflection already done
   useEffect(() => {
@@ -163,10 +176,13 @@ export default function PlayPage() {
 
     if (!game) return
 
-    // Check time limit
+    setGameId(game.id)
+
+    // Check time limit and path mode
     const settings = game.settings as GameSettings | null
     const timeLimit = settings?.time_limit_minutes ?? null
     setTimeLimitMinutes(timeLimit)
+    setPathMode(settings?.challenge_path_mode || "linear")
 
     // If no time limit, or if already started (has start time in localStorage), auto-start
     const storageKey = `ctf_start_${gameCode}`
@@ -186,7 +202,7 @@ export default function PlayPage() {
 
     const { data } = await supabase
       .from("challenges")
-      .select("id, title, description, type, points, hints, options, order_index, image_url, maps_url, hint_penalty")
+      .select("id, title, description, type, points, hints, options, order_index, image_url, maps_url, hint_penalty, prerequisites")
       .eq("game_id", game.id)
       .order("order_index", { ascending: true })
 
@@ -222,6 +238,53 @@ export default function PlayPage() {
     setGameStarted(true)
   }
 
+  // Free mode: handle submission from challenge detail modal
+  async function handleFreeSubmit(submittedAnswer: string, hintsUsed: number): Promise<{ is_correct: boolean; points_awarded: number; message: string; explanation?: string | null }> {
+    if (!session || selectedChallengeIndex === null) {
+      return { is_correct: false, points_awarded: 0, message: "Klaida" }
+    }
+    const challenge = challenges[selectedChallengeIndex]
+    const res = await fetch("/api/submissions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_token: session.session_token,
+        challenge_id: challenge.id,
+        answer: submittedAnswer.trim(),
+        hints_used: hintsUsed,
+      }),
+    })
+
+    if (res.status === 429) {
+      return { is_correct: false, points_awarded: 0, message: "Per daug bandymų. Palaukite minutę." }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result: any = await res.json()
+
+    if (result.is_correct) {
+      setTotalPoints(result.total_points || totalPoints + result.points_awarded)
+      setSolvedIds((prev) => {
+        const next = new Set(Array.from(prev))
+        next.add(challenge.id)
+        return next
+      })
+      // Show achievement if earned
+      if (result.achievements && result.achievements.length > 0) {
+        setPendingAchievement(result.achievements[0])
+      }
+      // Check if all solved
+      if (solvedIds.size + 1 >= challenges.length) {
+        setTimeout(() => {
+          setSelectedChallengeIndex(null)
+          setGameFinished(true)
+        }, 2000)
+      }
+    }
+
+    return result
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!answer.trim() || !session || !challenges[currentIndex] || timeExpired) return
@@ -251,8 +314,14 @@ export default function PlayPage() {
         return
       }
 
-      const result: ExtendedSubmissionResult = await res.json()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: ExtendedSubmissionResult & { achievements?: any[] } = await res.json()
       setFeedback(result)
+
+      // Show achievement toast if earned
+      if (result.achievements && result.achievements.length > 0) {
+        setPendingAchievement(result.achievements[0])
+      }
 
       if (result.is_correct) {
         setTotalPoints(result.total_points || totalPoints + result.points_awarded)
@@ -465,6 +534,83 @@ export default function PlayPage() {
     )
   }
 
+  // Free mode: show challenge grid
+  if (pathMode === "free") {
+    return (
+      <div className="min-h-screen p-4 pb-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Announcement banner */}
+          {gameId && <AnnouncementBanner gameId={gameId} />}
+
+          {/* Achievement toast */}
+          {pendingAchievement && (
+            <AchievementToast
+              achievement={pendingAchievement}
+              onDismiss={() => setPendingAchievement(null)}
+            />
+          )}
+
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono text-xs tracking-wider">
+                {gameCode}
+              </Badge>
+              <Badge variant="secondary" className="gap-1">
+                <Star className="h-3 w-3 text-highlight" />
+                {totalPoints} tšk.
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              {timeLimitMinutes && remainingSeconds > 0 && (
+                <Badge
+                  variant={remainingSeconds <= 60 ? "destructive" : "outline"}
+                  className={`gap-1 font-mono text-xs tabular-nums ${remainingSeconds <= 60 ? "animate-pulse" : ""}`}
+                >
+                  <Clock className="h-3 w-3" />
+                  {formatTime(remainingSeconds)}
+                </Badge>
+              )}
+              <Link href={`/play/${gameCode}/leaderboard`}>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  Lentelė
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <ChallengeGrid
+            challenges={challenges}
+            solvedIds={solvedIds}
+            onSelectChallenge={(index) => setSelectedChallengeIndex(index)}
+          />
+
+          <ChallengeDetailModal
+            challenge={selectedChallengeIndex !== null ? challenges[selectedChallengeIndex] : null}
+            open={selectedChallengeIndex !== null}
+            onOpenChange={(open) => { if (!open) setSelectedChallengeIndex(null) }}
+            onSubmit={handleFreeSubmit}
+            isSolved={selectedChallengeIndex !== null ? solvedIds.has(challenges[selectedChallengeIndex].id) : false}
+          />
+
+          <div className="text-center text-sm text-muted-foreground mt-4">
+            <span>Komanda: </span>
+            <span className="font-medium text-steam-dark">{session.team_name}</span>
+            <span className="mx-2">&middot;</span>
+            <button
+              onClick={() => { clearPlayerSession(gameCode); router.replace(`/play/${gameCode}`) }}
+              className="text-xs text-muted-foreground/60 hover:text-accent transition-colors inline-flex items-center gap-1"
+            >
+              <LogOut className="h-3 w-3" />
+              Išeiti
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const currentChallenge = challenges[currentIndex]
   const progressValue = (solvedIds.size / challenges.length) * 100
   const challengeHints = (currentChallenge.hints as string[]) || []
@@ -473,6 +619,17 @@ export default function PlayPage() {
   return (
     <div className="min-h-screen p-4 pb-8">
       <div className="max-w-lg mx-auto">
+        {/* Announcement banner */}
+        {gameId && <AnnouncementBanner gameId={gameId} />}
+
+        {/* Achievement toast */}
+        {pendingAchievement && (
+          <AchievementToast
+            achievement={pendingAchievement}
+            onDismiss={() => setPendingAchievement(null)}
+          />
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">

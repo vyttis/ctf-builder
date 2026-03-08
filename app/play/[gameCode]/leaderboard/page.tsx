@@ -16,8 +16,9 @@ import {
   Loader2,
 } from "lucide-react"
 import Link from "next/link"
-import type { LeaderboardEntry } from "@/types/game"
+import type { LeaderboardEntry, Achievement } from "@/types/game"
 import { getPlayerSession } from "@/lib/game/session"
+import { AchievementBadge } from "@/components/player/achievement-badge"
 
 const podiumColors = [
   "from-yellow-400/20 to-yellow-500/5 border-yellow-400/30",
@@ -39,6 +40,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true)
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
+  const [teamAchievements, setTeamAchievements] = useState<Record<string, Achievement[]>>({})
 
   const supabase = useMemo(() => createClient(), [])
 
@@ -60,6 +62,22 @@ export default function LeaderboardPage() {
       .order("updated_at", { ascending: true })
 
     if (data) setTeams(data)
+
+    // Fetch achievements for all teams
+    const { data: achievements } = await supabase
+      .from("achievements")
+      .select("*")
+      .eq("game_id", game.id)
+
+    if (achievements) {
+      const grouped: Record<string, Achievement[]> = {}
+      for (const a of achievements) {
+        if (!grouped[a.team_id]) grouped[a.team_id] = []
+        grouped[a.team_id].push(a as Achievement)
+      }
+      setTeamAchievements(grouped)
+    }
+
     setLoading(false)
   }, [gameCode, supabase])
 
@@ -182,9 +200,14 @@ export default function LeaderboardPage() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {team.current_challenge_index} užd. išspręsta
-                          </p>
+                          <div className="flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground">
+                              {team.current_challenge_index} užd. išspręsta
+                            </p>
+                            {teamAchievements[team.id]?.map((a) => (
+                              <AchievementBadge key={a.id} type={a.type} size="sm" />
+                            ))}
+                          </div>
                         </div>
 
                         <div className="text-right shrink-0">
