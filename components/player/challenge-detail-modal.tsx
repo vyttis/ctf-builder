@@ -94,6 +94,8 @@ export function ChallengeDetailModal({
           setShowExplanation(true)
         }
       }
+    } catch {
+      setFeedback({ is_correct: false, points_awarded: 0, message: "Tinklo klaida. Bandykite dar kartą." })
     } finally {
       setLoading(false)
     }

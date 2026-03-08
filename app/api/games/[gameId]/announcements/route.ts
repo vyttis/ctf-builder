@@ -10,6 +10,7 @@ export async function POST(
   request: Request,
   { params }: { params: { gameId: string } }
 ) {
+  try {
   const supabase = await createClient()
   const {
     data: { user },
@@ -68,12 +69,17 @@ export async function POST(
   }
 
   return NextResponse.json(announcement, { status: 201 })
+  } catch (err) {
+    console.error("Announcements POST error:", err)
+    return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
+  }
 }
 
 export async function GET(
   _request: Request,
   { params }: { params: { gameId: string } }
 ) {
+  try {
   const supabase = await createClient()
   const {
     data: { user },
@@ -109,4 +115,8 @@ export async function GET(
   }
 
   return NextResponse.json(announcements)
+  } catch (err) {
+    console.error("Announcements GET error:", err)
+    return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
+  }
 }

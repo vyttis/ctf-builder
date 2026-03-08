@@ -282,45 +282,49 @@ export default function PlayPage() {
       return { is_correct: false, points_awarded: 0, message: "Klaida" }
     }
     const challenge = challenges[selectedChallengeIndex]
-    const res = await fetch("/api/submissions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_token: session.session_token,
-        challenge_id: challenge.id,
-        answer: submittedAnswer.trim(),
-        hints_used: hintsUsed,
-      }),
-    })
-
-    if (res.status === 429) {
-      return { is_correct: false, points_awarded: 0, message: "Per daug bandymų. Palaukite minutę." }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result: any = await res.json()
-
-    if (result.is_correct) {
-      setTotalPoints(result.total_points || totalPoints + result.points_awarded)
-      setSolvedIds((prev) => {
-        const next = new Set(Array.from(prev))
-        next.add(challenge.id)
-        return next
+    try {
+      const res = await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_token: session.session_token,
+          challenge_id: challenge.id,
+          answer: submittedAnswer.trim(),
+          hints_used: hintsUsed,
+        }),
       })
-      // Show achievement if earned
-      if (result.achievements && result.achievements.length > 0) {
-        setAchievementQueue((q) => [...q, ...result.achievements])
-      }
-      // Check if all solved
-      if (solvedIds.size + 1 >= challenges.length) {
-        setTimeout(() => {
-          setSelectedChallengeIndex(null)
-          setGameFinished(true)
-        }, 2000)
-      }
-    }
 
-    return result
+      if (res.status === 429) {
+        return { is_correct: false, points_awarded: 0, message: "Per daug bandymų. Palaukite minutę." }
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: any = await res.json()
+
+      if (result.is_correct) {
+        setTotalPoints(result.total_points || totalPoints + result.points_awarded)
+        setSolvedIds((prev) => {
+          const next = new Set(Array.from(prev))
+          next.add(challenge.id)
+          return next
+        })
+        // Show achievement if earned
+        if (result.achievements && result.achievements.length > 0) {
+          setAchievementQueue((q) => [...q, ...result.achievements])
+        }
+        // Check if all solved
+        if (solvedIds.size + 1 >= challenges.length) {
+          setTimeout(() => {
+            setSelectedChallengeIndex(null)
+            setGameFinished(true)
+          }, 2000)
+        }
+      }
+
+      return result
+    } catch {
+      return { is_correct: false, points_awarded: 0, message: "Tinklo klaida. Bandykite dar kartą." }
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
