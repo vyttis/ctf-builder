@@ -24,7 +24,7 @@ export default function NewGamePage() {
       <Link href="/dashboard" className="inline-block mb-6">
         <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
           <ArrowLeft className="h-4 w-4" />
-          Grįžti į žaidimus
+          Grįžti į veiklas
         </Button>
       </Link>
 
@@ -35,10 +35,10 @@ export default function NewGamePage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-steam-dark">
-            Naujas žaidimas
+            Nauja veikla mokiniams
           </h1>
           <p className="text-muted-foreground mt-1">
-            Sukurkite CTF žaidimą savo mokiniams. Vėliau galėsite pridėti užduotis.
+            Sukurkite interaktyvią veiklą savo mokiniams. Vėliau galėsite pridėti užduotis.
           </p>
         </div>
       </div>

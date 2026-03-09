@@ -38,17 +38,16 @@ export default async function LessonGeneratorPage({
           className="gap-2 text-muted-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Grįžti į žaidimą
+          Grįžti į veiklą
         </Button>
       </Link>
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-steam-dark">
-          Pamokos generatorius
+          Užduočių generatorius
         </h1>
         <p className="text-muted-foreground mt-1">
-          Sukurkite struktūruotą pamoką pagal Lietuvos ugdymo programą.
-          Sugeneruotos veiklos taps žaidimo užduotimis.
+          Sugeneruokite užduotis šiai veiklai pagal Lietuvos ugdymo programą.
         </p>
       </div>
 

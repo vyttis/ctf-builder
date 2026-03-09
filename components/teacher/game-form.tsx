@@ -85,14 +85,14 @@ export function GameForm({ prefillData }: GameFormProps) {
 
       if (!res.ok) {
         const err = await res.json()
-        const errorMessage = typeof err.error === "string" ? err.error : "Nepavyko sukurti žaidimo"
+        const errorMessage = typeof err.error === "string" ? err.error : "Nepavyko sukurti veiklos"
         throw new Error(errorMessage)
       }
 
       const game = await res.json()
 
       toast({
-        title: "Žaidimas sukurtas!",
+        title: "Veikla sukurta!",
         description: `Kodas: ${game.game_code}`,
       })
 
@@ -100,7 +100,7 @@ export function GameForm({ prefillData }: GameFormProps) {
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Nepavyko sukurti žaidimo",
+        description: error instanceof Error ? error.message : "Nepavyko sukurti veiklos",
         variant: "destructive",
       })
     } finally {
@@ -135,7 +135,7 @@ export function GameForm({ prefillData }: GameFormProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Žaidimo pavadinimas *</Label>
+              <Label htmlFor="title">Veiklos pavadinimas *</Label>
               <Input
                 id="title"
                 placeholder="pvz., Vilniaus detektyvai"
@@ -151,7 +151,7 @@ export function GameForm({ prefillData }: GameFormProps) {
               <Label htmlFor="description">Aprašymas</Label>
               <Textarea
                 id="description"
-                placeholder="Trumpas žaidimo aprašymas mokiniams..."
+                placeholder="Trumpas veiklos aprašymas mokiniams..."
                 className="resize-none bg-white"
                 rows={3}
                 {...register("description")}
@@ -210,7 +210,7 @@ export function GameForm({ prefillData }: GameFormProps) {
                     Rodyti rezultatų lentelę
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Žaidėjai matys kitų komandų rezultatus
+                    Mokiniai matys kitų komandų rezultatus
                   </p>
                 </div>
                 <Switch
@@ -251,7 +251,7 @@ export function GameForm({ prefillData }: GameFormProps) {
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
             <>
-              Sukurti žaidimą
+              Sukurti veiklą
               <ArrowRight className="ml-2 h-4 w-4" />
             </>
           )}

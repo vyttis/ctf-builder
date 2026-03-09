@@ -116,7 +116,7 @@ export function BuilderHeader({
       <Dialog open={launchOpen} onOpenChange={setLaunchOpen}>
         <DialogContent className="max-w-sm sm:max-w-md">
           <DialogTitle className="text-lg font-bold text-steam-dark text-center">
-            Paleisti žaidimą
+            Paleisti veiklą
           </DialogTitle>
           <QRDisplay gameCode={game.game_code} />
         </DialogContent>

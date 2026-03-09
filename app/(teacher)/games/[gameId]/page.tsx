@@ -58,7 +58,7 @@ export default async function GameDetailPage({
           className="gap-2 text-muted-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Visi žaidimai
+          Visos veiklos
         </Button>
       </Link>
 

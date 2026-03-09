@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { LogOut, Plus, LayoutDashboard, BookOpen, Shield, Menu } from "lucide-react"
+import { LogOut, Gamepad2, GraduationCap, BookOpen, Shield, Menu } from "lucide-react"
 import Link from "next/link"
 import { UserRole } from "@/types/game"
 import Image from "next/image"
@@ -41,10 +41,16 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
             </Link>
 
             <div className="hidden sm:flex items-center gap-1">
+              <Link href="/lesson-plans">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
+                  <GraduationCap className="h-4 w-4" />
+                  Pamokų planai
+                </Button>
+              </Link>
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
-                  <LayoutDashboard className="h-4 w-4" />
-                  Žaidimai
+                  <Gamepad2 className="h-4 w-4" />
+                  Veiklos mokiniams
                 </Button>
               </Link>
               <Link href="/library">
@@ -66,13 +72,6 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <Link href="/games/new">
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20 gap-2">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Naujas žaidimas</span>
-              </Button>
-            </Link>
-
             <div className="hidden sm:flex items-center gap-3">
               {avatarUrl ? (
                 <Image src={avatarUrl} alt="" width={32} height={32} className="rounded-full" />
@@ -130,10 +129,16 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
             </div>
 
             {/* Nav links */}
+            <Link href="/lesson-plans" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start gap-3 h-11 text-steam-dark">
+                <GraduationCap className="h-4 w-4" />
+                Pamokų planai
+              </Button>
+            </Link>
             <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
               <Button variant="ghost" className="w-full justify-start gap-3 h-11 text-steam-dark">
-                <LayoutDashboard className="h-4 w-4" />
-                Žaidimai
+                <Gamepad2 className="h-4 w-4" />
+                Veiklos mokiniams
               </Button>
             </Link>
             <Link href="/library" onClick={() => setMobileMenuOpen(false)}>
