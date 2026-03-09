@@ -1,8 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Mail } from "lucide-react"
-import Link from "next/link"
+import { Mail, Handshake } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
@@ -25,44 +24,68 @@ export function FinalCtaSection() {
 
             {/* Glow accents */}
             <motion.div
-              animate={prefersReduced ? {} : { scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              animate={
+                prefersReduced
+                  ? {}
+                  : {
+                      scale: [1, 1.2, 1],
+                      opacity: [0.15, 0.25, 0.15],
+                    }
+              }
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
               className="absolute -top-20 -right-20 w-64 h-64 bg-primary rounded-full blur-3xl"
               style={{ opacity: 0.15 }}
             />
             <motion.div
-              animate={prefersReduced ? {} : { scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              animate={
+                prefersReduced
+                  ? {}
+                  : {
+                      scale: [1, 1.15, 1],
+                      opacity: [0.1, 0.2, 0.1],
+                    }
+              }
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
               className="absolute -bottom-20 -left-20 w-56 h-56 bg-secondary rounded-full blur-3xl"
               style={{ opacity: 0.1 }}
             />
 
             <div className="relative">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                Išbandykite platformą savo pamokoje
+                Domina daugiau informacijos?
               </h2>
               <p className="text-white/60 text-[15px] mb-8 max-w-md mx-auto leading-relaxed">
-                Pamoką galima sukurti per kelias minutes ir iš karto naudoti
-                klasėje — mokiniams nereikia registracijos.
+                Jeigu norite sužinoti daugiau apie platformą, partnerystės
+                galimybes ar mokytojų mokymus, susisiekite su Klaipėdos
+                universiteto STEAM metodiniu centru.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/auth/login">
+                <a href="mailto:steam@ku.lt">
                   <Button
                     size="lg"
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30 gap-2 h-12 text-sm px-8 font-semibold"
                   >
-                    Pradėti kurti pamoką
-                    <ArrowRight className="h-4 w-4" />
+                    <Mail className="h-4 w-4" />
+                    Susisiekti su STEAM centru
                   </Button>
-                </Link>
-                <a href="mailto:steam@ku.lt">
+                </a>
+                <a href="mailto:steam@ku.lt?subject=Domina%20partneryst%C4%97">
                   <Button
                     size="lg"
                     className="w-full sm:w-auto bg-transparent border border-white/20 text-white hover:bg-white/10 gap-2 h-12 text-sm px-8"
                   >
-                    <Mail className="h-4 w-4" />
-                    Susisiekti su centru
+                    <Handshake className="h-4 w-4" />
+                    Domina partnerystė
                   </Button>
                 </a>
               </div>

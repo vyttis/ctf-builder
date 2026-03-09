@@ -4,11 +4,11 @@ import { SteamLogo } from "@/components/steam-logo"
 import { Button } from "@/components/ui/button"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import {
-  ArrowRight,
   ArrowDown,
-  GraduationCap,
-  UserX,
   Building2,
+  GraduationCap,
+  Handshake,
+  Mail,
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -26,6 +26,21 @@ const fadeUp = {
     },
   }),
 }
+
+const trustItems = [
+  {
+    icon: Building2,
+    text: "Sukurta Klaipėdos universiteto STEAM metodiniame centre",
+  },
+  {
+    icon: Handshake,
+    text: "Skirta partnerių mokykloms",
+  },
+  {
+    icon: GraduationCap,
+    text: "Taikoma realiose pamokose ir edukacinėse veiklose",
+  },
+]
 
 export function HeroSection() {
   const prefersReduced = useReducedMotion()
@@ -65,8 +80,11 @@ export function HeroSection() {
         <nav className="flex items-center justify-between py-5">
           <SteamLogo />
           <Link href="/auth/login">
-            <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm h-9 px-5 text-sm">
-              Prisijungti
+            <Button
+              variant="ghost"
+              className="text-sm text-muted-foreground hover:text-steam-dark"
+            >
+              Mokytojams
             </Button>
           </Link>
         </nav>
@@ -86,7 +104,7 @@ export function HeroSection() {
               >
                 <Building2 className="h-3.5 w-3.5 text-secondary" />
                 <span className="text-xs font-medium text-secondary">
-                  Klaipėdos universiteto STEAM centras
+                  Klaipėdos universiteto STEAM metodinis centras
                 </span>
               </motion.div>
 
@@ -95,11 +113,11 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-extrabold text-steam-dark leading-[1.08] tracking-tight"
+                className="text-3xl sm:text-4xl md:text-[44px] lg:text-[50px] font-extrabold text-steam-dark leading-[1.1] tracking-tight"
               >
-                Pamokos, kuriose mokiniai{" "}
+                Interaktyvi pamokų kūrimo platforma{" "}
                 <span className="text-transparent bg-clip-text gradient-primary">
-                  sprendžia iššūkius
+                  partnerių mokykloms
                 </span>
               </motion.h1>
 
@@ -110,9 +128,20 @@ export function HeroSection() {
                 variants={fadeUp}
                 className="text-base text-muted-foreground mt-5 leading-relaxed max-w-lg"
               >
-                Interaktyvi platforma, padedanti mokytojams kurti įtraukiančias
-                pamokas ir komandines mokymosi veiklas — o mokinių progresą
-                stebėti realiu laiku.
+                Platforma padeda mokytojams kurti įtraukiančias pamokas,
+                komandines veiklas ir interaktyvias užduotis, kuriose mokiniai
+                mokosi aktyviai dalyvaudami.
+              </motion.p>
+
+              <motion.p
+                custom={2.5}
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                className="text-sm text-muted-foreground/70 mt-3 leading-relaxed max-w-lg"
+              >
+                Prieiga suteikiama partnerių mokyklų mokytojams, dalyvaujantiems
+                STEAM centro mokymuose, dirbtuvėse ir bendrose veiklose.
               </motion.p>
 
               {/* CTAs */}
@@ -123,15 +152,15 @@ export function HeroSection() {
                 variants={fadeUp}
                 className="flex flex-col sm:flex-row gap-3 mt-8"
               >
-                <Link href="/auth/login">
+                <a href="mailto:steam@ku.lt">
                   <Button
                     size="lg"
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/15 gap-2 h-12 text-sm px-7 font-semibold"
                   >
-                    Pradėti kurti pamoką
-                    <ArrowRight className="h-4 w-4" />
+                    <Mail className="h-4 w-4" />
+                    Susisiekti su STEAM centru
                   </Button>
-                </Link>
+                </a>
                 <Button
                   size="lg"
                   variant="outline"
@@ -143,26 +172,30 @@ export function HeroSection() {
                   }}
                 >
                   <ArrowDown className="h-4 w-4" />
-                  Kaip tai veikia?
+                  Kaip veikia platforma
                 </Button>
               </motion.div>
 
-              {/* Trust indicators */}
+              {/* Trust strip */}
               <motion.div
                 custom={4}
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 text-xs text-muted-foreground/70"
+                className="flex flex-col gap-2.5 mt-8"
               >
-                <span className="flex items-center gap-1.5">
-                  <GraduationCap className="h-3.5 w-3.5" />
-                  Nemokama mokykloms
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <UserX className="h-3.5 w-3.5" />
-                  Be registracijos mokiniams
-                </span>
+                {trustItems.map((item, i) => {
+                  const Icon = item.icon
+                  return (
+                    <span
+                      key={i}
+                      className="flex items-center gap-2 text-xs text-muted-foreground/70"
+                    >
+                      <Icon className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                      {item.text}
+                    </span>
+                  )
+                })}
               </motion.div>
             </div>
 
@@ -184,7 +217,13 @@ export function HeroSection() {
                     transition={{ delay: 0.4, duration: 0.6 }}
                     className="relative col-span-2 rounded-2xl overflow-hidden shadow-2xl shadow-steam-dark/10 border border-white/60 aspect-[16/9]"
                   >
-                    <Image src="/photos/activity-students.jpg" alt="Mokiniai sprendžia užduotis komandomis" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                    <Image
+                      src="/photos/activity-students.jpg"
+                      alt="Mokiniai sprendžia užduotis komandomis"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
                   </motion.div>
 
                   <motion.div
@@ -193,7 +232,13 @@ export function HeroSection() {
                     transition={{ delay: 0.6, duration: 0.5 }}
                     className="relative rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
                   >
-                    <Image src="/photos/classroom-teacher.jpg" alt="Mokytoja padeda mokiniams klasėje" fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" />
+                    <Image
+                      src="/photos/classroom-teacher.jpg"
+                      alt="Mokytoja padeda mokiniams klasėje"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 25vw"
+                    />
                   </motion.div>
 
                   <motion.div
@@ -202,7 +247,13 @@ export function HeroSection() {
                     transition={{ delay: 0.7, duration: 0.5 }}
                     className="relative rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
                   >
-                    <Image src="/photos/activity-beavers.jpg" alt="STEAM centro veiklos" fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" />
+                    <Image
+                      src="/photos/activity-beavers.jpg"
+                      alt="STEAM centro veiklos"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 25vw"
+                    />
                   </motion.div>
                 </div>
               </div>

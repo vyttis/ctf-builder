@@ -1,14 +1,124 @@
+"use client"
+
 import { SteamLogo } from "@/components/steam-logo"
+import { Mail, Phone, MapPin } from "lucide-react"
+import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="py-8 border-t border-border/40 bg-white">
+    <footer className="py-12 md:py-16 border-t border-border/40 bg-white">
       <div className="container mx-auto px-5 max-w-[1140px]">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <SteamLogo size="small" />
-          <p className="text-xs text-muted-foreground/60">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+          {/* Brand */}
+          <div>
+            <SteamLogo size="small" />
+            <p className="text-xs text-muted-foreground/60 mt-3 leading-relaxed max-w-[200px]">
+              Interaktyvi pamokų kūrimo platforma partnerių mokykloms.
+            </p>
+          </div>
+
+          {/* About */}
+          <div>
+            <h4 className="text-sm font-semibold text-steam-dark mb-3">
+              Apie platformą
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("how-it-works")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                >
+                  Kaip veikia
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("access")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                >
+                  Kaip suteikiama prieiga
+                </button>
+              </li>
+              <li>
+                <Link
+                  href="/auth/login"
+                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                >
+                  Prisijungimas mokytojams
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Institution */}
+          <div>
+            <h4 className="text-sm font-semibold text-steam-dark mb-3">
+              Klaipėdos universitetas
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <a
+                  href="https://www.ku.lt/steam"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                >
+                  STEAM metodinis centras
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.ku.lt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                >
+                  Klaipėdos universitetas
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="text-sm font-semibold text-steam-dark mb-3">
+              Kontaktai
+            </h4>
+            <ul className="space-y-2.5">
+              <li className="flex items-center gap-2 text-xs text-muted-foreground/60">
+                <Mail className="h-3 w-3 shrink-0" />
+                <a
+                  href="mailto:steam@ku.lt"
+                  className="hover:text-steam-dark transition-colors"
+                >
+                  steam@ku.lt
+                </a>
+              </li>
+              <li className="flex items-center gap-2 text-xs text-muted-foreground/60">
+                <Phone className="h-3 w-3 shrink-0" />
+                <span>+370 (46) 398 978</span>
+              </li>
+              <li className="flex items-start gap-2 text-xs text-muted-foreground/60">
+                <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                <span>Herkaus Manto g. 84, Klaipėda</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="pt-6 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground/50">
             &copy; {new Date().getFullYear()} Klaipėdos universiteto STEAM
-            centras
+            metodinis centras
           </p>
         </div>
       </div>

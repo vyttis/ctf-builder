@@ -2,7 +2,7 @@
 
 import { SectionWrapper } from "./section-wrapper"
 import { SectionHeader } from "./section-header"
-import { Pencil, Sparkles, Layout, QrCode, BarChart3 } from "lucide-react"
+import { Pencil, Sparkles, Layout, Smartphone, BarChart3 } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
@@ -10,36 +10,41 @@ const steps = [
   {
     number: "01",
     icon: Pencil,
-    title: "Aprašykite temą",
-    description: "Įveskite pamokos temą ir tikslus — sistema pritaikys turinį jūsų dalyko kontekstui.",
+    title: "Tema ir veiklos tipas",
+    description:
+      "Mokytojas pasirenka dalyką, temą, klasę ar planuojamą veiklos formatą.",
     color: "bg-primary/10 text-primary",
   },
   {
     number: "02",
     icon: Sparkles,
-    title: "Gaukite pasiūlymus",
-    description: "DI padėjėjas pasiūlys klausimus ir užduotis — jūs peržiūrite ir patvirtinate.",
+    title: "Užduočių kūrimas",
+    description:
+      "Mokytojas kuria turinį rankiniu būdu arba pasitelkia dirbtinio intelekto pagalbą.",
     color: "bg-highlight/10 text-highlight",
   },
   {
     number: "03",
     icon: Layout,
-    title: "Sudėliokite scenarijų",
-    description: "Surikiuokite užduotis, nustatykite taškus ir užuominas.",
+    title: "Pamokos eiga",
+    description:
+      "Užduotys išdėstomos į nuoseklią struktūrą, kurią galima koreguoti pagal klasės poreikius.",
     color: "bg-secondary/10 text-secondary",
   },
   {
     number: "04",
-    icon: QrCode,
-    title: "Mokiniai prisijungia",
-    description: "Nuskaito QR kodą telefonu ir per sekundes jungiasi — be registracijos.",
+    icon: Smartphone,
+    title: "Mokiniai jungiasi",
+    description:
+      "Mokiniai prisijungia naudodami telefonus ar kompiuterius ir sprendžia užduotis individualiai arba komandomis.",
     color: "bg-accent/10 text-accent",
   },
   {
     number: "05",
     icon: BarChart3,
-    title: "Stebėkite progresą",
-    description: "Matote komandų atsakymus, taškus ir progresą realiu laiku.",
+    title: "Progresas ir rezultatai",
+    description:
+      "Pamokos eiga ir atsakymai matomi realiu laiku, todėl mokytojas gali greitai reaguoti.",
     color: "bg-primary/10 text-primary",
   },
 ]
@@ -66,7 +71,13 @@ function StepConnectorSVG() {
         strokeDasharray="6 4"
       />
       {[200, 400, 600, 800].map((cx) => (
-        <circle key={cx} cx={cx} cy={55} r={3} fill="hsl(195 100% 35% / 0.2)" />
+        <circle
+          key={cx}
+          cx={cx}
+          cy={55}
+          r={3}
+          fill="hsl(195 100% 35% / 0.2)"
+        />
       ))}
     </svg>
   )
@@ -79,7 +90,7 @@ export function HowItWorksSection() {
     <SectionWrapper background="muted" id="how-it-works">
       <SectionHeader
         title="Kaip veikia platforma"
-        subtitle="Nuo idėjos iki pamokos — per kelias minutes."
+        subtitle="Nuo temos pasirinkimo iki pamokos stebėjimo — per kelias minutes."
         align="center"
       />
 
@@ -91,14 +102,22 @@ export function HowItWorksSection() {
             return (
               <motion.div
                 key={index}
-                initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 30 }}
+                initial={
+                  prefersReduced ? { opacity: 1 } : { opacity: 0, y: 30 }
+                }
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.8, ease: [0, 0, 0.2, 1] }}
+                transition={{
+                  delay: index * 0.1,
+                  duration: 0.8,
+                  ease: [0, 0, 0.2, 1],
+                }}
                 className="relative"
               >
                 <div className="text-center p-4 md:p-3 rounded-2xl hover:bg-white/60 transition-colors">
-                  <div className={`w-14 h-14 rounded-2xl ${step.color} flex items-center justify-center mx-auto mb-4 relative`}>
+                  <div
+                    className={`w-14 h-14 rounded-2xl ${step.color} flex items-center justify-center mx-auto mb-4 relative`}
+                  >
                     <Icon className="h-6 w-6" />
                     <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-steam-dark text-white text-[10px] font-bold flex items-center justify-center">
                       {step.number}

@@ -1,12 +1,14 @@
 import {
   HeroSection,
-  ValueSection,
+  ForWhomSection,
+  WhatYouCanDoSection,
   HowItWorksSection,
-  FeaturesSection,
-  ProductVisualsSection,
-  ComparisonSection,
+  ClassroomExperienceSection,
   UseCasesSection,
-  InstitutionSection,
+  TeacherValueSection,
+  DifferenceSection,
+  AccessSection,
+  AboutCreatorsSection,
   FinalCtaSection,
   Footer,
 } from "@/components/landing"
@@ -15,13 +17,15 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       <HeroSection />
-      <ValueSection />
+      <ForWhomSection />
+      <WhatYouCanDoSection />
       <HowItWorksSection />
-      <FeaturesSection />
-      <ProductVisualsSection />
-      <ComparisonSection />
+      <ClassroomExperienceSection />
       <UseCasesSection />
-      <InstitutionSection />
+      <TeacherValueSection />
+      <DifferenceSection />
+      <AccessSection />
+      <AboutCreatorsSection />
       <FinalCtaSection />
       <Footer />
     </div>
