@@ -9,35 +9,39 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 const benefits = [
   {
     icon: Clock,
-    title: "Padeda greičiau pasiruošti pamokai",
+    title: "Mažiau laiko pasiruošimui",
     description:
-      "Mokytojas gali greičiau sukurti veiklą ir lengviau pasiruošti interaktyviai pamokai.",
+      "Veikla sukuriama greičiau, o pasiruošimas interaktyviai pamokai užima mažiau laiko nei įprasta.",
     color: "text-primary",
     bg: "bg-primary/8",
+    number: "01",
   },
   {
     icon: Layers,
-    title: "Leidžia kurti įvairesnes veiklas",
+    title: "Daugiau nei tik klausimai",
     description:
-      "Platforma neapsiriboja tik klausimų rinkiniais, todėl galima kurti įdomesnį ir lankstesnį pamokos scenarijų.",
+      "Galima derinti skirtingus užduočių tipus, veiklos etapus ir komandines užduotis — ne vien klausimų rinkinius.",
     color: "text-secondary",
     bg: "bg-secondary/8",
+    number: "02",
   },
   {
     icon: TrendingUp,
-    title: "Didina mokinių įsitraukimą",
+    title: "Aktyvesni mokiniai",
     description:
-      "Mokiniai aktyviau dalyvauja pamokoje, kai dirba komandose, sprendžia iššūkius ir mato veiklos eigą.",
+      "Komandos, iššūkiai ir matoma veiklos eiga skatina mokinius dalyvauti, o ne tik klausytis.",
     color: "text-highlight",
     bg: "bg-highlight/8",
+    number: "03",
   },
   {
     icon: Eye,
-    title: "Padeda geriau matyti mokymosi procesą",
+    title: "Visas procesas kaip ant delno",
     description:
-      "Mokytojas gali stebėti ne tik galutinį rezultatą, bet ir visą veiklos eigą.",
+      "Matomas ne tik galutinis rezultatas, bet ir kiekvienas žingsnis — kur sekėsi, kur strigo.",
     color: "text-accent",
     bg: "bg-accent/8",
+    number: "04",
   },
 ]
 
@@ -45,12 +49,12 @@ export function TeacherValueSection() {
   const prefersReduced = useReducedMotion()
 
   return (
-    <SectionWrapper background="white">
+    <SectionWrapper background="muted">
       <SectionHeader
-        title="Kodėl ši platforma naudinga mokytojams"
+        title="Nauda mokytojui"
       />
 
-      <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div className="grid sm:grid-cols-2 gap-5 max-w-5xl mx-auto">
         {benefits.map((item, index) => {
           const Icon = item.icon
           return (
@@ -60,19 +64,17 @@ export function TeacherValueSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              whileHover={
-                prefersReduced
-                  ? {}
-                  : { y: -4, transition: { duration: 0.25 } }
-              }
-              className="rounded-2xl border border-border/40 bg-muted p-6 cursor-default transition-shadow hover:shadow-md"
+              className="rounded-xl border border-border/50 bg-white p-7 cursor-default transition-all hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden"
             >
+              <span className="absolute top-4 right-5 text-[48px] font-extrabold text-steam-dark/[0.03] leading-none select-none">
+                {item.number}
+              </span>
               <div
-                className={`w-12 h-12 rounded-xl ${item.bg} ${item.color} flex items-center justify-center mb-4`}
+                className={`w-12 h-12 rounded-xl ${item.bg} ${item.color} flex items-center justify-center mb-5`}
               >
                 <Icon className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-steam-dark text-[15px] mb-2">
+              <h3 className="font-semibold text-steam-dark text-base mb-2">
                 {item.title}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">

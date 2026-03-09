@@ -6,25 +6,25 @@ import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="py-10 md:py-12 border-t border-border/40 bg-white">
-      <div className="container mx-auto px-5 max-w-[1140px]">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+    <footer className="py-12 md:py-16 border-t border-border/40 bg-white">
+      <div className="container mx-auto px-5 max-w-[1200px]">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div>
             <Link href="/" className="inline-flex hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
               <SteamLogo size="small" />
             </Link>
             <p className="text-xs text-muted-foreground/60 mt-3 leading-relaxed max-w-[200px]">
-              Interaktyvi pamokų kūrimo platforma partnerių mokykloms.
+              Interaktyvių pamokų kūrimo įrankis partnerių mokykloms.
             </p>
           </div>
 
           {/* About */}
           <div>
-            <h4 className="text-sm font-semibold text-steam-dark mb-3">
-              Apie platformą
+            <h4 className="text-sm font-semibold text-steam-dark mb-4">
+              Apie įrankį
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               <li>
                 <button
                   onClick={() =>
@@ -32,7 +32,7 @@ export function Footer() {
                       .getElementById("how-it-works")
                       ?.scrollIntoView({ behavior: "smooth" })
                   }
-                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
                 >
                   Kaip veikia
                 </button>
@@ -44,7 +44,7 @@ export function Footer() {
                       .getElementById("access")
                       ?.scrollIntoView({ behavior: "smooth" })
                   }
-                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
                 >
                   Kaip suteikiama prieiga
                 </button>
@@ -52,7 +52,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/auth/login"
-                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
                 >
                   Prisijungimas mokytojams
                 </Link>
@@ -62,16 +62,16 @@ export function Footer() {
 
           {/* Institution */}
           <div>
-            <h4 className="text-sm font-semibold text-steam-dark mb-3">
+            <h4 className="text-sm font-semibold text-steam-dark mb-4">
               Klaipėdos universitetas
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               <li>
                 <a
                   href="https://www.ku.lt/steam"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
                 >
                   STEAM metodinis centras
                 </a>
@@ -81,7 +81,7 @@ export function Footer() {
                   href="https://www.ku.lt"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
                 >
                   Klaipėdos universitetas
                 </a>
@@ -91,12 +91,12 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="text-sm font-semibold text-steam-dark mb-3">
+            <h4 className="text-sm font-semibold text-steam-dark mb-4">
               Kontaktai
             </h4>
-            <ul className="space-y-2.5">
-              <li className="flex items-center gap-2 text-xs text-muted-foreground/60">
-                <Mail className="h-3 w-3 shrink-0" />
+            <ul className="space-y-3">
+              <li className="flex items-center gap-2 text-sm text-muted-foreground/60">
+                <Mail className="h-3.5 w-3.5 shrink-0" />
                 <a
                   href="mailto:steam@ku.lt"
                   className="hover:text-steam-dark transition-colors"
@@ -104,12 +104,12 @@ export function Footer() {
                   steam@ku.lt
                 </a>
               </li>
-              <li className="flex items-center gap-2 text-xs text-muted-foreground/60">
-                <Phone className="h-3 w-3 shrink-0" />
+              <li className="flex items-center gap-2 text-sm text-muted-foreground/60">
+                <Phone className="h-3.5 w-3.5 shrink-0" />
                 <span>+370 (46) 398 978</span>
               </li>
-              <li className="flex items-start gap-2 text-xs text-muted-foreground/60">
-                <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+              <li className="flex items-start gap-2 text-sm text-muted-foreground/60">
+                <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                 <span>Herkaus Manto g. 84, Klaipėda</span>
               </li>
             </ul>
@@ -117,7 +117,7 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-6 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="pt-8 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground/50">
             &copy; {new Date().getFullYear()} Klaipėdos universiteto STEAM
             metodinis centras

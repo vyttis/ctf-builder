@@ -8,17 +8,20 @@ import Image from "next/image"
 export function AboutCreatorsSection() {
   return (
     <SectionWrapper background="white">
-      <div className="relative rounded-3xl overflow-hidden">
-        {/* Background gradient */}
+      <div className="relative rounded-2xl overflow-hidden">
+        {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-steam-dark via-steam-teal to-steam-blue" />
+        {/* Subtle texture */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(0,210,150,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(0,140,180,0.08),transparent_50%)]" />
 
-        <div className="relative p-8 sm:p-12 md:p-16">
-          <div className="max-w-2xl">
+        <div className="relative grid lg:grid-cols-[1fr_300px] gap-8">
+          <div className="p-8 sm:p-12 md:p-16">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-2xl sm:text-3xl font-bold text-white leading-tight"
+              className="text-2xl sm:text-3xl md:text-[36px] font-bold text-white leading-tight tracking-tight"
             >
               Sukurta Klaipėdos universiteto STEAM metodiniame centre
             </motion.h2>
@@ -28,23 +31,12 @@ export function AboutCreatorsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-[15px] text-white/70 mt-3 leading-normal max-w-xl"
+              className="text-[15px] text-white/60 mt-4 leading-relaxed max-w-xl"
             >
-              Platforma kuriama Klaipėdos universiteto STEAM metodiniame centre,
-              kuris dirba su mokytojais, mokiniais ir švietimo bendruomene,
-              siekdamas kurti ir taikyti inovatyvius mokymo metodus.
-            </motion.p>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15 }}
-              className="text-[15px] text-white/70 mt-2 leading-normal max-w-xl"
-            >
-              Centro veikla orientuota į praktinį, aktyvų ir šiuolaikišką
-              mokymąsi, todėl platforma vystoma kaip realus įrankis, pritaikytas
-              mokyklų poreikiams ir naudojimui pamokose.
+              Centras dirba su mokytojais, mokiniais ir švietimo bendruomene,
+              kurdamas ir taikydamas inovatyvius mokymo metodus. Šis įrankis
+              gimė iš to darbo — kaip praktinis projektas, pritaikytas
+              konkretiems mokyklų poreikiams.
             </motion.p>
 
             {/* Activity photos */}
@@ -68,14 +60,10 @@ export function AboutCreatorsSection() {
                   src: "/photos/activity-vr.jpg",
                   alt: "VR technologijos",
                 },
-                {
-                  src: "/photos/activity-teachers.jpg",
-                  alt: "Mokytojų veiklos",
-                },
               ].map((photo, i) => (
                 <div
                   key={i}
-                  className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white/20 shrink-0 group"
+                  className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white/15 shrink-0 group"
                 >
                   <Image
                     src={photo.src}
@@ -94,7 +82,7 @@ export function AboutCreatorsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-8 text-sm text-white/70"
+              className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-8 text-sm text-white/60"
             >
               <span className="flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5 text-primary" />
@@ -123,6 +111,18 @@ export function AboutCreatorsSection() {
               Sužinoti daugiau apie centrą
               <ExternalLink className="h-3.5 w-3.5" />
             </motion.a>
+          </div>
+
+          {/* Right — decorative image strip, hidden on mobile */}
+          <div className="relative hidden lg:block">
+            <Image
+              src="/photos/classroom-lecture.jpg"
+              alt="STEAM centro veikla"
+              fill
+              className="object-cover opacity-40"
+              sizes="300px"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-steam-dark/80" />
           </div>
         </div>
       </div>

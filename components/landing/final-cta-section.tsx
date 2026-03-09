@@ -14,11 +14,11 @@ export function FinalCtaSection() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
-      className="py-14 md:py-[4.5rem] bg-muted"
+      className="py-16 md:py-24 bg-[#F6F8FA]"
     >
-      <div className="container mx-auto px-5 max-w-[1140px]">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="rounded-3xl p-8 sm:p-12 md:p-16 text-white relative overflow-hidden">
+      <div className="container mx-auto px-5 max-w-[1200px]">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="rounded-2xl p-10 sm:p-14 md:p-20 text-white relative overflow-hidden">
             {/* Background */}
             <div className="absolute inset-0 bg-gradient-to-br from-steam-dark via-steam-teal to-steam-blue" />
 
@@ -61,12 +61,11 @@ export function FinalCtaSection() {
 
             <div className="relative">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                Domina daugiau informacijos?
+                Norite sužinoti daugiau?
               </h2>
-              <p className="text-white/60 text-[15px] mb-6 max-w-md mx-auto leading-normal">
-                Jeigu norite sužinoti daugiau apie platformą, partnerystės
-                galimybes ar mokytojų mokymus, susisiekite su Klaipėdos
-                universiteto STEAM metodiniu centru.
+              <p className="text-white/50 text-[15px] md:text-base mb-8 max-w-lg mx-auto leading-relaxed">
+                Partnerystė, mokymai ar tiesiog klausimai — STEAM centras
+                mielai padės.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
