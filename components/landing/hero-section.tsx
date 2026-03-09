@@ -83,8 +83,9 @@ export function HeroSection() {
           </Link>
           <Link href="/auth/login">
             <Button
-              variant="ghost"
-              className="text-sm text-muted-foreground hover:text-steam-dark"
+              variant="outline"
+              size="sm"
+              className="text-sm text-muted-foreground hover:text-steam-dark hover:border-steam-dark/30 border-border/60"
             >
               Mokytojams
             </Button>
@@ -165,8 +166,8 @@ export function HeroSection() {
                 </a>
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto gap-2 h-12 text-sm px-7 border-border/60"
+                  variant="ghost"
+                  className="w-full sm:w-auto gap-2 h-12 text-sm px-7 text-muted-foreground hover:text-steam-dark hover:bg-steam-dark/5"
                   onClick={() => {
                     document
                       .getElementById("how-it-works")
