@@ -13,6 +13,7 @@ import {
   Clock,
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
@@ -92,11 +93,7 @@ export default async function AdminDashboardPage() {
                 >
                   <div className="flex items-center gap-3">
                     {user.avatar_url ? (
-                      <img
-                        src={user.avatar_url}
-                        alt=""
-                        className="w-8 h-8 rounded-full"
-                      />
+                      <Image src={user.avatar_url} alt="" width={32} height={32} className="rounded-full" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                         {(user.full_name || user.email)[0].toUpperCase()}

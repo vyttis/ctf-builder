@@ -88,12 +88,12 @@ export function ChallengeGrid({
     <div className="space-y-4">
       {/* Progress header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-[#00323C]">
+        <p className="text-sm font-medium text-steam-dark">
           Išspręsta {solvedCount} iš {totalCount} užduočių
         </p>
-        <div className="h-2 flex-1 max-w-[160px] ml-3 rounded-full bg-[#F8FAFB] overflow-hidden">
+        <div className="h-2 flex-1 max-w-[160px] ml-3 rounded-full bg-muted overflow-hidden">
           <motion.div
-            className="h-full rounded-full bg-[#00D296]"
+            className="h-full rounded-full bg-steam-green"
             initial={{ width: 0 }}
             animate={{
               width: totalCount > 0 ? `${(solvedCount / totalCount) * 100}%` : "0%",
@@ -148,8 +148,8 @@ function ChallengeCard({
           isLocked
             ? "bg-gray-50 border-gray-200 cursor-not-allowed opacity-60"
             : isSolved
-            ? "bg-[#00D296]/5 border-[#00D296]/30 cursor-default"
-            : "bg-white border-l-4 border-l-[#00D296] border-t border-r border-b border-gray-200 cursor-pointer hover:shadow-md hover:border-l-[#00D296] hover:-translate-y-0.5"
+            ? "bg-steam-green/5 border-steam-green/30 cursor-default"
+            : "bg-white border-l-4 border-l-steam-green border-t border-r border-b border-gray-200 cursor-pointer hover:shadow-md hover:border-l-steam-green hover:-translate-y-0.5"
         }`}
         onClick={isUnlocked ? onSelect : undefined}
         role={isUnlocked ? "button" : undefined}
@@ -186,10 +186,10 @@ function ChallengeCard({
               variant="outline"
               className={`text-[10px] font-bold tabular-nums ${
                 isSolved
-                  ? "bg-[#00D296]/10 text-[#00D296] border-[#00D296]/20"
+                  ? "bg-steam-green/10 text-steam-green border-steam-green/20"
                   : isLocked
                   ? "bg-gray-100 text-gray-400 border-gray-200"
-                  : "bg-[#FAC846]/10 text-[#00323C] border-[#FAC846]/30"
+                  : "bg-steam-yellow/10 text-steam-dark border-steam-yellow/30"
               }`}
             >
               {challenge.points} tšk.
@@ -199,7 +199,7 @@ function ChallengeCard({
               className={`text-[10px] gap-1 ${
                 isLocked
                   ? "text-gray-400 border-gray-200"
-                  : "text-[#008CB4] border-[#008CB4]/20"
+                  : "text-steam-blue border-steam-blue/20"
               }`}
             >
               {typeIcons[challenge.type]}
@@ -217,7 +217,7 @@ function ChallengeCard({
 
         {/* Solved overlay */}
         {isSolved && (
-          <div className="absolute inset-0 bg-[#00D296]/[0.03] pointer-events-none" />
+          <div className="absolute inset-0 bg-steam-green/[0.03] pointer-events-none" />
         )}
       </Card>
     </motion.div>
@@ -234,14 +234,14 @@ function StatusIcon({ status }: { status: ChallengeStatus }) {
       )
     case "solved":
       return (
-        <div className="shrink-0 rounded-full bg-[#00D296]/10 p-1.5">
-          <CheckCircle2 className="h-3.5 w-3.5 text-[#00D296]" />
+        <div className="shrink-0 rounded-full bg-steam-green/10 p-1.5">
+          <CheckCircle2 className="h-3.5 w-3.5 text-steam-green" />
         </div>
       )
     case "unlocked":
       return (
-        <div className="shrink-0 rounded-full bg-[#00D296]/10 p-1.5">
-          <Unlock className="h-3.5 w-3.5 text-[#00D296]" />
+        <div className="shrink-0 rounded-full bg-steam-green/10 p-1.5">
+          <Unlock className="h-3.5 w-3.5 text-steam-green" />
         </div>
       )
   }

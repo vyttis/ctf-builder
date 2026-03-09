@@ -100,14 +100,14 @@
   }
 
   .gradient-primary {
-    @apply bg-gradient-to-r from-[#00D296] to-[#008CB4];
+    @apply bg-gradient-to-r from-steam-green to-steam-blue;
   }
 
   .gradient-accent {
-    @apply bg-gradient-to-r from-[#FA2864] to-[#FAC846];
+    @apply bg-gradient-to-r from-steam-pink to-steam-yellow;
   }
 
   .gradient-hero {
-    @apply bg-gradient-to-br from-[#00323C] via-[#00323C] to-[#008CB4]/30;
+    @apply bg-gradient-to-br from-steam-dark via-steam-dark to-steam-blue/30;
   }
 }

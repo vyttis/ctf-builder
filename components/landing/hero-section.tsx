@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import Image from "next/image"
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -32,7 +33,7 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden min-h-[90vh] flex flex-col">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-[#F8FAFB] to-primary/[0.03]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white via-muted to-primary/[0.03]" />
       <motion.div
         animate={
           prefersReduced
@@ -181,39 +182,27 @@ export function HeroSection() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
-                    className="col-span-2 rounded-2xl overflow-hidden shadow-2xl shadow-steam-dark/10 border border-white/60 aspect-[16/9]"
+                    className="relative col-span-2 rounded-2xl overflow-hidden shadow-2xl shadow-steam-dark/10 border border-white/60 aspect-[16/9]"
                   >
-                    <img
-                      src="/photos/activity-students.jpg"
-                      alt="Mokiniai sprendžia užduotis komandomis"
-                      className="w-full h-full object-cover"
-                    />
+                    <Image src="/photos/activity-students.jpg" alt="Mokiniai sprendžia užduotis komandomis" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                   </motion.div>
 
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6, duration: 0.5 }}
-                    className="rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
+                    className="relative rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
                   >
-                    <img
-                      src="/photos/classroom-teacher.jpg"
-                      alt="Mokytoja padeda mokiniams klasėje"
-                      className="w-full h-full object-cover"
-                    />
+                    <Image src="/photos/classroom-teacher.jpg" alt="Mokytoja padeda mokiniams klasėje" fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" />
                   </motion.div>
 
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7, duration: 0.5 }}
-                    className="rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
+                    className="relative rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
                   >
-                    <img
-                      src="/photos/activity-beavers.jpg"
-                      alt="STEAM centro veiklos"
-                      className="w-full h-full object-cover"
-                    />
+                    <Image src="/photos/activity-beavers.jpg" alt="STEAM centro veiklos" fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" />
                   </motion.div>
                 </div>
               </div>

@@ -21,7 +21,7 @@ export function SectionWrapper({
 
   const bgClasses = {
     white: "bg-white",
-    muted: "bg-[#F8FAFB]",
+    muted: "bg-muted",
     dark: "bg-steam-dark text-white",
   }
 

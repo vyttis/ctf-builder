@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { LogOut, Plus, LayoutDashboard, BookOpen, Shield, Menu } from "lucide-react"
 import Link from "next/link"
 import { UserRole } from "@/types/game"
+import Image from "next/image"
 import { canViewAdminDashboard } from "@/lib/auth/roles"
 
 interface TeacherNavProps {
@@ -74,11 +75,7 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
 
             <div className="hidden sm:flex items-center gap-3">
               {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt=""
-                  className="w-8 h-8 rounded-full"
-                />
+                <Image src={avatarUrl} alt="" width={32} height={32} className="rounded-full" />
               ) : null}
               <div className="text-right">
                 <p className="text-sm font-medium text-steam-dark leading-none">
@@ -120,7 +117,7 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
             {/* User info */}
             <div className="flex items-center gap-3 pb-3 mb-3 border-b border-border/50">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="w-10 h-10 rounded-full" />
+                <Image src={avatarUrl} alt="" width={40} height={40} className="rounded-full" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
                   {(fullName || email).charAt(0).toUpperCase()}

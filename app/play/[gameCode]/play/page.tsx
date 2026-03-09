@@ -35,6 +35,7 @@ import { AchievementToast } from "@/components/player/achievement-toast"
 import { ChallengeGrid } from "@/components/player/challenge-grid"
 import { ChallengeDetailModal } from "@/components/player/challenge-detail-modal"
 import Link from "next/link"
+import Image from "next/image"
 
 interface PlayerChallenge {
   id: string
@@ -535,11 +536,7 @@ export default function PlayPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md text-center"
         >
-          <img
-            src="/illustrations/celebration.svg"
-            alt=""
-            className="w-48 h-48 mx-auto mb-4"
-          />
+          <Image src="/illustrations/celebration.svg" alt="" width={192} height={192} className="mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-steam-dark mb-2">
             Sveikiname! 🎉
           </h1>
@@ -748,11 +745,7 @@ export default function PlayPage() {
                 {/* Paveiksliukas */}
                 {currentChallenge.image_url && (
                   <div className="mb-4 rounded-xl overflow-hidden border border-border/30">
-                    <img
-                      src={currentChallenge.image_url}
-                      alt={currentChallenge.title}
-                      className="w-full max-h-64 object-cover"
-                    />
+                    <Image src={currentChallenge.image_url} alt={currentChallenge.title} width={800} height={256} className="w-full max-h-64 object-cover" unoptimized />
                   </div>
                 )}
 

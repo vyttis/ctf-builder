@@ -16,6 +16,7 @@ import {
   Loader2,
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import type { LeaderboardEntry, Achievement } from "@/types/game"
 import { getPlayerSession } from "@/lib/game/session"
 import { AchievementBadge } from "@/components/player/achievement-badge"
@@ -148,7 +149,7 @@ export default function LeaderboardPage() {
         </div>
 
         <div className="text-center mb-8">
-          <img src="/illustrations/trophy.svg" alt="" className="w-32 h-32 mx-auto mb-3" />
+          <Image src="/illustrations/trophy.svg" alt="" width={128} height={128} className="mx-auto mb-3" />
           <h1 className="text-2xl font-bold text-steam-dark">Rezultatų lentelė</h1>
           <div className="flex items-center justify-center gap-2 mt-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />

@@ -63,17 +63,17 @@ export function TimeControls({ gameId, currentTimeLimit }: TimeControlsProps) {
     <Card className="border-border/50 bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Clock className="h-4 w-4 text-[#00D296]" />
+          <Clock className="h-4 w-4 text-steam-green" />
           Laiko valdymas
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Current time limit display */}
-        <div className="flex items-center gap-2 rounded-lg bg-[#F8FAFB] p-3">
-          <Timer className="h-5 w-5 text-[#00323C]/60" />
+        <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+          <Timer className="h-5 w-5 text-steam-dark/60" />
           <div>
             <p className="text-xs text-muted-foreground">Laiko limitas</p>
-            <p className="font-semibold text-sm text-[#00323C]">
+            <p className="font-semibold text-sm text-steam-dark">
               {timeLimit ? `${timeLimit} min.` : "Nėra"}
             </p>
           </div>
@@ -107,7 +107,7 @@ export function TimeControls({ gameId, currentTimeLimit }: TimeControlsProps) {
                 !additionalMinutes ||
                 parseInt(additionalMinutes, 10) < 1
               }
-              className="bg-[#00D296] hover:bg-[#00D296]/90 shrink-0"
+              className="bg-steam-green hover:bg-steam-green/90 shrink-0"
             >
               {extending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

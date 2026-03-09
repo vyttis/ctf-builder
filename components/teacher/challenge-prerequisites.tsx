@@ -115,7 +115,7 @@ export function ChallengePrerequisites({
   return (
     <div className="space-y-2" ref={containerRef}>
       <Label className="flex items-center gap-1.5 text-sm font-medium">
-        <Link2 className="h-3.5 w-3.5 text-[#008CB4]" />
+        <Link2 className="h-3.5 w-3.5 text-steam-blue" />
         Prieš tai reikia išspręsti:
       </Label>
 
@@ -126,16 +126,16 @@ export function ChallengePrerequisites({
             <Badge
               key={c.id}
               variant="outline"
-              className="gap-1 pr-1 bg-[#008CB4]/5 text-[#008CB4] border-[#008CB4]/20 text-xs"
+              className="gap-1 pr-1 bg-steam-blue/5 text-steam-blue border-steam-blue/20 text-xs"
             >
-              <span className="font-mono text-[10px] text-[#00323C]/50">
+              <span className="font-mono text-[10px] text-steam-dark/50">
                 #{c.order_index + 1}
               </span>
               <span className="max-w-[140px] truncate">{c.title}</span>
               <button
                 type="button"
                 onClick={() => removePrerequisite(c.id)}
-                className="ml-0.5 rounded-full p-0.5 hover:bg-[#FA2864]/10 hover:text-[#FA2864] transition-colors"
+                className="ml-0.5 rounded-full p-0.5 hover:bg-steam-pink/10 hover:text-steam-pink transition-colors"
                 aria-label={`Pašalinti ${c.title}`}
               >
                 <X className="h-3 w-3" />
@@ -178,7 +178,7 @@ export function ChallengePrerequisites({
                 placeholder="Ieškoti užduočių..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-2 py-1.5 text-sm rounded border border-gray-200 outline-none focus:border-[#00D296] focus:ring-1 focus:ring-[#00D296]/30 transition-colors"
+                className="w-full px-2 py-1.5 text-sm rounded border border-gray-200 outline-none focus:border-steam-green focus:ring-1 focus:ring-steam-green/30 transition-colors"
                 autoFocus
               />
             </div>
@@ -204,8 +204,8 @@ export function ChallengePrerequisites({
                         isBlocked
                           ? "opacity-40 cursor-not-allowed"
                           : isSelected
-                          ? "bg-[#00D296]/5"
-                          : "hover:bg-[#F8FAFB]"
+                          ? "bg-steam-green/5"
+                          : "hover:bg-muted"
                       }`}
                       title={
                         isBlocked
@@ -217,7 +217,7 @@ export function ChallengePrerequisites({
                       <div
                         className={`shrink-0 flex items-center justify-center w-4 h-4 rounded border transition-colors ${
                           isSelected
-                            ? "bg-[#00D296] border-[#00D296] text-white"
+                            ? "bg-steam-green border-steam-green text-white"
                             : "border-gray-300"
                         }`}
                       >
@@ -225,16 +225,16 @@ export function ChallengePrerequisites({
                       </div>
 
                       {/* Challenge info */}
-                      <span className="font-mono text-[10px] text-[#00323C]/40 shrink-0">
+                      <span className="font-mono text-[10px] text-steam-dark/40 shrink-0">
                         #{c.order_index + 1}
                       </span>
-                      <span className="truncate text-[#00323C]">
+                      <span className="truncate text-steam-dark">
                         {c.title}
                       </span>
 
                       {/* Blocked indicator */}
                       {isBlocked && (
-                        <AlertTriangle className="h-3 w-3 text-[#FAC846] shrink-0 ml-auto" />
+                        <AlertTriangle className="h-3 w-3 text-steam-yellow shrink-0 ml-auto" />
                       )}
                     </button>
                   )

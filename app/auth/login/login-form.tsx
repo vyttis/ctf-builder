@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
 import { Mail, KeyRound, ArrowRight, ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -144,11 +145,7 @@ export function LoginForm() {
         <Card className="border-0 shadow-2xl shadow-primary/10 bg-white/80 backdrop-blur-xl">
           <CardHeader className="text-center pb-2">
             <div className="mx-auto mb-4 w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-              <img
-                src="/illustrations/hero-hacker.svg"
-                alt=""
-                className="w-14 h-14"
-              />
+              <Image src="/illustrations/hero-hacker.svg" alt="" width={56} height={56} />
             </div>
             <CardTitle className="text-2xl font-bold text-steam-dark">
               {step === "email" ? "Prisijungimas" : "Patvirtinkite kodą"}

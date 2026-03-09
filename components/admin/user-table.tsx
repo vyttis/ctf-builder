@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Profile, UserRole } from "@/types/game"
 import { getRoleLabel, getRoleBadgeColor } from "@/lib/auth/roles"
 import { InviteUserDialog } from "@/components/admin/invite-user-dialog"
+import Image from "next/image"
 import { Shield, ShieldCheck, GraduationCap, Loader2 } from "lucide-react"
 
 interface UserTableProps {
@@ -121,11 +122,7 @@ export function UserTable({ users, currentUserRole, currentUserId, onUserAdded }
               <td className="py-3 px-4">
                 <div className="flex items-center gap-3">
                   {user.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt=""
-                      className="w-8 h-8 rounded-full"
-                    />
+                    <Image src={user.avatar_url} alt="" width={32} height={32} className="rounded-full" />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                       {(user.full_name || user.email)[0].toUpperCase()}

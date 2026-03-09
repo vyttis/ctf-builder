@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { MapsEmbed } from "@/components/shared/maps-embed"
+import Image from "next/image"
 
 interface ChallengeDetailModalProps {
   challenge: {
@@ -123,7 +124,7 @@ export function ChallengeDetailModal({
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
-              <SheetTitle className="text-lg font-bold text-[#00323C] text-left truncate">
+              <SheetTitle className="text-lg font-bold text-steam-dark text-left truncate">
                 {challenge.title}
               </SheetTitle>
               <SheetDescription className="sr-only">
@@ -132,7 +133,7 @@ export function ChallengeDetailModal({
             </div>
             <Badge
               variant="outline"
-              className="shrink-0 bg-[#FAC846]/10 text-[#00323C] border-[#FAC846]/30 font-bold text-xs"
+              className="shrink-0 bg-steam-yellow/10 text-steam-dark border-steam-yellow/30 font-bold text-xs"
             >
               {challenge.points} tšk.
             </Badge>
@@ -144,10 +145,10 @@ export function ChallengeDetailModal({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 rounded-lg bg-[#00D296]/10 border border-[#00D296]/20 flex items-center gap-2"
+            className="mb-4 p-3 rounded-lg bg-steam-green/10 border border-steam-green/20 flex items-center gap-2"
           >
-            <CheckCircle2 className="h-5 w-5 text-[#00D296] shrink-0" />
-            <p className="text-sm font-medium text-[#00D296]">
+            <CheckCircle2 className="h-5 w-5 text-steam-green shrink-0" />
+            <p className="text-sm font-medium text-steam-green">
               Ši užduotis jau išspręsta
             </p>
           </motion.div>
@@ -155,7 +156,7 @@ export function ChallengeDetailModal({
 
         {/* Description */}
         {challenge.description && (
-          <div className="bg-[#F8FAFB] rounded-lg p-4 mb-4 text-sm text-[#00323C] leading-relaxed">
+          <div className="bg-muted rounded-lg p-4 mb-4 text-sm text-steam-dark leading-relaxed">
             {challenge.description}
           </div>
         )}
@@ -163,11 +164,7 @@ export function ChallengeDetailModal({
         {/* Image */}
         {challenge.image_url && (
           <div className="mb-4 rounded-xl overflow-hidden border border-gray-200">
-            <img
-              src={challenge.image_url}
-              alt={challenge.title}
-              className="w-full max-h-64 object-cover"
-            />
+            <Image src={challenge.image_url} alt={challenge.title} width={800} height={256} className="w-full max-h-64 object-cover" unoptimized />
           </div>
         )}
 
@@ -192,9 +189,9 @@ export function ChallengeDetailModal({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                   >
-                    <div className="bg-[#FAC846]/5 border border-[#FAC846]/20 rounded-lg p-3 text-sm flex items-start gap-2">
-                      <Lightbulb className="h-3.5 w-3.5 text-[#FAC846] shrink-0 mt-0.5" />
-                      <p className="text-[#00323C]">{hint}</p>
+                    <div className="bg-steam-yellow/5 border border-steam-yellow/20 rounded-lg p-3 text-sm flex items-start gap-2">
+                      <Lightbulb className="h-3.5 w-3.5 text-steam-yellow shrink-0 mt-0.5" />
+                      <p className="text-steam-dark">{hint}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -205,14 +202,14 @@ export function ChallengeDetailModal({
                 variant="ghost"
                 size="sm"
                 onClick={() => setRevealedHintCount((prev) => prev + 1)}
-                className="text-[#FAC846] hover:text-[#FAC846]/80 gap-1.5"
+                className="text-steam-yellow hover:text-steam-yellow/80 gap-1.5"
               >
                 <Lightbulb className="h-3.5 w-3.5" />
                 {revealedHintCount === 0
                   ? "Reikia užuominos?"
                   : `Kita užuomina (${revealedHintCount}/${challengeHints.length})`}
                 {challenge.hint_penalty > 0 && (
-                  <span className="text-[#FA2864] text-[10px]">
+                  <span className="text-steam-pink text-[10px]">
                     -{challenge.hint_penalty} tšk.
                   </span>
                 )}
@@ -233,7 +230,7 @@ export function ChallengeDetailModal({
                     variant={answer === option ? "default" : "outline"}
                     className={`w-full justify-start h-auto py-3 px-4 text-left ${
                       answer === option
-                        ? "bg-[#00D296] text-white hover:bg-[#00D296]/90"
+                        ? "bg-steam-green text-white hover:bg-steam-green/90"
                         : ""
                     }`}
                     onClick={() => setAnswer(option)}
@@ -262,7 +259,7 @@ export function ChallengeDetailModal({
             <Button
               type="submit"
               disabled={loading || !answer.trim()}
-              className="w-full h-12 bg-[#00D296] hover:bg-[#00D296]/90 text-white font-semibold shadow-lg shadow-[#00D296]/25 gap-2"
+              className="w-full h-12 bg-steam-green hover:bg-steam-green/90 text-white font-semibold shadow-lg shadow-steam-green/25 gap-2"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -290,21 +287,21 @@ export function ChallengeDetailModal({
               <div
                 className={`p-4 rounded-lg flex items-center gap-3 ${
                   feedback.is_correct
-                    ? "bg-[#00D296]/10 border border-[#00D296]/20"
-                    : "bg-[#FA2864]/5 border border-[#FA2864]/20"
+                    ? "bg-steam-green/10 border border-steam-green/20"
+                    : "bg-steam-pink/5 border border-steam-pink/20"
                 }`}
               >
                 {feedback.is_correct ? (
-                  <CheckCircle2 className="h-6 w-6 text-[#00D296] shrink-0" />
+                  <CheckCircle2 className="h-6 w-6 text-steam-green shrink-0" />
                 ) : (
-                  <XCircle className="h-6 w-6 text-[#FA2864] shrink-0" />
+                  <XCircle className="h-6 w-6 text-steam-pink shrink-0" />
                 )}
                 <div>
                   <p
                     className={`font-medium ${
                       feedback.is_correct
-                        ? "text-[#00D296]"
-                        : "text-[#FA2864]"
+                        ? "text-steam-green"
+                        : "text-steam-pink"
                     }`}
                   >
                     {feedback.message}
@@ -324,20 +321,20 @@ export function ChallengeDetailModal({
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-3"
                 >
-                  <div className="p-4 rounded-lg bg-[#008CB4]/5 border border-[#008CB4]/20">
+                  <div className="p-4 rounded-lg bg-steam-blue/5 border border-steam-blue/20">
                     <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="h-4 w-4 text-[#008CB4]" />
-                      <p className="text-sm font-semibold text-[#008CB4]">
+                      <BookOpen className="h-4 w-4 text-steam-blue" />
+                      <p className="text-sm font-semibold text-steam-blue">
                         Ar žinojote?
                       </p>
                     </div>
-                    <p className="text-sm text-[#00323C]/80 leading-relaxed">
+                    <p className="text-sm text-steam-dark/80 leading-relaxed">
                       {feedback.explanation}
                     </p>
                   </div>
                   <Button
                     onClick={handleClose}
-                    className="w-full bg-[#00D296] hover:bg-[#00D296]/90 text-white gap-2"
+                    className="w-full bg-steam-green hover:bg-steam-green/90 text-white gap-2"
                   >
                     Grįžti
                     <ArrowLeft className="h-4 w-4" />
@@ -349,7 +346,7 @@ export function ChallengeDetailModal({
               {feedback.is_correct && !feedback.explanation && (
                 <Button
                   onClick={handleClose}
-                  className="w-full bg-[#00D296] hover:bg-[#00D296]/90 text-white gap-2"
+                  className="w-full bg-steam-green hover:bg-steam-green/90 text-white gap-2"
                 >
                   Grįžti
                   <ArrowLeft className="h-4 w-4" />

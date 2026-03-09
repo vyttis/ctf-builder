@@ -70,7 +70,7 @@ export function AnnouncementBanner({ gameId }: AnnouncementBannerProps) {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="fixed top-0 left-0 right-0 z-50"
         >
-          <div className="bg-[#008CB4] text-white shadow-lg">
+          <div className="bg-steam-blue text-white shadow-lg">
             <div className="max-w-2xl mx-auto px-4 py-3 flex items-start gap-3">
               <Megaphone className="h-5 w-5 shrink-0 mt-0.5" />
               <p className="flex-1 text-sm font-medium leading-snug">

@@ -59,7 +59,7 @@ export function AchievementToast({
         className="fixed top-14 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2"
       >
         <div
-          className="flex items-center gap-3 rounded-xl border border-[#FAC846]/30 bg-gradient-to-r from-[#FAC846]/15 to-[#FAC846]/5 px-4 py-3 shadow-lg backdrop-blur-sm"
+          className="flex items-center gap-3 rounded-xl border border-steam-yellow/30 bg-gradient-to-r from-steam-yellow/15 to-steam-yellow/5 px-4 py-3 shadow-lg backdrop-blur-sm"
         >
           <div
             className="flex shrink-0 items-center justify-center rounded-full"
@@ -73,17 +73,17 @@ export function AchievementToast({
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-[#00323C]">
+            <p className="text-sm font-semibold text-steam-dark">
               🏆 {config.name}
             </p>
-            <p className="text-xs text-[#00323C]/70 leading-snug">
+            <p className="text-xs text-steam-dark/70 leading-snug">
               {description}
             </p>
           </div>
 
           <button
             onClick={onDismiss}
-            className="shrink-0 rounded-md p-1 text-[#00323C]/40 transition-colors hover:bg-[#00323C]/5 hover:text-[#00323C]/70"
+            className="shrink-0 rounded-md p-1 text-steam-dark/40 transition-colors hover:bg-steam-dark/5 hover:text-steam-dark/70"
             aria-label="Uždaryti"
           >
             <X size={16} />

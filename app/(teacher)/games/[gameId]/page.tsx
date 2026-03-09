@@ -21,6 +21,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default async function GameDetailPage({
   params,
@@ -201,11 +202,7 @@ export default async function GameDetailPage({
                           {index + 1}
                         </div>
                         {challenge.image_url && (
-                          <img
-                            src={challenge.image_url}
-                            alt=""
-                            className="w-10 h-10 rounded-lg object-cover shrink-0 border border-border/30"
-                          />
+                          <Image src={challenge.image_url} alt="" width={40} height={40} className="rounded-lg object-cover shrink-0 border border-border/30" unoptimized />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-steam-dark truncate">
@@ -231,11 +228,7 @@ export default async function GameDetailPage({
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <img
-                    src="/illustrations/empty-state.svg"
-                    alt=""
-                    className="w-32 h-32 mx-auto mb-3 opacity-50"
-                  />
+                  <Image src="/illustrations/empty-state.svg" alt="" width={128} height={128} className="mx-auto mb-3 opacity-50" />
                   <p className="text-muted-foreground text-sm mb-3">
                     Dar nėra užduočių
                   </p>

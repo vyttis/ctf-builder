@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
+import Image from "next/image"
 
 const photos: {
   src: string
@@ -38,7 +39,7 @@ const photos: {
     src: "",
     alt: "STEAM Klaipėda centras",
     span: "col-span-2 row-span-1",
-    gradient: "from-[#008CB4] via-[#00D296] to-[#00323C]",
+    gradient: "from-steam-blue via-steam-green to-steam-dark",
   },
 ]
 
@@ -82,11 +83,7 @@ export function PhotoGallerySection() {
               className={`${photo.span} rounded-2xl overflow-hidden relative group cursor-default`}
             >
               {photo.src ? (
-                <img
-                  src={photo.src}
-                  alt={photo.alt}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                <Image src={photo.src} alt={photo.alt} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 768px) 50vw, 25vw" />
               ) : (
                 <div className={`w-full h-full bg-gradient-to-br ${photo.gradient}`} />
               )}

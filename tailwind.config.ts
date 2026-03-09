@@ -64,6 +64,7 @@ const config: Config = {
           yellow: "#FAC846",
           blue: "#008CB4",
           dark: "#00323C",
+          teal: "#004D5C",
           cyan: "#00BFA5",
         },
       },

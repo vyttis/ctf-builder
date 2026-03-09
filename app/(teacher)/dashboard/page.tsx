@@ -4,6 +4,7 @@ import { GameWithChallengeCount } from "@/types/game"
 import { Button } from "@/components/ui/button"
 import { Plus, Gamepad2 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -44,11 +45,7 @@ export default async function DashboardPage() {
         /* Empty state */
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-48 h-48 mb-6">
-            <img
-              src="/illustrations/empty-state.svg"
-              alt="Nėra žaidimų"
-              className="w-full h-full"
-            />
+            <Image src="/illustrations/empty-state.svg" alt="Nėra žaidimų" width={192} height={192} className="w-full h-full" />
           </div>
           <Gamepad2 className="h-10 w-10 text-muted-foreground/30 mb-4" />
           <h2 className="text-xl font-semibold text-steam-dark mb-2">

@@ -3,13 +3,14 @@
 import { SectionWrapper } from "./section-wrapper"
 import { MapPin, Phone, Mail, ExternalLink } from "lucide-react"
 import { motion } from "framer-motion"
+import Image from "next/image"
 
 export function InstitutionSection() {
   return (
     <SectionWrapper background="white">
       <div className="relative rounded-3xl overflow-hidden">
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#00323C] via-[#004D5C] to-[#008CB4]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-steam-dark via-steam-teal to-steam-blue" />
 
         <div className="relative p-8 sm:p-12 md:p-16">
           <div className="max-w-2xl">
@@ -61,13 +62,9 @@ export function InstitutionSection() {
               ].map((photo, i) => (
                 <div
                   key={i}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white/20 shrink-0 group"
+                  className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white/20 shrink-0 group"
                 >
-                  <img
-                    src={photo.src}
-                    alt={photo.alt}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
+                  <Image src={photo.src} alt={photo.alt} fill className="object-cover transition-transform duration-300 group-hover:scale-110" sizes="96px" />
                 </div>
               ))}
             </motion.div>

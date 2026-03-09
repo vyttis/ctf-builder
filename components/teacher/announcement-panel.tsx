@@ -94,7 +94,7 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
     <Card className="border-border/50 bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Megaphone className="h-4 w-4 text-[#008CB4]" />
+          <Megaphone className="h-4 w-4 text-steam-blue" />
           Pranešimai
         </CardTitle>
       </CardHeader>
@@ -113,7 +113,7 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
             <span
               className={`text-xs ${
                 message.length >= MAX_CHARS
-                  ? "text-[#FA2864]"
+                  ? "text-steam-pink"
                   : "text-muted-foreground"
               }`}
             >
@@ -123,7 +123,7 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
               size="sm"
               onClick={handleSend}
               disabled={!message.trim() || sending}
-              className="bg-[#008CB4] hover:bg-[#008CB4]/90"
+              className="bg-steam-blue hover:bg-steam-blue/90"
             >
               {sending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -143,9 +143,9 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
                 key={a.id}
                 className="flex items-start gap-2.5 text-sm group"
               >
-                <Megaphone className="h-3.5 w-3.5 text-[#008CB4]/50 mt-0.5 shrink-0" />
+                <Megaphone className="h-3.5 w-3.5 text-steam-blue/50 mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[#00323C] leading-snug break-words">
+                  <p className="text-steam-dark leading-snug break-words">
                     {a.message}
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
