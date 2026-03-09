@@ -65,3 +65,16 @@ CREATE INDEX IF NOT EXISTS idx_submissions_team_challenge
 -- Add index for rate limiting query (recent attempts)
 CREATE INDEX IF NOT EXISTS idx_submissions_team_attempted
   ON public.submissions(team_id, attempted_at DESC);
+
+-- Add index on games(status) for filtered queries
+CREATE INDEX IF NOT EXISTS idx_games_status
+  ON public.games(status);
+
+-- ============================================
+-- Secure unused templates table (Sprint 1 placeholder, replaced by library_items)
+-- ============================================
+ALTER TABLE public.templates ENABLE ROW LEVEL SECURITY;
+
+-- Deny all access by default; templates table is unused (library_items is the active table)
+CREATE POLICY "deny_all_templates" ON public.templates
+  FOR ALL USING (false);
