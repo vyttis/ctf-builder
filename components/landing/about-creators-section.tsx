@@ -5,7 +5,7 @@ import { MapPin, Phone, Mail, ExternalLink } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 
-export function InstitutionSection() {
+export function AboutCreatorsSection() {
   return (
     <SectionWrapper background="white">
       <div className="relative rounded-3xl overflow-hidden">
@@ -20,7 +20,7 @@ export function InstitutionSection() {
               viewport={{ once: true }}
               className="text-2xl sm:text-3xl font-bold text-white leading-tight"
             >
-              Sukurta Klaipėdos universitete
+              Sukurta Klaipėdos universiteto STEAM metodiniame centre
             </motion.h2>
 
             <motion.p
@@ -30,9 +30,9 @@ export function InstitutionSection() {
               transition={{ delay: 0.1 }}
               className="text-[15px] text-white/70 mt-4 leading-relaxed max-w-xl"
             >
-              Platforma kuriama Klaipėdos universiteto STEAM metodiniame centre.
-              Centras dirba su mokytojais ir mokiniais, kurdamas bei testuodamas
-              inovatyvius mokymo metodus.
+              Platforma kuriama Klaipėdos universiteto STEAM metodiniame centre,
+              kuris dirba su mokytojais, mokiniais ir švietimo bendruomene,
+              siekdamas kurti ir taikyti inovatyvius mokymo metodus.
             </motion.p>
 
             <motion.p
@@ -42,8 +42,9 @@ export function InstitutionSection() {
               transition={{ delay: 0.15 }}
               className="text-[15px] text-white/70 mt-3 leading-relaxed max-w-xl"
             >
-              Ši platforma yra viena iš priemonių, padedančių mokykloms
-              taikyti aktyvaus mokymosi principus kasdienėse pamokose.
+              Centro veikla orientuota į praktinį, aktyvų ir šiuolaikišką
+              mokymąsi, todėl platforma vystoma kaip realus įrankis, pritaikytas
+              mokyklų poreikiams ir naudojimui pamokose.
             </motion.p>
 
             {/* Activity photos */}
@@ -55,16 +56,34 @@ export function InstitutionSection() {
               className="flex gap-3 mt-8"
             >
               {[
-                { src: "/photos/steam-lab.jpg", alt: "STEAM centro laboratorija" },
-                { src: "/photos/steam-robot.jpg", alt: "Pepper robotas STEAM centre" },
-                { src: "/photos/activity-vr.jpg", alt: "VR technologijos" },
-                { src: "/photos/activity-teachers.jpg", alt: "Mokytojų veiklos" },
+                {
+                  src: "/photos/steam-lab.jpg",
+                  alt: "STEAM centro laboratorija",
+                },
+                {
+                  src: "/photos/steam-robot.jpg",
+                  alt: "Pepper robotas STEAM centre",
+                },
+                {
+                  src: "/photos/activity-vr.jpg",
+                  alt: "VR technologijos",
+                },
+                {
+                  src: "/photos/activity-teachers.jpg",
+                  alt: "Mokytojų veiklos",
+                },
               ].map((photo, i) => (
                 <div
                   key={i}
                   className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white/20 shrink-0 group"
                 >
-                  <Image src={photo.src} alt={photo.alt} fill className="object-cover transition-transform duration-300 group-hover:scale-110" sizes="96px" />
+                  <Image
+                    src={photo.src}
+                    alt={photo.alt}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    sizes="96px"
+                  />
                 </div>
               ))}
             </motion.div>

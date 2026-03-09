@@ -17,27 +17,27 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "CTF Builder | STEAM LT Klaipėda",
+  title: "KU STEAM platforma | Interaktyvios pamokos",
   description:
-    "Klaipėdos universiteto metodinio STEAM centro mokytojams skirta platforma interaktyvioms CTF veikloms kurti ir valdyti klasėje.",
+    "Klaipėdos universiteto STEAM metodinio centro platforma partnerių mokyklų mokytojams — interaktyvių pamokų, komandinių veiklų ir užduočių kūrimui.",
   icons: {
     icon: "/icon.svg",
   },
-  metadataBase: new URL("https://ctf-builder.vercel.app"),
+  metadataBase: new URL("https://www.kusteam.app"),
   openGraph: {
-    title: "CTF pamokoms STEAM bendruomenei",
+    title: "Interaktyvi pamokų kūrimo platforma partnerių mokykloms",
     description:
-      "Klaipėdos universiteto metodinio STEAM centro mokytojams skirta platforma interaktyvioms CTF veikloms kurti ir valdyti klasėje.",
-    url: "https://ctf-builder.vercel.app",
-    siteName: "STEAM LT Klaipėda",
+      "Klaipėdos universiteto STEAM metodinio centro platforma mokytojams — interaktyvių pamokų, komandinių veiklų ir užduočių kūrimui.",
+    url: "https://www.kusteam.app",
+    siteName: "KU STEAM platforma",
     type: "website",
     locale: "lt_LT",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CTF pamokoms STEAM bendruomenei",
+    title: "Interaktyvi pamokų kūrimo platforma partnerių mokykloms",
     description:
-      "Klaipėdos universiteto metodinio STEAM centro mokytojams skirta platforma interaktyvioms CTF veikloms kurti ir valdyti klasėje.",
+      "Klaipėdos universiteto STEAM metodinio centro platforma mokytojams — interaktyvių pamokų, komandinių veiklų ir užduočių kūrimui.",
   },
   robots: {
     index: false,

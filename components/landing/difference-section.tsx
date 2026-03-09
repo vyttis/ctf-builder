@@ -39,15 +39,32 @@ const rows = [
   },
 ]
 
-export function ComparisonSection() {
+export function DifferenceSection() {
   const prefersReduced = useReducedMotion()
 
   return (
     <SectionWrapper background="white">
-      <SectionHeader
-        title="Daugiau nei paprastas quiz"
-        subtitle="Daugelis platformų leidžia tik pateikti klausimus ir surinkti atsakymus. Ši sistema leidžia kurti visą mokymosi veiklą."
-      />
+      <SectionHeader title="Daugiau nei paprastas klausimų įrankis" />
+
+      <div className="max-w-3xl mx-auto mb-10">
+        <motion.div
+          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="space-y-4"
+        >
+          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
+            Daugelis skaitmeninių įrankių leidžia pateikti klausimus ir surinkti
+            atsakymus. Ši platforma skirta platesniam tikslui — padėti mokytojui
+            sukurti visą interaktyvią mokymosi veiklą.
+          </p>
+          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
+            Ji leidžia kurti pamokos struktūrą, organizuoti komandines veiklas,
+            taikyti skirtingus užduočių tipus ir lanksčiai pritaikyti turinį
+            skirtingoms klasėms ar temoms.
+          </p>
+        </motion.div>
+      </div>
 
       <motion.div
         initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 30 }}

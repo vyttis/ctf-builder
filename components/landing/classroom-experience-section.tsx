@@ -147,16 +147,37 @@ function StudentViewMock() {
   )
 }
 
-export function ProductVisualsSection() {
+export function ClassroomExperienceSection() {
   const prefersReduced = useReducedMotion()
 
   return (
-    <SectionWrapper background="muted">
+    <SectionWrapper background="white">
       <SectionHeader
-        title="Kaip atrodo pamoka klasėje"
-        subtitle="Mokytojas kuria ir stebi progresą — mokiniai sprendžia užduotis telefonais ar kompiuteriais."
+        title="Kaip platforma naudojama pamokoje"
       />
 
+      {/* Descriptive text */}
+      <div className="max-w-3xl mx-auto mb-12">
+        <motion.div
+          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="space-y-4"
+        >
+          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
+            Pamokos metu mokiniai įsitraukia ne tik atsakinėdami į klausimus,
+            bet ir spręsdami užduotis, analizuodami situacijas, diskutuodami
+            bei ieškodami sprendimų kartu.
+          </p>
+          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
+            Platforma padeda pamoką paversti aktyvesne mokymosi veikla,
+            kurioje svarbu ne tik teisingas atsakymas, bet ir mąstymo
+            procesas, argumentavimas bei bendradarbiavimas.
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Product mockups */}
       <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {/* Teacher view */}
         <motion.div

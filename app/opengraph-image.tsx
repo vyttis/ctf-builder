@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og"
 
 export const runtime = "edge"
-export const alt = "CTF Builder — STEAM LT Klaipėda"
+export const alt = "KU STEAM — Interaktyvi pamokų kūrimo platforma"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
@@ -41,47 +41,25 @@ export default async function Image() {
             width: 200,
             height: 200,
             borderRadius: "50%",
-            background: "rgba(250, 40, 100, 0.06)",
+            background: "rgba(0, 140, 180, 0.06)",
           }}
         />
-
-        {/* CTF icon */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 80,
-            height: 80,
-            borderRadius: 20,
-            background: "rgba(0, 210, 150, 0.15)",
-            marginBottom: 32,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 40,
-              display: "flex",
-            }}
-          >
-            🚩
-          </div>
-        </div>
 
         {/* Title */}
         <div
           style={{
-            fontSize: 56,
+            fontSize: 48,
             fontWeight: 800,
             color: "white",
             letterSpacing: "-0.02em",
             textAlign: "center",
-            lineHeight: 1.1,
+            lineHeight: 1.15,
             display: "flex",
             marginBottom: 16,
+            maxWidth: 800,
           }}
         >
-          CTF Builder
+          Interaktyvi pamokų kūrimo platforma
         </div>
 
         {/* Accent line */}
@@ -107,7 +85,7 @@ export default async function Image() {
             display: "flex",
           }}
         >
-          Interaktyvios CTF veiklos mokytojams ir mokiniams
+          Skirta partnerių mokykloms ir mokytojams
         </div>
 
         {/* Bottom badge */}
@@ -137,7 +115,7 @@ export default async function Image() {
               display: "flex",
             }}
           >
-            STEAM LT Klaipėda • Klaipėdos universitetas
+            Klaipėdos universiteto STEAM metodinis centras
           </div>
         </div>
       </div>
