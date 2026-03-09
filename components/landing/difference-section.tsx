@@ -46,19 +46,19 @@ export function DifferenceSection() {
     <SectionWrapper background="white">
       <SectionHeader title="Daugiau nei paprastas klausimų įrankis" />
 
-      <div className="max-w-3xl mx-auto mb-10">
+      <div className="max-w-3xl mx-auto mb-6">
         <motion.div
           initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="space-y-4"
+          className="space-y-2.5"
         >
-          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
+          <p className="text-[15px] text-muted-foreground leading-normal text-center">
             Daugelis skaitmeninių įrankių leidžia pateikti klausimus ir surinkti
             atsakymus. Ši platforma skirta platesniam tikslui — padėti mokytojui
             sukurti visą interaktyvią mokymosi veiklą.
           </p>
-          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
+          <p className="text-[15px] text-muted-foreground leading-normal text-center">
             Ji leidžia kurti pamokos struktūrą, organizuoti komandines veiklas,
             taikyti skirtingus užduočių tipus ir lanksčiai pritaikyti turinį
             skirtingoms klasėms ar temoms.

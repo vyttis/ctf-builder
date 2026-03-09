@@ -16,16 +16,16 @@ export function ForWhomSection() {
           <SectionHeader
             title="Kam skirta ši platforma"
             align="left"
-            className="mb-8 md:mb-10"
+            className="mb-6"
           />
 
-          <div className="space-y-5">
+          <div className="space-y-3">
             <motion.p
               initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="text-[15px] text-muted-foreground leading-relaxed"
+              className="text-[15px] text-muted-foreground leading-normal"
             >
               Platforma skirta Klaipėdos universiteto STEAM metodinio centro
               partnerių mokykloms ir mokytojams, kurie dalyvauja STEAM centro
@@ -37,7 +37,7 @@ export function ForWhomSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1, duration: 0.5 }}
-              className="text-[15px] text-muted-foreground leading-relaxed"
+              className="text-[15px] text-muted-foreground leading-normal"
             >
               Ji sukurta mokytojams, norintiems pamokose taikyti aktyvesnius,
               įtraukesnius ir šiuolaikiškus darbo metodus, kurie skatina mokinių
@@ -49,7 +49,7 @@ export function ForWhomSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="text-[15px] text-muted-foreground leading-relaxed"
+              className="text-[15px] text-muted-foreground leading-normal"
             >
               Platforma gali būti naudojama tiek atskirų dalykų pamokose, tiek
               integruotose STEAM veiklose, projektiniuose darbuose ar

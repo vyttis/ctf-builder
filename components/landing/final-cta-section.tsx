@@ -14,7 +14,7 @@ export function FinalCtaSection() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
-      className="py-20 md:py-24 bg-muted"
+      className="py-14 md:py-18 bg-muted"
     >
       <div className="container mx-auto px-5 max-w-[1140px]">
         <div className="max-w-3xl mx-auto text-center">
@@ -63,7 +63,7 @@ export function FinalCtaSection() {
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 leading-tight">
                 Domina daugiau informacijos?
               </h2>
-              <p className="text-white/60 text-[15px] mb-8 max-w-md mx-auto leading-relaxed">
+              <p className="text-white/60 text-[15px] mb-6 max-w-md mx-auto leading-normal">
                 Jeigu norite sužinoti daugiau apie platformą, partnerystės
                 galimybes ar mokytojų mokymus, susisiekite su Klaipėdos
                 universiteto STEAM metodiniu centru.

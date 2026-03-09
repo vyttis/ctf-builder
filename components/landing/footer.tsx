@@ -6,12 +6,14 @@ import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="py-12 md:py-16 border-t border-border/40 bg-white">
+    <footer className="py-10 md:py-12 border-t border-border/40 bg-white">
       <div className="container mx-auto px-5 max-w-[1140px]">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
           {/* Brand */}
           <div>
-            <SteamLogo size="small" />
+            <Link href="/" className="inline-flex hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
+              <SteamLogo size="small" />
+            </Link>
             <p className="text-xs text-muted-foreground/60 mt-3 leading-relaxed max-w-[200px]">
               Interaktyvi pamokų kūrimo platforma partnerių mokykloms.
             </p>
