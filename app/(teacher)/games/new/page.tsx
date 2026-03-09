@@ -7,6 +7,7 @@ import { AiGameIdea } from "@/lib/ai/types"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
 export default function NewGamePage() {
   const [prefillData, setPrefillData] = useState<AiGameIdea | undefined>(
@@ -30,11 +31,7 @@ export default function NewGamePage() {
       {/* Header with illustration */}
       <div className="flex items-center gap-6 mb-8">
         <div className="hidden sm:block w-24 h-24 shrink-0">
-          <img
-            src="/illustrations/create-game.svg"
-            alt=""
-            className="w-full h-full"
-          />
+          <Image src="/illustrations/create-game.svg" alt="" width={96} height={96} className="w-full h-full" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-steam-dark">

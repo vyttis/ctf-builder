@@ -12,6 +12,7 @@ import { Users, ArrowRight, Loader2, Gamepad2, AlertCircle, ArrowLeft } from "lu
 import type { PlayerSession } from "@/types/game"
 import { getPlayerSession, savePlayerSession } from "@/lib/game/session"
 import Link from "next/link"
+import Image from "next/image"
 
 type GameState =
   | { status: "loading" }
@@ -203,11 +204,7 @@ export default function JoinGamePage() {
         className="w-full max-w-sm relative z-10"
       >
         <div className="flex justify-center mb-6">
-          <img
-            src="/illustrations/adventure-start.svg"
-            alt=""
-            className="w-48 h-48"
-          />
+          <Image src="/illustrations/adventure-start.svg" alt="" width={192} height={192} />
         </div>
 
         <Card className="border-0 shadow-2xl shadow-primary/10 bg-white/90 backdrop-blur-xl">

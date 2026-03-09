@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { ImagePlus, X, Upload, Loader2, Link as LinkIcon } from "lucide-react"
+import Image from "next/image"
 
 interface ImageUploadProps {
   value: string | null
@@ -119,11 +120,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
           Paveiksliukas
         </Label>
         <div className="relative rounded-xl overflow-hidden border border-border/50 bg-muted/20">
-          <img
-            src={value}
-            alt="Užduoties paveiksliukas"
-            className="w-full max-h-48 object-cover"
-          />
+          <Image src={value} alt="Užduoties paveiksliukas" width={800} height={192} className="w-full max-h-48 object-cover" unoptimized />
           <Button
             type="button"
             variant="destructive"

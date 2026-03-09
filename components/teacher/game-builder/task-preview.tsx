@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react"
 import { useState } from "react"
+import Image from "next/image"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 
 interface TaskPreviewProps {
@@ -103,12 +104,8 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
                 <ImageIcon className="h-3 w-3" />
                 Paveiksliukas
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={challenge.image_url}
-                alt={challenge.title}
-                className="w-full max-h-48 object-contain bg-white"
-              />
+              
+              <Image src={challenge.image_url} alt={challenge.title} width={800} height={192} className="w-full max-h-48 object-contain bg-white" unoptimized />
             </div>
           )}
 

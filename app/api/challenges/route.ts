@@ -8,7 +8,8 @@ const MINIMAL_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points
 const EXTRA_COLUMNS = ", explanation, difficulty, hint_penalty"
 const BASE_CHALLENGE_COLUMNS = MINIMAL_CHALLENGE_COLUMNS + EXTRA_COLUMNS
 const DI_COLUMNS = ", generated_by_di, verification_verdict, verification_issues, verification_confidence"
-const SAFE_CHALLENGE_COLUMNS = BASE_CHALLENGE_COLUMNS + DI_COLUMNS
+const PATH_COLUMNS = ", prerequisites"
+const SAFE_CHALLENGE_COLUMNS = BASE_CHALLENGE_COLUMNS + DI_COLUMNS + PATH_COLUMNS
 
 const createChallengeSchema = z.object({
   game_id: z.string().uuid(),
@@ -35,6 +36,7 @@ const createChallengeSchema = z.object({
   verification_verdict: z.enum(["pass", "fail", "uncertain"]).nullable().optional(),
   verification_issues: z.array(z.string()).default([]),
   verification_confidence: z.number().min(0).max(1).nullable().optional(),
+  prerequisites: z.array(z.string().uuid()).default([]),
 })
 
 export async function POST(request: Request) {
@@ -121,6 +123,7 @@ export async function POST(request: Request) {
     verification_verdict: parsed.data.verification_verdict ?? null,
     verification_issues: parsed.data.verification_issues,
     verification_confidence: parsed.data.verification_confidence ?? null,
+    prerequisites: parsed.data.prerequisites,
   }
 
   const isColumnError = (err: { message?: string; code?: string }) =>

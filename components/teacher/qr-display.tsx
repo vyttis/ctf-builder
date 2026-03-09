@@ -1,7 +1,12 @@
 "use client"
 
-import { QRCodeSVG } from "qrcode.react"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
+
+const QRCodeSVG = dynamic(
+  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
+  { ssr: false, loading: () => <div className="animate-pulse bg-muted rounded" style={{ width: 200, height: 200 }} /> }
+)
 import { Card, CardContent } from "@/components/ui/card"
 import { Copy, Check, Download, Maximize2 } from "lucide-react"
 import { useState, useRef, useCallback } from "react"

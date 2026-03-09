@@ -24,7 +24,7 @@ export default async function TeacherLayout({
     .single()
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB]">
+    <div className="min-h-screen bg-muted">
       <TeacherNav
         email={user.email || ""}
         fullName={profile?.full_name || ""}

@@ -78,7 +78,7 @@ export function ComparisonSection() {
               key={index}
               className="grid grid-cols-[1fr_1fr] sm:grid-cols-[140px_1fr_1fr] border-b last:border-b-0 border-border/20"
             >
-              <div className="hidden sm:flex items-center px-5 py-3.5 bg-[#F8FAFB]">
+              <div className="hidden sm:flex items-center px-5 py-3.5 bg-muted">
                 <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                   {row.label}
                 </span>

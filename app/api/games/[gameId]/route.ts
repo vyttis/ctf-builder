@@ -15,6 +15,7 @@ const updateGameSchema = z.object({
       time_limit_minutes: z.number().nullable().optional(),
       show_leaderboard: z.boolean().optional(),
       shuffle_challenges: z.boolean().optional(),
+      challenge_path_mode: z.enum(["linear", "free"]).optional(),
     })
     .optional(),
 })

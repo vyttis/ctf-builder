@@ -5,6 +5,7 @@ import { SectionHeader } from "./section-header"
 import { BookX, Lightbulb, Zap } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
+import Image from "next/image"
 
 const problems = [
   {
@@ -60,14 +61,10 @@ export function ValueSection() {
                   ? {}
                   : { y: -4, transition: { duration: 0.2 } }
               }
-              className="rounded-2xl border border-border/40 bg-[#F8FAFB] overflow-hidden group cursor-default"
+              className="rounded-2xl border border-border/40 bg-muted overflow-hidden group cursor-default"
             >
-              <div className="aspect-[3/2] overflow-hidden border-b border-border/20 relative">
-                <img
-                  src={item.photo}
-                  alt={item.photoAlt}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+              <div className="relative aspect-[3/2] overflow-hidden border-b border-border/20">
+                <Image src={item.photo} alt={item.photoAlt} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 100vw, 33vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
               <div className="p-6">

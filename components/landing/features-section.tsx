@@ -65,7 +65,7 @@ export function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              className={`rounded-2xl border border-border/40 border-l-4 ${activity.accentColor} bg-[#F8FAFB] p-6 cursor-default transition-shadow hover:shadow-md`}
+              className={`rounded-2xl border border-border/40 border-l-4 ${activity.accentColor} bg-muted p-6 cursor-default transition-shadow hover:shadow-md`}
             >
               <div
                 className={`w-11 h-11 rounded-xl ${activity.color} flex items-center justify-center mb-4`}

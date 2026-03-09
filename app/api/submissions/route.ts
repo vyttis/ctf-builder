@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAnswer } from "@/lib/game/answer-hasher"
+import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     // Check game is still active before accepting submissions
     const { data: game } = await supabase
       .from("games")
-      .select("id, status")
+      .select("id, status, settings")
       .eq("id", team.game_id)
       .single()
 
@@ -97,6 +98,24 @@ export async function POST(request: Request) {
       )
     }
 
+    // In free mode, verify challenge is unlocked
+    const gameSettings = (game.settings as Record<string, unknown>) || {}
+    const pathMode = (gameSettings.challenge_path_mode as string) || "linear"
+
+    if (pathMode === "free") {
+      const { data: unlocked } = await supabase.rpc("is_challenge_unlocked", {
+        p_team_id: team.id,
+        p_challenge_id: parsed.data.challenge_id,
+      })
+
+      if (unlocked === false) {
+        return NextResponse.json(
+          { error: "Ši užduotis dar neprieinama. Pirmiausia išspręskite reikalingas užduotis." },
+          { status: 403 }
+        )
+      }
+    }
+
     // Get challenge details (include answer_hash for server-side bcrypt verification)
     const { data: challenge } = await supabase
       .from("challenges")
@@ -131,11 +150,37 @@ export async function POST(request: Request) {
     })
 
     // If correct, update team score atomically via RPC
+    let earnedAchievements: { type: string; challengeId: string | null; metadata: Record<string, unknown> }[] = []
+
     if (isCorrect) {
       await supabase.rpc("increment_team_score", {
         p_team_id: team.id,
         p_points: pointsAwarded,
       })
+
+      // Evaluate and save achievements
+      try {
+        const { count: totalChallenges } = await supabase
+          .from("challenges")
+          .select("*", { count: "exact", head: true })
+          .eq("game_id", team.game_id)
+
+        const achievements = await evaluateAchievements(supabase, {
+          teamId: team.id,
+          gameId: team.game_id,
+          challengeId: parsed.data.challenge_id,
+          hintsUsed: hintsUsed,
+          totalChallengesInGame: totalChallenges || 0,
+        })
+
+        if (achievements.length > 0) {
+          await saveAchievements(supabase, team.game_id, team.id, achievements)
+          earnedAchievements = achievements
+        }
+      } catch (err) {
+        // Don't fail the submission if achievements fail
+        console.error("Achievement evaluation error:", err)
+      }
     }
 
     // Fetch updated team score for accurate response
@@ -151,6 +196,7 @@ export async function POST(request: Request) {
         : "Neteisingai. Bandykite dar kartą!",
       total_points: newTotalPoints,
       explanation: isCorrect ? (challenge.explanation || null) : null,
+      achievements: earnedAchievements,
     })
   } catch (err) {
     console.error("Submissions API error:", err)

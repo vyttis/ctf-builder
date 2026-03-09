@@ -18,7 +18,7 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 function TeacherViewMock() {
   return (
-    <div className="w-full bg-gradient-to-br from-[#F8FAFB] to-white p-3 space-y-2.5">
+    <div className="w-full bg-gradient-to-br from-muted to-white p-3 space-y-2.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
@@ -87,7 +87,7 @@ function TeacherViewMock() {
 
 function StudentViewMock() {
   return (
-    <div className="w-full bg-gradient-to-br from-[#F8FAFB] to-white p-3 space-y-2.5">
+    <div className="w-full bg-gradient-to-br from-muted to-white p-3 space-y-2.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded bg-secondary/10 flex items-center justify-center">
@@ -175,7 +175,7 @@ export function ProductVisualsSection() {
           <div className="relative">
             <div className="absolute -inset-2 bg-gradient-to-br from-primary/8 via-transparent to-secondary/8 rounded-2xl blur-xl opacity-60" />
             <div className="relative rounded-2xl border border-border/40 bg-white overflow-hidden shadow-lg shadow-steam-dark/5">
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 bg-[#F8FAFB]">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 bg-muted">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 rounded-full bg-accent/40" />
                   <div className="w-2 h-2 rounded-full bg-highlight/40" />
@@ -212,7 +212,7 @@ export function ProductVisualsSection() {
           <div className="relative">
             <div className="absolute -inset-2 bg-gradient-to-br from-secondary/8 via-transparent to-highlight/8 rounded-2xl blur-xl opacity-60" />
             <div className="relative rounded-2xl border border-border/40 bg-white overflow-hidden shadow-lg shadow-steam-dark/5">
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 bg-[#F8FAFB]">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 bg-muted">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 rounded-full bg-accent/40" />
                   <div className="w-2 h-2 rounded-full bg-highlight/40" />

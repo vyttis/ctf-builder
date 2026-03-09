@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Save } from "lucide-react"
+import { Loader2, Save, GitBranch } from "lucide-react"
 
 interface BuilderSettingsProps {
   open: boolean
@@ -50,6 +50,9 @@ export function BuilderSettings({
   const [shuffleChallenges, setShuffleChallenges] = useState(
     settings.shuffle_challenges
   )
+  const [challengePathMode, setChallengePathMode] = useState<"linear" | "free">(
+    settings.challenge_path_mode || "linear"
+  )
 
   async function handleSave() {
     setLoading(true)
@@ -65,6 +68,7 @@ export function BuilderSettings({
             time_limit_minutes: timeLimit,
             show_leaderboard: showLeaderboard,
             shuffle_challenges: shuffleChallenges,
+            challenge_path_mode: challengePathMode,
           },
         }),
       })
@@ -179,6 +183,23 @@ export function BuilderSettings({
               <Switch
                 checked={shuffleChallenges}
                 onCheckedChange={setShuffleChallenges}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  <GitBranch className="h-3.5 w-3.5" />
+                  Laisvas kelias
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Komandos gali pasirinkti užduotis laisvai, ne eilės tvarka
+                </p>
+              </div>
+              <Switch
+                checked={challengePathMode === "free"}
+                onCheckedChange={(checked) =>
+                  setChallengePathMode(checked ? "free" : "linear")
+                }
               />
             </div>
           </div>

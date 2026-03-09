@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { motion } from "framer-motion"
 import { ArrowRight, Gamepad2 } from "lucide-react"
 import { QRScanner } from "@/components/player/qr-scanner"
+import Image from "next/image"
 
 export default function PlayerLandingPage() {
   const [code, setCode] = useState("")
@@ -31,11 +32,7 @@ export default function PlayerLandingPage() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm text-center"
       >
-        <img
-          src="/illustrations/adventure-start.svg"
-          alt=""
-          className="w-48 h-48 mx-auto mb-6"
-        />
+        <Image src="/illustrations/adventure-start.svg" alt="" width={192} height={192} className="mx-auto mb-6" />
 
         <h1 className="text-2xl font-bold text-steam-dark mb-2">
           CTF žaidimas

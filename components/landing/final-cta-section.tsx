@@ -15,13 +15,13 @@ export function FinalCtaSection() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
-      className="py-20 md:py-24 bg-[#F8FAFB]"
+      className="py-20 md:py-24 bg-muted"
     >
       <div className="container mx-auto px-5 max-w-[1140px]">
         <div className="max-w-3xl mx-auto text-center">
           <div className="rounded-3xl p-8 sm:p-12 md:p-16 text-white relative overflow-hidden">
             {/* Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00323C] via-[#004D5C] to-[#008CB4]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-steam-dark via-steam-teal to-steam-blue" />
 
             {/* Glow accents */}
             <motion.div

@@ -16,8 +16,10 @@ import {
   Loader2,
 } from "lucide-react"
 import Link from "next/link"
-import type { LeaderboardEntry } from "@/types/game"
+import Image from "next/image"
+import type { LeaderboardEntry, Achievement } from "@/types/game"
 import { getPlayerSession } from "@/lib/game/session"
+import { AchievementBadge } from "@/components/player/achievement-badge"
 
 const podiumColors = [
   "from-yellow-400/20 to-yellow-500/5 border-yellow-400/30",
@@ -39,6 +41,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true)
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
+  const [teamAchievements, setTeamAchievements] = useState<Record<string, Achievement[]>>({})
 
   const supabase = useMemo(() => createClient(), [])
 
@@ -60,6 +63,22 @@ export default function LeaderboardPage() {
       .order("updated_at", { ascending: true })
 
     if (data) setTeams(data)
+
+    // Fetch achievements for all teams
+    const { data: achievements } = await supabase
+      .from("achievements")
+      .select("*")
+      .eq("game_id", game.id)
+
+    if (achievements) {
+      const grouped: Record<string, Achievement[]> = {}
+      for (const a of achievements) {
+        if (!grouped[a.team_id]) grouped[a.team_id] = []
+        grouped[a.team_id].push(a as Achievement)
+      }
+      setTeamAchievements(grouped)
+    }
+
     setLoading(false)
   }, [gameCode, supabase])
 
@@ -130,11 +149,11 @@ export default function LeaderboardPage() {
         </div>
 
         <div className="text-center mb-8">
-          <img src="/illustrations/trophy.svg" alt="" className="w-32 h-32 mx-auto mb-3" />
+          <Image src="/illustrations/trophy.svg" alt="" width={128} height={128} className="mx-auto mb-3" />
           <h1 className="text-2xl font-bold text-steam-dark">Rezultatų lentelė</h1>
           <div className="flex items-center justify-center gap-2 mt-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
-            <span>{teams.length} {teams.length === 1 ? "komanda" : "komandos"}</span>
+            <span>{teams.length} {(() => { const m10 = teams.length % 10, m100 = teams.length % 100; if (m100 >= 11 && m100 <= 19) return "komandų"; if (m10 === 1) return "komanda"; if (m10 >= 2 && m10 <= 9) return "komandos"; return "komandų"; })()}</span>
           </div>
           <div className="flex items-center justify-center gap-1 mt-1">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -182,9 +201,14 @@ export default function LeaderboardPage() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {team.current_challenge_index} užd. išspręsta
-                          </p>
+                          <div className="flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground">
+                              {team.current_challenge_index} užd. išspręsta
+                            </p>
+                            {teamAchievements[team.id]?.map((a) => (
+                              <AchievementBadge key={a.id} type={a.type} size="sm" />
+                            ))}
+                          </div>
                         </div>
 
                         <div className="text-right shrink-0">

@@ -7,6 +7,7 @@ export interface GameSettings {
   time_limit_minutes: number | null
   show_leaderboard: boolean
   shuffle_challenges: boolean
+  challenge_path_mode?: "linear" | "free"
 }
 
 export interface GameWithChallengeCount {
@@ -44,6 +45,7 @@ export interface Challenge {
   verification_verdict: "pass" | "fail" | "uncertain" | null
   verification_issues: string[]
   verification_confidence: number | null
+  prerequisites: string[]
   created_at: string
   updated_at: string
 }
@@ -138,6 +140,19 @@ export interface ChallengeSnapshot {
   image_url: string | null
   maps_url: string | null
   order_index: number
+}
+
+// Achievement badges
+export type AchievementType = "first_solver" | "speed_demon" | "hint_free" | "perfect_game" | "streak"
+
+export interface Achievement {
+  id: string
+  game_id: string
+  team_id: string
+  type: AchievementType
+  challenge_id: string | null
+  metadata: Record<string, unknown>
+  earned_at: string
 }
 
 export interface PlatformStats {

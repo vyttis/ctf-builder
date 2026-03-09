@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { generateGameCode } from "@/lib/game/code-generator"
+import { hashAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
+import type { ChallengeSnapshot } from "@/types/game"
 
 // POST /api/library/[itemId]/clone — clone library item into a new game
 export async function POST(
@@ -60,17 +62,18 @@ export async function POST(
     }
 
     // Create challenges from snapshot
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const challengeData = item.challenge_data as any[]
+    const challengeData = item.challenge_data as ChallengeSnapshot[]
     if (challengeData && challengeData.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const challenges = challengeData.map((c: any) => ({
+      // Placeholder hash — teacher must set real answers before activating game
+      const placeholderHash = await hashAnswer("__placeholder__")
+
+      const challenges = challengeData.map((c: ChallengeSnapshot) => ({
         game_id: game.id,
         title: c.title,
         description: c.description || "",
         type: c.type || "text",
         points: c.points || 100,
-        answer_hash: "", // Teacher needs to fill in answers
+        answer_hash: placeholderHash,
         hints: c.hints || [],
         options: c.options || null,
         order_index: c.order_index || 0,

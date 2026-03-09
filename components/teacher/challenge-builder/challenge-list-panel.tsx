@@ -9,6 +9,7 @@ import { Challenge } from "@/types/game"
 import { SortableChallengeCard } from "./sortable-challenge-card"
 import { Plus, Sparkles, Puzzle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
 interface ChallengeListPanelProps {
   challenges: Challenge[]
@@ -94,11 +95,7 @@ export function ChallengeListPanel({
             </div>
           ) : (
             <div className="text-center py-16">
-              <img
-                src="/illustrations/empty-state.svg"
-                alt=""
-                className="w-32 h-32 mx-auto mb-4 opacity-50"
-              />
+              <Image src="/illustrations/empty-state.svg" alt="" width={128} height={128} className="mx-auto mb-4 opacity-50" />
               <h3 className="text-base font-semibold text-steam-dark mb-2">
                 {isOverPanel
                   ? "Paleiskite užduotį čia"

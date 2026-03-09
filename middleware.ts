@@ -113,7 +113,8 @@ export async function middleware(request: NextRequest) {
   const isTeacherRoute =
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/games") ||
-    url.pathname.startsWith("/admin")
+    url.pathname.startsWith("/admin") ||
+    url.pathname.startsWith("/library")
 
   // Always let /auth/callback through — it exchanges the OAuth code
   if (isAuthCallback) {
