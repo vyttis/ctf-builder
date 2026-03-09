@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { GamesGrid } from "@/components/teacher/games-grid"
 import { GameWithChallengeCount } from "@/types/game"
 import { Button } from "@/components/ui/button"
-import { Plus, Gamepad2 } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Plus, Gamepad2, BookOpen, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -17,6 +18,8 @@ export default async function DashboardPage() {
     .select("*, challenges(count)")
     .eq("teacher_id", user!.id)
     .order("created_at", { ascending: false })
+
+  const latestGameId = games?.[0]?.id
 
   return (
     <div>
@@ -37,6 +40,28 @@ export default async function DashboardPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Lesson generator CTA */}
+      {latestGameId && (
+        <Link href={`/games/${latestGameId}/lesson`}>
+          <Card className="mb-6 border-secondary/30 bg-gradient-to-r from-secondary/5 to-secondary/10 hover:shadow-lg hover:shadow-secondary/10 transition-all duration-300 group cursor-pointer">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+                <BookOpen className="h-5 w-5 text-secondary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-steam-dark text-sm">
+                  Pamokos generatorius
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Sukurkite struktūruotą pamoką pagal Lietuvos ugdymo programą su DI pagalba
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-secondary shrink-0 group-hover:translate-x-1 transition-transform" />
+            </CardContent>
+          </Card>
+        </Link>
+      )}
 
       {/* Games grid */}
       {games && games.length > 0 ? (
