@@ -61,9 +61,9 @@ function TeacherViewMock() {
       </div>
       <div className="space-y-1.5">
         {[
-          { name: "Saulės komanda", pct: 85, color: "bg-primary" },
-          { name: "Vėjo komanda", pct: 60, color: "bg-secondary" },
-          { name: "Jūros komanda", pct: 45, color: "bg-highlight" },
+          { name: "Saulės komanda", pct: 85, barColor: "bg-primary/40" },
+          { name: "Vėjo komanda", pct: 60, barColor: "bg-secondary/40" },
+          { name: "Jūros komanda", pct: 45, barColor: "bg-highlight/40" },
         ].map((team) => (
           <div key={team.name} className="flex items-center gap-2">
             <span className="text-[8px] text-muted-foreground w-16 truncate">
@@ -71,7 +71,7 @@ function TeacherViewMock() {
             </span>
             <div className="flex-1 h-1.5 bg-border/20 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full ${team.color}/40`}
+                className={`h-full rounded-full ${team.barColor}`}
                 style={{ width: `${team.pct}%` }}
               />
             </div>

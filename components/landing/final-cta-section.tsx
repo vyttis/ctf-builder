@@ -14,7 +14,7 @@ export function FinalCtaSection() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
-      className="py-14 md:py-18 bg-muted"
+      className="py-14 md:py-[4.5rem] bg-muted"
     >
       <div className="container mx-auto px-5 max-w-[1140px]">
         <div className="max-w-3xl mx-auto text-center">

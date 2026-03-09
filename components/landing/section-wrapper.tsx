@@ -32,7 +32,7 @@ export function SectionWrapper({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={cn("py-14 md:py-18", bgClasses[background], className)}
+      className={cn("py-14 md:py-[4.5rem]", bgClasses[background], className)}
     >
       <div className="container mx-auto px-5 max-w-[1140px]">
         {children}
