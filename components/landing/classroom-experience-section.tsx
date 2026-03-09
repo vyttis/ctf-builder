@@ -157,19 +157,19 @@ export function ClassroomExperienceSection() {
       />
 
       {/* Descriptive text */}
-      <div className="max-w-3xl mx-auto mb-12">
+      <div className="max-w-3xl mx-auto mb-8">
         <motion.div
           initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="space-y-4"
+          className="space-y-2.5"
         >
-          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
+          <p className="text-[15px] text-muted-foreground leading-normal text-center">
             Pamokos metu mokiniai įsitraukia ne tik atsakinėdami į klausimus,
             bet ir spręsdami užduotis, analizuodami situacijas, diskutuodami
             bei ieškodami sprendimų kartu.
           </p>
-          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
+          <p className="text-[15px] text-muted-foreground leading-normal text-center">
             Platforma padeda pamoką paversti aktyvesne mokymosi veikla,
             kurioje svarbu ne tik teisingas atsakymas, bet ir mąstymo
             procesas, argumentavimas bei bendradarbiavimas.

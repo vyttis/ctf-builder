@@ -16,7 +16,7 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        "mb-12 md:mb-16",
+        "mb-8 md:mb-10",
         align === "center" && "text-center",
         className
       )}
@@ -27,7 +27,7 @@ export function SectionHeader({
       {subtitle && (
         <p
           className={cn(
-            "text-muted-foreground mt-3 max-w-2xl leading-relaxed text-[15px]",
+            "text-muted-foreground mt-2.5 max-w-2xl leading-normal text-[15px]",
             align === "center" && "mx-auto"
           )}
         >

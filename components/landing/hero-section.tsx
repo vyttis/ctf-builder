@@ -78,7 +78,9 @@ export function HeroSection() {
       <div className="relative container mx-auto px-5 max-w-[1140px] flex-1 flex flex-col">
         {/* Navigation */}
         <nav className="flex items-center justify-between py-5">
-          <SteamLogo />
+          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
+            <SteamLogo />
+          </Link>
           <Link href="/auth/login">
             <Button
               variant="ghost"
@@ -126,7 +128,7 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-base text-muted-foreground mt-5 leading-relaxed max-w-lg"
+                className="text-base text-muted-foreground mt-4 leading-normal max-w-lg"
               >
                 Platforma padeda mokytojams kurti įtraukiančias pamokas,
                 komandines veiklas ir interaktyvias užduotis, kuriose mokiniai
@@ -138,7 +140,7 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-sm text-muted-foreground/70 mt-3 leading-relaxed max-w-lg"
+                className="text-sm text-muted-foreground/70 mt-2 leading-normal max-w-lg"
               >
                 Prieiga suteikiama partnerių mokyklų mokytojams, dalyvaujantiems
                 STEAM centro mokymuose, dirbtuvėse ir bendrose veiklose.

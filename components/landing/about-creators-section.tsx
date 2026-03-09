@@ -28,7 +28,7 @@ export function AboutCreatorsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-[15px] text-white/70 mt-4 leading-relaxed max-w-xl"
+              className="text-[15px] text-white/70 mt-3 leading-normal max-w-xl"
             >
               Platforma kuriama Klaipėdos universiteto STEAM metodiniame centre,
               kuris dirba su mokytojais, mokiniais ir švietimo bendruomene,
@@ -40,7 +40,7 @@ export function AboutCreatorsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.15 }}
-              className="text-[15px] text-white/70 mt-3 leading-relaxed max-w-xl"
+              className="text-[15px] text-white/70 mt-2 leading-normal max-w-xl"
             >
               Centro veikla orientuota į praktinį, aktyvų ir šiuolaikišką
               mokymąsi, todėl platforma vystoma kaip realus įrankis, pritaikytas
