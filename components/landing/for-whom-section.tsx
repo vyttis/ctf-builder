@@ -10,17 +10,17 @@ const audiences = [
   {
     icon: Building2,
     title: "Partnerių mokykloms",
-    text: "Platformą naudoja Klaipėdos universiteto STEAM metodinio centro partnerių mokyklų mokytojai.",
+    text: "Naudojasi Klaipėdos universiteto STEAM centro partnerių mokyklų mokytojai.",
   },
   {
     icon: Users,
     title: "Aktyviems mokytojams",
-    text: "Sukurta mokytojams, norintiems taikyti aktyvesnius, įtraukesnius ir šiuolaikiškus darbo metodus.",
+    text: "Tinka tiems, kurie ieško aktyvesnių, įtraukesnių ir šiuolaikiškesnių darbo būdų pamokoje.",
   },
   {
     icon: BookOpen,
     title: "Įvairioms veikloms",
-    text: "Tinka atskirų dalykų pamokoms, integruotoms STEAM veikloms, projektiniams darbams ar neformaliojo ugdymo užsiėmimams.",
+    text: "Veikia tiek atskirų dalykų pamokose, tiek integruotose STEAM veiklose, projektiniuose darbuose ar neformaliajame ugdyme.",
   },
 ]
 
@@ -45,7 +45,7 @@ export function ForWhomSection() {
             viewport={{ once: true }}
             className="text-2xl sm:text-3xl md:text-[36px] font-bold text-steam-dark leading-tight tracking-tight mb-8"
           >
-            Kam skirta ši platforma
+            Kam tai skirta
           </motion.h2>
 
           <div className="space-y-6">

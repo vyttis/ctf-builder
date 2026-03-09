@@ -15,14 +15,14 @@ export function Footer() {
               <SteamLogo size="small" />
             </Link>
             <p className="text-xs text-muted-foreground/60 mt-3 leading-relaxed max-w-[200px]">
-              Interaktyvi pamokų kūrimo platforma partnerių mokykloms.
+              Interaktyvių pamokų kūrimo įrankis partnerių mokykloms.
             </p>
           </div>
 
           {/* About */}
           <div>
             <h4 className="text-sm font-semibold text-steam-dark mb-4">
-              Apie platformą
+              Apie įrankį
             </h4>
             <ul className="space-y-2.5">
               <li>

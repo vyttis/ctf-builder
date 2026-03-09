@@ -30,7 +30,7 @@ const fadeUp = {
 const trustItems = [
   {
     icon: Building2,
-    text: "Klaipėdos universiteto STEAM metodinis centras",
+    text: "Klaipėdos universiteto STEAM centras",
   },
   {
     icon: Handshake,
@@ -108,7 +108,7 @@ export function HeroSection() {
               >
                 <Building2 className="h-3.5 w-3.5 text-primary" />
                 <span className="text-xs font-medium text-white/70">
-                  Klaipėdos universiteto STEAM metodinis centras
+                  Klaipėdos universiteto STEAM centras
                 </span>
               </motion.div>
 
@@ -119,11 +119,11 @@ export function HeroSection() {
                 variants={fadeUp}
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-extrabold text-white leading-[1.08] tracking-tight"
               >
-                Interaktyvi pamokų{" "}
+                Pamokos, kurios{" "}
                 <br className="hidden sm:block" />
-                kūrimo platforma{" "}
+                įtraukia{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-steam-cyan">
-                  partnerių mokykloms
+                  visą klasę
                 </span>
               </motion.h1>
 
@@ -134,9 +134,10 @@ export function HeroSection() {
                 variants={fadeUp}
                 className="text-base md:text-lg text-white/50 mt-5 leading-relaxed max-w-[520px]"
               >
-                Platforma padeda mokytojams kurti įtraukiančias pamokas,
-                komandines veiklas ir interaktyvias užduotis, kuriose mokiniai
-                mokosi aktyviai dalyvaudami.
+                KU STEAM centro komanda sukūrė įrankį, kuriuo mokytojai
+                parengia interaktyvias pamokas su komandinėmis užduotimis,
+                iššūkiais ir diskusijomis. Prieiga suteikiama partnerių mokyklų
+                mokytojams po mokymų ir praktinių veiklų.
               </motion.p>
 
               {/* CTAs */}
@@ -167,7 +168,7 @@ export function HeroSection() {
                   }}
                 >
                   <ArrowDown className="h-4 w-4" />
-                  Kaip veikia platforma
+                  Kaip tai veikia
                 </Button>
               </motion.div>
 

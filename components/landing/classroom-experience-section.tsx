@@ -153,8 +153,8 @@ export function ClassroomExperienceSection() {
   return (
     <SectionWrapper background="muted">
       <SectionHeader
-        title="Kaip platforma naudojama pamokoje"
-        subtitle="Mokiniai sprendžia užduotis, analizuoja situacijas ir diskutuoja komandose. Mokytojas stebi progresą realiu laiku."
+        title="Kaip tai atrodo pamokoje"
+        subtitle="Mokiniai sprendžia, analizuoja ir diskutuoja komandose — o mokytojas mato visą eigą realiu laiku."
       />
 
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">

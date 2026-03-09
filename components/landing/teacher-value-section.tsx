@@ -9,36 +9,36 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 const benefits = [
   {
     icon: Clock,
-    title: "Padeda greičiau pasiruošti pamokai",
+    title: "Mažiau laiko pasiruošimui",
     description:
-      "Mokytojas gali greičiau sukurti veiklą ir lengviau pasiruošti interaktyviai pamokai.",
+      "Veikla sukuriama greičiau, o pasiruošimas interaktyviai pamokai užima mažiau laiko nei įprasta.",
     color: "text-primary",
     bg: "bg-primary/8",
     number: "01",
   },
   {
     icon: Layers,
-    title: "Leidžia kurti įvairesnes veiklas",
+    title: "Daugiau nei tik klausimai",
     description:
-      "Platforma neapsiriboja tik klausimų rinkiniais, todėl galima kurti įdomesnį ir lankstesnį pamokos scenarijų.",
+      "Galima derinti skirtingus užduočių tipus, veiklos etapus ir komandines užduotis — ne vien klausimų rinkinius.",
     color: "text-secondary",
     bg: "bg-secondary/8",
     number: "02",
   },
   {
     icon: TrendingUp,
-    title: "Didina mokinių įsitraukimą",
+    title: "Aktyvesni mokiniai",
     description:
-      "Mokiniai aktyviau dalyvauja pamokoje, kai dirba komandose, sprendžia iššūkius ir mato veiklos eigą.",
+      "Komandos, iššūkiai ir matoma veiklos eiga skatina mokinius dalyvauti, o ne tik klausytis.",
     color: "text-highlight",
     bg: "bg-highlight/8",
     number: "03",
   },
   {
     icon: Eye,
-    title: "Padeda geriau matyti mokymosi procesą",
+    title: "Visas procesas kaip ant delno",
     description:
-      "Mokytojas gali stebėti ne tik galutinį rezultatą, bet ir visą veiklos eigą.",
+      "Matomas ne tik galutinis rezultatas, bet ir kiekvienas žingsnis — kur sekėsi, kur strigo.",
     color: "text-accent",
     bg: "bg-accent/8",
     number: "04",
@@ -51,7 +51,7 @@ export function TeacherValueSection() {
   return (
     <SectionWrapper background="muted">
       <SectionHeader
-        title="Kodėl ši platforma naudinga mokytojams"
+        title="Nauda mokytojui"
       />
 
       <div className="grid sm:grid-cols-2 gap-5 max-w-5xl mx-auto">

@@ -70,8 +70,8 @@ export function WhatYouCanDoSection() {
   return (
     <SectionWrapper background="muted">
       <SectionHeader
-        title="Ką galima daryti platformoje"
-        subtitle="Platforma leidžia mokytojui vienoje vietoje kurti, organizuoti ir valdyti interaktyvias mokymosi veiklas."
+        title="Galimybės"
+        subtitle="Vienoje vietoje galima parengti užduotis, sudėlioti veiklos eigą ir stebėti, kaip klasė dirba pamokos metu."
       />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

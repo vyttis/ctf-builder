@@ -44,7 +44,7 @@ export function DifferenceSection() {
 
   return (
     <SectionWrapper background="white">
-      <SectionHeader title="Daugiau nei paprastas klausimų įrankis" />
+      <SectionHeader title="Ne tik atsakymams rinkti" />
 
       <div className="max-w-3xl mx-auto mb-8">
         <motion.div
@@ -55,9 +55,9 @@ export function DifferenceSection() {
         >
           <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
             Daugelis skaitmeninių įrankių leidžia pateikti klausimus ir surinkti
-            atsakymus. Ši platforma skirta platesniam tikslui — padėti mokytojui
-            sukurti visą interaktyvią mokymosi veiklą su lanksčia struktūra,
-            komandinėmis veiklomis ir skirtingais užduočių tipais.
+            atsakymus. Čia tikslas platesnis — padėti mokytojui sukurti visą
+            interaktyvią veiklą su lankščia struktūra, komandų darbu ir
+            skirtingais užduočių tipais.
           </p>
         </motion.div>
       </div>
@@ -80,7 +80,7 @@ export function DifferenceSection() {
             </div>
             <div className="px-6 py-4 bg-primary/[0.04] border-b border-border/30">
               <p className="text-sm font-bold text-steam-dark">
-                Ši platforma
+                Šis įrankis
               </p>
             </div>
           </div>

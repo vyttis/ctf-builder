@@ -34,8 +34,9 @@ export function AboutCreatorsSection() {
               className="text-[15px] text-white/60 mt-4 leading-relaxed max-w-xl"
             >
               Centras dirba su mokytojais, mokiniais ir švietimo bendruomene,
-              siekdamas kurti ir taikyti inovatyvius mokymo metodus. Platforma
-              vystoma kaip realus įrankis, pritaikytas mokyklų poreikiams.
+              kurdamas ir taikydamas inovatyvius mokymo metodus. Šis įrankis
+              gimė iš to darbo — kaip praktinis projektas, pritaikytas
+              konkretiems mokyklų poreikiams.
             </motion.p>
 
             {/* Activity photos */}

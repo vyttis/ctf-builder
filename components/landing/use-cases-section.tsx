@@ -1,7 +1,6 @@
 "use client"
 
 import { SectionWrapper } from "./section-wrapper"
-import { SectionHeader } from "./section-header"
 import { Zap, Users, Search, Brain, Target } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
@@ -12,7 +11,7 @@ const useCases = [
     icon: Zap,
     title: "Greitam žinių patikrinimui",
     description:
-      "Kai reikia greitai įvertinti, kaip mokiniai suprato naują temą.",
+      "Greitai patikrinti, ar mokiniai suprato naują temą — kelios minutės ir vaizdas aiškus.",
     color: "text-primary",
     bg: "bg-primary/8",
   },
@@ -20,7 +19,7 @@ const useCases = [
     icon: Users,
     title: "Komandiniams iššūkiams",
     description:
-      "Kai norima skatinti bendradarbiavimą, diskusiją ir bendrą sprendimų paiešką.",
+      "Paskatinti bendradarbiavimą, diskusiją ir bendrą sprendimų paiešką tarp mokinių.",
     color: "text-secondary",
     bg: "bg-secondary/8",
   },
@@ -28,7 +27,7 @@ const useCases = [
     icon: Search,
     title: "Tyrimo veikloms",
     description:
-      "Kai mokiniai turi analizuoti informaciją, lyginti, ieškoti paaiškinimų ir pagrįsti atsakymus.",
+      "Mokiniai analizuoja informaciją, lygina, ieško paaiškinimų ir pagrindžia savo atsakymus.",
     color: "text-highlight",
     bg: "bg-highlight/8",
   },
@@ -36,7 +35,7 @@ const useCases = [
     icon: Brain,
     title: "Loginėms užduotims",
     description:
-      "Kai svarbu mąstyti nuosekliai, spręsti žingsnis po žingsnio ir taikyti žinias.",
+      "Nuoseklus mąstymas, sprendimas žingsnis po žingsnio ir žinių taikymas praktikoje.",
     color: "text-accent",
     bg: "bg-accent/8",
   },
@@ -44,7 +43,7 @@ const useCases = [
     icon: Target,
     title: "Integruotoms STEAM pamokoms",
     description:
-      "Kai viena veikla apjungia kelis dalykus, praktinį taikymą ir problemų sprendimą.",
+      "Viena veikla apjungia kelis dalykus, praktinį taikymą ir problemų sprendimą.",
     color: "text-steam-dark",
     bg: "bg-steam-dark/8",
   },
@@ -92,7 +91,7 @@ export function UseCasesSection() {
             viewport={{ once: true }}
             className="text-2xl sm:text-3xl md:text-[36px] font-bold text-steam-dark leading-tight tracking-tight mb-8"
           >
-            Kokioms veikloms tinka platforma
+            Tinka įvairioms veikloms
           </motion.h2>
 
           <div className="space-y-4">

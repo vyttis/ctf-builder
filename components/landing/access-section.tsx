@@ -1,7 +1,6 @@
 "use client"
 
 import { SectionWrapper } from "./section-wrapper"
-import { SectionHeader } from "./section-header"
 import { Handshake, GraduationCap, KeyRound, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
@@ -13,7 +12,7 @@ const steps = [
     icon: Handshake,
     title: "Bendradarbiavimas su STEAM centru",
     description:
-      "Platforma skirta partnerių mokykloms, bendradarbiaujančioms su Klaipėdos universiteto STEAM metodiniu centru.",
+      "Prieiga teikiama mokykloms, kurios bendradarbiauja su Klaipėdos universiteto STEAM centru.",
     color: "bg-secondary/10 text-secondary",
   },
   {
@@ -21,7 +20,7 @@ const steps = [
     icon: GraduationCap,
     title: "Dalyvavimas mokymuose ir dirbtuvėse",
     description:
-      "Prieš pradedant naudoti platformą, mokytojai supažindinami su jos taikymu praktiniuose mokymuose ir veiklose.",
+      "Prieš pradedant dirbti, mokytojai susipažįsta su įrankiu praktiniuose mokymuose ir dirbtuvėse.",
     color: "bg-primary/10 text-primary",
   },
   {
@@ -29,7 +28,7 @@ const steps = [
     icon: KeyRound,
     title: "Prieigos suteikimas",
     description:
-      "Po mokymų partnerių mokyklų mokytojams suteikiama prieiga prie platformos naudojimo.",
+      "Po mokymų mokytojams suteikiama asmeninė prieiga ir galimybė kurti veiklas savarankiškai.",
     color: "bg-highlight/10 text-highlight",
   },
 ]
@@ -56,7 +55,7 @@ export function AccessSection() {
             viewport={{ once: true }}
             className="text-2xl sm:text-3xl md:text-[36px] font-bold text-steam-dark leading-tight tracking-tight mb-10"
           >
-            Kaip suteikiama prieiga prie platformos
+            Kaip gauti prieigą
           </motion.h2>
 
           <div className="space-y-8">
@@ -112,12 +111,11 @@ export function AccessSection() {
               <Mail className="h-6 w-6 text-secondary" />
             </div>
             <h3 className="text-lg font-bold text-steam-dark mb-3">
-              Domina bendradarbiavimas?
+              Norite pradėti?
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              Jeigu jūsų mokyklą domina bendradarbiavimas ar norite daugiau
-              informacijos apie platformos taikymą, kviečiame susisiekti su
-              Klaipėdos universiteto STEAM metodiniu centru.
+              Jeigu jūsų mokykla nori prisijungti prie partnerių tinklo arba
+              tiesiog norite sužinoti daugiau — parašykite STEAM centrui.
             </p>
             <a href="mailto:steam@ku.lt">
               <Button

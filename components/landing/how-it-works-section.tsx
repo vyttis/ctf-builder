@@ -12,7 +12,7 @@ const steps = [
     icon: Pencil,
     title: "Tema ir veiklos tipas",
     description:
-      "Mokytojas pasirenka dalyką, temą, klasę ar planuojamą veiklos formatą.",
+      "Pasirenkamas dalykas, tema, klasė ir veiklos formatas.",
     color: "bg-primary/10 text-primary",
     ring: "ring-primary/20",
   },
@@ -21,7 +21,7 @@ const steps = [
     icon: Sparkles,
     title: "Užduočių kūrimas",
     description:
-      "Mokytojas kuria turinį rankiniu būdu arba pasitelkia dirbtinio intelekto pagalbą.",
+      "Turinys kuriamas rankiniu būdu arba pasitelkiant DI pagalbą — abu variantai dera tarpusavyje.",
     color: "bg-highlight/10 text-highlight",
     ring: "ring-highlight/20",
   },
@@ -30,7 +30,7 @@ const steps = [
     icon: Layout,
     title: "Pamokos eiga",
     description:
-      "Užduotys išdėstomos į nuoseklią struktūrą, kurią galima koreguoti pagal klasės poreikius.",
+      "Užduotys sudėliojamos į nuoseklią eigą ir koreguojamos pagal klasės poreikius.",
     color: "bg-secondary/10 text-secondary",
     ring: "ring-secondary/20",
   },
@@ -39,7 +39,7 @@ const steps = [
     icon: Smartphone,
     title: "Mokiniai jungiasi",
     description:
-      "Mokiniai prisijungia naudodami telefonus ar kompiuterius ir sprendžia užduotis individualiai arba komandomis.",
+      "Per telefonus ar kompiuterius mokiniai jungiasi ir sprendžia užduotis — po vieną arba komandomis.",
     color: "bg-accent/10 text-accent",
     ring: "ring-accent/20",
   },
@@ -48,7 +48,7 @@ const steps = [
     icon: BarChart3,
     title: "Progresas ir rezultatai",
     description:
-      "Pamokos eiga ir atsakymai matomi realiu laiku, todėl mokytojas gali greitai reaguoti.",
+      "Visa eiga ir atsakymai matomi realiu laiku — galima reaguoti iš karto.",
     color: "bg-primary/10 text-primary",
     ring: "ring-primary/20",
   },
@@ -60,7 +60,7 @@ export function HowItWorksSection() {
   return (
     <SectionWrapper background="white" id="how-it-works">
       <SectionHeader
-        title="Kaip veikia platforma"
+        title="Penki žingsniai iki pamokos"
         subtitle="Nuo temos pasirinkimo iki pamokos stebėjimo — per kelias minutes."
         align="center"
       />
