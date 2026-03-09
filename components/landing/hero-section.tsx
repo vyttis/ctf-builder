@@ -30,7 +30,7 @@ const fadeUp = {
 const trustItems = [
   {
     icon: Building2,
-    text: "Sukurta Klaipėdos universiteto STEAM metodiniame centre",
+    text: "Klaipėdos universiteto STEAM metodinis centras",
   },
   {
     icon: Handshake,
@@ -38,7 +38,7 @@ const trustItems = [
   },
   {
     icon: GraduationCap,
-    text: "Taikoma realiose pamokose ir edukacinėse veiklose",
+    text: "Taikoma realiose pamokose",
   },
 ]
 
@@ -46,24 +46,25 @@ export function HeroSection() {
   const prefersReduced = useReducedMotion()
 
   return (
-    <section className="relative overflow-hidden min-h-[90vh] flex flex-col">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-muted to-primary/[0.03]" />
+    <section className="relative overflow-hidden">
+      {/* Background — full bleed dark */}
+      <div className="absolute inset-0 bg-gradient-to-br from-steam-dark via-[#003845] to-steam-dark" />
+      {/* Subtle glow accents */}
       <motion.div
         animate={
           prefersReduced
             ? {}
-            : { scale: [1, 1.15, 1], opacity: [0.04, 0.07, 0.04] }
+            : { scale: [1, 1.15, 1], opacity: [0.12, 0.2, 0.12] }
         }
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary rounded-full blur-3xl -translate-y-1/3 translate-x-1/4"
-        style={{ opacity: 0.04 }}
+        className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary rounded-full blur-[120px] -translate-y-1/3 translate-x-1/4"
+        style={{ opacity: 0.12 }}
       />
       <motion.div
         animate={
           prefersReduced
             ? {}
-            : { scale: [1, 1.1, 1], opacity: [0.03, 0.06, 0.03] }
+            : { scale: [1, 1.1, 1], opacity: [0.08, 0.15, 0.08] }
         }
         transition={{
           duration: 10,
@@ -71,21 +72,21 @@ export function HeroSection() {
           ease: "easeInOut",
           delay: 2,
         }}
-        className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"
-        style={{ opacity: 0.03 }}
+        className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4"
+        style={{ opacity: 0.08 }}
       />
 
-      <div className="relative container mx-auto px-5 max-w-[1140px] flex-1 flex flex-col">
+      <div className="relative">
         {/* Navigation */}
-        <nav className="flex items-center justify-between py-5">
+        <nav className="container mx-auto px-5 max-w-[1200px] flex items-center justify-between py-5">
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
-            <SteamLogo />
+            <SteamLogo className="[&_text]:fill-white [&_line]:opacity-90" />
           </Link>
           <Link href="/auth/login">
             <Button
               variant="outline"
               size="sm"
-              className="text-sm text-muted-foreground hover:text-steam-dark hover:border-steam-dark/30 border-border/60"
+              className="text-sm text-white/70 hover:text-white hover:border-white/40 border-white/20 bg-white/5 hover:bg-white/10"
             >
               Mokytojams
             </Button>
@@ -93,8 +94,8 @@ export function HeroSection() {
         </nav>
 
         {/* Hero content */}
-        <div className="flex-1 flex items-center pb-12 md:pb-16">
-          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center w-full">
+        <div className="container mx-auto px-5 max-w-[1200px] pt-12 md:pt-20 pb-20 md:pb-28">
+          <div className="grid lg:grid-cols-[1fr_520px] gap-10 lg:gap-16 items-center">
             {/* Left — text */}
             <div>
               {/* KU trust badge */}
@@ -103,10 +104,10 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/8 border border-secondary/15 mb-6"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.06] border border-white/10 mb-7"
               >
-                <Building2 className="h-3.5 w-3.5 text-secondary" />
-                <span className="text-xs font-medium text-secondary">
+                <Building2 className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-white/70">
                   Klaipėdos universiteto STEAM metodinis centras
                 </span>
               </motion.div>
@@ -116,10 +117,12 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-3xl sm:text-4xl md:text-[44px] lg:text-[50px] font-extrabold text-steam-dark leading-[1.1] tracking-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-extrabold text-white leading-[1.08] tracking-tight"
               >
-                Interaktyvi pamokų kūrimo platforma{" "}
-                <span className="text-transparent bg-clip-text gradient-primary">
+                Interaktyvi pamokų{" "}
+                <br className="hidden sm:block" />
+                kūrimo platforma{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-steam-cyan">
                   partnerių mokykloms
                 </span>
               </motion.h1>
@@ -129,22 +132,11 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-base text-muted-foreground mt-4 leading-normal max-w-lg"
+                className="text-base md:text-lg text-white/50 mt-5 leading-relaxed max-w-[520px]"
               >
                 Platforma padeda mokytojams kurti įtraukiančias pamokas,
                 komandines veiklas ir interaktyvias užduotis, kuriose mokiniai
                 mokosi aktyviai dalyvaudami.
-              </motion.p>
-
-              <motion.p
-                custom={2.5}
-                initial="hidden"
-                animate="visible"
-                variants={fadeUp}
-                className="text-sm text-muted-foreground/70 mt-2 leading-normal max-w-lg"
-              >
-                Prieiga suteikiama partnerių mokyklų mokytojams, dalyvaujantiems
-                STEAM centro mokymuose, dirbtuvėse ir bendrose veiklose.
               </motion.p>
 
               {/* CTAs */}
@@ -153,12 +145,12 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="flex flex-col sm:flex-row gap-3 mt-8"
+                className="flex flex-col sm:flex-row gap-3 mt-9"
               >
                 <a href="mailto:steam@ku.lt">
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/15 gap-2 h-12 text-sm px-7 font-semibold"
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 gap-2 h-12 text-sm px-8 font-semibold"
                   >
                     <Mail className="h-4 w-4" />
                     Susisiekti su STEAM centru
@@ -167,7 +159,7 @@ export function HeroSection() {
                 <Button
                   size="lg"
                   variant="ghost"
-                  className="w-full sm:w-auto gap-2 h-12 text-sm px-7 text-muted-foreground hover:text-steam-dark hover:bg-steam-dark/5"
+                  className="w-full sm:w-auto gap-2 h-12 text-sm px-8 text-white/60 hover:text-white hover:bg-white/10"
                   onClick={() => {
                     document
                       .getElementById("how-it-works")
@@ -185,16 +177,16 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="flex flex-col gap-2.5 mt-8"
+                className="flex flex-wrap gap-x-6 gap-y-2 mt-10 pt-8 border-t border-white/10"
               >
                 {trustItems.map((item, i) => {
                   const Icon = item.icon
                   return (
                     <span
                       key={i}
-                      className="flex items-center gap-2 text-xs text-muted-foreground/70"
+                      className="flex items-center gap-2 text-[13px] text-white/40 font-medium"
                     >
-                      <Icon className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                      <Icon className="h-4 w-4 text-primary/70 shrink-0" />
                       {item.text}
                     </span>
                   )
@@ -202,63 +194,69 @@ export function HeroSection() {
               </motion.div>
             </div>
 
-            {/* Right — photo grid */}
+            {/* Right — hero visual */}
             <motion.div
               custom={2}
               initial="hidden"
               animate="visible"
               variants={fadeUp}
-              className="hidden md:block"
+              className="hidden lg:block"
             >
               <div className="relative">
-                <div className="absolute -inset-6 bg-gradient-to-br from-primary/10 via-secondary/5 to-highlight/10 rounded-3xl blur-2xl opacity-60" />
+                {/* Glow behind images */}
+                <div className="absolute -inset-8 bg-gradient-to-br from-primary/20 via-secondary/10 to-highlight/15 rounded-3xl blur-3xl opacity-50" />
 
-                <div className="relative grid grid-cols-2 gap-3">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4, duration: 0.6 }}
-                    className="relative col-span-2 rounded-2xl overflow-hidden shadow-2xl shadow-steam-dark/10 border border-white/60 aspect-[16/9]"
-                  >
-                    <Image
-                      src="/photos/activity-students.jpg"
-                      alt="Mokiniai sprendžia užduotis komandomis"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                  </motion.div>
+                {/* Main hero image — dominant */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4, duration: 0.6 }}
+                  className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/30 border border-white/10 aspect-[4/3]"
+                >
+                  <Image
+                    src="/photos/activity-students.jpg"
+                    alt="Mokiniai sprendžia užduotis komandomis"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 520px"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-steam-dark/30 via-transparent to-transparent" />
+                </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.5 }}
-                    className="relative rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
-                  >
-                    <Image
-                      src="/photos/classroom-teacher.jpg"
-                      alt="Mokytoja padeda mokiniams klasėje"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 25vw"
-                    />
-                  </motion.div>
+                {/* Secondary support image — overlapping bottom-left */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  className="absolute -bottom-6 -left-8 w-[200px] rounded-xl overflow-hidden shadow-xl shadow-black/20 border-2 border-white/15 aspect-[4/3]"
+                >
+                  <Image
+                    src="/photos/classroom-teacher.jpg"
+                    alt="Mokytoja padeda mokiniams klasėje"
+                    fill
+                    className="object-cover"
+                    sizes="200px"
+                  />
+                </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7, duration: 0.5 }}
-                    className="relative rounded-2xl overflow-hidden shadow-lg shadow-steam-dark/8 border border-white/60 aspect-[4/3]"
-                  >
-                    <Image
-                      src="/photos/activity-beavers.jpg"
-                      alt="STEAM centro veiklos"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 25vw"
-                    />
-                  </motion.div>
-                </div>
+                {/* Floating badge — top right */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.9, duration: 0.4 }}
+                  className="absolute -top-4 -right-4 bg-white rounded-xl shadow-xl shadow-black/15 px-4 py-3 border border-border/30"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-steam-dark leading-none">3 komandos</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">sprendžia užduotis</div>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </motion.div>
           </div>

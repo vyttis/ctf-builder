@@ -14,6 +14,7 @@ const benefits = [
       "Mokytojas gali greičiau sukurti veiklą ir lengviau pasiruošti interaktyviai pamokai.",
     color: "text-primary",
     bg: "bg-primary/8",
+    number: "01",
   },
   {
     icon: Layers,
@@ -22,6 +23,7 @@ const benefits = [
       "Platforma neapsiriboja tik klausimų rinkiniais, todėl galima kurti įdomesnį ir lankstesnį pamokos scenarijų.",
     color: "text-secondary",
     bg: "bg-secondary/8",
+    number: "02",
   },
   {
     icon: TrendingUp,
@@ -30,6 +32,7 @@ const benefits = [
       "Mokiniai aktyviau dalyvauja pamokoje, kai dirba komandose, sprendžia iššūkius ir mato veiklos eigą.",
     color: "text-highlight",
     bg: "bg-highlight/8",
+    number: "03",
   },
   {
     icon: Eye,
@@ -38,6 +41,7 @@ const benefits = [
       "Mokytojas gali stebėti ne tik galutinį rezultatą, bet ir visą veiklos eigą.",
     color: "text-accent",
     bg: "bg-accent/8",
+    number: "04",
   },
 ]
 
@@ -45,12 +49,12 @@ export function TeacherValueSection() {
   const prefersReduced = useReducedMotion()
 
   return (
-    <SectionWrapper background="white">
+    <SectionWrapper background="muted">
       <SectionHeader
         title="Kodėl ši platforma naudinga mokytojams"
       />
 
-      <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div className="grid sm:grid-cols-2 gap-5 max-w-5xl mx-auto">
         {benefits.map((item, index) => {
           const Icon = item.icon
           return (
@@ -60,19 +64,17 @@ export function TeacherValueSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              whileHover={
-                prefersReduced
-                  ? {}
-                  : { y: -4, transition: { duration: 0.25 } }
-              }
-              className="rounded-2xl border border-border/40 bg-muted p-6 cursor-default transition-shadow hover:shadow-md"
+              className="rounded-xl border border-border/50 bg-white p-7 cursor-default transition-all hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden"
             >
+              <span className="absolute top-4 right-5 text-[48px] font-extrabold text-steam-dark/[0.03] leading-none select-none">
+                {item.number}
+              </span>
               <div
-                className={`w-12 h-12 rounded-xl ${item.bg} ${item.color} flex items-center justify-center mb-4`}
+                className={`w-12 h-12 rounded-xl ${item.bg} ${item.color} flex items-center justify-center mb-5`}
               >
                 <Icon className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-steam-dark text-[15px] mb-2">
+              <h3 className="font-semibold text-steam-dark text-base mb-2">
                 {item.title}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">

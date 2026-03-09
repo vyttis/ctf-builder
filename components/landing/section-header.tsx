@@ -16,18 +16,18 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        "mb-8 md:mb-10",
+        "mb-10 md:mb-14",
         align === "center" && "text-center",
         className
       )}
     >
-      <h2 className="text-2xl sm:text-3xl font-bold text-steam-dark leading-tight">
+      <h2 className="text-2xl sm:text-3xl md:text-[36px] font-bold text-steam-dark leading-tight tracking-tight">
         {title}
       </h2>
       {subtitle && (
         <p
           className={cn(
-            "text-muted-foreground mt-2.5 max-w-2xl leading-normal text-[15px]",
+            "text-muted-foreground mt-3 max-w-2xl leading-relaxed text-[15px] md:text-base",
             align === "center" && "mx-auto"
           )}
         >

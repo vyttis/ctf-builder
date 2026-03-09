@@ -21,7 +21,7 @@ export function SectionWrapper({
 
   const bgClasses = {
     white: "bg-white",
-    muted: "bg-muted",
+    muted: "bg-[#F6F8FA]",
     dark: "bg-steam-dark text-white",
   }
 
@@ -32,9 +32,9 @@ export function SectionWrapper({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={cn("py-14 md:py-[4.5rem]", bgClasses[background], className)}
+      className={cn("py-16 md:py-24", bgClasses[background], className)}
     >
-      <div className="container mx-auto px-5 max-w-[1140px]">
+      <div className="container mx-auto px-5 max-w-[1200px]">
         {children}
       </div>
     </motion.section>

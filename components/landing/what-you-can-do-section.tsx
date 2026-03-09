@@ -20,7 +20,7 @@ const capabilities = [
     description:
       "Kurkite skirtingų tipų užduotis: klausimus, loginius iššūkius, komandines veiklas, tyrimo scenarijus ir diskusijomis paremtas užduotis.",
     color: "bg-primary/10 text-primary",
-    accent: "border-l-primary",
+    border: "border-l-primary",
   },
   {
     icon: BookOpen,
@@ -28,7 +28,7 @@ const capabilities = [
     description:
       "Sujunkite užduotis į nuoseklią pamokos eigą, pritaikytą konkrečiai temai, klasei ir mokymosi tikslui.",
     color: "bg-secondary/10 text-secondary",
-    accent: "border-l-secondary",
+    border: "border-l-secondary",
   },
   {
     icon: Sparkles,
@@ -36,7 +36,7 @@ const capabilities = [
     description:
       "Greitai generuokite užduočių idėjas, klausimus, paaiškinimus ir užuominas, kuriuos vėliau galima redaguoti ir pritaikyti.",
     color: "bg-highlight/10 text-highlight",
-    accent: "border-l-highlight",
+    border: "border-l-highlight",
   },
   {
     icon: Users,
@@ -44,7 +44,7 @@ const capabilities = [
     description:
       "Įtraukite mokinius į darbą poromis ar komandomis, kad jie spręstų užduotis bendradarbiaudami.",
     color: "bg-accent/10 text-accent",
-    accent: "border-l-accent",
+    border: "border-l-accent",
   },
   {
     icon: Activity,
@@ -52,7 +52,7 @@ const capabilities = [
     description:
       "Veiklos metu matykite, kaip sekasi komandoms ar mokiniams, kurios užduotys jau atliktos ir kur kyla daugiausia sunkumų.",
     color: "bg-primary/10 text-primary",
-    accent: "border-l-primary",
+    border: "border-l-primary",
   },
   {
     icon: BarChart3,
@@ -60,7 +60,7 @@ const capabilities = [
     description:
       "Analizuokite mokinių atsakymus, peržiūrėkite sudėtingiausias vietas ir geriau supraskite, ką verta aptarti dar kartą.",
     color: "bg-secondary/10 text-secondary",
-    accent: "border-l-secondary",
+    border: "border-l-secondary",
   },
 ]
 
@@ -74,7 +74,7 @@ export function WhatYouCanDoSection() {
         subtitle="Platforma leidžia mokytojui vienoje vietoje kurti, organizuoti ir valdyti interaktyvias mokymosi veiklas."
       />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {capabilities.map((item, index) => {
           const Icon = item.icon
           return (
@@ -83,8 +83,8 @@ export function WhatYouCanDoSection() {
               initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.08, duration: 0.5 }}
-              className={`rounded-2xl border border-border/40 border-l-4 ${item.accent} bg-white p-6 cursor-default transition-shadow hover:shadow-md`}
+              transition={{ delay: index * 0.07, duration: 0.5 }}
+              className={`rounded-xl border border-border/50 border-l-[3px] ${item.border} bg-white p-6 cursor-default transition-all hover:shadow-lg hover:-translate-y-0.5`}
             >
               <div
                 className={`w-11 h-11 rounded-xl ${item.color} flex items-center justify-center mb-4`}
