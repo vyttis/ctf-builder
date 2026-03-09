@@ -26,7 +26,12 @@ export async function POST(
     }
 
     // Parse and validate body
-    const body = await request.json().catch(() => ({}))
+    let body: unknown = {}
+    try {
+      body = await request.json()
+    } catch {
+      // Empty body is valid (title is optional)
+    }
     const parsed = duplicateSchema.safeParse(body)
 
     if (!parsed.success) {
@@ -121,6 +126,10 @@ export async function POST(
 
       if (insertError) {
         console.error("Challenge duplication error:", insertError)
+        return NextResponse.json(
+          { error: "Žaidimas sukurtas, bet nepavyko nukopijuoti užduočių: " + insertError.message, game_id: newGame.id },
+          { status: 207 }
+        )
       } else if (newChallenges) {
         // Build old ID → new ID mapping via order_index
         const newIdByIndex = new Map(newChallenges.map((c: { id: string; order_index: number }) => [c.order_index, c.id]))
@@ -133,11 +142,11 @@ export async function POST(
         // Update prerequisites with remapped IDs
         const hasPrereqs = sourceChallenges.some((c) => c.prerequisites?.length > 0)
         if (hasPrereqs) {
-          await Promise.all(
+          const prereqResults = await Promise.all(
             sourceChallenges.map((src) => {
-              if (!src.prerequisites?.length) return Promise.resolve()
+              if (!src.prerequisites?.length) return Promise.resolve(null)
               const newId = idMap.get(src.id)
-              if (!newId) return Promise.resolve()
+              if (!newId) return Promise.resolve(null)
               const remapped = src.prerequisites
                 .map((oldPrereqId: string) => idMap.get(oldPrereqId))
                 .filter(Boolean) as string[]
@@ -147,6 +156,10 @@ export async function POST(
                 .eq("id", newId)
             })
           )
+          const prereqErrors = prereqResults.filter((r) => r?.error)
+          if (prereqErrors.length > 0) {
+            console.error("Prerequisite remapping errors:", prereqErrors)
+          }
         }
       }
     }
