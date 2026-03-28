@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { LessonPlanDetail } from "@/components/teacher/lesson-plan-detail"
 
 export default async function LessonPlanDetailPage({
@@ -9,12 +9,13 @@ export default async function LessonPlanDetailPage({
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/auth/login")
 
   const { data: plan } = await supabase
     .from("lesson_plans")
     .select("*")
     .eq("id", params.planId)
-    .eq("teacher_id", user!.id)
+    .eq("teacher_id", user.id)
     .single()
 
   if (!plan) {

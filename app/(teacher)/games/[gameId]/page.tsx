@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { GameStatus, GameSettings, Challenge } from "@/types/game"
 import { QRDisplay } from "@/components/teacher/qr-display"
 import { GameStatusActions } from "@/components/teacher/game-status-actions"
@@ -33,11 +33,13 @@ export default async function GameDetailPage({
     data: { user },
   } = await supabase.auth.getUser()
 
+  if (!user) redirect("/auth/login")
+
   const { data: game } = await supabase
     .from("games")
     .select("*, challenges(*), teams(count)")
     .eq("id", params.gameId)
-    .eq("teacher_id", user!.id)
+    .eq("teacher_id", user.id)
     .single()
 
   if (!game) {

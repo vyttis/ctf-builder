@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Crown, Zap, Brain, Trophy, Flame, X, type LucideIcon } from "lucide-react"
 import { ACHIEVEMENT_CONFIG, type AchievementType } from "@/lib/game/achievements"
 
@@ -50,14 +50,13 @@ export function AchievementToast({
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: -40 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -40 }}
-        transition={{ type: "spring", damping: 20, stiffness: 300 }}
-        className="fixed top-14 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2"
-      >
+    <motion.div
+      initial={{ opacity: 0, y: -40 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -40 }}
+      transition={{ type: "spring", damping: 20, stiffness: 300 }}
+      className="fixed top-14 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2"
+    >
         <div
           className="flex items-center gap-3 rounded-xl border border-steam-yellow/30 bg-gradient-to-r from-steam-yellow/15 to-steam-yellow/5 px-4 py-3 shadow-lg backdrop-blur-sm"
         >
@@ -89,7 +88,6 @@ export function AchievementToast({
             <X size={16} />
           </button>
         </div>
-      </motion.div>
-    </AnimatePresence>
+    </motion.div>
   )
 }

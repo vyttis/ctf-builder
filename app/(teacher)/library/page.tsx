@@ -47,11 +47,14 @@ export default function LibraryPage() {
     if (gradeLevel !== "all") params.set("grade_level", gradeLevel)
     if (search) params.set("search", search)
 
-    const res = await fetch(`/api/library?${params.toString()}`)
-    if (res.ok) {
-      const data = await res.json()
-      // Only show approved items on this page
-      setItems(data.filter((i: LibraryItem) => i.status === "approved"))
+    try {
+      const res = await fetch(`/api/library?status=approved&${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setItems(data.items || [])
+      }
+    } catch {
+      // Network error — silently fail, items stay empty
     }
     setLoading(false)
   }, [subject, gradeLevel, search])

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { Challenge } from "@/types/game"
 import { LessonGenerator } from "@/components/teacher/lesson-generator"
 import { Button } from "@/components/ui/button"
@@ -16,11 +16,13 @@ export default async function LessonGeneratorPage({
     data: { user },
   } = await supabase.auth.getUser()
 
+  if (!user) redirect("/auth/login")
+
   const { data: game } = await supabase
     .from("games")
     .select("*, challenges(*)")
     .eq("id", params.gameId)
-    .eq("teacher_id", user!.id)
+    .eq("teacher_id", user.id)
     .single()
 
   if (!game) {

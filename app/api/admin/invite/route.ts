@@ -104,12 +104,11 @@ export async function POST(request: Request) {
       },
     })
   } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Prieiga uždrausta"
+    const isAuthError = message.includes("role") || message.includes("Prieiga") || message.includes("prisijung")
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Prieiga uždrausta",
-      },
-      { status: 403 }
+      { error: message },
+      { status: isAuthError ? 403 : 500 }
     )
   }
 }

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -30,11 +31,12 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
 export default async function LessonPlansPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/auth/login")
 
   const { data: plans } = await supabase
     .from("lesson_plans")
     .select("*")
-    .eq("teacher_id", user!.id)
+    .eq("teacher_id", user.id)
     .order("created_at", { ascending: false })
 
   return (

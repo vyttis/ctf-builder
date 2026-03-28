@@ -21,9 +21,11 @@ export async function GET() {
 
     return NextResponse.json(users)
   } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Prieiga uždrausta"
+    const isAuthError = message.includes("role") || message.includes("Prieiga") || message.includes("prisijung")
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Prieiga uždrausta" },
-      { status: 403 }
+      { error: message },
+      { status: isAuthError ? 403 : 500 }
     )
   }
 }
@@ -73,9 +75,11 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Prieiga uždrausta"
+    const isAuthError = message.includes("role") || message.includes("Prieiga") || message.includes("prisijung")
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Prieiga uždrausta" },
-      { status: 403 }
+      { error: message },
+      { status: isAuthError ? 403 : 500 }
     )
   }
 }

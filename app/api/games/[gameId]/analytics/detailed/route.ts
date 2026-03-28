@@ -94,10 +94,12 @@ export async function GET(
       let avgAttemptsToSolve = 0
       if (uniqueSolves > 0) {
         const attemptsPerTeam = new Map<string, number>()
+        const teamDone = new Set<string>()
         for (const sub of subs) {
+          if (teamDone.has(sub.team_id)) continue
           const current = attemptsPerTeam.get(sub.team_id) || 0
           attemptsPerTeam.set(sub.team_id, current + 1)
-          if (sub.is_correct) break // count up to first correct
+          if (sub.is_correct) teamDone.add(sub.team_id) // stop counting for this team
         }
         const totalAttemptsForSolvers = Array.from(solvedTeams).reduce(
           (sum, teamId) => sum + (attemptsPerTeam.get(teamId) || 0),

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 import { GamesGrid } from "@/components/teacher/games-grid"
 import { GameWithChallengeCount } from "@/types/game"
 import { Button } from "@/components/ui/button"
@@ -13,10 +14,12 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
+  if (!user) redirect("/auth/login")
+
   const { data: games } = await supabase
     .from("games")
     .select("*, challenges(count)")
-    .eq("teacher_id", user!.id)
+    .eq("teacher_id", user.id)
     .order("created_at", { ascending: false })
 
   return (

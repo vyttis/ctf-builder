@@ -13,9 +13,18 @@ const createTeamSchema = z.object({
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT = 30
 const RATE_WINDOW = 60_000
+const CLEANUP_INTERVAL = 5 * 60_000 // cleanup stale entries every 5 min
+let lastCleanup = Date.now()
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now()
+  // Periodic cleanup of expired entries to prevent memory leaks
+  if (now - lastCleanup > CLEANUP_INTERVAL) {
+    rateLimitMap.forEach((val, key) => {
+      if (now > val.resetAt) rateLimitMap.delete(key)
+    })
+    lastCleanup = now
+  }
   const entry = rateLimitMap.get(ip)
   if (!entry || now > entry.resetAt) {
     rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW })

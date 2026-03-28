@@ -46,6 +46,14 @@ export async function POST(request: Request) {
     )
   }
 
+  // Validate storage_path to prevent path traversal
+  if (parsed.data.storage_path.includes("..") || !parsed.data.storage_path.startsWith("imports/")) {
+    return NextResponse.json(
+      { error: "Netinkamas failo kelias" },
+      { status: 400 }
+    )
+  }
+
   try {
     // Download file from storage
     const { data: fileData, error: downloadError } = await supabase.storage

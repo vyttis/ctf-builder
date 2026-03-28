@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     .select("*", { count: "exact", head: true })
     .eq("game_id", parsed.data.game_id)
 
-  const orderIndex = parsed.data.order_index || (count || 0)
+  const orderIndex = parsed.data.order_index ?? (count ?? 0)
 
   const minimalPayload = {
     game_id: parsed.data.game_id,

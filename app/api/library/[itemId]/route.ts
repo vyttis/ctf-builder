@@ -73,7 +73,7 @@ export async function PATCH(
       .update({
         status,
         review_notes: review_notes || null,
-        reviewed_by: user!.id,
+        reviewed_by: user?.id ?? null,
         reviewed_at: new Date().toISOString(),
       })
       .eq("id", params.itemId)

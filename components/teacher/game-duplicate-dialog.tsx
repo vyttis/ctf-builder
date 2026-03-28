@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   Dialog,
@@ -33,6 +33,13 @@ export function GameDuplicateDialog({
   const { toast } = useToast()
   const [title, setTitle] = useState(`${gameTitle} (kopija)`)
   const [duplicating, setDuplicating] = useState(false)
+
+  // Sync title when dialog opens with a different game
+  useEffect(() => {
+    if (open) {
+      setTitle(`${gameTitle} (kopija)`)
+    }
+  }, [open, gameTitle])
 
   async function handleDuplicate() {
     setDuplicating(true)

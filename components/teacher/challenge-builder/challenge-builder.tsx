@@ -317,15 +317,24 @@ export function ChallengeBuilder({
       const reordered = arrayMove(challenges, oldIndex, newIndex)
       onChallengesChange(reordered)
 
-      // Persist
-      await fetch("/api/challenges/reorder", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          game_id: gameId,
-          order: reordered.map((c, i) => ({ id: c.id, order_index: i })),
-        }),
-      })
+      // Persist — rollback on failure
+      try {
+        const res = await fetch("/api/challenges/reorder", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            game_id: gameId,
+            order: reordered.map((c, i) => ({ id: c.id, order_index: i })),
+          }),
+        })
+        if (!res.ok) {
+          onChallengesChange(challenges) // rollback
+          toast({ title: "Nepavyko pakeisti tvarkos", variant: "destructive" })
+        }
+      } catch {
+        onChallengesChange(challenges) // rollback
+        toast({ title: "Tinklo klaida", variant: "destructive" })
+      }
     }
 
     // Case 2: Drop suggestion into challenge list

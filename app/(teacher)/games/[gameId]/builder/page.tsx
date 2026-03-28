@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { GameStatus, GameSettings, Challenge } from "@/types/game"
 import { GameBuilder } from "@/components/teacher/game-builder/game-builder"
 
@@ -13,11 +13,13 @@ export default async function BuilderPage({
     data: { user },
   } = await supabase.auth.getUser()
 
+  if (!user) redirect("/auth/login")
+
   const { data: game } = await supabase
     .from("games")
     .select("*, challenges(*)")
     .eq("id", params.gameId)
-    .eq("teacher_id", user!.id)
+    .eq("teacher_id", user.id)
     .single()
 
   if (!game) {

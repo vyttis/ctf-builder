@@ -303,22 +303,22 @@ export default function PlayPage() {
       const result: any = await res.json()
 
       if (result.is_correct) {
-        setTotalPoints(result.total_points || totalPoints + result.points_awarded)
+        setTotalPoints((prev) => result.total_points || prev + result.points_awarded)
         setSolvedIds((prev) => {
           const next = new Set(Array.from(prev))
           next.add(challenge.id)
+          // Check if all solved using updated set
+          if (next.size >= challenges.length) {
+            setTimeout(() => {
+              setSelectedChallengeIndex(null)
+              setGameFinished(true)
+            }, 2000)
+          }
           return next
         })
         // Show achievement if earned
         if (result.achievements && result.achievements.length > 0) {
           setAchievementQueue((q) => [...q, ...result.achievements])
-        }
-        // Check if all solved
-        if (solvedIds.size + 1 >= challenges.length) {
-          setTimeout(() => {
-            setSelectedChallengeIndex(null)
-            setGameFinished(true)
-          }, 2000)
         }
       }
 
@@ -368,7 +368,7 @@ export default function PlayPage() {
       }
 
       if (result.is_correct) {
-        setTotalPoints(result.total_points || totalPoints + result.points_awarded)
+        setTotalPoints((prev) => result.total_points || prev + result.points_awarded)
         setSolvedIds((prev) => {
           const next = new Set(Array.from(prev))
           next.add(challenges[currentIndex].id)
@@ -405,7 +405,7 @@ export default function PlayPage() {
   }
 
   // Loading state
-  if (!session || challenges.length === 0) {
+  if (!session || (!gameFinished && challenges.length === 0 && !timeExpired)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
