@@ -96,11 +96,14 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
                 <Puzzle className="h-3.5 w-3.5" />
                 <span>
                   {challengeCount}{" "}
-                  {challengeCount === 1
-                    ? "užduotis"
-                    : challengeCount >= 10 && challengeCount <= 20
-                    ? "užduočių"
-                    : "užduotys"}
+                  {(() => {
+                    const m10 = challengeCount % 10
+                    const m100 = challengeCount % 100
+                    if (m100 >= 11 && m100 <= 19) return "užduočių"
+                    if (m10 === 1) return "užduotis"
+                    if (m10 >= 2 && m10 <= 9) return "užduotys"
+                    return "užduočių"
+                  })()}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 font-mono text-xs bg-muted/50 px-2 py-0.5 rounded">

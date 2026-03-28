@@ -211,7 +211,6 @@ export default async function GameDetailPage({
                             {challenge.title}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {challenge.points} tšk. &middot;{" "}
                             {challenge.type === "text"
                               ? "Tekstas"
                               : challenge.type === "number"

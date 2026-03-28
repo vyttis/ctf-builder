@@ -102,6 +102,7 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
               size="sm"
               onClick={() => setMobileMenuOpen(true)}
               className="sm:hidden text-muted-foreground"
+              aria-label="Atidaryti meniu"
             >
               <Menu className="h-5 w-5" />
             </Button>

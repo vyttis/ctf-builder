@@ -26,6 +26,14 @@ import {
   BookOpen,
   ChevronRight,
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
 import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
 import { MapsEmbed } from "@/components/shared/maps-embed"
@@ -92,6 +100,9 @@ export default function PlayPage() {
   const [achievementQueue, setAchievementQueue] = useState<{ type: AchievementType; metadata?: Record<string, unknown> }[]>([])
   const pendingAchievement = achievementQueue.length > 0 ? achievementQueue[0] : null
   const dismissAchievement = () => setAchievementQueue((q) => q.slice(1))
+
+  // Logout confirmation
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   // Check if reflection already done
   useEffect(() => {
@@ -639,13 +650,35 @@ export default function PlayPage() {
             <span className="font-medium text-steam-dark">{session.team_name}</span>
             <span className="mx-2">&middot;</span>
             <button
-              onClick={() => { clearPlayerSession(gameCode); router.replace(`/play/${gameCode}`) }}
+              onClick={() => setShowLogoutConfirm(true)}
               className="text-xs text-muted-foreground/60 hover:text-accent transition-colors inline-flex items-center gap-1"
             >
               <LogOut className="h-3 w-3" />
               Išeiti
             </button>
           </div>
+
+          <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+            <DialogContent className="max-w-xs">
+              <DialogHeader>
+                <DialogTitle>Išeiti iš žaidimo?</DialogTitle>
+                <DialogDescription>
+                  Jūsų rezultatai bus išsaugoti, bet turėsite prisijungti iš naujo su nauju komandos vardu.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+                  Likti
+                </Button>
+                <Button
+                  onClick={() => { clearPlayerSession(gameCode); router.replace(`/play/${gameCode}`) }}
+                  className="bg-accent hover:bg-accent/90 text-white"
+                >
+                  Išeiti
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     )
@@ -928,16 +961,35 @@ export default function PlayPage() {
           <span className="font-medium text-steam-dark">{session.team_name}</span>
           <span className="mx-2">&middot;</span>
           <button
-            onClick={() => {
-              clearPlayerSession(gameCode)
-              router.replace(`/play/${gameCode}`)
-            }}
+            onClick={() => setShowLogoutConfirm(true)}
             className="text-xs text-muted-foreground/60 hover:text-accent transition-colors inline-flex items-center gap-1"
           >
             <LogOut className="h-3 w-3" />
             Išeiti
           </button>
         </div>
+
+        <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+          <DialogContent className="max-w-xs">
+            <DialogHeader>
+              <DialogTitle>Išeiti iš žaidimo?</DialogTitle>
+              <DialogDescription>
+                Jūsų rezultatai bus išsaugoti, bet turėsite prisijungti iš naujo su nauju komandos vardu.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+                Likti
+              </Button>
+              <Button
+                onClick={() => { clearPlayerSession(gameCode); router.replace(`/play/${gameCode}`) }}
+                className="bg-accent hover:bg-accent/90 text-white"
+              >
+                Išeiti
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

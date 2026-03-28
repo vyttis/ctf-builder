@@ -37,6 +37,7 @@ export function GameStatusActions({
 }: GameStatusActionsProps) {
   const [loading, setLoading] = useState(false)
   const [showActivateDialog, setShowActivateDialog] = useState(false)
+  const [showFinishDialog, setShowFinishDialog] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -130,58 +131,136 @@ export function GameStatusActions({
 
   if (status === "active") {
     return (
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          onClick={() => updateStatus("paused")}
-          disabled={loading}
-          className="gap-2"
-        >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Pause className="h-4 w-4" />
-          )}
-          Pristabdyti
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => updateStatus("finished")}
-          disabled={loading}
-          className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
-        >
-          <Square className="h-4 w-4" />
-          Baigti žaidimą
-        </Button>
-      </div>
+      <>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => updateStatus("paused")}
+            disabled={loading}
+            className="gap-2"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Pause className="h-4 w-4" />
+            )}
+            Pristabdyti
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowFinishDialog(true)}
+            disabled={loading}
+            className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
+          >
+            <Square className="h-4 w-4" />
+            Baigti žaidimą
+          </Button>
+        </div>
+        <Dialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-accent" />
+                Baigti žaidimą?
+              </DialogTitle>
+              <DialogDescription>
+                Mokiniai nebegalės pateikti atsakymų. Visi rezultatai bus
+                išsaugoti. Šio veiksmo negalima atšaukti.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowFinishDialog(false)}
+              >
+                Atšaukti
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowFinishDialog(false)
+                  updateStatus("finished")
+                }}
+                disabled={loading}
+                className="bg-accent hover:bg-accent/90 text-white gap-2"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                Baigti žaidimą
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     )
   }
 
   if (status === "paused") {
     return (
-      <div className="flex gap-2">
-        <Button
-          onClick={() => updateStatus("active")}
-          disabled={loading}
-          className="bg-primary hover:bg-primary/90 text-white gap-2"
-        >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Play className="h-4 w-4" />
-          )}
-          Tęsti
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => updateStatus("finished")}
-          disabled={loading}
-          className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
-        >
-          <Square className="h-4 w-4" />
-          Baigti
-        </Button>
-      </div>
+      <>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => updateStatus("active")}
+            disabled={loading}
+            className="bg-primary hover:bg-primary/90 text-white gap-2"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+            Tęsti
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowFinishDialog(true)}
+            disabled={loading}
+            className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
+          >
+            <Square className="h-4 w-4" />
+            Baigti
+          </Button>
+        </div>
+        <Dialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-accent" />
+                Baigti žaidimą?
+              </DialogTitle>
+              <DialogDescription>
+                Mokiniai nebegalės pateikti atsakymų. Visi rezultatai bus
+                išsaugoti. Šio veiksmo negalima atšaukti.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowFinishDialog(false)}
+              >
+                Atšaukti
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowFinishDialog(false)
+                  updateStatus("finished")
+                }}
+                disabled={loading}
+                className="bg-accent hover:bg-accent/90 text-white gap-2"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                Baigti žaidimą
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     )
   }
 

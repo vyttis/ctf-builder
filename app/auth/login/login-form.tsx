@@ -31,8 +31,16 @@ export function LoginForm() {
   const [step, setStep] = useState<"email" | "otp">("email")
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
   const { toast } = useToast()
   const searchParams = useSearchParams()
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [resendCooldown])
 
   useEffect(() => {
     const error = searchParams.get("error")
@@ -90,6 +98,7 @@ export function LoginForm() {
     }
 
     setStep("otp")
+    setResendCooldown(60)
     toast({
       title: "Kodas išsiųstas!",
       description: "Patikrinkite savo el. pašto dėžutę.",
@@ -278,17 +287,53 @@ export function LoginForm() {
                     )}
                   </Button>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setStep("email")
-                      setOtp("")
-                    }}
-                    className="w-full text-muted-foreground hover:text-steam-dark"
-                  >
-                    Grįžti atgal
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setStep("email")
+                        setOtp("")
+                      }}
+                      className="flex-1 text-muted-foreground hover:text-steam-dark gap-1"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      Atgal
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={loading || resendCooldown > 0}
+                      onClick={async () => {
+                        setLoading(true)
+                        const supabase = createClient()
+                        const { error: resendError } = await supabase.auth.signInWithOtp({
+                          email,
+                          options: { shouldCreateUser: true },
+                        })
+                        setLoading(false)
+                        if (resendError) {
+                          toast({
+                            title: "Klaida",
+                            description: "Nepavyko išsiųsti kodo pakartotinai.",
+                            variant: "destructive",
+                          })
+                        } else {
+                          setResendCooldown(60)
+                          toast({
+                            title: "Kodas išsiųstas!",
+                            description: "Patikrinkite savo el. pašto dėžutę.",
+                          })
+                        }
+                      }}
+                      className="flex-1 text-muted-foreground hover:text-steam-dark gap-1"
+                    >
+                      <Mail className="h-3.5 w-3.5" />
+                      {resendCooldown > 0
+                        ? `Siųsti dar kartą (${resendCooldown}s)`
+                        : "Siųsti dar kartą"}
+                    </Button>
+                  </div>
                 </motion.form>
               )}
             </AnimatePresence>

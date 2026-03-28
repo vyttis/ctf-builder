@@ -114,7 +114,8 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/games") ||
     url.pathname.startsWith("/admin") ||
-    url.pathname.startsWith("/library")
+    url.pathname.startsWith("/library") ||
+    url.pathname.startsWith("/lesson-plans")
 
   // Always let /auth/callback through — it exchanges the OAuth code
   if (isAuthCallback) {

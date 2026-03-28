@@ -60,11 +60,16 @@ export default function PlayerLandingPage() {
               <Button
                 type="submit"
                 disabled={code.trim().length < 6}
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/25 gap-2"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/25 gap-2 disabled:opacity-50"
               >
                 Prisijungti
                 <ArrowRight className="h-4 w-4" />
               </Button>
+              {code.length > 0 && code.length < 6 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  {6 - code.length} {6 - code.length === 1 ? "simbolis" : "simboliai"} liko
+                </p>
+              )}
             </form>
 
             <div className="relative">
