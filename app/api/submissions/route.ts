@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import { verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { NextResponse } from "next/server"
 import { z } from "zod"
@@ -116,10 +115,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Get challenge details (include answer_hash for server-side bcrypt verification)
+    // Get challenge details (never fetch answer_hash — verification via DB RPC)
     const { data: challenge } = await supabase
       .from("challenges")
-      .select("id, points, game_id, explanation, hint_penalty, hints, answer_hash")
+      .select("id, points, game_id, explanation, hint_penalty, hints")
       .eq("id", parsed.data.challenge_id)
       .single()
 
@@ -130,8 +129,12 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verify answer server-side with bcrypt (supports legacy plaintext hashes)
-    const isCorrect = await verifyAnswer(parsed.data.answer, challenge.answer_hash)
+    // Verify answer via Postgres check_answer() function (SECURITY DEFINER)
+    // This keeps answer_hash entirely within the DB — never exposed to Node.js
+    const { data: isCorrect } = await supabase.rpc("check_answer", {
+      p_challenge_id: parsed.data.challenge_id,
+      p_answer: parsed.data.answer,
+    })
 
     // Server-side hint penalty: cap hints_used to actual available hints
     const availableHints = Array.isArray(challenge.hints) ? challenge.hints.length : 0
@@ -139,12 +142,12 @@ export async function POST(request: Request) {
     const hintPenalty = hintsUsed * (challenge.hint_penalty || 0)
     const pointsAwarded = isCorrect ? Math.max(0, challenge.points - hintPenalty) : 0
 
-    // Record submission with hints_used
+    // Record submission with hints_used (store answer for analytics, not security-sensitive)
     await supabase.from("submissions").insert({
       team_id: team.id,
       challenge_id: parsed.data.challenge_id,
       answer: parsed.data.answer,
-      is_correct: isCorrect,
+      is_correct: isCorrect ?? false,
       points_awarded: pointsAwarded,
       hints_used: hintsUsed,
     })

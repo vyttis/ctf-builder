@@ -19,12 +19,16 @@ export async function verifyAnswer(
   const normalized = normalizeAnswer(submitted)
 
   // Support legacy plaintext hashes (migration path)
-  // Use constant-time comparison to prevent timing attacks
+  // Pad to equal length before constant-time comparison to prevent length leak
   if (!storedHash.startsWith("$2")) {
     const a = Buffer.from(normalized, "utf-8")
     const b = Buffer.from(storedHash, "utf-8")
-    if (a.length !== b.length) return false
-    return timingSafeEqual(a, b)
+    const maxLen = Math.max(a.length, b.length)
+    const paddedA = Buffer.alloc(maxLen, 0)
+    const paddedB = Buffer.alloc(maxLen, 0)
+    a.copy(paddedA)
+    b.copy(paddedB)
+    return timingSafeEqual(paddedA, paddedB) && a.length === b.length
   }
 
   return bcrypt.compare(normalized, storedHash)
