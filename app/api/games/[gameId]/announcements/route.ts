@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+const paramsSchema = z.object({ gameId: z.string().uuid() })
+
 const createAnnouncementSchema = z.object({
   message: z.string().min(1, "Pranešimas negali būti tuščias").max(500, "Pranešimas per ilgas (max 500 simbolių)"),
 })
@@ -11,6 +13,11 @@ export async function POST(
   { params }: { params: { gameId: string } }
 ) {
   try {
+  const paramsParsed = paramsSchema.safeParse(params)
+  if (!paramsParsed.success) {
+    return NextResponse.json({ error: "Neteisingas žaidimo ID" }, { status: 400 })
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -80,6 +87,11 @@ export async function GET(
   { params }: { params: { gameId: string } }
 ) {
   try {
+  const paramsParsed = paramsSchema.safeParse(params)
+  if (!paramsParsed.success) {
+    return NextResponse.json({ error: "Neteisingas žaidimo ID" }, { status: 400 })
+  }
+
   const supabase = await createClient()
   const {
     data: { user },

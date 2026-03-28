@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { requireRole } from "@/lib/auth/roles"
+import { requireRole, getUserRole, canApproveLibrary } from "@/lib/auth/roles"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -26,6 +26,14 @@ export async function GET(
 
     if (error || !data) {
       return NextResponse.json({ error: "Nerasta" }, { status: 404 })
+    }
+
+    // Non-admins can only see approved items or their own items
+    if (data.status !== "approved" && data.published_by !== user.id) {
+      const role = await getUserRole(supabase)
+      if (!canApproveLibrary(role)) {
+        return NextResponse.json({ error: "Nerasta" }, { status: 404 })
+      }
     }
 
     return NextResponse.json({
@@ -58,7 +66,12 @@ export async function PATCH(
       data: { user },
     } = await supabase.auth.getUser()
 
-    const body = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+    }
     const parsed = reviewSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json(

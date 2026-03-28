@@ -3,6 +3,8 @@ import { generateGameCode } from "@/lib/game/code-generator"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+const paramsSchema = z.object({ gameId: z.string().uuid() })
+
 const duplicateSchema = z.object({
   title: z.string().min(3, "Pavadinimas turi būti bent 3 simbolių").optional(),
 })
@@ -13,6 +15,11 @@ export async function POST(
   { params }: { params: { gameId: string } }
 ) {
   try {
+    const paramsParsed = paramsSchema.safeParse(params)
+    if (!paramsParsed.success) {
+      return NextResponse.json({ error: "Neteisingas žaidimo ID" }, { status: 400 })
+    }
+
     const supabase = await createClient()
     const {
       data: { user },
@@ -56,10 +63,10 @@ export async function POST(
       )
     }
 
-    // Fetch all challenges for this game (teacher has RLS access including answer_hash)
+    // Fetch all challenges for this game (explicitly include answer_hash for server-side copy)
     const { data: sourceChallenges, error: challengesError } = await supabase
       .from("challenges")
-      .select("*")
+      .select("id, game_id, title, description, type, points, answer_hash, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites")
       .eq("game_id", sourceGame.id)
       .order("order_index", { ascending: true })
 

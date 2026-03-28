@@ -57,14 +57,12 @@ export async function GET(request: Request) {
   )
 }
 
-// Use x-forwarded-host for production (behind proxy/CDN), fallback to origin
-function getRedirectOrigin(request: Request, fallbackOrigin: string): string {
-  const forwardedHost = request.headers.get("x-forwarded-host")
-  const forwardedProto = request.headers.get("x-forwarded-proto") || "https"
-
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`
+// Use NEXT_PUBLIC_APP_URL if set, otherwise fallback to request origin.
+// Never trust x-forwarded-host blindly to prevent open redirect attacks.
+function getRedirectOrigin(_request: Request, fallbackOrigin: string): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (appUrl) {
+    return appUrl.replace(/\/+$/, "")
   }
-
   return fallbackOrigin
 }

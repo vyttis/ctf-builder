@@ -41,7 +41,12 @@ export async function PATCH(request: Request) {
     const supabase = await createClient()
     await requireRole(supabase, "super_admin")
 
-    const body = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+    }
     const parsed = updateRoleSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json(

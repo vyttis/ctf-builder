@@ -12,7 +12,12 @@ const reflectionSchema = z.object({
 // POST /api/reflections — player submits post-game reflection
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+    }
     const parsed = reflectionSchema.safeParse(body)
 
     if (!parsed.success) {

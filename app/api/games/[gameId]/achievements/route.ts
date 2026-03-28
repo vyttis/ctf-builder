@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { ACHIEVEMENT_CONFIG, type AchievementType } from "@/lib/game/achievements"
+
+const paramsSchema = z.object({ gameId: z.string().uuid() })
 
 // GET /api/games/[gameId]/achievements — achievement distribution for teacher
 export async function GET(
@@ -8,6 +11,11 @@ export async function GET(
   { params }: { params: { gameId: string } }
 ) {
   try {
+    const paramsParsed = paramsSchema.safeParse(params)
+    if (!paramsParsed.success) {
+      return NextResponse.json({ error: "Neteisingas žaidimo ID" }, { status: 400 })
+    }
+
     const supabase = await createClient()
     const {
       data: { user },

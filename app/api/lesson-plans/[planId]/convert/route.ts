@@ -1,7 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { generateGameCode } from "@/lib/game/code-generator"
 import { hashAnswer } from "@/lib/game/answer-hasher"
+
+const paramsSchema = z.object({ planId: z.string().uuid() })
 
 /**
  * Convert a saved lesson plan into a student activity (game).
@@ -12,6 +15,11 @@ export async function POST(
   { params }: { params: { planId: string } }
 ) {
   try {
+    const paramsParsed = paramsSchema.safeParse(params)
+    if (!paramsParsed.success) {
+      return NextResponse.json({ error: "Neteisingas plano ID" }, { status: 400 })
+    }
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 

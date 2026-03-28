@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { z } from "zod"
+
+const paramsSchema = z.object({ gameId: z.string().uuid() })
 
 // GET /api/games/[gameId]/analytics — get game statistics
 export async function GET(
@@ -7,6 +10,11 @@ export async function GET(
   { params }: { params: { gameId: string } }
 ) {
   try {
+    const paramsParsed = paramsSchema.safeParse(params)
+    if (!paramsParsed.success) {
+      return NextResponse.json({ error: "Neteisingas žaidimo ID" }, { status: 400 })
+    }
+
     const supabase = await createClient()
     const {
       data: { user },

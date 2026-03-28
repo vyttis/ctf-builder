@@ -18,7 +18,12 @@ export async function POST(request: Request) {
     const supabase = await createClient()
     await requireRole(supabase, "admin", "super_admin")
 
-    const body = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: "Netinkamas užklausos formatas" }, { status: 400 })
+    }
     const parsed = inviteSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json(

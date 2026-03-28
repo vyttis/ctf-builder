@@ -5,7 +5,7 @@ import { z } from "zod"
 
 // Sanitize search input for PostgREST ilike filter
 function sanitizeSearch(input: string): string {
-  return input.replace(/[%_\\,().]/g, "")
+  return input.replace(/[%_\\,().:;!@#$^&*=<>{}[\]|`~"'/]/g, "").trim()
 }
 
 // GET /api/library — list approved library items (+ own items for teachers)
@@ -44,9 +44,12 @@ export async function GET(request: Request) {
       .select("*, profiles!library_items_published_by_fkey(full_name, email)", { count: "exact" })
       .order("created_at", { ascending: false })
 
-    // Filter by status (admins can see pending_review)
+    // Filter by status; default to approved for non-admin users
     if (status) {
       query = query.eq("status", status)
+    } else {
+      // Non-admins only see approved items + their own items
+      query = query.or(`status.eq.approved,published_by.eq.${user.id}`)
     }
 
     if (subject) {

@@ -91,11 +91,15 @@ export async function POST(
       }
     }
 
-    // Increment clone count (best effort)
-    await supabase
-      .from("library_items")
-      .update({ clone_count: (item.clone_count || 0) + 1 })
-      .eq("id", params.itemId)
+    // Increment clone count (best effort, non-blocking)
+    const { error: rpcError } = await supabase.rpc("increment_clone_count", { item_id: params.itemId })
+    if (rpcError) {
+      // Fallback: non-atomic increment if RPC not available
+      await supabase
+        .from("library_items")
+        .update({ clone_count: (item.clone_count || 0) + 1 })
+        .eq("id", params.itemId)
+    }
 
     return NextResponse.json(
       { game_id: game.id, game_code: game.game_code },

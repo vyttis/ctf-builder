@@ -3,6 +3,8 @@ import { hashAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+const paramsSchema = z.object({ challengeId: z.string().uuid() })
+
 // Safe columns to return (never include answer_hash)
 const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites, created_at, updated_at"
 
@@ -56,6 +58,11 @@ export async function PATCH(
   request: Request,
   { params }: { params: { challengeId: string } }
 ) {
+  const paramsParsed = paramsSchema.safeParse(params)
+  if (!paramsParsed.success) {
+    return NextResponse.json({ error: "Neteisingas užduoties ID" }, { status: 400 })
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -118,6 +125,11 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { challengeId: string } }
 ) {
+  const paramsParsed = paramsSchema.safeParse(params)
+  if (!paramsParsed.success) {
+    return NextResponse.json({ error: "Neteisingas užduoties ID" }, { status: 400 })
+  }
+
   const supabase = await createClient()
   const {
     data: { user },

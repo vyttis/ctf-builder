@@ -19,7 +19,11 @@ export interface UserProfile {
  * Get current user's role from profiles table
  */
 export async function getUserRole(supabase: SupabaseClient): Promise<UserRole> {
-  const { data } = await supabase.rpc("get_my_role")
+  const { data, error } = await supabase.rpc("get_my_role")
+  if (error) {
+    console.error("getUserRole RPC error:", error.message)
+    throw new Error("Nepavyko nustatyti vartotojo rolės")
+  }
   return (data as UserRole) || "teacher"
 }
 
