@@ -30,12 +30,22 @@ const rows = [
   {
     label: "Stebėjimas",
     quiz: "Rezultatai po žaidimo",
-    platform: "Progresas realiu laiku pamokos metu",
+    platform: "Valdymo centras, pranešimai ir progresas realiu laiku",
   },
   {
     label: "Kūrimas",
     quiz: "Rankinis klausimų vedimas",
-    platform: "DI padėjėjas pasiūlo pagal temą",
+    platform: "DI asistentas sukuria visą žaidimą pagal temą",
+  },
+  {
+    label: "Pamokų planai",
+    quiz: "Nėra",
+    platform: "DI generuoja pamokų planus su etapais ir refleksija",
+  },
+  {
+    label: "Dalinimasis",
+    quiz: "Kiekvienas kuria nuo nulio",
+    platform: "Biblioteka su gatavais žaidimais — klonuok ir pritaikyk",
   },
 ]
 

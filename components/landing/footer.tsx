@@ -51,6 +51,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/library"
+                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                >
+                  Žaidimų biblioteka
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/auth/login"
                   className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
                 >

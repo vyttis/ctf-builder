@@ -5,13 +5,16 @@ import { SectionHeader } from "./section-header"
 import {
   Settings,
   Users,
-  BarChart3,
   Puzzle,
   Star,
   CheckCircle2,
   Trophy,
   Smartphone,
   Monitor,
+  Megaphone,
+  Pause,
+  Crown,
+  Lock,
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
@@ -19,6 +22,14 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 function TeacherViewMock() {
   return (
     <div className="w-full bg-gradient-to-br from-[#F6F8FA] to-white p-4 space-y-3">
+      {/* Announcement banner */}
+      <div className="flex items-center gap-1.5 rounded-lg bg-primary/8 border border-primary/15 px-2.5 py-1.5">
+        <Megaphone className="h-3 w-3 text-primary shrink-0" />
+        <span className="text-[9px] text-primary font-medium truncate">
+          Liko 5 minutės! Paskubėkite su paskutine užduotimi.
+        </span>
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
@@ -29,6 +40,12 @@ function TeacherViewMock() {
           </span>
         </div>
         <div className="flex gap-1">
+          <div className="h-5 px-2 bg-accent/8 rounded flex items-center gap-1 cursor-default">
+            <Pause className="h-2.5 w-2.5 text-accent" />
+            <span className="text-[9px] text-accent font-medium">
+              Pristabdyti
+            </span>
+          </div>
           <div className="h-5 px-2 bg-primary/8 rounded flex items-center">
             <span className="text-[9px] text-primary font-medium">
               3 komandos
@@ -40,7 +57,7 @@ function TeacherViewMock() {
         {[
           { label: "Užduotys", value: "8", icon: Puzzle, color: "text-primary" },
           { label: "Komandos", value: "3", icon: Users, color: "text-secondary" },
-          { label: "Atsakymai", value: "18", icon: BarChart3, color: "text-highlight" },
+          { label: "Pasiekimai", value: "5", icon: Trophy, color: "text-highlight" },
         ].map((kpi) => {
           const KIcon = kpi.icon
           return (
@@ -102,29 +119,53 @@ function StudentViewMock() {
           <span className="text-[10px] font-bold text-steam-dark">280 tšk</span>
         </div>
       </div>
+
+      {/* Achievement notification */}
+      <div className="flex items-center gap-1.5 rounded-lg bg-highlight/8 border border-highlight/15 px-2.5 py-1.5">
+        <Crown className="h-3 w-3 text-highlight shrink-0" />
+        <span className="text-[9px] text-highlight font-medium">
+          Pasiekimas: Pirmi išsprendėte &bdquo;Jūros ekosistema&ldquo;!
+        </span>
+      </div>
+
       {[
-        { name: "Jūros ekosistema", pts: 100, done: true },
-        { name: "Klimato pokyčiai", pts: 150, done: true },
-        { name: "Energijos šaltiniai", pts: 200, done: false },
+        { name: "Jūros ekosistema", pts: 100, done: true, difficulty: "Lengva", diffColor: "text-primary bg-primary/8", achievement: true },
+        { name: "Klimato pokyčiai", pts: 150, done: true, difficulty: "Vidutinė", diffColor: "text-highlight bg-highlight/8", achievement: false },
+        { name: "Energijos šaltiniai", pts: 200, done: false, difficulty: "Sunki", diffColor: "text-accent bg-accent/8", locked: true },
       ].map((ch) => (
         <div
           key={ch.name}
           className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-border/30 shadow-sm"
         >
           <div
-            className={`w-6 h-6 rounded-full flex items-center justify-center ${ch.done ? "bg-primary/10" : "bg-muted"}`}
+            className={`w-6 h-6 rounded-full flex items-center justify-center ${
+              ch.done ? "bg-primary/10" : ch.locked ? "bg-muted" : "bg-muted"
+            }`}
           >
             {ch.done ? (
               <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+            ) : ch.locked ? (
+              <Lock className="h-3 w-3 text-muted-foreground/40" />
             ) : (
               <Puzzle className="h-3 w-3 text-muted-foreground/40" />
             )}
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="text-[10px] font-medium text-steam-dark">
               {ch.name}
             </div>
+            {ch.locked && (
+              <div className="text-[8px] text-muted-foreground/50 mt-0.5">
+                Reikia išspręsti ankstesnę
+              </div>
+            )}
           </div>
+          <span className={`text-[8px] font-medium ${ch.diffColor} px-1.5 py-0.5 rounded`}>
+            {ch.difficulty}
+          </span>
+          {ch.achievement && (
+            <Crown className="h-3 w-3 text-highlight shrink-0" />
+          )}
           <div className="flex items-center gap-0.5">
             <Trophy className="h-3 w-3 text-highlight/50" />
             <span className="text-[9px] text-muted-foreground">{ch.pts}</span>
@@ -154,7 +195,7 @@ export function ClassroomExperienceSection() {
     <SectionWrapper background="muted">
       <SectionHeader
         title="Kaip tai atrodo pamokoje"
-        subtitle="Mokiniai sprendžia, analizuoja ir diskutuoja komandose — o mokytojas mato visą eigą realiu laiku."
+        subtitle="Mokiniai sprendžia, analizuoja ir diskutuoja komandose — o mokytojas valdo eigą, siunčia pranešimus ir mato viską realiu laiku."
       />
 
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
@@ -190,7 +231,7 @@ export function ClassroomExperienceSection() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-4 text-center font-medium">
-            Realiu laiku matote komandų progresą ir rezultatus
+            Valdymo centras su pranešimais, pauze ir progreso stebėjimu
           </p>
         </motion.div>
 
@@ -226,7 +267,7 @@ export function ClassroomExperienceSection() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-4 text-center font-medium">
-            Mokiniai sprendžia užduotis ir stebi savo progresą
+            Pasiekimai, sudėtingumo lygiai ir užduočių priklausomybės
           </p>
         </motion.div>
       </div>

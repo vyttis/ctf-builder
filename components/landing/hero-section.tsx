@@ -7,8 +7,8 @@ import {
   ArrowDown,
   Building2,
   GraduationCap,
-  Handshake,
   Mail,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -33,8 +33,8 @@ const trustItems = [
     text: "Klaipėdos universiteto STEAM centras",
   },
   {
-    icon: Handshake,
-    text: "Skirta partnerių mokykloms",
+    icon: Sparkles,
+    text: "DI padeda kurti turinį greičiau",
   },
   {
     icon: GraduationCap,
@@ -119,11 +119,11 @@ export function HeroSection() {
                 variants={fadeUp}
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-extrabold text-white leading-[1.08] tracking-tight"
               >
-                Pamokos, kurios{" "}
+                Interaktyvios pamokos{" "}
                 <br className="hidden sm:block" />
-                įtraukia{" "}
+                su{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-steam-cyan">
-                  visą klasę
+                  DI pagalbininku
                 </span>
               </motion.h1>
 
@@ -134,10 +134,10 @@ export function HeroSection() {
                 variants={fadeUp}
                 className="text-base md:text-lg text-white/50 mt-5 leading-relaxed max-w-[520px]"
               >
-                KU STEAM centro komanda sukūrė įrankį, kuriuo mokytojai
-                parengia interaktyvias pamokas su komandinėmis užduotimis,
-                iššūkiais ir diskusijomis. Prieiga suteikiama partnerių mokyklų
-                mokytojams po mokymų ir praktinių veiklų.
+                Dirbtinis intelektas padeda sukurti žaidimus ir pamokų planus
+                per kelias minutes — jūs tik peržiūrite ir patvirtinate.
+                Stebėkite komandų progresą realiu laiku, dalinkitės turiniu
+                per biblioteką ir naudokite pakartotinai.
               </motion.p>
 
               {/* CTAs */}
@@ -249,12 +249,12 @@ export function HeroSection() {
                   className="absolute -top-4 -right-4 bg-white rounded-xl shadow-xl shadow-black/15 px-4 py-3 border border-border/30"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <GraduationCap className="h-4 w-4 text-primary" />
+                    <div className="w-8 h-8 rounded-lg bg-highlight/10 flex items-center justify-center">
+                      <Sparkles className="h-4 w-4 text-highlight" />
                     </div>
                     <div>
-                      <div className="text-[11px] font-bold text-steam-dark leading-none">3 komandos</div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5">sprendžia užduotis</div>
+                      <div className="text-[11px] font-bold text-steam-dark leading-none">DI sukūrė per 2 min</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">8 užduotys su atsakymais</div>
                     </div>
                   </div>
                 </motion.div>

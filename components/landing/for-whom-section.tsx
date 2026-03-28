@@ -20,7 +20,7 @@ const audiences = [
   {
     icon: BookOpen,
     title: "Įvairioms veikloms",
-    text: "Veikia tiek atskirų dalykų pamokose, tiek integruotose STEAM veiklose, projektiniuose darbuose ar neformaliajame ugdyme.",
+    text: "Veikia tiek atskirų dalykų pamokose, tiek integruotose STEAM veiklose, pamokų planuose, projektiniuose darbuose ar neformaliajame ugdyme.",
   },
 ]
 

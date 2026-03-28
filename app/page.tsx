@@ -2,9 +2,10 @@ import {
   HeroSection,
   ForWhomSection,
   WhatYouCanDoSection,
+  AiShowcaseSection,
   HowItWorksSection,
   ClassroomExperienceSection,
-  UseCasesSection,
+  LibrarySection,
   TeacherValueSection,
   DifferenceSection,
   AccessSection,
@@ -19,9 +20,10 @@ export default function LandingPage() {
       <HeroSection />
       <ForWhomSection />
       <WhatYouCanDoSection />
+      <AiShowcaseSection />
       <HowItWorksSection />
       <ClassroomExperienceSection />
-      <UseCasesSection />
+      <LibrarySection />
       <TeacherValueSection />
       <DifferenceSection />
       <AccessSection />

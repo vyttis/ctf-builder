@@ -11,16 +11,16 @@ const benefits = [
     icon: Clock,
     title: "Mažiau laiko pasiruošimui",
     description:
-      "Veikla sukuriama greičiau, o pasiruošimas interaktyviai pamokai užima mažiau laiko nei įprasta.",
+      "DI asistentas sukuria žaidimą per kelias minutes — belieka peržiūrėti ir patvirtinti. Pamokų planai taip pat generuojami automatiškai.",
     color: "text-primary",
     bg: "bg-primary/8",
     number: "01",
   },
   {
     icon: Layers,
-    title: "Daugiau nei tik klausimai",
+    title: "Lankstūs veiklos formatai",
     description:
-      "Galima derinti skirtingus užduočių tipus, veiklos etapus ir komandines užduotis — ne vien klausimų rinkinius.",
+      "Teksto, skaičiaus ir pasirinkimo užduotys, žemėlapiai, paveikslėliai, progresinės užuominos ir skirtingi sudėtingumo lygiai.",
     color: "text-secondary",
     bg: "bg-secondary/8",
     number: "02",
@@ -29,7 +29,7 @@ const benefits = [
     icon: TrendingUp,
     title: "Aktyvesni mokiniai",
     description:
-      "Komandos, iššūkiai ir matoma veiklos eiga skatina mokinius dalyvauti, o ne tik klausytis.",
+      "Komandos, iššūkiai, pasiekimų ženkliukai ir matoma veiklos eiga skatina mokinius aktyviai dalyvauti.",
     color: "text-highlight",
     bg: "bg-highlight/8",
     number: "03",
@@ -38,7 +38,7 @@ const benefits = [
     icon: Eye,
     title: "Visas procesas kaip ant delno",
     description:
-      "Matomas ne tik galutinis rezultatas, bet ir kiekvienas žingsnis — kur sekėsi, kur strigo.",
+      "Matomas ne tik galutinis rezultatas, bet ir kiekvienas žingsnis. Po veiklos — išsami analitika ir mokinių refleksijos.",
     color: "text-accent",
     bg: "bg-accent/8",
     number: "04",

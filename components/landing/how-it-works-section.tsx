@@ -21,7 +21,7 @@ const steps = [
     icon: Sparkles,
     title: "Užduočių kūrimas",
     description:
-      "Turinys kuriamas rankiniu būdu arba pasitelkiant DI pagalbą — abu variantai dera tarpusavyje.",
+      "DI asistentas pasiūlo visą žaidimo struktūrą — užduotis, atsakymus ir užuominas. Arba kurkite rankiniu būdu.",
     color: "bg-highlight/10 text-highlight",
     ring: "ring-highlight/20",
   },
@@ -30,7 +30,7 @@ const steps = [
     icon: Layout,
     title: "Pamokos eiga",
     description:
-      "Užduotys sudėliojamos į nuoseklią eigą ir koreguojamos pagal klasės poreikius.",
+      "Užduotys sudėliojamos į linijinę arba laisvą eigą. Galima sukurti ir pilną pamokos planą su etapais.",
     color: "bg-secondary/10 text-secondary",
     ring: "ring-secondary/20",
   },
@@ -39,7 +39,7 @@ const steps = [
     icon: Smartphone,
     title: "Mokiniai jungiasi",
     description:
-      "Per telefonus ar kompiuterius mokiniai jungiasi ir sprendžia užduotis — po vieną arba komandomis.",
+      "Per QR kodą ar nuorodą mokiniai jungiasi ir sprendžia užduotis — po vieną arba komandomis.",
     color: "bg-accent/10 text-accent",
     ring: "ring-accent/20",
   },
@@ -48,7 +48,7 @@ const steps = [
     icon: BarChart3,
     title: "Progresas ir rezultatai",
     description:
-      "Visa eiga ir atsakymai matomi realiu laiku — galima reaguoti iš karto.",
+      "Visa eiga matoma realiu laiku — komandų progresas, pasiekimų ženkliukai ir išsami analitika po veiklos.",
     color: "bg-primary/10 text-primary",
     ring: "ring-primary/20",
   },
