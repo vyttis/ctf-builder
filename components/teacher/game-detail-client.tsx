@@ -8,8 +8,22 @@ import { GameEditDialog } from "./game-edit-dialog"
 import { GameDeleteDialog } from "./game-delete-dialog"
 import { GameDuplicateDialog } from "./game-duplicate-dialog"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import Link from "next/link"
-import { Sparkles, Edit3, Trash2, Copy, BookOpen } from "lucide-react"
+import {
+  MoreHorizontal,
+  Sparkles,
+  Edit3,
+  Trash2,
+  Copy,
+  BookOpen,
+} from "lucide-react"
 
 interface GameDetailClientProps {
   game: {
@@ -37,59 +51,50 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
 
   return (
     <>
-      {/* Action buttons */}
-      <div className="flex items-center gap-2">
-        <Button
-          onClick={() => setAiSheetOpen(true)}
-          variant="outline"
-          size="sm"
-          className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
-        >
-          <Sparkles className="h-4 w-4" />
-          DI Padėjėjas
-        </Button>
-        <Link href={`/games/${game.id}/lesson`}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5"
+            className="gap-2 border-border/50"
           >
-            <BookOpen className="h-4 w-4" />
-            Sukurti pamoką
+            <MoreHorizontal className="h-4 w-4" />
+            Daugiau
           </Button>
-        </Link>
-        <Button
-          onClick={() => setDuplicateDialogOpen(true)}
-          variant="outline"
-          size="sm"
-          className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
-        >
-          <Copy className="h-4 w-4" />
-          Dubliuoti
-        </Button>
-        {game.status === "draft" && (
-          <>
-            <Button
-              onClick={() => setEditDialogOpen(true)}
-              variant="outline"
-              size="sm"
-              className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5"
-            >
-              <Edit3 className="h-4 w-4" />
-              Redaguoti
-            </Button>
-            <Button
-              onClick={() => setDeleteDialogOpen(true)}
-              variant="outline"
-              size="sm"
-              className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
-            >
-              <Trash2 className="h-4 w-4" />
-              Ištrinti
-            </Button>
-          </>
-        )}
-      </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={() => setAiSheetOpen(true)}>
+            <Sparkles className="h-4 w-4 text-highlight" />
+            DI Padėjėjas
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={`/games/${game.id}/lesson`}>
+              <BookOpen className="h-4 w-4 text-secondary" />
+              Sukurti pamoką
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setDuplicateDialogOpen(true)}>
+            <Copy className="h-4 w-4 text-primary" />
+            Dubliuoti
+          </DropdownMenuItem>
+          {game.status === "draft" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                <Edit3 className="h-4 w-4 text-secondary" />
+                Redaguoti
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setDeleteDialogOpen(true)}
+                className="text-accent focus:text-accent"
+              >
+                <Trash2 className="h-4 w-4" />
+                Ištrinti
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* DI Assistant Panel */}
       <AiAssistantPanel

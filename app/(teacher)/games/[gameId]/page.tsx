@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PublishDialog } from "@/components/teacher/publish-dialog"
-import { LiveActivityFeed } from "@/components/teacher/live-activity-feed"
-import { LiveControlCenter } from "@/components/teacher/live-control-center"
 import {
   ArrowLeft,
   Puzzle,
@@ -19,6 +17,8 @@ import {
   Trophy,
   BarChart3,
   Sparkles,
+  Radio,
+  ArrowRight,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -108,6 +108,37 @@ export default async function GameDetailPage({
         </div>
       </div>
 
+      {/* Active game banner */}
+      {(game.status === "active" || game.status === "paused") && (
+        <Link href={`/games/${game.id}/live`}>
+          <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-5 py-4 transition-colors hover:bg-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Radio className="h-5 w-5 text-primary" />
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+              </div>
+              <div>
+                <p className="font-semibold text-steam-dark">
+                  Žaidimas vyksta!
+                  {game.status === "paused" && (
+                    <Badge variant="outline" className="ml-2 text-xs border-highlight/40 text-highlight">
+                      Pristabdytas
+                    </Badge>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Stebėkite komandų progresą ir valdykite žaidimą realiu laiku
+                </p>
+              </div>
+            </div>
+            <Button size="sm" className="bg-primary hover:bg-primary/90 text-white gap-1.5 shrink-0">
+              Stebėti
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </Link>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left column - Main content */}
         <div className="lg:col-span-2 space-y-6">
@@ -153,23 +184,6 @@ export default async function GameDetailPage({
               </CardContent>
             </Card>
           </div>
-
-          {/* Live control center — visible when game is active or paused */}
-          {(game.status === "active" || game.status === "paused") && (
-            <LiveControlCenter
-              gameId={game.id}
-              gameStatus={game.status}
-              settings={{
-                time_limit_minutes: settings?.time_limit_minutes ?? null,
-                max_teams: settings?.max_teams ?? 50,
-              }}
-            />
-          )}
-
-          {/* Live activity feed — visible when game is active or paused */}
-          {(game.status === "active" || game.status === "paused") && (
-            <LiveActivityFeed gameId={game.id} />
-          )}
 
           {/* Challenges section */}
           <Card className="border-border/50 bg-white">

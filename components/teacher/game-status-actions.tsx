@@ -65,7 +65,14 @@ export function GameStatusActions({
       })
 
       setShowActivateDialog(false)
-      router.refresh()
+
+      if (newStatus === "active") {
+        router.push(`/games/${gameId}/live`)
+      } else if (newStatus === "finished") {
+        router.push(`/games/${gameId}/analytics`)
+      } else {
+        router.refresh()
+      }
     } catch (error: unknown) {
       toast({
         title: "Klaida",
