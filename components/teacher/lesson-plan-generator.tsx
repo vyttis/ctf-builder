@@ -74,7 +74,7 @@ export function LessonPlanGenerator() {
     setLearningGoal(t.learning_goal)
     toast({
       title: "Pavyzdys įkeltas",
-      description: "Peržiūrėkite parametrus ir spauskite „Generuoti".",
+      description: 'Peržiūrėkite parametrus ir spauskite „Generuoti".',
     })
   }, [searchParams, toast])
 
@@ -397,10 +397,7 @@ export function LessonPlanGenerator() {
                     <div>
                       <p className="font-medium">Šie dalykai neturi bendrų klasių</p>
                       <p className="mt-1 text-xs opacity-80">
-                        „{getSubjectLabel(subject)}" ({getGradesForSubject(subject)[0]}–
-                        {getGradesForSubject(subject).slice(-1)[0]} kl.) ir „{getSubjectLabel(secondarySubject)}" (
-                        {getGradesForSubject(secondarySubject)[0]}–
-                        {getGradesForSubject(secondarySubject).slice(-1)[0]} kl.) nesutampa. Pasirinkite kitą antrąjį dalyką.
+                        {`„${getSubjectLabel(subject)}" (${getGradesForSubject(subject)[0]}–${getGradesForSubject(subject).slice(-1)[0]} kl.) ir „${getSubjectLabel(secondarySubject)}" (${getGradesForSubject(secondarySubject)[0]}–${getGradesForSubject(secondarySubject).slice(-1)[0]} kl.) nesutampa. Pasirinkite kitą antrąjį dalyką.`}
                       </p>
                     </div>
                   </div>

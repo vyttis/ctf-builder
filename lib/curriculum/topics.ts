@@ -198,6 +198,9 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "saltasis-karas", label: "Šaltasis karas", subtopics: ["NATO ir Varšuvos paktas", "Branduolinis ginklavimasis", "Kosmoso lenktynės"] },
       { id: "sovietine-okupacija", label: "Sovietinė okupacija", subtopics: ["Trėmimai", "Partizaninis judėjimas", "Sąjūdis"] },
       { id: "nepriklausomybe", label: "Nepriklausomybės atkūrimas", subtopics: ["Kovo 11-oji", "Sausio 13-oji", "Eurointegracijos kelias"] },
+      { id: "siuolaikinis-pasaulis", label: "Šiuolaikinis pasaulis", subtopics: ["Globalizacija", "ES", "Terorizmas", "Technologijų revoliucija"] },
+    ],
+  },
   daile: {
     "1-4": [
       { id: "dl-piesimas-1-4", label: "Piešimas", subtopics: ["Linija ir kontūras", "Formos", "Spalvos", "Natiurmortas"] },
