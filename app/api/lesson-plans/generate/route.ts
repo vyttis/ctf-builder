@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 import { buildLessonPlanSystemPrompt, buildLessonPlanUserMessage } from "@/lib/ai/lesson-plan-prompt"
+import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
 import { z } from "zod"
 
 // Rate limiter
@@ -85,6 +86,22 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message || "Neteisingi duomenys" },
+        { status: 400 }
+      )
+    }
+
+    const validGrades = parsed.data.secondary_subject
+      ? getGradesIntersection(parsed.data.subject, parsed.data.secondary_subject)
+      : getGradesForSubject(parsed.data.subject)
+    if (validGrades.length === 0) {
+      return NextResponse.json(
+        { error: "Šie dalykai neturi bendrų klasių. Pasirinkite kitą derinį." },
+        { status: 400 }
+      )
+    }
+    if (!validGrades.includes(parsed.data.grade)) {
+      return NextResponse.json(
+        { error: `Klasė ${parsed.data.grade} netinka šiam dalykų deriniui.` },
         { status: 400 }
       )
     }
