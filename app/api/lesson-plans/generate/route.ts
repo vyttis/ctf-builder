@@ -10,16 +10,18 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT = 5
 const RATE_WINDOW = 60_000
 
-function checkRateLimit(userId: string): boolean {
+function checkRateLimit(userId: string): { allowed: boolean; retryAfterSec: number } {
   const now = Date.now()
   const entry = rateLimitMap.get(userId)
   if (!entry || now > entry.resetAt) {
     rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW })
-    return true
+    return { allowed: true, retryAfterSec: 0 }
   }
-  if (entry.count >= RATE_LIMIT) return false
+  if (entry.count >= RATE_LIMIT) {
+    return { allowed: false, retryAfterSec: Math.ceil((entry.resetAt - now) / 1000) }
+  }
   entry.count++
-  return true
+  return { allowed: true, retryAfterSec: 0 }
 }
 
 const requestSchema = z.object({
@@ -68,10 +70,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
     }
 
-    if (!checkRateLimit(user.id)) {
+    const rate = checkRateLimit(user.id)
+    if (!rate.allowed) {
       return NextResponse.json(
-        { error: "Per daug užklausų. Palaukite minutę." },
-        { status: 429 }
+        { error: `Pasiektas DI užklausų limitas (${RATE_LIMIT}/min). Palaukite ${rate.retryAfterSec} s ir bandykite vėl.` },
+        { status: 429, headers: { "Retry-After": rate.retryAfterSec.toString() } }
       )
     }
 

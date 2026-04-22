@@ -119,6 +119,9 @@ export function LessonPlanGenerator() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => null)
+        if (res.status === 429) {
+          throw new Error(err?.error || "Per daug užklausų. Palaukite minutę ir bandykite vėl.")
+        }
         throw new Error(err?.error || "Generavimas nepavyko")
       }
 
