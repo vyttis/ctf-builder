@@ -404,6 +404,40 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "fl-pazinimas", label: "Pažinimo teorija", subtopics: ["Racionalumas", "Empirizmas", "Tiesos samprata", "Abejonė"] },
     ],
   },
+  pilietiskumas: {
+    "9-10": [
+      { id: "pl-valstybe", label: "Valstybė ir pilietybė", subtopics: ["Demokratija", "Konstitucija", "Piliečio teisės ir pareigos", "LR Seimas"] },
+      { id: "pl-teise", label: "Teisės pagrindai", subtopics: ["Teisės šakos", "Teismai", "Žmogaus teisės", "Atsakomybė"] },
+      { id: "pl-es", label: "Europos Sąjunga", subtopics: ["ES institucijos", "Lietuva ES", "Euras", "Laisvas judėjimas"] },
+      { id: "pl-dalyvavimas", label: "Pilietinis dalyvavimas", subtopics: ["Rinkimai", "Referendumas", "NVO", "Savivalda"] },
+      { id: "pl-aktualijos", label: "Visuomenės aktualijos", subtopics: ["Žiniasklaida", "Kritinis mąstymas", "Dezinformacija", "Diskusija"] },
+    ],
+  },
+  ekonomika: {
+    "9-10": [
+      { id: "ek-pagrindai-9-10", label: "Ekonomikos pagrindai", subtopics: ["Poreikiai ir ištekliai", "Pasiūla ir paklausa", "Rinkos kainos"] },
+      { id: "ek-asmenine", label: "Asmeninės finansai", subtopics: ["Biudžetas", "Taupymas", "Kreditas", "Draudimas"] },
+      { id: "ek-verslumas-9-10", label: "Verslumo pagrindai", subtopics: ["Verslo idėja", "Verslo planas", "Rinkodara"] },
+    ],
+    "11-12": [
+      { id: "ek-makro", label: "Makroekonomika", subtopics: ["BVP", "Infliacija", "Nedarbas", "Monetarinė politika"] },
+      { id: "ek-mikro", label: "Mikroekonomika", subtopics: ["Rinkos struktūros", "Konkurencija", "Monopolija", "Išorės veiksniai"] },
+      { id: "ek-globali", label: "Globali ekonomika", subtopics: ["Tarptautinė prekyba", "Valiutos kursai", "Globalizacija", "ES ekonomika"] },
+      { id: "ek-verslumas-11-12", label: "Verslo kūrimas", subtopics: ["Startuoliai", "Finansavimas", "Mokesčiai", "Verslo etika"] },
+      { id: "ek-investicijos", label: "Investavimas ir finansų rinkos", subtopics: ["Akcijos", "Obligacijos", "Fondai", "Rizikos valdymas"] },
+    ],
+  },
+  psichologija: {
+    "11-12": [
+      { id: "ps-ivadas", label: "Psichologijos įvadas", subtopics: ["Psichologijos šakos", "Tyrimo metodai", "Žymūs psichologai"] },
+      { id: "ps-asmenybe", label: "Asmenybės psichologija", subtopics: ["Asmenybės teorijos", "Charakteris", "Temperamento tipai"] },
+      { id: "ps-pazinimas", label: "Pažintiniai procesai", subtopics: ["Atmintis", "Dėmesys", "Mąstymas", "Vaizduotė"] },
+      { id: "ps-emocijos", label: "Emocijos ir motyvacija", subtopics: ["Emocijų teorijos", "Stresas", "Motyvacijos tipai", "Savireguliacija"] },
+      { id: "ps-socialine", label: "Socialinė psichologija", subtopics: ["Grupės dinamika", "Lyderystė", "Įtaka", "Konfliktai"] },
+      { id: "ps-raida", label: "Raidos psichologija", subtopics: ["Vaikystė", "Paauglystė", "Suaugusiojo tarpsnis", "Senatvė"] },
+      { id: "ps-sveikata", label: "Psichikos sveikata", subtopics: ["Psichikos sutrikimai", "Pagalba", "Savirūpa", "Atsparumas"] },
+    ],
+  },
 }
 
 function getGradeBand(grade: number): string {
