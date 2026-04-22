@@ -9,18 +9,18 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 const benefits = [
   {
     icon: Clock,
-    title: "Mažiau laiko pasiruošimui",
+    title: "Mažiau pasiruošimo — daugiau pamokos",
     description:
-      "Veikla sukuriama greičiau, o pasiruošimas interaktyviai pamokai užima mažiau laiko nei įprasta.",
+      "Interaktyvi veikla parengiama per kelias minutes, o ne valandas. DI padeda ten, kur labiausiai užtrunka.",
     color: "text-primary",
     bg: "bg-primary/8",
     number: "01",
   },
   {
     icon: Layers,
-    title: "Daugiau nei tik klausimai",
+    title: "Platesnė nei tik klausimynai",
     description:
-      "Galima derinti skirtingus užduočių tipus, veiklos etapus ir komandines užduotis — ne vien klausimų rinkinius.",
+      "Derinkite skirtingus užduočių tipus, veiklos etapus ir komandinį darbą vienoje pamokoje — pagal savo scenarijų.",
     color: "text-secondary",
     bg: "bg-secondary/8",
     number: "02",
@@ -29,16 +29,16 @@ const benefits = [
     icon: TrendingUp,
     title: "Aktyvesni mokiniai",
     description:
-      "Komandos, iššūkiai ir matoma veiklos eiga skatina mokinius dalyvauti, o ne tik klausytis.",
+      "Komandinis darbas, iššūkiai ir matoma pažanga pamokos metu įtraukia mokinius — jie dalyvauja, o ne tik klausosi.",
     color: "text-highlight",
     bg: "bg-highlight/8",
     number: "03",
   },
   {
     icon: Eye,
-    title: "Visas procesas kaip ant delno",
+    title: "Visa eiga — kaip ant delno",
     description:
-      "Matomas ne tik galutinis rezultatas, bet ir kiekvienas žingsnis — kur sekėsi, kur strigo.",
+      "Matote ne tik galutinį rezultatą, bet ir kiekvieną žingsnį: kur sekėsi, kur užstrigo, ką reikia pakartoti.",
     color: "text-accent",
     bg: "bg-accent/8",
     number: "04",

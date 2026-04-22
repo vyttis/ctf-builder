@@ -61,11 +61,11 @@ export function FinalCtaSection() {
 
             <div className="relative">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                Norite sužinoti daugiau?
+                Pasiruošę pagyvinti pamokas?
               </h2>
-              <p className="text-white/50 text-[15px] md:text-base mb-8 max-w-lg mx-auto leading-relaxed">
-                Partnerystė, mokymai ar tiesiog klausimai — STEAM centras
-                mielai padės.
+              <p className="text-white/55 text-[15px] md:text-base mb-8 max-w-lg mx-auto leading-relaxed">
+                Dėl partnerystės, mokymų ar bet kokių klausimų — parašykite STEAM metodiniam centrui.
+                Atsakysime per 1–2 darbo dienas.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

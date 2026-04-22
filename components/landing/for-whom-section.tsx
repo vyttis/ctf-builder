@@ -10,17 +10,17 @@ const audiences = [
   {
     icon: Building2,
     title: "Partnerių mokykloms",
-    text: "Naudojasi Klaipėdos universiteto STEAM centro partnerių mokyklų mokytojai.",
+    text: "Įrankiu naudojasi mokytojai iš Klaipėdos universiteto STEAM centro partnerių mokyklų tinklo.",
   },
   {
     icon: Users,
-    title: "Aktyviems mokytojams",
-    text: "Tinka tiems, kurie ieško aktyvesnių, įtraukesnių ir šiuolaikiškesnių darbo būdų pamokoje.",
+    title: "Šiuolaikiškiems mokytojams",
+    text: "Skirta tiems, kurie ieško įtraukesnių darbo būdų ir nori, kad mokiniai pamokoje mąstytų, o ne tik klausytųsi.",
   },
   {
     icon: BookOpen,
     title: "Įvairioms veikloms",
-    text: "Veikia tiek atskirų dalykų pamokose, tiek integruotose STEAM veiklose, projektiniuose darbuose ar neformaliajame ugdyme.",
+    text: "Tinka atskirų dalykų pamokoms, integruotoms STEAM veikloms, projektiniam darbui ir neformaliajam ugdymui.",
   },
 ]
 

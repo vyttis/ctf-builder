@@ -21,7 +21,7 @@ const steps = [
     icon: Sparkles,
     title: "Užduočių kūrimas",
     description:
-      "Turinys kuriamas rankiniu būdu arba pasitelkiant DI pagalbą — abu variantai dera tarpusavyje.",
+      "Rašykite patys arba pasitelkite dirbtinio intelekto pagalbą — abu būdus galima derinti.",
     color: "bg-highlight/10 text-highlight",
     ring: "ring-highlight/20",
   },
@@ -39,7 +39,7 @@ const steps = [
     icon: Smartphone,
     title: "Mokiniai jungiasi",
     description:
-      "Per telefonus ar kompiuterius mokiniai jungiasi ir sprendžia užduotis — po vieną arba komandomis.",
+      "Telefonu ar kompiuteriu mokiniai prisijungia per kelias sekundes ir dirba poromis, komandomis arba individualiai.",
     color: "bg-accent/10 text-accent",
     ring: "ring-accent/20",
   },

@@ -34,11 +34,11 @@ const trustItems = [
   },
   {
     icon: Handshake,
-    text: "Skirta partnerių mokykloms",
+    text: "Prieiga partnerių mokykloms",
   },
   {
     icon: GraduationCap,
-    text: "Taikoma realiose pamokose",
+    text: "Išbandyta realiose pamokose",
   },
 ]
 
@@ -119,9 +119,9 @@ export function HeroSection() {
                 variants={fadeUp}
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-extrabold text-white leading-[1.08] tracking-tight"
               >
-                Pamokos, kurios{" "}
+                Interaktyvios pamokos,{" "}
                 <br className="hidden sm:block" />
-                įtraukia{" "}
+                kurios įtraukia{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-steam-cyan">
                   visą klasę
                 </span>
@@ -132,12 +132,11 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-base md:text-lg text-white/50 mt-5 leading-relaxed max-w-[520px]"
+                className="text-base md:text-lg text-white/55 mt-5 leading-relaxed max-w-[540px]"
               >
-                KU STEAM centro komanda sukūrė įrankį, kuriuo mokytojai
-                parengia interaktyvias pamokas su komandinėmis užduotimis,
-                iššūkiais ir diskusijomis. Prieiga suteikiama partnerių mokyklų
-                mokytojams po mokymų ir praktinių veiklų.
+                Kurkite pamokas pagal Lietuvos bendrojo ugdymo programą — su
+                komandinėmis užduotimis, iššūkiais, diskusijomis ir integruotomis
+                STEAM veiklomis. Pritaikyta 24 dalykams nuo 1 iki 12 klasės.
               </motion.p>
 
               {/* CTAs */}
@@ -253,8 +252,8 @@ export function HeroSection() {
                       <GraduationCap className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <div className="text-[11px] font-bold text-steam-dark leading-none">3 komandos</div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5">sprendžia užduotis</div>
+                      <div className="text-[11px] font-bold text-steam-dark leading-none">24 dalykai</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">1–12 klasėms</div>
                     </div>
                   </div>
                 </motion.div>

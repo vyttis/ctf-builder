@@ -11,7 +11,7 @@ const useCases = [
     icon: Zap,
     title: "Greitam žinių patikrinimui",
     description:
-      "Greitai patikrinti, ar mokiniai suprato naują temą — kelios minutės ir vaizdas aiškus.",
+      "Per kelias minutes sužinokite, ar klasė suprato naują temą — ir kur vertėtų grįžti.",
     color: "text-primary",
     bg: "bg-primary/8",
   },
@@ -19,7 +19,7 @@ const useCases = [
     icon: Users,
     title: "Komandiniams iššūkiams",
     description:
-      "Paskatinti bendradarbiavimą, diskusiją ir bendrą sprendimų paiešką tarp mokinių.",
+      "Skatinkite bendradarbiavimą, diskusiją ir bendrą sprendimų paiešką — nes kartu dirbti mokiniai mokosi tik taip.",
     color: "text-secondary",
     bg: "bg-secondary/8",
   },
@@ -27,7 +27,7 @@ const useCases = [
     icon: Search,
     title: "Tyrimo veikloms",
     description:
-      "Mokiniai analizuoja informaciją, lygina, ieško paaiškinimų ir pagrindžia savo atsakymus.",
+      "Mokiniai analizuoja, lygina, ieško paaiškinimų ir pagrindžia atsakymus — kaip tikri tyrėjai.",
     color: "text-highlight",
     bg: "bg-highlight/8",
   },
@@ -35,7 +35,7 @@ const useCases = [
     icon: Brain,
     title: "Loginėms užduotims",
     description:
-      "Nuoseklus mąstymas, sprendimas žingsnis po žingsnio ir žinių taikymas praktikoje.",
+      "Nuoseklus mąstymas, sprendimas žingsnis po žingsnio ir teorijos taikymas realiose situacijose.",
     color: "text-accent",
     bg: "bg-accent/8",
   },
@@ -43,7 +43,7 @@ const useCases = [
     icon: Target,
     title: "Integruotoms STEAM pamokoms",
     description:
-      "Viena veikla apjungia kelis dalykus, praktinį taikymą ir problemų sprendimą.",
+      "Sujunkite du dalykus į vieną pamoką — pavyzdžiui, matematiką su biologija ar fiziką su chemija. DI sukurs organiškai susietas užduotis.",
     color: "text-steam-dark",
     bg: "bg-steam-dark/8",
   },

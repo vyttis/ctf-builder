@@ -54,10 +54,9 @@ export function DifferenceSection() {
           className="space-y-2.5"
         >
           <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
-            Daugelis skaitmeninių įrankių leidžia pateikti klausimus ir surinkti
-            atsakymus. Čia tikslas platesnis — padėti mokytojui sukurti visą
-            interaktyvią veiklą su lankščia struktūra, komandų darbu ir
-            skirtingais užduočių tipais.
+            Dauguma skaitmeninių įrankių tiesiog pateikia klausimus ir surenka
+            atsakymus. Mes eisime toliau — padėsime sukurti visavertę pamoką su
+            lanksčia struktūra, komandiniu darbu ir skirtingo tipo užduotimis.
           </p>
         </motion.div>
       </div>
