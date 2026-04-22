@@ -340,6 +340,70 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "fu-specializacija", label: "Sporto šakų specializacija", subtopics: ["Pasirinkta sporto šaka", "Technika", "Strategija"] },
     ],
   },
+  tikyba: {
+    "1-4": [
+      { id: "tk-sventes-1-4", label: "Religinės šventės", subtopics: ["Kalėdos", "Velykos", "Sekminės", "Tradicijos"] },
+      { id: "tk-vertybes-1-4", label: "Vertybės ir santykiai", subtopics: ["Gerumas", "Draugystė", "Šeima", "Meilė artimui"] },
+      { id: "tk-biblija-1-4", label: "Biblijos pasakojimai", subtopics: ["Kūrimo istorija", "Jėzaus gyvenimas", "Palyginimai"] },
+    ],
+    "5-6": [
+      { id: "tk-senasis-testamentas", label: "Senasis Testamentas", subtopics: ["Patriarchai", "Moizės dešimt įsakymų", "Karaliai"] },
+      { id: "tk-naujasis-testamentas", label: "Naujasis Testamentas", subtopics: ["Evangelijos", "Apaštalų darbai", "Laiškai"] },
+      { id: "tk-krikscionybe", label: "Krikščionybės pradžia", subtopics: ["Pirmieji krikščionys", "Bažnyčios formavimasis", "Šventieji"] },
+    ],
+    "7-8": [
+      { id: "tk-religijos", label: "Pasaulio religijos", subtopics: ["Krikščionybė", "Judaizmas", "Islamas", "Budizmas", "Induizmas"] },
+      { id: "tk-etika-7-8", label: "Krikščioniška etika", subtopics: ["Sąžinė", "Atsakomybė", "Atleidimas", "Meilė"] },
+      { id: "tk-lietuvos-baznycia", label: "Lietuvos Bažnyčios istorija", subtopics: ["Krikštas", "Šventieji Lietuvos globėjai", "Pogrindžio Bažnyčia"] },
+    ],
+    "9-10": [
+      { id: "tk-teologija-9-10", label: "Teologijos pagrindai", subtopics: ["Dievas ir žmogus", "Sakramentai", "Malda", "Gailestingumas"] },
+      { id: "tk-moralines", label: "Moralinės dilemos", subtopics: ["Gyvybės šventumas", "Teisingumas", "Taika ir karas"] },
+      { id: "tk-ekumenizmas", label: "Ekumenizmas ir dialogas", subtopics: ["Krikščionių susivienijimas", "Tarpreliginis dialogas"] },
+    ],
+    "11-12": [
+      { id: "tk-bioetika", label: "Bioetika", subtopics: ["Gyvybės pradžia", "Eutanazija", "Genų inžinerija", "Žmogaus orumas"] },
+      { id: "tk-socialinis-mokymas", label: "Socialinis Bažnyčios mokymas", subtopics: ["Darbas ir teisingumas", "Solidarumas", "Bendrasis gėris"] },
+      { id: "tk-tikejimo-paieska", label: "Tikėjimas ir abejonės", subtopics: ["Ateizmas", "Agnostikumas", "Tikėjimo kelias", "Dvasingumas"] },
+    ],
+  },
+  etika: {
+    "1-4": [
+      { id: "et-as-kitas-1-4", label: "Aš ir kiti", subtopics: ["Savęs pažinimas", "Draugystė", "Empatija", "Pagarba"] },
+      { id: "et-vertybes-1-4", label: "Pagrindinės vertybės", subtopics: ["Sąžiningumas", "Gerumas", "Atsakomybė", "Tolerancija"] },
+      { id: "et-taisykles-1-4", label: "Taisyklės ir bendrumas", subtopics: ["Klasės taisyklės", "Bendravimas", "Konfliktų sprendimas"] },
+    ],
+    "5-6": [
+      { id: "et-teisingumas", label: "Teisingumas ir sąžiningumas", subtopics: ["Kas yra teisinga?", "Pažadai", "Melas", "Atsakomybė"] },
+      { id: "et-emocijos", label: "Emocijos ir savivertė", subtopics: ["Jausmų atpažinimas", "Pyktis", "Baimė", "Laimė"] },
+      { id: "et-visuomene-5-6", label: "Gyvenimas visuomenėje", subtopics: ["Bendruomenė", "Pilietinės pareigos", "Gamtos apsauga"] },
+    ],
+    "7-8": [
+      { id: "et-morale", label: "Moralės pagrindai", subtopics: ["Gėris ir blogis", "Moralinės dilemos", "Sąžinė"] },
+      { id: "et-tapatumas", label: "Tapatumas ir skirtumai", subtopics: ["Savęs pažinimas", "Kultūrinis tapatumas", "Įvairovė"] },
+      { id: "et-medijos", label: "Etika ir medijos", subtopics: ["Kritinis mąstymas", "Socialiniai tinklai", "Privatumas"] },
+    ],
+    "9-10": [
+      { id: "et-filosofija-9-10", label: "Etinės teorijos", subtopics: ["Utilitarizmas", "Deontologija", "Dorybių etika"] },
+      { id: "et-dilemos", label: "Šiuolaikinės etinės dilemos", subtopics: ["Aplinkosauga", "Gyvybės klausimai", "Technologijų etika"] },
+      { id: "et-zmogaus-teises", label: "Žmogaus teisės", subtopics: ["Visuotinė deklaracija", "Diskriminacija", "Tolerancija"] },
+    ],
+    "11-12": [
+      { id: "et-profesine", label: "Profesinė etika", subtopics: ["Darbo etika", "Korupcija", "Verslo etika", "Medikų etika"] },
+      { id: "et-globalios", label: "Globaliniai klausimai", subtopics: ["Karai", "Migracija", "Klimato kaita", "Nelygybė"] },
+      { id: "et-gyvenimo-prasme", label: "Gyvenimo prasmė", subtopics: ["Laimė", "Pareigos", "Savirealizacija", "Mirties samprata"] },
+    ],
+  },
+  filosofija: {
+    "11-12": [
+      { id: "fl-pagrindai", label: "Filosofijos įvadas", subtopics: ["Kas yra filosofija?", "Filosofijos sritys", "Filosofavimo metodas"] },
+      { id: "fl-senoves", label: "Senovės filosofija", subtopics: ["Sokratas", "Platonas", "Aristotelis", "Stoikai"] },
+      { id: "fl-naujieji", label: "Naujųjų laikų filosofija", subtopics: ["Dekartas", "Kantas", "Hegelis", "Nietzsche"] },
+      { id: "fl-xx-a", label: "XX a. filosofija", subtopics: ["Egzistencializmas", "Fenomenologija", "Analitinė filosofija"] },
+      { id: "fl-etika", label: "Etinė filosofija", subtopics: ["Utilitarizmas", "Deontologija", "Moralinės dilemos"] },
+      { id: "fl-pazinimas", label: "Pažinimo teorija", subtopics: ["Racionalumas", "Empirizmas", "Tiesos samprata", "Abejonė"] },
+    ],
+  },
 }
 
 function getGradeBand(grade: number): string {
