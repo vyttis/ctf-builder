@@ -5,37 +5,33 @@ export interface Subject {
   icon: string // lucide-react icon name
 }
 
+const g = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => from + i)
+
 export const SUBJECTS: Subject[] = [
-  {
-    id: "matematika",
-    label: "Matematika",
-    grades: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    icon: "Calculator",
-  },
-  {
-    id: "biologija",
-    label: "Biologija",
-    grades: [5, 6, 7, 8, 9, 10, 11, 12],
-    icon: "Leaf",
-  },
-  {
-    id: "geografija",
-    label: "Geografija",
-    grades: [5, 6, 7, 8, 9, 10, 11, 12],
-    icon: "Globe",
-  },
-  {
-    id: "istorija",
-    label: "Istorija",
-    grades: [5, 6, 7, 8, 9, 10, 11, 12],
-    icon: "Landmark",
-  },
-  {
-    id: "steam",
-    label: "Integruotos STEAM veiklos",
-    grades: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    icon: "Beaker",
-  },
+  { id: "lietuviu-kalba",         label: "Lietuvių kalba ir literatūra", grades: g(1, 12), icon: "BookText" },
+  { id: "matematika",             label: "Matematika",                   grades: g(1, 12), icon: "Calculator" },
+  { id: "pasaulio-pazinimas",     label: "Pasaulio pažinimas",           grades: g(1, 4),  icon: "Compass" },
+  { id: "gamta-ir-zmogus",        label: "Gamta ir žmogus",              grades: [5, 6],   icon: "Sprout" },
+  { id: "biologija",              label: "Biologija",                    grades: g(7, 12), icon: "Leaf" },
+  { id: "chemija",                label: "Chemija",                      grades: g(8, 12), icon: "FlaskConical" },
+  { id: "fizika",                 label: "Fizika",                       grades: g(7, 12), icon: "Atom" },
+  { id: "istorija",               label: "Istorija",                     grades: g(5, 12), icon: "Landmark" },
+  { id: "geografija",             label: "Geografija",                   grades: g(6, 12), icon: "Globe" },
+  { id: "pilietiskumas",          label: "Pilietiškumo pagrindai",       grades: [9, 10],  icon: "Scale" },
+  { id: "ekonomika",              label: "Ekonomika ir verslumas",       grades: g(9, 12), icon: "TrendingUp" },
+  { id: "informatika",            label: "Informatika",                  grades: g(5, 12), icon: "Cpu" },
+  { id: "anglu-kalba",            label: "Užsienio kalba (anglų)",       grades: g(2, 12), icon: "Languages" },
+  { id: "antroji-uzsienio-kalba", label: "Užsienio kalba (antroji)",     grades: g(6, 12), icon: "MessageSquare" },
+  { id: "daile",                  label: "Dailė",                        grades: g(1, 10), icon: "Palette" },
+  { id: "muzika",                 label: "Muzika",                       grades: g(1, 10), icon: "Music" },
+  { id: "technologijos",          label: "Technologijos",                grades: g(1, 10), icon: "Hammer" },
+  { id: "fizinis-ugdymas",        label: "Fizinis ugdymas",              grades: g(1, 12), icon: "Dumbbell" },
+  { id: "tikyba",                 label: "Tikyba",                       grades: g(1, 12), icon: "Church" },
+  { id: "etika",                  label: "Etika",                        grades: g(1, 12), icon: "HeartHandshake" },
+  { id: "psichologija",           label: "Psichologija",                 grades: [11, 12], icon: "Brain" },
+  { id: "filosofija",             label: "Filosofija",                   grades: [11, 12], icon: "Lightbulb" },
+  { id: "teatras",                label: "Teatras",                      grades: g(5, 12), icon: "Drama" },
+  { id: "sokis",                  label: "Šokis",                        grades: g(1, 12), icon: "PersonStanding" },
 ]
 
 export const LESSON_TYPES = [
@@ -57,4 +53,16 @@ export function getSubjectById(id: string): Subject | undefined {
 
 export function getGradesForSubject(subjectId: string): number[] {
   return getSubjectById(subjectId)?.grades ?? []
+}
+
+export function getSubjectLabel(id: string): string {
+  return (
+    SUBJECTS.find((s) => s.id === id)?.label ??
+    (id === "steam" ? "Integruotos STEAM veiklos" : id)
+  )
+}
+
+export function getGradesIntersection(a: string, b: string): number[] {
+  const setA = new Set(getGradesForSubject(a))
+  return getGradesForSubject(b).filter((g) => setA.has(g))
 }
