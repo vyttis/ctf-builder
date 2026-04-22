@@ -5,6 +5,7 @@ import { z } from "zod"
 const createSchema = z.object({
   title: z.string().min(1),
   subject: z.string().min(1),
+  secondary_subject: z.string().min(1).nullable().optional().default(null),
   grade: z.number().min(1).max(12),
   topic: z.string().min(1),
   lesson_type: z.enum(["nauja_tema", "kartojimas", "vertinimas", "projektine_veikla"]),
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
       .insert({
         teacher_id: user.id,
         ...parsed.data,
+        secondary_subject: parsed.data.secondary_subject ?? null,
         status: "saved",
       })
       .select()

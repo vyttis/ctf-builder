@@ -24,6 +24,7 @@ export interface LessonPlan {
   teacher_id: string
   title: string
   subject: string
+  secondary_subject: string | null
   grade: number
   topic: string
   lesson_type: string
@@ -42,6 +43,7 @@ export interface LessonPlan {
 export interface LessonPlanFormData {
   title: string
   subject: string
+  secondary_subject?: string | null
   grade: number
   topic: string
   lesson_type: string

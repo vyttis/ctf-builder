@@ -39,12 +39,101 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "algebra-11-12", label: "Algebra", subtopics: ["Kompleksiniai skaičiai", "Polinomai", "Matricų pagrindai"] },
     ],
   },
-  biologija: {
-    "5-6": [
-      { id: "gyvoji-gamta", label: "Gyvoji gamta", subtopics: ["Gyvų organizmų įvairovė", "Augalai", "Gyvūnai", "Grybai ir bakterijos"] },
-      { id: "zmogaus-kunas-5-6", label: "Žmogaus kūnas", subtopics: ["Judėjimo sistema", "Mityba ir virškinimas", "Higiena"] },
-      { id: "ekosistemos-5-6", label: "Ekosistemos", subtopics: ["Mitybos grandinės", "Gamtos apsauga", "Aplinkos tarša"] },
+  "lietuviu-kalba": {
+    "1-4": [
+      { id: "lk-rastingumas-1-4", label: "Raštingumas", subtopics: ["Abėcėlė", "Skaitymas", "Rašyba", "Skyryba"] },
+      { id: "lk-tekstai-1-4", label: "Tekstų suvokimas", subtopics: ["Pasakos", "Eilėraščiai", "Pasakojimai"] },
+      { id: "lk-kalbejimas-1-4", label: "Kalbėjimas", subtopics: ["Pasakojimas", "Aprašymas", "Dialogas"] },
     ],
+    "5-6": [
+      { id: "lk-gramatika-5-6", label: "Gramatika", subtopics: ["Daiktavardis", "Būdvardis", "Veiksmažodis", "Linksniavimas"] },
+      { id: "lk-tautosaka", label: "Tautosaka", subtopics: ["Mitai", "Pasakos", "Patarlės", "Dainos"] },
+      { id: "lk-rasymas-5-6", label: "Teksto kūrimas", subtopics: ["Pasakojimas", "Aprašymas", "Laiškas"] },
+    ],
+    "7-8": [
+      { id: "lk-sintakse", label: "Sintaksė", subtopics: ["Sakinio dalys", "Sudėtiniai sakiniai", "Skyryba"] },
+      { id: "lk-literatura-7-8", label: "Literatūra", subtopics: ["Žanrai", "Kūrinio analizė", "Autoriai"] },
+      { id: "lk-rasymas-7-8", label: "Rašymas", subtopics: ["Samprotavimas", "Charakteristika", "Recenzija"] },
+    ],
+    "9-10": [
+      { id: "lk-literatura-9-10", label: "Lietuvių literatūra", subtopics: ["Donelaitis", "Maironis", "Žemaitė", "XX a. rašytojai"] },
+      { id: "lk-stilistika", label: "Stilistika", subtopics: ["Kalbos stiliai", "Meninės raiškos priemonės", "Tekstynas"] },
+      { id: "lk-argumentavimas", label: "Argumentavimas", subtopics: ["Teiginys", "Argumentai", "Samprotavimas"] },
+    ],
+    "11-12": [
+      { id: "lk-literatura-11-12", label: "Lietuvių ir pasaulio literatūra", subtopics: ["Klasikai", "Modernistai", "Šiuolaikiniai autoriai"] },
+      { id: "lk-analize", label: "Teksto analizė", subtopics: ["Kontekstas", "Prasmė", "Interpretacija"] },
+      { id: "lk-rasinys", label: "Samprotaujamasis rašinys", subtopics: ["Teiginio formulavimas", "Argumentavimas", "Išvados"] },
+    ],
+  },
+  "pasaulio-pazinimas": {
+    "1-4": [
+      { id: "pp-gamta", label: "Gamta aplink mus", subtopics: ["Augalai", "Gyvūnai", "Orai", "Metų laikai"] },
+      { id: "pp-zmogus", label: "Žmogus ir sveikata", subtopics: ["Kūno dalys", "Jausmai", "Mityba", "Saugumas"] },
+      { id: "pp-visuomene", label: "Visuomenė ir aplinka", subtopics: ["Šeima", "Miestas", "Lietuva", "Pasaulis"] },
+    ],
+  },
+  "gamta-ir-zmogus": {
+    "5-6": [
+      { id: "giz-gyvoji", label: "Gyvoji gamta", subtopics: ["Gyvų organizmų įvairovė", "Augalai", "Gyvūnai", "Grybai ir bakterijos"] },
+      { id: "giz-zmogus", label: "Žmogaus kūnas", subtopics: ["Judėjimo sistema", "Mityba ir virškinimas", "Higiena"] },
+      { id: "giz-ekosistemos", label: "Ekosistemos", subtopics: ["Mitybos grandinės", "Gamtos apsauga", "Aplinkos tarša"] },
+      { id: "giz-negyvoji", label: "Negyvoji gamta", subtopics: ["Vanduo", "Oras", "Dirvožemis", "Saulės sistema"] },
+    ],
+  },
+  fizika: {
+    "7-8": [
+      { id: "fiz-mechanika-7-8", label: "Mechanika", subtopics: ["Greitis", "Jėga", "Inercija", "Svertai"] },
+      { id: "fiz-siluma-7-8", label: "Šiluminiai reiškiniai", subtopics: ["Temperatūra", "Šilumos perdavimas", "Garavimas"] },
+      { id: "fiz-elektra-7-8", label: "Elektros reiškiniai", subtopics: ["Elektros krūvis", "Srovė", "Grandinė"] },
+    ],
+    "9-10": [
+      { id: "fiz-optika", label: "Optika", subtopics: ["Šviesa", "Lęšiai", "Spektras", "Šviesos atspindys"] },
+      { id: "fiz-magnetizmas", label: "Elektromagnetizmas", subtopics: ["Magnetai", "Elektromagnetinė indukcija", "Transformatoriai"] },
+      { id: "fiz-bangos", label: "Bangos", subtopics: ["Mechaninės bangos", "Garsas", "Elektromagnetinės bangos"] },
+    ],
+    "11-12": [
+      { id: "fiz-kvantine", label: "Kvantinė fizika", subtopics: ["Fotonai", "Atomo sandara", "Branduolinė fizika"] },
+      { id: "fiz-reliatyvumo", label: "Reliatyvumo teorija", subtopics: ["Specialioji reliatyvumo teorija", "Erdvė ir laikas"] },
+      { id: "fiz-termodinamika", label: "Termodinamika", subtopics: ["Dujų dėsniai", "Entropija", "Šiluminiai varikliai"] },
+    ],
+  },
+  chemija: {
+    "7-8": [
+      { id: "chem-medziagos", label: "Medžiagos ir jų savybės", subtopics: ["Agregatinės būsenos", "Grynos medžiagos", "Mišiniai"] },
+      { id: "chem-atomai", label: "Atomų sandara", subtopics: ["Elementai", "Periodinė lentelė", "Molekulės"] },
+    ],
+    "9-10": [
+      { id: "chem-reakcijos", label: "Cheminės reakcijos", subtopics: ["Reakcijų tipai", "Lygtys", "Greitis"] },
+      { id: "chem-tirpalai", label: "Tirpalai", subtopics: ["Rūgštys", "Bazės", "Druskos", "pH"] },
+      { id: "chem-organine-9-10", label: "Organinė chemija", subtopics: ["Angliavandeniliai", "Alkoholiai", "Karboksirūgštys"] },
+    ],
+    "11-12": [
+      { id: "chem-organine-11-12", label: "Organinė chemija", subtopics: ["Baltymai", "Angliavandeniai", "Riebalai", "Polimerai"] },
+      { id: "chem-termochemija", label: "Termochemija", subtopics: ["Reakcijų šiluma", "Pusiausvyra", "Katalizatoriai"] },
+      { id: "chem-elektrochemija", label: "Elektrochemija", subtopics: ["Galvaninis elementas", "Elektrolizė", "Korozija"] },
+    ],
+  },
+  informatika: {
+    "5-6": [
+      { id: "inf-ik", label: "Informacinės technologijos", subtopics: ["Kompiuterio sandara", "Failai", "Internetas", "Saugumas"] },
+      { id: "inf-scratch", label: "Programavimo pagrindai", subtopics: ["Scratch", "Algoritmai", "Ciklai", "Sąlygos"] },
+    ],
+    "7-8": [
+      { id: "inf-algoritmai-7-8", label: "Algoritmai", subtopics: ["Sekos", "Ciklai", "Funkcijos", "Klaidos"] },
+      { id: "inf-duomenys-7-8", label: "Duomenų apdorojimas", subtopics: ["Skaičiuoklė", "Formulės", "Grafikai"] },
+    ],
+    "9-10": [
+      { id: "inf-python", label: "Python programavimas", subtopics: ["Sintaksė", "Sąrašai", "Funkcijos", "Objektai"] },
+      { id: "inf-tinklai", label: "Kompiuterių tinklai", subtopics: ["IP adresai", "Protokolai", "Kibernetinis saugumas"] },
+    ],
+    "11-12": [
+      { id: "inf-algoritmika", label: "Algoritmika", subtopics: ["Rūšiavimas", "Paieška", "Rekursija", "Sudėtingumas"] },
+      { id: "inf-db", label: "Duomenų bazės", subtopics: ["SQL", "Reliacinis modelis", "Normalizavimas"] },
+      { id: "inf-ai", label: "Dirbtinis intelektas", subtopics: ["Mašininis mokymasis", "Neuroniniai tinklai", "Etika"] },
+    ],
+  },
+  biologija: {
     "7-8": [
       { id: "lastele", label: "Ląstelė", subtopics: ["Ląstelės sandara", "Ląstelės dalijimasis", "Augalinė ir gyvūninė ląstelė"] },
       { id: "augalai-7-8", label: "Augalų biologija", subtopics: ["Fotosintezė", "Augalų dauginimasis", "Augalų prisitaikymas"] },
@@ -110,33 +199,6 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "sovietine-okupacija", label: "Sovietinė okupacija", subtopics: ["Trėmimai", "Partizaninis judėjimas", "Sąjūdis"] },
       { id: "nepriklausomybe", label: "Nepriklausomybės atkūrimas", subtopics: ["Kovo 11-oji", "Sausio 13-oji", "Eurointegracijos kelias"] },
       { id: "siuolaikinis-pasaulis", label: "Šiuolaikinis pasaulis", subtopics: ["Globalizacija", "ES", "Terorizmas", "Technologijų revoliucija"] },
-    ],
-  },
-  steam: {
-    "1-4": [
-      { id: "gamta-eksperimentai", label: "Gamtos eksperimentai", subtopics: ["Vandens savybės", "Augalų augimas", "Magnetai", "Šviesa ir šešėliai"] },
-      { id: "technologijos-1-4", label: "Technologijos", subtopics: ["Paprastos mašinos", "Programavimo pagrindai", "Robotika pradedantiesiems"] },
-      { id: "kurybiskumas", label: "Kūrybiškumas", subtopics: ["Dizainas", "3D modeliavimas", "Skaitmeninis menas"] },
-    ],
-    "5-6": [
-      { id: "fizika-pagrindai", label: "Fizikos pagrindai", subtopics: ["Jėga ir judėjimas", "Energija", "Elektra", "Garsas"] },
-      { id: "chemija-pagrindai", label: "Chemijos pagrindai", subtopics: ["Medžiagų savybės", "Mišiniai ir tirpalai", "Cheminės reakcijos"] },
-      { id: "programavimas-5-6", label: "Programavimas", subtopics: ["Scratch", "Algoritminis mąstymas", "Žaidimų kūrimas"] },
-    ],
-    "7-8": [
-      { id: "inzinerija", label: "Inžinerija", subtopics: ["Konstrukcijų projektavimas", "3D spausdinimas", "Elektronika"] },
-      { id: "aplinkosauga", label: "Aplinkosauga", subtopics: ["Atsinaujinanti energija", "Perdirbimas", "Ekologinis pėdsakas"] },
-      { id: "duomenys-7-8", label: "Duomenų mokslas", subtopics: ["Duomenų rinkimas", "Vizualizacija", "Kritinis mąstymas"] },
-    ],
-    "9-10": [
-      { id: "robotika", label: "Robotika", subtopics: ["Arduino", "Sensoriai", "Automatizacija"] },
-      { id: "ai-pagrindai", label: "Dirbtinis intelektas", subtopics: ["Mašininis mokymasis", "Vaizdų atpažinimas", "Chatbotai"] },
-      { id: "bioinzinerija", label: "Bioinžinerija", subtopics: ["Bionika", "Medicinos technologijos", "Genetinė inžinerija"] },
-    ],
-    "11-12": [
-      { id: "moksliniai-tyrimai", label: "Moksliniai tyrimai", subtopics: ["Tyrimų metodologija", "Statistinė analizė", "Mokslinės publikacijos"] },
-      { id: "inovacijos", label: "Inovacijos", subtopics: ["Startuoliai", "Dizaino mąstymas", "Prototipavimas"] },
-      { id: "etika-technologijos", label: "Etika ir technologijos", subtopics: ["Privatumas", "DI etika", "Socialinė atsakomybė"] },
     ],
   },
 }

@@ -23,13 +23,17 @@ function checkRateLimit(userId: string): boolean {
 
 const requestSchema = z.object({
   subject: z.string().min(1),
+  secondary_subject: z.string().min(1).nullable().optional(),
   grade: z.number().min(1).max(12),
   topic: z.string().min(1).max(500),
   lesson_type: z.enum(["nauja_tema", "kartojimas", "vertinimas", "projektine_veikla"]),
   duration: z.number().min(25).max(90),
   learning_goal: z.string().max(500).optional(),
   curriculum_context: z.string().max(2000).optional(),
-})
+}).refine(
+  (d) => !d.secondary_subject || d.secondary_subject !== d.subject,
+  { message: "Antrasis dalykas turi skirtis nuo pirmojo", path: ["secondary_subject"] }
+)
 
 const stageSchema = z.object({
   activity_type: z.enum(["intro", "challenge", "discussion", "reflection"]),
@@ -99,7 +103,10 @@ export async function POST(request: Request) {
       model: "claude-sonnet-4-20250514",
       max_tokens: 8192,
       system: buildLessonPlanSystemPrompt(),
-      messages: [{ role: "user", content: buildLessonPlanUserMessage(parsed.data) }],
+      messages: [{ role: "user", content: buildLessonPlanUserMessage({
+        ...parsed.data,
+        secondary_subject: parsed.data.secondary_subject ?? null,
+      }) }],
     })
 
     const textBlock = message.content.find((b) => b.type === "text")
