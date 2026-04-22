@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import {
   ArrowDown,
+  ArrowUpRight,
   Building2,
   GraduationCap,
   Handshake,
+  LogIn,
   Mail,
 } from "lucide-react"
 import Link from "next/link"
@@ -79,18 +81,26 @@ export function HeroSection() {
       <div className="relative">
         {/* Navigation */}
         <nav className="container mx-auto px-5 max-w-[1200px] flex items-center justify-between py-5">
-          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
+          <Link
+            href="/"
+            className="flex items-center hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+          >
             <SteamLogo className="[&_text]:fill-white [&_line]:opacity-90" />
           </Link>
-          <Link href="/auth/login">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-sm text-white/70 hover:text-white hover:border-white/40 border-white/20 bg-white/5 hover:bg-white/10"
+
+          <div className="flex items-center gap-3 sm:gap-5">
+            <span className="hidden sm:inline text-xs text-white/40">
+              Partnerių mokyklų mokytojams
+            </span>
+            <Link
+              href="/auth/login"
+              className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] backdrop-blur-sm pl-4 pr-3.5 py-2 text-sm text-white/80 hover:text-white hover:border-white/30 hover:bg-white/[0.08] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
-              Mokytojams
-            </Button>
-          </Link>
+              <LogIn className="h-3.5 w-3.5 text-primary/80 group-hover:text-primary transition-colors" />
+              <span className="font-medium">Prisijungti</span>
+              <ArrowUpRight className="h-3.5 w-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+            </Link>
+          </div>
         </nav>
 
         {/* Hero content */}
