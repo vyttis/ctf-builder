@@ -198,7 +198,70 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "saltasis-karas", label: "Šaltasis karas", subtopics: ["NATO ir Varšuvos paktas", "Branduolinis ginklavimasis", "Kosmoso lenktynės"] },
       { id: "sovietine-okupacija", label: "Sovietinė okupacija", subtopics: ["Trėmimai", "Partizaninis judėjimas", "Sąjūdis"] },
       { id: "nepriklausomybe", label: "Nepriklausomybės atkūrimas", subtopics: ["Kovo 11-oji", "Sausio 13-oji", "Eurointegracijos kelias"] },
-      { id: "siuolaikinis-pasaulis", label: "Šiuolaikinis pasaulis", subtopics: ["Globalizacija", "ES", "Terorizmas", "Technologijų revoliucija"] },
+  daile: {
+    "1-4": [
+      { id: "dl-piesimas-1-4", label: "Piešimas", subtopics: ["Linija ir kontūras", "Formos", "Spalvos", "Natiurmortas"] },
+      { id: "dl-spalvos-1-4", label: "Spalvų pažinimas", subtopics: ["Pagrindinės spalvos", "Šiltos ir šaltos", "Spalvų maišymas"] },
+      { id: "dl-amatai-1-4", label: "Kūrybiniai darbai", subtopics: ["Aplikacija", "Lipdymas", "Kolažas", "Origami"] },
+    ],
+    "5-6": [
+      { id: "dl-kompozicija-5-6", label: "Kompozicija", subtopics: ["Perspektyva", "Proporcijos", "Simetrija", "Dinamika"] },
+      { id: "dl-grafika", label: "Grafika", subtopics: ["Estampas", "Piešinys anglimi", "Iliustracija"] },
+      { id: "dl-menas-istorija-5-6", label: "Meno istorija", subtopics: ["Priešistorinis menas", "Senovės civilizacijų menas", "Lietuvių liaudies menas"] },
+    ],
+    "7-8": [
+      { id: "dl-tapyba", label: "Tapyba", subtopics: ["Akvarelė", "Guašas", "Aliejiniai dažai", "Portretas"] },
+      { id: "dl-skulptura", label: "Skulptūra", subtopics: ["Reljefas", "Apvalioji skulptūra", "Medžiagos"] },
+      { id: "dl-renesansas", label: "Renesanso menas", subtopics: ["Leonardo da Vinci", "Mikelandželas", "Rafaelis"] },
+    ],
+    "9-10": [
+      { id: "dl-stiliai", label: "Meno stiliai", subtopics: ["Impresionizmas", "Modernizmas", "Siurrealizmas", "Abstrakcionizmas"] },
+      { id: "dl-dizainas", label: "Dizainas", subtopics: ["Grafinis dizainas", "Interjeras", "Produkto dizainas", "Tipografija"] },
+      { id: "dl-lietuvos-menas", label: "Lietuvos menas", subtopics: ["Čiurlionis", "Šiuolaikiniai menininkai", "Vilniaus dailės akademija"] },
+    ],
+  },
+  muzika: {
+    "1-4": [
+      { id: "mz-ritmas-1-4", label: "Ritmas ir garsas", subtopics: ["Ritmo suvokimas", "Garso aukštis", "Tempas", "Dinamika"] },
+      { id: "mz-dainavimas-1-4", label: "Dainavimas", subtopics: ["Vaikų dainelės", "Lietuvių liaudies dainos", "Kanonas"] },
+      { id: "mz-instrumentai-1-4", label: "Muzikos instrumentai", subtopics: ["Mušamieji", "Styginiai", "Pučiamieji", "Klavišiniai"] },
+    ],
+    "5-6": [
+      { id: "mz-notos", label: "Natų rašto pagrindai", subtopics: ["Penklinė", "Natų vardai", "Pauzės", "Takto dalybos"] },
+      { id: "mz-liaudies", label: "Lietuvių liaudies muzika", subtopics: ["Sutartinės", "Kalendorinės dainos", "Darbo dainos"] },
+      { id: "mz-orkestras", label: "Orkestras ir ansamblis", subtopics: ["Simfoninis orkestras", "Choras", "Kamerinė muzika"] },
+    ],
+    "7-8": [
+      { id: "mz-kompozitoriai", label: "Klasikos kompozitoriai", subtopics: ["Bachas", "Mocartas", "Bethovenas", "Chopenas"] },
+      { id: "mz-zanrai", label: "Muzikos žanrai", subtopics: ["Klasikinė", "Džiazas", "Rokas", "Popmuzika", "Folkloras"] },
+      { id: "mz-lietuvos-muzika", label: "Lietuvos muzikos istorija", subtopics: ["Čiurlionis", "Šiuolaikiniai kompozitoriai", "Operos ir baleto teatras"] },
+    ],
+    "9-10": [
+      { id: "mz-epochos", label: "Muzikos epochos", subtopics: ["Barokas", "Klasicizmas", "Romantizmas", "XX a. muzika"] },
+      { id: "mz-analize", label: "Muzikos analizė", subtopics: ["Forma", "Harmonija", "Melodija", "Tema ir variacijos"] },
+      { id: "mz-technologijos", label: "Muzika ir technologijos", subtopics: ["Garso įrašymas", "Elektroninė muzika", "DAW programos"] },
+    ],
+  },
+  technologijos: {
+    "1-4": [
+      { id: "th-medziagos-1-4", label: "Medžiagos ir jų savybės", subtopics: ["Popierius", "Audinys", "Mediena", "Plastikas"] },
+      { id: "th-konstravimas-1-4", label: "Konstravimas", subtopics: ["Aplikavimas", "Lankstymas", "Klijavimas", "Siuvimas"] },
+      { id: "th-saugumas-1-4", label: "Saugus darbas", subtopics: ["Įrankiai", "Asmeninė sauga", "Darbo tvarka"] },
+    ],
+    "5-6": [
+      { id: "th-mityba-5-6", label: "Mityba ir kulinarija", subtopics: ["Maisto piramidė", "Paprasti patiekalai", "Higiena virtuvėje"] },
+      { id: "th-tekstile", label: "Tekstilė", subtopics: ["Audinių rūšys", "Siuvimas", "Mezgimas", "Aplikacija"] },
+      { id: "th-mediena-5-6", label: "Darbas su mediena", subtopics: ["Medienos rūšys", "Įrankiai", "Paprasti gaminiai"] },
+    ],
+    "7-8": [
+      { id: "th-projektavimas", label: "Projektavimas ir konstravimas", subtopics: ["Brėžiniai", "Modeliavimas", "Prototipų kūrimas"] },
+      { id: "th-mityba-7-8", label: "Mityba ir sveikata", subtopics: ["Sveika mityba", "Receptai", "Maisto ruošimo technika"] },
+      { id: "th-dizainas", label: "Dizaino pagrindai", subtopics: ["Formos ir funkcija", "Medžiagų parinkimas", "Estetika"] },
+    ],
+    "9-10": [
+      { id: "th-elektronika", label: "Elektronika ir robotika", subtopics: ["Grandinės", "Microcontrolleriai", "Arduino", "Sensoriai"] },
+      { id: "th-3d", label: "3D modeliavimas ir spausdinimas", subtopics: ["CAD programos", "3D spausdintuvas", "Prototipavimas"] },
+      { id: "th-tvarumas", label: "Tvarios technologijos", subtopics: ["Perdirbimas", "Atsinaujinantys resursai", "Žiedinė ekonomika"] },
     ],
   },
 }
