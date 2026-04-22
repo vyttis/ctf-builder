@@ -362,31 +362,46 @@ export function LessonPlanGenerator() {
             )}
 
             {/* Grade */}
-            {subject && (
+            {subject && (!isIntegrated || secondarySubject) && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2"
               >
                 <Label>Klasė</Label>
-                <Select
-                  value={grade?.toString() ?? ""}
-                  onValueChange={(v) => {
-                    setGrade(parseInt(v, 10))
-                    setTopicId("")
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pasirinkite klasę" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableGrades.map((g) => (
-                      <SelectItem key={g} value={g.toString()}>
-                        {g} klasė
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {availableGrades.length === 0 ? (
+                  <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                    <span className="text-base leading-none">⚠️</span>
+                    <div>
+                      <p className="font-medium">Šie dalykai neturi bendrų klasių</p>
+                      <p className="mt-1 text-xs opacity-80">
+                        „{getSubjectLabel(subject)}" ({getGradesForSubject(subject)[0]}–
+                        {getGradesForSubject(subject).slice(-1)[0]} kl.) ir „{getSubjectLabel(secondarySubject)}" (
+                        {getGradesForSubject(secondarySubject)[0]}–
+                        {getGradesForSubject(secondarySubject).slice(-1)[0]} kl.) nesutampa. Pasirinkite kitą antrąjį dalyką.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <Select
+                    value={grade?.toString() ?? ""}
+                    onValueChange={(v) => {
+                      setGrade(parseInt(v, 10))
+                      setTopicId("")
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pasirinkite klasę" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableGrades.map((g) => (
+                        <SelectItem key={g} value={g.toString()}>
+                          {g} klasė
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </motion.div>
             )}
 
