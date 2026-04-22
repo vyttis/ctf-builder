@@ -2,10 +2,11 @@ import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, FileText, GraduationCap, Clock, ArrowRight, Sparkles } from "lucide-react"
+import { Plus, FileText, GraduationCap, Clock, ArrowRight, Sparkles, SearchX } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { getSubjectLabel } from "@/lib/curriculum/subjects"
+import { LessonPlansFilterBar } from "@/components/teacher/lesson-plans-filter-bar"
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
   nauja_tema: "Nauja tema",
@@ -20,15 +21,54 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
   converted: { label: "Paverstas veikla", variant: "default" },
 }
 
-export default async function LessonPlansPage() {
+const SORT_CONFIG: Record<string, { column: string; ascending: boolean }> = {
+  created_desc: { column: "created_at", ascending: false },
+  created_asc: { column: "created_at", ascending: true },
+  title_asc: { column: "title", ascending: true },
+  updated_desc: { column: "updated_at", ascending: false },
+}
+
+type SearchParams = Promise<{
+  q?: string
+  subject?: string
+  status?: string
+  sort?: string
+}>
+
+export default async function LessonPlansPage({
+  searchParams,
+}: {
+  searchParams: SearchParams
+}) {
+  const params = await searchParams
+  const search = params.q ?? ""
+  const subjectFilter = params.subject ?? ""
+  const statusFilter = params.status ?? ""
+  const sortKey = params.sort ?? "created_desc"
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: plans } = await supabase
+  const sort = SORT_CONFIG[sortKey] ?? SORT_CONFIG.created_desc
+  let query = supabase
     .from("lesson_plans")
     .select("*")
     .eq("teacher_id", user!.id)
-    .order("created_at", { ascending: false })
+
+  if (subjectFilter) {
+    query = query.or(`subject.eq.${subjectFilter},secondary_subject.eq.${subjectFilter}`)
+  }
+  if (statusFilter) {
+    query = query.eq("status", statusFilter)
+  }
+  if (search) {
+    const safe = search.replace(/[%_]/g, "")
+    query = query.or(`title.ilike.%${safe}%,topic.ilike.%${safe}%`)
+  }
+
+  const { data: plans } = await query.order(sort.column, { ascending: sort.ascending })
+
+  const hasAnyFilter = Boolean(search || subjectFilter || statusFilter)
 
   return (
     <div>
@@ -49,6 +89,13 @@ export default async function LessonPlansPage() {
           </Button>
         </Link>
       </div>
+
+      <LessonPlansFilterBar
+        initialSearch={search}
+        initialSubject={subjectFilter}
+        initialStatus={statusFilter}
+        initialSort={sortKey}
+      />
 
       {/* Plans list */}
       {plans && plans.length > 0 ? (
@@ -114,6 +161,16 @@ export default async function LessonPlansPage() {
               </Link>
             )
           })}
+        </div>
+      ) : hasAnyFilter ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <SearchX className="h-10 w-10 text-muted-foreground/40 mb-4" />
+          <h2 className="text-lg font-semibold text-steam-dark mb-1">
+            Pagal filtrus nieko nerasta
+          </h2>
+          <p className="text-muted-foreground text-sm max-w-sm">
+            Pakeiskite paieškos frazę, dalyką ar statusą, arba išvalykite filtrus.
+          </p>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
