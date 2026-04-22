@@ -264,6 +264,82 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "th-tvarumas", label: "Tvarios technologijos", subtopics: ["Perdirbimas", "Atsinaujinantys resursai", "Žiedinė ekonomika"] },
     ],
   },
+  "anglu-kalba": {
+    "1-4": [
+      { id: "ak-abc-1-4", label: "Abėcėlė ir garsai", subtopics: ["Abėcėlė", "Tarimas", "Skaičiai iki 20", "Spalvos"] },
+      { id: "ak-seima-1-4", label: "Šeima ir aš", subtopics: ["Šeimos nariai", "Savęs pristatymas", "Kūno dalys"] },
+      { id: "ak-kasdiena-1-4", label: "Kasdienybė", subtopics: ["Mokykla", "Žaislai", "Maistas", "Gyvūnai"] },
+    ],
+    "5-6": [
+      { id: "ak-gramatika-5-6", label: "Pagrindinė gramatika", subtopics: ["Present Simple", "Present Continuous", "Klausimai", "Įvardžiai"] },
+      { id: "ak-temos-5-6", label: "Kasdienės temos", subtopics: ["Hobiai", "Maistas", "Drabužiai", "Laisvalaikis"] },
+      { id: "ak-skaitymas-5-6", label: "Skaitymas ir klausymas", subtopics: ["Trumpi tekstai", "Dialogai", "Pasakos"] },
+    ],
+    "7-8": [
+      { id: "ak-laikai", label: "Laikai", subtopics: ["Past Simple", "Past Continuous", "Future", "Present Perfect"] },
+      { id: "ak-kelione", label: "Kelionės ir kultūra", subtopics: ["Šalys", "JK ir JAV", "Tradicijos", "Maršrutai"] },
+      { id: "ak-rasymas-7-8", label: "Rašymas", subtopics: ["El. laiškas", "Trumpas rašinys", "Aprašymas"] },
+    ],
+    "9-10": [
+      { id: "ak-gramatika-9-10", label: "Pažengusi gramatika", subtopics: ["Modal verbs", "Conditionals", "Passive voice", "Reported speech"] },
+      { id: "ak-aktualijos", label: "Aktualūs klausimai", subtopics: ["Aplinkosauga", "Technologijos", "Sveikata", "Socialiniai tinklai"] },
+      { id: "ak-literatura-9-10", label: "Literatūra ir medijos", subtopics: ["Trumpi kūriniai", "Filmai", "Žurnalistika"] },
+    ],
+    "11-12": [
+      { id: "ak-b2", label: "B2 lygis", subtopics: ["Akademinė kalba", "Argumentavimas", "Esė rašymas", "Debatai"] },
+      { id: "ak-verslas", label: "Dalykinė anglų kalba", subtopics: ["Darbo pokalbis", "CV", "Dalykinis laiškas", "Prezentacijos"] },
+      { id: "ak-kultura-11-12", label: "Kultūra ir literatūra", subtopics: ["Shakespeare", "Šiuolaikiniai autoriai", "Amerikietiška kultūra"] },
+    ],
+  },
+  "antroji-uzsienio-kalba": {
+    "5-6": [
+      { id: "au-pagrindai-5-6", label: "Kalbos pagrindai", subtopics: ["Abėcėlė", "Tarimas", "Savęs pristatymas", "Skaičiai"] },
+      { id: "au-seima-5-6", label: "Šeima ir namai", subtopics: ["Šeimos nariai", "Kambariai", "Daiktai"] },
+      { id: "au-mokykla-5-6", label: "Mokykla", subtopics: ["Dalykai", "Mokymosi priemonės", "Tvarkaraštis"] },
+    ],
+    "7-8": [
+      { id: "au-gramatika-7-8", label: "Gramatikos pagrindai", subtopics: ["Esamojo laiko veiksmažodžiai", "Daiktavardžių giminės", "Paprasti klausimai"] },
+      { id: "au-maistas", label: "Maistas ir kasdienybė", subtopics: ["Maistas", "Parduotuvė", "Kavinė", "Receptai"] },
+      { id: "au-kultura-7-8", label: "Šalies kultūra", subtopics: ["Geografija", "Šventės", "Tradicijos", "Žinomi žmonės"] },
+    ],
+    "9-10": [
+      { id: "au-laikai-9-10", label: "Laikai", subtopics: ["Būtasis laikas", "Būsimasis laikas", "Teigimas ir neigimas"] },
+      { id: "au-kelione-9-10", label: "Kelionės", subtopics: ["Maršrutai", "Viešbutis", "Transportas", "Lankytinos vietos"] },
+      { id: "au-skaitymas-9-10", label: "Skaitymas ir rašymas", subtopics: ["Trumpi tekstai", "Dialogai", "El. laiškas"] },
+    ],
+    "11-12": [
+      { id: "au-b1", label: "B1 lygis", subtopics: ["Argumentavimas", "Diskusija", "Ilgesni tekstai", "Rašinys"] },
+      { id: "au-visuomene", label: "Visuomenė ir aktualijos", subtopics: ["Aplinkos apsauga", "Technologijos", "Studijos užsienyje"] },
+      { id: "au-literatura-11-12", label: "Literatūra ir medijos", subtopics: ["Žinomi autoriai", "Filmai", "Žiniasklaida"] },
+    ],
+  },
+  "fizinis-ugdymas": {
+    "1-4": [
+      { id: "fu-pagrindai-1-4", label: "Judėjimo pagrindai", subtopics: ["Bėgimas", "Šokinėjimas", "Metimas", "Gaudymas"] },
+      { id: "fu-zaidimai-1-4", label: "Judrieji žaidimai", subtopics: ["Liaudies žaidimai", "Estafetės", "Komandiniai žaidimai"] },
+      { id: "fu-gimnastika-1-4", label: "Gimnastika", subtopics: ["Pratimai", "Ritmika", "Lankstumas", "Pusiausvyra"] },
+    ],
+    "5-6": [
+      { id: "fu-krepsinis-5-6", label: "Krepšinis", subtopics: ["Pagrindiniai veiksmai", "Varymas", "Metimas", "Taisyklės"] },
+      { id: "fu-futbolas-5-6", label: "Futbolas", subtopics: ["Kamuolio kontrolė", "Pasavimas", "Smūgis", "Žaidimas"] },
+      { id: "fu-lengvoji", label: "Lengvoji atletika", subtopics: ["Bėgimas", "Šokis į tolį", "Metimas", "Ištvermė"] },
+    ],
+    "7-8": [
+      { id: "fu-tinklinis", label: "Tinklinis", subtopics: ["Mušimas", "Perdavimas", "Padavimas", "Taktika"] },
+      { id: "fu-sveikata-7-8", label: "Sveikatingumas", subtopics: ["Fizinis pajėgumas", "Mityba ir sportas", "Traumų prevencija"] },
+      { id: "fu-plaukimas", label: "Plaukimas", subtopics: ["Krauliai", "Nugara", "Krūtine", "Saugumas vandenyje"] },
+    ],
+    "9-10": [
+      { id: "fu-komanda", label: "Komandiniai sportai", subtopics: ["Rankinis", "Beisbolas", "Taktika", "Lyderystė"] },
+      { id: "fu-individualus", label: "Individualūs sportai", subtopics: ["Lengvoji atletika", "Gimnastika", "Stalo tenisas"] },
+      { id: "fu-treniruote", label: "Treniruotės principai", subtopics: ["Apšilimas", "Jėgos pratimai", "Aerobika", "Atsipalaidavimas"] },
+    ],
+    "11-12": [
+      { id: "fu-sveika-gyvensena", label: "Sveika gyvensena", subtopics: ["Sporto nauda", "Streso valdymas", "Mityba sportuojant"] },
+      { id: "fu-organizavimas", label: "Sporto renginių organizavimas", subtopics: ["Varžybų planavimas", "Teisėjavimas", "Komandos vadovavimas"] },
+      { id: "fu-specializacija", label: "Sporto šakų specializacija", subtopics: ["Pasirinkta sporto šaka", "Technika", "Strategija"] },
+    ],
+  },
 }
 
 function getGradeBand(grade: number): string {
