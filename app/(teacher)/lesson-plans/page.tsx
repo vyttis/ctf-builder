@@ -7,6 +7,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { getSubjectLabel } from "@/lib/curriculum/subjects"
 import { LessonPlansFilterBar } from "@/components/teacher/lesson-plans-filter-bar"
+import { SteamTemplatesShowcase } from "@/components/teacher/steam-templates-showcase"
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
   nauja_tema: "Nauja tema",
@@ -69,6 +70,8 @@ export default async function LessonPlansPage({
   const { data: plans } = await query.order(sort.column, { ascending: sort.ascending })
 
   const hasAnyFilter = Boolean(search || subjectFilter || statusFilter)
+  const hasIntegratedPlan = plans?.some((p) => p.secondary_subject) ?? false
+  const showShowcase = !hasAnyFilter && !hasIntegratedPlan
 
   return (
     <div>
@@ -89,6 +92,8 @@ export default async function LessonPlansPage({
           </Button>
         </Link>
       </div>
+
+      {showShowcase && <SteamTemplatesShowcase />}
 
       <LessonPlansFilterBar
         initialSearch={search}

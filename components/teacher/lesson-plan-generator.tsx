@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useMemo, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject, getGradesIntersection, getSubjectLabel } from "@/lib/curriculum/subjects"
 import { getTopicsForSubjectAndGrade, getCurriculumContext } from "@/lib/curriculum/topics"
+import { getLessonTemplate } from "@/lib/curriculum/lesson-templates"
 import { Switch } from "@/components/ui/switch"
 import type { LessonStage } from "@/types/lesson-plan"
 import { LessonActivityCard } from "./lesson-activity-card"
@@ -38,6 +39,7 @@ type Phase = "input" | "preview" | "saving"
 
 export function LessonPlanGenerator() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
 
   // Form state
@@ -55,6 +57,26 @@ export function LessonPlanGenerator() {
   const [phase, setPhase] = useState<Phase>("input")
   const [loading, setLoading] = useState(false)
   const [converting, setConverting] = useState(false)
+
+  // Prefill from URL template (shown via lesson-plans list "Pavyzdžiai")
+  useEffect(() => {
+    const templateId = searchParams.get("template")
+    if (!templateId) return
+    const t = getLessonTemplate(templateId)
+    if (!t) return
+    setSubject(t.subject)
+    setIsIntegrated(true)
+    setSecondarySubject(t.secondary_subject)
+    setGrade(t.grade)
+    setCustomTopic(t.topic)
+    setLessonType(t.lesson_type)
+    setDuration(t.duration)
+    setLearningGoal(t.learning_goal)
+    toast({
+      title: "Pavyzdys įkeltas",
+      description: "Peržiūrėkite parametrus ir spauskite „Generuoti".",
+    })
+  }, [searchParams, toast])
 
   // Editable lesson plan state
   const [editTitle, setEditTitle] = useState("")
