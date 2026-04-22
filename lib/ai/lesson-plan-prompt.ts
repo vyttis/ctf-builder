@@ -5,6 +5,8 @@
  * The output is a planning document, NOT a game task list.
  */
 
+import { getSubjectLabel } from "@/lib/curriculum/subjects"
+
 export interface LessonPlanGenerateInput {
   subject: string
   secondary_subject?: string | null
@@ -107,11 +109,14 @@ ATSAKYK TIK validžiu JSON formatu pagal šią struktūrą:
 export function buildLessonPlanUserMessage(input: LessonPlanGenerateInput): string {
   const parts: string[] = []
 
-  if (input.secondary_subject) {
-    parts.push(`Pagrindinis dalykas: ${input.subject}`)
-    parts.push(`Integruojamas dalykas: ${input.secondary_subject}`)
+  const primaryLabel = getSubjectLabel(input.subject)
+  const secondaryLabel = input.secondary_subject ? getSubjectLabel(input.secondary_subject) : null
+
+  if (secondaryLabel) {
+    parts.push(`Pagrindinis dalykas: ${primaryLabel}`)
+    parts.push(`Integruojamas dalykas: ${secondaryLabel}`)
   } else {
-    parts.push(`Dalykas: ${input.subject}`)
+    parts.push(`Dalykas: ${primaryLabel}`)
   }
   parts.push(`Klasė: ${input.grade}`)
   parts.push(`Tema: ${input.topic}`)
@@ -122,9 +127,9 @@ export function buildLessonPlanUserMessage(input: LessonPlanGenerateInput): stri
     parts.push(`\n${typeInstructions}`)
   }
 
-  if (input.secondary_subject) {
+  if (secondaryLabel) {
     parts.push(`\nINTEGRUOTA PAMOKA (STEAM principu):
-- Ši pamoka jungia DU dalykus: ${input.subject} ir ${input.secondary_subject}.
+- Ši pamoka jungia DU dalykus: ${primaryLabel} ir ${secondaryLabel}.
 - Kiekviena veikla turi ORGANIŠKAI jungti abiejų dalykų turinį — ne paeiliui, o kartu.
 - curriculum_link lauke nurodyk ryšį su ABIEJŲ dalykų programomis.
 - teacher_methodical_note paaiškink, kokios žinios iš abiejų dalykų būtinos ir kaip padėti mokiniams matyti ryšį.`)
