@@ -2,17 +2,10 @@ import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, FileText, GraduationCap, Clock, ArrowRight } from "lucide-react"
+import { Plus, FileText, GraduationCap, Clock, ArrowRight, Sparkles } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-
-const SUBJECT_LABELS: Record<string, string> = {
-  matematika: "Matematika",
-  biologija: "Biologija",
-  geografija: "Geografija",
-  istorija: "Istorija",
-  steam: "STEAM",
-}
+import { getSubjectLabel } from "@/lib/curriculum/subjects"
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
   nauja_tema: "Nauja tema",
@@ -90,8 +83,14 @@ export default async function LessonPlansPage() {
                     <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
                       <span className="bg-muted/50 px-2 py-0.5 rounded-full flex items-center gap-1">
                         <GraduationCap className="h-3 w-3" />
-                        {SUBJECT_LABELS[plan.subject] || plan.subject}
+                        {getSubjectLabel(plan.subject)}
                       </span>
+                      {plan.secondary_subject && (
+                        <span className="bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" />
+                          {getSubjectLabel(plan.secondary_subject)}
+                        </span>
+                      )}
                       <span className="bg-muted/50 px-2 py-0.5 rounded-full">
                         {plan.grade} kl.
                       </span>

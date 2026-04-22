@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject } from "@/lib/curriculum/subjects"
+import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject, getGradesIntersection, getSubjectLabel } from "@/lib/curriculum/subjects"
 import { getTopicsForSubjectAndGrade, getCurriculumContext } from "@/lib/curriculum/topics"
+import { Switch } from "@/components/ui/switch"
 import type { LessonStage } from "@/types/lesson-plan"
 import { LessonActivityCard } from "./lesson-activity-card"
 import { Button } from "@/components/ui/button"
@@ -41,6 +42,8 @@ export function LessonPlanGenerator() {
 
   // Form state
   const [subject, setSubject] = useState("")
+  const [isIntegrated, setIsIntegrated] = useState(false)
+  const [secondarySubject, setSecondarySubject] = useState("")
   const [grade, setGrade] = useState<number | null>(null)
   const [topicId, setTopicId] = useState("")
   const [customTopic, setCustomTopic] = useState("")
@@ -62,21 +65,37 @@ export function LessonPlanGenerator() {
   const [stages, setStages] = useState<LessonStage[]>([])
 
   // Derived
-  const availableGrades = useMemo(() => getGradesForSubject(subject), [subject])
+  const availableGrades = useMemo(() => {
+    if (!subject) return []
+    if (isIntegrated && secondarySubject) return getGradesIntersection(subject, secondarySubject)
+    return getGradesForSubject(subject)
+  }, [subject, secondarySubject, isIntegrated])
   const curriculumTopics = useMemo(
-    () => (subject && grade ? getTopicsForSubjectAndGrade(subject, grade) : []),
-    [subject, grade]
+    () => (subject && grade && !isIntegrated ? getTopicsForSubjectAndGrade(subject, grade) : []),
+    [subject, grade, isIntegrated]
   )
-  const curriculumContext = useMemo(
-    () => subject && grade ? getCurriculumContext(subject, grade, topicId || undefined) : "",
-    [subject, grade, topicId]
-  )
+  const curriculumContext = useMemo(() => {
+    const parts: string[] = []
+    if (subject && grade) parts.push(getCurriculumContext(subject, grade, topicId || undefined))
+    if (isIntegrated && secondarySubject && grade) {
+      const sec = getCurriculumContext(secondarySubject, grade)
+      if (sec) parts.push(`\n--- Antrasis dalykas (${getSubjectLabel(secondarySubject)}) ---\n${sec}`)
+    }
+    return parts.filter(Boolean).join("\n")
+  }, [subject, secondarySubject, grade, topicId, isIntegrated])
 
   const effectiveTopic = topicId
     ? curriculumTopics.find((t) => t.id === topicId)?.label ?? customTopic
     : customTopic
 
-  const canGenerate = subject && grade && effectiveTopic.trim() && lessonType && duration && !loading
+  const canGenerate =
+    subject &&
+    grade &&
+    effectiveTopic.trim() &&
+    lessonType &&
+    duration &&
+    !loading &&
+    (!isIntegrated || (!!secondarySubject && secondarySubject !== subject))
 
   async function handleGenerate() {
     if (!canGenerate) return
@@ -88,6 +107,7 @@ export function LessonPlanGenerator() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subject,
+          secondary_subject: isIntegrated && secondarySubject ? secondarySubject : null,
           grade,
           topic: effectiveTopic,
           lesson_type: lessonType,
@@ -152,6 +172,7 @@ export function LessonPlanGenerator() {
         body: JSON.stringify({
           title: editTitle,
           subject,
+          secondary_subject: isIntegrated && secondarySubject ? secondarySubject : null,
           grade,
           topic: effectiveTopic,
           lesson_type: lessonType,
@@ -195,6 +216,7 @@ export function LessonPlanGenerator() {
         body: JSON.stringify({
           title: editTitle,
           subject,
+          secondary_subject: isIntegrated && secondarySubject ? secondarySubject : null,
           grade,
           topic: effectiveTopic,
           lesson_type: lessonType,
@@ -267,6 +289,7 @@ export function LessonPlanGenerator() {
                   setSubject(v)
                   setGrade(null)
                   setTopicId("")
+                  if (v === secondarySubject) setSecondarySubject("")
                 }}
               >
                 <SelectTrigger>
@@ -281,6 +304,59 @@ export function LessonPlanGenerator() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Integrated STEAM toggle */}
+            {subject && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="space-y-3"
+              >
+                <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-muted/30 p-3">
+                  <Switch
+                    id="integrated"
+                    checked={isIntegrated}
+                    onCheckedChange={(v) => {
+                      setIsIntegrated(v)
+                      if (!v) {
+                        setSecondarySubject("")
+                        setGrade(null)
+                        setTopicId("")
+                      }
+                    }}
+                  />
+                  <Label htmlFor="integrated" className="cursor-pointer text-sm font-normal">
+                    <Sparkles className="inline h-3.5 w-3.5 text-accent mr-1" />
+                    Integruoti su antru dalyku (STEAM veikla)
+                  </Label>
+                </div>
+
+                {isIntegrated && (
+                  <div className="space-y-2">
+                    <Label>Antrasis dalykas</Label>
+                    <Select
+                      value={secondarySubject}
+                      onValueChange={(v) => {
+                        setSecondarySubject(v)
+                        setGrade(null)
+                        setTopicId("")
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pasirinkite antrą dalyką" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SUBJECTS.filter((s) => s.id !== subject).map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {/* Grade */}
             {subject && (
@@ -490,8 +566,14 @@ export function LessonPlanGenerator() {
             {/* Meta info */}
             <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
               <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
-                {SUBJECTS.find((s) => s.id === subject)?.label}
+                {getSubjectLabel(subject)}
               </span>
+              {isIntegrated && secondarySubject && (
+                <span className="bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  {getSubjectLabel(secondarySubject)}
+                </span>
+              )}
               <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
                 {grade} klasė
               </span>

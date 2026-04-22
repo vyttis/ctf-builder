@@ -16,16 +16,10 @@ import {
   PlayCircle,
   Loader2,
   FileText,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
-
-const SUBJECT_LABELS: Record<string, string> = {
-  matematika: "Matematika",
-  biologija: "Biologija",
-  geografija: "Geografija",
-  istorija: "Istorija",
-  steam: "STEAM",
-}
+import { getSubjectLabel } from "@/lib/curriculum/subjects"
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
   nauja_tema: "Nauja tema",
@@ -52,6 +46,7 @@ interface LessonPlanDetailProps {
     id: string
     title: string
     subject: string
+    secondary_subject: string | null
     grade: number
     topic: string
     lesson_type: string
@@ -138,8 +133,14 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
       <div className="flex flex-wrap gap-2 mb-6">
         <Badge variant="outline" className="gap-1">
           <GraduationCap className="h-3 w-3" />
-          {SUBJECT_LABELS[plan.subject] || plan.subject}
+          {getSubjectLabel(plan.subject)}
         </Badge>
+        {plan.secondary_subject && (
+          <Badge variant="outline" className="gap-1 border-accent/40 text-accent">
+            <Sparkles className="h-3 w-3" />
+            {getSubjectLabel(plan.secondary_subject)}
+          </Badge>
+        )}
         <Badge variant="outline">{plan.grade} klasė</Badge>
         <Badge variant="outline" className="gap-1">
           <Clock className="h-3 w-3" />
