@@ -438,6 +438,54 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "ps-sveikata", label: "Psichikos sveikata", subtopics: ["Psichikos sutrikimai", "Pagalba", "Savirūpa", "Atsparumas"] },
     ],
   },
+  teatras: {
+    "5-6": [
+      { id: "tt-ivadas-5-6", label: "Teatro pažinimas", subtopics: ["Kas yra teatras?", "Aktorius ir vaidmuo", "Scena ir žiūrovai"] },
+      { id: "tt-kurybiskumas-5-6", label: "Kūrybiniai žaidimai", subtopics: ["Improvizacija", "Vaidmenų žaidimai", "Balso lavinimas"] },
+      { id: "tt-pasakos-5-6", label: "Pasakos ir inscenizacijos", subtopics: ["Pasakos personažai", "Paprastos inscenizacijos", "Lėlių teatras"] },
+    ],
+    "7-8": [
+      { id: "tt-aktorystes", label: "Aktorystės pagrindai", subtopics: ["Kūno kalba", "Emocijos", "Dėmesys", "Partnerystė scenoje"] },
+      { id: "tt-zanrai-7-8", label: "Teatro žanrai", subtopics: ["Drama", "Komedija", "Tragedija", "Muzikinis teatras"] },
+      { id: "tt-lietuvos-teatras", label: "Lietuvos teatras", subtopics: ["Nacionalinis dramos teatras", "Žymūs aktoriai", "Režisieriai"] },
+    ],
+    "9-10": [
+      { id: "tt-rezisura", label: "Režisūros pagrindai", subtopics: ["Scenarijus", "Mizanscena", "Tempas ir ritmas"] },
+      { id: "tt-istorija-9-10", label: "Teatro istorija", subtopics: ["Senovės Graikijos teatras", "Shakespeare", "XX a. teatras"] },
+      { id: "tt-pastatymai", label: "Spektaklio pastatymas", subtopics: ["Repeticijos", "Dekoracijos", "Kostiumai", "Apšvietimas"] },
+    ],
+    "11-12": [
+      { id: "tt-teorijos", label: "Teatro teorijos", subtopics: ["Stanislavskio sistema", "Brechto epinis teatras", "Šiuolaikinis teatras"] },
+      { id: "tt-analize-11-12", label: "Spektaklio analizė", subtopics: ["Interpretacija", "Vaidybos stilius", "Režisūrinis sumanymas"] },
+      { id: "tt-projektas", label: "Teatrinis projektas", subtopics: ["Ideos kūrimas", "Scenarijaus rašymas", "Pastatymas", "Refleksija"] },
+    ],
+  },
+  sokis: {
+    "1-4": [
+      { id: "sk-judejimas-1-4", label: "Ritmas ir judesys", subtopics: ["Ritmo pajutimas", "Paprasti žingsniai", "Judesys pagal muziką"] },
+      { id: "sk-zaidimai-1-4", label: "Šokio žaidimai", subtopics: ["Grupiniai šokiai", "Liaudies žaidimai", "Kūrybiniai užsiėmimai"] },
+    ],
+    "5-6": [
+      { id: "sk-liaudies-5-6", label: "Lietuvių liaudies šokiai", subtopics: ["Malūnas", "Kepurinė", "Suktinis", "Rateliai"] },
+      { id: "sk-klasikos-pagrindai", label: "Klasikinio šokio pagrindai", subtopics: ["Pagrindinės pozicijos", "Plié", "Balansas"] },
+      { id: "sk-ritminiai", label: "Ritminis judesys", subtopics: ["Ritmo kūrimas", "Sinchroninis šokimas", "Žaidybinės kompozicijos"] },
+    ],
+    "7-8": [
+      { id: "sk-stiliai-7-8", label: "Šokio stiliai", subtopics: ["Klasikinis baletas", "Modernus šokis", "Džiazas", "Gatvės šokis"] },
+      { id: "sk-kompozicija-7-8", label: "Šokio kompozicija", subtopics: ["Erdvė", "Laikas", "Forma", "Vienybė"] },
+      { id: "sk-kulturos", label: "Pasaulio šokių kultūra", subtopics: ["Salsa", "Tango", "Flamenco", "Rytų tautų šokiai"] },
+    ],
+    "9-10": [
+      { id: "sk-technika", label: "Šokio technika", subtopics: ["Koordinacija", "Lankstumas", "Ištvermė", "Raiškumas"] },
+      { id: "sk-choreografija", label: "Choreografijos pagrindai", subtopics: ["Idėja", "Struktūra", "Muzikos pasirinkimas", "Statymas"] },
+      { id: "sk-sceninis", label: "Sceninis pasirodymas", subtopics: ["Prezentacija", "Kostiumai", "Apšvietimas", "Darbas komandoje"] },
+    ],
+    "11-12": [
+      { id: "sk-istorija-11-12", label: "Šokio istorija ir teorijos", subtopics: ["Šokio raida", "Žymūs choreografai", "Šiuolaikinės tendencijos"] },
+      { id: "sk-projektas", label: "Šokio projektas", subtopics: ["Idėjos kūrimas", "Savarankiška choreografija", "Pristatymas", "Analizė"] },
+      { id: "sk-analize-11-12", label: "Šokio analizė", subtopics: ["Stiliaus atpažinimas", "Kompozicijos vertinimas", "Kontekstas ir prasmė"] },
+    ],
+  },
 }
 
 function getGradeBand(grade: number): string {
