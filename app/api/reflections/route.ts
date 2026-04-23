@@ -73,16 +73,18 @@ export async function POST(request: Request) {
           { status: 409 }
         )
       }
+      console.error("Reflection INSERT error:", error)
       return NextResponse.json(
-        { error: error.message },
+        { error: "Nepavyko išsaugoti refleksijos." },
         { status: 500 }
       )
     }
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
+    console.error("Reflection POST error:", error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Serverio klaida" },
+      { error: "Serverio klaida." },
       { status: 500 }
     )
   }

@@ -69,7 +69,8 @@ export async function GET(request: Request) {
     const { data, error, count } = await query.range(from, to)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error("Library SELECT error:", error)
+      return NextResponse.json({ error: "Nepavyko gauti bibliotekos sąrašo." }, { status: 500 })
     }
 
     // Enrich with publisher info and challenge count
@@ -95,7 +96,8 @@ export async function GET(request: Request) {
       total_pages: Math.ceil((count ?? items.length) / limit),
     })
   } catch (error: unknown) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Vidinė klaida" }, { status: 500 })
+    console.error("Library GET error:", error)
+    return NextResponse.json({ error: "Serverio klaida." }, { status: 500 })
   }
 }
 
@@ -200,6 +202,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(libraryItem, { status: 201 })
   } catch (error: unknown) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Vidinė klaida" }, { status: 500 })
+    console.error("Library POST error:", error)
+    return NextResponse.json({ error: "Serverio klaida." }, { status: 500 })
   }
 }

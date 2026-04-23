@@ -27,7 +27,12 @@ const updateChallengeSchema = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
   hint_penalty: z.number().min(0).max(100).optional(),
   prerequisites: z.array(z.string().uuid()).optional(),
-})
+}).strict()
+
+type ChallengeUpdatePayload = z.infer<typeof updateChallengeSchema> & {
+  answer_hash?: string
+  correct_answer?: never
+}
 
 async function verifyChallengeOwnership(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -91,13 +96,12 @@ export async function PATCH(
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateData: Record<string, any> = { ...parsed.data }
+  const { correct_answer, ...rest } = parsed.data
+  const updateData: ChallengeUpdatePayload = { ...rest }
 
-  // If answer is being updated, hash it with bcrypt
-  if (updateData.correct_answer) {
-    updateData.answer_hash = await hashAnswer(updateData.correct_answer as string)
-    delete updateData.correct_answer
+  // If answer is being updated, hash it with bcrypt (never stored/returned in plaintext)
+  if (correct_answer) {
+    updateData.answer_hash = await hashAnswer(correct_answer)
   }
 
   const { data, error } = await supabase
@@ -108,7 +112,8 @@ export async function PATCH(
     .single()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("Challenge UPDATE error:", error)
+    return NextResponse.json({ error: "Nepavyko atnaujinti užduoties." }, { status: 500 })
   }
 
   return NextResponse.json(data)
@@ -142,7 +147,8 @@ export async function DELETE(
     .eq("id", params.challengeId)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("Challenge DELETE error:", error)
+    return NextResponse.json({ error: "Nepavyko ištrinti užduoties." }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

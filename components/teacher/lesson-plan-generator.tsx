@@ -6,6 +6,7 @@ import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject, getGradesInters
 import { getTopicsForSubjectAndGrade, getCurriculumContext } from "@/lib/curriculum/topics"
 import { getLessonTemplate } from "@/lib/curriculum/lesson-templates"
 import { Switch } from "@/components/ui/switch"
+import { SubjectCombobox } from "@/components/ui/subject-combobox"
 import type { LessonStage } from "@/types/lesson-plan"
 import { LessonActivityCard } from "./lesson-activity-card"
 import { Button } from "@/components/ui/button"
@@ -307,27 +308,21 @@ export function LessonPlanGenerator() {
           <CardContent className="space-y-5">
             {/* Subject */}
             <div className="space-y-2">
-              <Label>Dalykas</Label>
-              <Select
+              <Label htmlFor="lp-subject">Dalykas</Label>
+              <SubjectCombobox
+                id="lp-subject"
                 value={subject}
-                onValueChange={(v) => {
+                options={SUBJECTS.map((s) => ({ value: s.id, label: s.label }))}
+                placeholder="Pasirinkite dalyką"
+                searchPlaceholder="Ieškoti dalyko..."
+                emptyText="Dalyko nerasta"
+                onChange={(v) => {
                   setSubject(v)
                   setGrade(null)
                   setTopicId("")
                   if (v === secondarySubject) setSecondarySubject("")
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pasirinkite dalyką" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SUBJECTS.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             {/* Integrated STEAM toggle */}
@@ -358,26 +353,23 @@ export function LessonPlanGenerator() {
 
                 {isIntegrated && (
                   <div className="space-y-2">
-                    <Label>Antrasis dalykas</Label>
-                    <Select
+                    <Label htmlFor="lp-secondary-subject">Antrasis dalykas</Label>
+                    <SubjectCombobox
+                      id="lp-secondary-subject"
                       value={secondarySubject}
-                      onValueChange={(v) => {
+                      options={SUBJECTS.filter((s) => s.id !== subject).map((s) => ({
+                        value: s.id,
+                        label: s.label,
+                      }))}
+                      placeholder="Pasirinkite antrą dalyką"
+                      searchPlaceholder="Ieškoti dalyko..."
+                      emptyText="Dalyko nerasta"
+                      onChange={(v) => {
                         setSecondarySubject(v)
                         setGrade(null)
                         setTopicId("")
                       }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pasirinkite antrą dalyką" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SUBJECTS.filter((s) => s.id !== subject).map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
                 )}
               </motion.div>
@@ -390,7 +382,7 @@ export function LessonPlanGenerator() {
                 animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2"
               >
-                <Label>Klasė</Label>
+                <Label htmlFor="lp-grade">Klasė</Label>
                 {availableGrades.length === 0 ? (
                   <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
                     <span className="text-base leading-none">⚠️</span>
@@ -409,7 +401,7 @@ export function LessonPlanGenerator() {
                       setTopicId("")
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="lp-grade">
                       <SelectValue placeholder="Pasirinkite klasę" />
                     </SelectTrigger>
                     <SelectContent>
@@ -431,7 +423,7 @@ export function LessonPlanGenerator() {
                 animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2"
               >
-                <Label>Tema</Label>
+                <Label htmlFor="lp-topic">Tema</Label>
                 {curriculumTopics.length > 0 && (
                   <Select
                     value={topicId}
@@ -443,7 +435,7 @@ export function LessonPlanGenerator() {
                       }
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="lp-topic">
                       <SelectValue placeholder="Pasirinkite iš programos arba rašykite žemiau" />
                     </SelectTrigger>
                     <SelectContent>
@@ -470,9 +462,9 @@ export function LessonPlanGenerator() {
 
             {/* Lesson type */}
             <div className="space-y-2">
-              <Label>Pamokos tipas</Label>
+              <Label htmlFor="lp-type">Pamokos tipas</Label>
               <Select value={lessonType} onValueChange={setLessonType}>
-                <SelectTrigger>
+                <SelectTrigger id="lp-type">
                   <SelectValue placeholder="Pasirinkite tipą" />
                 </SelectTrigger>
                 <SelectContent>
@@ -487,12 +479,12 @@ export function LessonPlanGenerator() {
 
             {/* Duration */}
             <div className="space-y-2">
-              <Label>Trukmė</Label>
+              <Label htmlFor="lp-duration">Trukmė</Label>
               <Select
                 value={duration.toString()}
                 onValueChange={(v) => setDuration(parseInt(v, 10))}
               >
-                <SelectTrigger>
+                <SelectTrigger id="lp-duration">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -507,11 +499,12 @@ export function LessonPlanGenerator() {
 
             {/* Learning goal */}
             <div className="space-y-2">
-              <Label>
+              <Label htmlFor="lp-goal">
                 Mokymosi tikslas{" "}
                 <span className="text-muted-foreground font-normal">(neprivaloma)</span>
               </Label>
               <Textarea
+                id="lp-goal"
                 placeholder="Pvz.: Mokiniai gebės apskaičiuoti trikampio plotą..."
                 value={learningGoal}
                 onChange={(e) => setLearningGoal(e.target.value)}

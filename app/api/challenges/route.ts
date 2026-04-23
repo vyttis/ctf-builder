@@ -157,8 +157,8 @@ export async function POST(request: Request) {
   }
 
   if (result.error) {
-    console.error("Challenge INSERT error:", result.error, "payload keys:", Object.keys({ ...minimalPayload, ...extraPayload, ...diPayload }))
-    return NextResponse.json({ error: result.error.message }, { status: 500 })
+    console.error("Challenge INSERT error:", result.error)
+    return NextResponse.json({ error: "Nepavyko sukurti užduoties. Bandykite dar kartą." }, { status: 500 })
   }
 
   return NextResponse.json(result.data, { status: 201 })
@@ -222,7 +222,7 @@ export async function GET(request: Request) {
 
   if (result.error) {
     console.error("Challenge SELECT error:", result.error)
-    return NextResponse.json({ error: result.error.message }, { status: 500 })
+    return NextResponse.json({ error: "Nepavyko gauti užduočių sąrašo." }, { status: 500 })
   }
 
   return NextResponse.json(result.data)
