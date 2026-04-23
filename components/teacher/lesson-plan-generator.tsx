@@ -6,6 +6,7 @@ import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject, getGradesInters
 import { getTopicsForSubjectAndGrade, getCurriculumContext } from "@/lib/curriculum/topics"
 import { getLessonTemplate } from "@/lib/curriculum/lesson-templates"
 import { Switch } from "@/components/ui/switch"
+import { SubjectCombobox } from "@/components/ui/subject-combobox"
 import type { LessonStage } from "@/types/lesson-plan"
 import { LessonActivityCard } from "./lesson-activity-card"
 import { Button } from "@/components/ui/button"
@@ -308,26 +309,20 @@ export function LessonPlanGenerator() {
             {/* Subject */}
             <div className="space-y-2">
               <Label htmlFor="lp-subject">Dalykas</Label>
-              <Select
+              <SubjectCombobox
+                id="lp-subject"
                 value={subject}
-                onValueChange={(v) => {
+                options={SUBJECTS.map((s) => ({ value: s.id, label: s.label }))}
+                placeholder="Pasirinkite dalyką"
+                searchPlaceholder="Ieškoti dalyko..."
+                emptyText="Dalyko nerasta"
+                onChange={(v) => {
                   setSubject(v)
                   setGrade(null)
                   setTopicId("")
                   if (v === secondarySubject) setSecondarySubject("")
                 }}
-              >
-                <SelectTrigger id="lp-subject">
-                  <SelectValue placeholder="Pasirinkite dalyką" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SUBJECTS.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             {/* Integrated STEAM toggle */}
@@ -359,25 +354,22 @@ export function LessonPlanGenerator() {
                 {isIntegrated && (
                   <div className="space-y-2">
                     <Label htmlFor="lp-secondary-subject">Antrasis dalykas</Label>
-                    <Select
+                    <SubjectCombobox
+                      id="lp-secondary-subject"
                       value={secondarySubject}
-                      onValueChange={(v) => {
+                      options={SUBJECTS.filter((s) => s.id !== subject).map((s) => ({
+                        value: s.id,
+                        label: s.label,
+                      }))}
+                      placeholder="Pasirinkite antrą dalyką"
+                      searchPlaceholder="Ieškoti dalyko..."
+                      emptyText="Dalyko nerasta"
+                      onChange={(v) => {
                         setSecondarySubject(v)
                         setGrade(null)
                         setTopicId("")
                       }}
-                    >
-                      <SelectTrigger id="lp-secondary-subject">
-                        <SelectValue placeholder="Pasirinkite antrą dalyką" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SUBJECTS.filter((s) => s.id !== subject).map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
                 )}
               </motion.div>

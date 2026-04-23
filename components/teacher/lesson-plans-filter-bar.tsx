@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { SubjectCombobox } from "@/components/ui/subject-combobox"
 import { Search, X } from "lucide-react"
 import { SUBJECTS } from "@/lib/curriculum/subjects"
 
@@ -86,25 +87,21 @@ export function LessonPlansFilterBar({
 
       {/* Filter selects — grid on mobile/tablet, inline on desktop */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:flex lg:items-center lg:gap-3">
-      <Select
-        value={subject}
-        onValueChange={(v) => {
+      <SubjectCombobox
+        value={subject === "all" ? "" : subject}
+        options={[
+          { value: "all", label: "Visi dalykai" },
+          ...SUBJECTS.map((s) => ({ value: s.id, label: s.label })),
+        ]}
+        placeholder="Visi dalykai"
+        searchPlaceholder="Ieškoti dalyko..."
+        emptyText="Dalyko nerasta"
+        className="lg:w-52"
+        onChange={(v) => {
           setSubject(v)
           updateUrl({ subject: v })
         }}
-      >
-        <SelectTrigger className="w-full lg:w-52">
-          <SelectValue placeholder="Visi dalykai" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Visi dalykai</SelectItem>
-          {SUBJECTS.map((s) => (
-            <SelectItem key={s.id} value={s.id}>
-              {s.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      />
 
       <Select
         value={status}
