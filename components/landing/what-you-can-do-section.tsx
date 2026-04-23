@@ -24,9 +24,9 @@ const capabilities = [
   },
   {
     icon: BookOpen,
-    title: "Pamokos scenarijaus sudarymas",
+    title: "Pamokos planas per kelias minutes",
     description:
-      "Sujunkite užduotis į nuoseklią pamokos eigą, pritaikytą konkrečiai temai, klasei ir mokymosi tikslui.",
+      "Sudėliokite užduotis į nuoseklią pamokos eigą — tikslai, trukmė, komandos ir refleksija vienoje vietoje.",
     color: "bg-secondary/10 text-secondary",
     border: "border-l-secondary",
   },
@@ -34,7 +34,7 @@ const capabilities = [
     icon: Sparkles,
     title: "Dirbtinio intelekto pagalba",
     description:
-      "Greitai generuokite užduočių idėjas, klausimus, paaiškinimus ir užuominas, kuriuos vėliau galima redaguoti ir pritaikyti.",
+      "DI sugeneruoja užduočių idėjas, klausimus, paaiškinimus ir užuominas pagal ugdymo programą — jūs jas redaguojate ir tvirtinate.",
     color: "bg-highlight/10 text-highlight",
     border: "border-l-highlight",
   },
@@ -50,15 +50,15 @@ const capabilities = [
     icon: Activity,
     title: "Pamokos stebėjimas realiu laiku",
     description:
-      "Veiklos metu matykite, kaip sekasi komandoms ar mokiniams, kurios užduotys jau atliktos ir kur kyla daugiausia sunkumų.",
+      "Veiklos metu matykite, kaip sekasi kiekvienai komandai, kurios užduotys atliktos ir kur reikia pagalbos.",
     color: "bg-primary/10 text-primary",
     border: "border-l-primary",
   },
   {
     icon: BarChart3,
-    title: "Rezultatų peržiūra po veiklos",
+    title: "Rezultatų analizė po pamokos",
     description:
-      "Analizuokite mokinių atsakymus, peržiūrėkite sudėtingiausias vietas ir geriau supraskite, ką verta aptarti dar kartą.",
+      "Peržiūrėkite mokinių atsakymus, atpažinkite sudėtingiausias vietas ir sužinokite, ką verta grįžti aptarti.",
     color: "bg-secondary/10 text-secondary",
     border: "border-l-secondary",
   },
@@ -70,8 +70,8 @@ export function WhatYouCanDoSection() {
   return (
     <SectionWrapper background="muted">
       <SectionHeader
-        title="Galimybės"
-        subtitle="Vienoje vietoje galima parengti užduotis, sudėlioti veiklos eigą ir stebėti, kaip klasė dirba pamokos metu."
+        title="Ką galite nuveikti"
+        subtitle="Vienoje platformoje parengsite užduotis, sudėliosite pamokos eigą ir stebėsite, kaip klasė dirba."
       />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

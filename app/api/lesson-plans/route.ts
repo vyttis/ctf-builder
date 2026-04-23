@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
 import { z } from "zod"
 
 const createSchema = z.object({
   title: z.string().min(1),
   subject: z.string().min(1),
+  secondary_subject: z.string().min(1).nullable().optional().default(null),
   grade: z.number().min(1).max(12),
   topic: z.string().min(1),
   lesson_type: z.enum(["nauja_tema", "kartojimas", "vertinimas", "projektine_veikla"]),
@@ -46,11 +48,22 @@ export async function POST(request: Request) {
       )
     }
 
+    const validGrades = parsed.data.secondary_subject
+      ? getGradesIntersection(parsed.data.subject, parsed.data.secondary_subject)
+      : getGradesForSubject(parsed.data.subject)
+    if (validGrades.length === 0 || !validGrades.includes(parsed.data.grade)) {
+      return NextResponse.json(
+        { error: "Klasė netinka pasirinktiems dalykams." },
+        { status: 400 }
+      )
+    }
+
     const { data, error } = await supabase
       .from("lesson_plans")
       .insert({
         teacher_id: user.id,
         ...parsed.data,
+        secondary_subject: parsed.data.secondary_subject ?? null,
         status: "saved",
       })
       .select()

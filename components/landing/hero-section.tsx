@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import {
   ArrowDown,
+  ArrowUpRight,
   Building2,
   GraduationCap,
   Handshake,
+  LogIn,
   Mail,
 } from "lucide-react"
 import Link from "next/link"
@@ -34,11 +36,11 @@ const trustItems = [
   },
   {
     icon: Handshake,
-    text: "Skirta partnerių mokykloms",
+    text: "Prieiga partnerių mokykloms",
   },
   {
     icon: GraduationCap,
-    text: "Taikoma realiose pamokose",
+    text: "Išbandyta realiose pamokose",
   },
 ]
 
@@ -79,18 +81,26 @@ export function HeroSection() {
       <div className="relative">
         {/* Navigation */}
         <nav className="container mx-auto px-5 max-w-[1200px] flex items-center justify-between py-5">
-          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
+          <Link
+            href="/"
+            className="flex items-center hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+          >
             <SteamLogo className="[&_text]:fill-white [&_line]:opacity-90" />
           </Link>
-          <Link href="/auth/login">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-sm text-white/70 hover:text-white hover:border-white/40 border-white/20 bg-white/5 hover:bg-white/10"
+
+          <div className="flex items-center gap-3 sm:gap-5">
+            <span className="hidden sm:inline text-xs text-white/40">
+              Partnerių mokyklų mokytojams
+            </span>
+            <Link
+              href="/auth/login"
+              className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] backdrop-blur-sm pl-4 pr-3.5 py-2 text-sm text-white/80 hover:text-white hover:border-white/30 hover:bg-white/[0.08] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
-              Mokytojams
-            </Button>
-          </Link>
+              <LogIn className="h-3.5 w-3.5 text-primary/80 group-hover:text-primary transition-colors" />
+              <span className="font-medium">Prisijungti</span>
+              <ArrowUpRight className="h-3.5 w-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+            </Link>
+          </div>
         </nav>
 
         {/* Hero content */}
@@ -119,9 +129,9 @@ export function HeroSection() {
                 variants={fadeUp}
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-extrabold text-white leading-[1.08] tracking-tight"
               >
-                Pamokos, kurios{" "}
+                Interaktyvios pamokos,{" "}
                 <br className="hidden sm:block" />
-                įtraukia{" "}
+                kurios įtraukia{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-steam-cyan">
                   visą klasę
                 </span>
@@ -132,12 +142,11 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-base md:text-lg text-white/50 mt-5 leading-relaxed max-w-[520px]"
+                className="text-base md:text-lg text-white/55 mt-5 leading-relaxed max-w-[540px]"
               >
-                KU STEAM centro komanda sukūrė įrankį, kuriuo mokytojai
-                parengia interaktyvias pamokas su komandinėmis užduotimis,
-                iššūkiais ir diskusijomis. Prieiga suteikiama partnerių mokyklų
-                mokytojams po mokymų ir praktinių veiklų.
+                Kurkite pamokas pagal Lietuvos bendrojo ugdymo programą — su
+                komandinėmis užduotimis, iššūkiais, diskusijomis ir integruotomis
+                STEAM veiklomis. Pritaikyta 24 dalykams nuo 1 iki 12 klasės.
               </motion.p>
 
               {/* CTAs */}
@@ -253,8 +262,8 @@ export function HeroSection() {
                       <GraduationCap className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <div className="text-[11px] font-bold text-steam-dark leading-none">3 komandos</div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5">sprendžia užduotis</div>
+                      <div className="text-[11px] font-bold text-steam-dark leading-none">24 dalykai</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">1–12 klasėms</div>
                     </div>
                   </div>
                 </motion.div>

@@ -12,23 +12,23 @@ const steps = [
     icon: Handshake,
     title: "Bendradarbiavimas su STEAM centru",
     description:
-      "Prieiga teikiama mokykloms, kurios bendradarbiauja su Klaipėdos universiteto STEAM centru.",
+      "Prieiga suteikiama mokykloms, priklausančioms Klaipėdos universiteto STEAM metodinio centro partnerių tinklui.",
     color: "bg-secondary/10 text-secondary",
   },
   {
     number: "02",
     icon: GraduationCap,
-    title: "Dalyvavimas mokymuose ir dirbtuvėse",
+    title: "Mokymai ir dirbtuvės",
     description:
-      "Prieš pradedant dirbti, mokytojai susipažįsta su įrankiu praktiniuose mokymuose ir dirbtuvėse.",
+      "Prieš pradedant dirbti, mokytojai kartu su STEAM centro komanda praeina praktinius mokymus ir dirbtuves.",
     color: "bg-primary/10 text-primary",
   },
   {
     number: "03",
     icon: KeyRound,
-    title: "Prieigos suteikimas",
+    title: "Asmeninė prieiga",
     description:
-      "Po mokymų mokytojams suteikiama asmeninė prieiga ir galimybė kurti veiklas savarankiškai.",
+      "Po mokymų mokytojui suteikiama asmeninė prieiga — nuo tada pamokas kursite savarankiškai.",
     color: "bg-highlight/10 text-highlight",
   },
 ]
@@ -111,11 +111,11 @@ export function AccessSection() {
               <Mail className="h-6 w-6 text-secondary" />
             </div>
             <h3 className="text-lg font-bold text-steam-dark mb-3">
-              Norite pradėti?
+              Norite prisijungti?
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              Jeigu jūsų mokykla nori prisijungti prie partnerių tinklo arba
-              tiesiog norite sužinoti daugiau — parašykite STEAM centrui.
+              Jei jūsų mokykla svarsto tapti partnere arba tiesiog turite klausimų —
+              parašykite STEAM metodiniam centrui, pasikalbėsime.
             </p>
             <a href="mailto:steam@ku.lt">
               <Button

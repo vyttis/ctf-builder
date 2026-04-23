@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { BookOpen, Loader2 } from "lucide-react"
+import { SUBJECTS } from "@/lib/curriculum/subjects"
 
 interface PublishDialogProps {
   gameId: string
@@ -30,15 +31,9 @@ interface PublishDialogProps {
   gameDescription?: string | null
 }
 
-const subjects = [
-  "Fizika",
-  "Chemija",
-  "Biologija",
-  "Matematika",
-  "Informatika",
-  "Technologijos",
-  "Menas",
-  "Kita",
+const subjectOptions: { value: string; label: string }[] = [
+  ...SUBJECTS.map((s) => ({ value: s.label, label: s.label })),
+  { value: "Kita", label: "Kita" },
 ]
 
 const gradeLevels = ["5-6", "7-8", "9-10", "11-12"]
@@ -154,9 +149,9 @@ export function PublishDialog({
                   <SelectValue placeholder="Pasirinkite" />
                 </SelectTrigger>
                 <SelectContent>
-                  {subjects.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
+                  {subjectOptions.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

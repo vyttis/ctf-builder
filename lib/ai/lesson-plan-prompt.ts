@@ -5,8 +5,11 @@
  * The output is a planning document, NOT a game task list.
  */
 
+import { getSubjectLabel } from "@/lib/curriculum/subjects"
+
 export interface LessonPlanGenerateInput {
   subject: string
+  secondary_subject?: string | null
   grade: number
   topic: string
   lesson_type: string
@@ -60,6 +63,7 @@ TAISYKLĖS:
 - Veiklos turi būti įdomios ir interaktyvios.
 - Sunkumas turi progresyviai didėti per pamoką.
 - Kiekviena veikla turi turėti teisingą atsakymą, užuominas ir paaiškinimą.
+- Jei pateikiami du dalykai, pamoka turi būti tikrai integruota, o ne nuosekli.
 
 VEIKLŲ ETAPAI:
 - "intro" — motyvacinis įvadas, susidomėjimo kėlimas
@@ -105,7 +109,15 @@ ATSAKYK TIK validžiu JSON formatu pagal šią struktūrą:
 export function buildLessonPlanUserMessage(input: LessonPlanGenerateInput): string {
   const parts: string[] = []
 
-  parts.push(`Dalykas: ${input.subject}`)
+  const primaryLabel = getSubjectLabel(input.subject)
+  const secondaryLabel = input.secondary_subject ? getSubjectLabel(input.secondary_subject) : null
+
+  if (secondaryLabel) {
+    parts.push(`Pagrindinis dalykas: ${primaryLabel}`)
+    parts.push(`Integruojamas dalykas: ${secondaryLabel}`)
+  } else {
+    parts.push(`Dalykas: ${primaryLabel}`)
+  }
   parts.push(`Klasė: ${input.grade}`)
   parts.push(`Tema: ${input.topic}`)
   parts.push(`Pamokos trukmė: ${input.duration} minučių`)
@@ -113,6 +125,14 @@ export function buildLessonPlanUserMessage(input: LessonPlanGenerateInput): stri
   const typeInstructions = LESSON_TYPE_INSTRUCTIONS[input.lesson_type]
   if (typeInstructions) {
     parts.push(`\n${typeInstructions}`)
+  }
+
+  if (secondaryLabel) {
+    parts.push(`\nINTEGRUOTA PAMOKA (STEAM principu):
+- Ši pamoka jungia DU dalykus: ${primaryLabel} ir ${secondaryLabel}.
+- Kiekviena veikla turi ORGANIŠKAI jungti abiejų dalykų turinį — ne paeiliui, o kartu.
+- curriculum_link lauke nurodyk ryšį su ABIEJŲ dalykų programomis.
+- teacher_methodical_note paaiškink, kokios žinios iš abiejų dalykų būtinos ir kaip padėti mokiniams matyti ryšį.`)
   }
 
   if (input.learning_goal) {

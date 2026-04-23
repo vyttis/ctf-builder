@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 import { buildLessonPlanSystemPrompt, buildLessonPlanUserMessage } from "@/lib/ai/lesson-plan-prompt"
+import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
 import { z } from "zod"
 
 // Rate limiter
@@ -9,27 +10,33 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT = 5
 const RATE_WINDOW = 60_000
 
-function checkRateLimit(userId: string): boolean {
+function checkRateLimit(userId: string): { allowed: boolean; retryAfterSec: number } {
   const now = Date.now()
   const entry = rateLimitMap.get(userId)
   if (!entry || now > entry.resetAt) {
     rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW })
-    return true
+    return { allowed: true, retryAfterSec: 0 }
   }
-  if (entry.count >= RATE_LIMIT) return false
+  if (entry.count >= RATE_LIMIT) {
+    return { allowed: false, retryAfterSec: Math.ceil((entry.resetAt - now) / 1000) }
+  }
   entry.count++
-  return true
+  return { allowed: true, retryAfterSec: 0 }
 }
 
 const requestSchema = z.object({
   subject: z.string().min(1),
+  secondary_subject: z.string().min(1).nullable().optional(),
   grade: z.number().min(1).max(12),
   topic: z.string().min(1).max(500),
   lesson_type: z.enum(["nauja_tema", "kartojimas", "vertinimas", "projektine_veikla"]),
   duration: z.number().min(25).max(90),
   learning_goal: z.string().max(500).optional(),
   curriculum_context: z.string().max(2000).optional(),
-})
+}).refine(
+  (d) => !d.secondary_subject || d.secondary_subject !== d.subject,
+  { message: "Antrasis dalykas turi skirtis nuo pirmojo", path: ["secondary_subject"] }
+)
 
 const stageSchema = z.object({
   activity_type: z.enum(["intro", "challenge", "discussion", "reflection"]),
@@ -63,10 +70,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
     }
 
-    if (!checkRateLimit(user.id)) {
+    const rate = checkRateLimit(user.id)
+    if (!rate.allowed) {
       return NextResponse.json(
-        { error: "Per daug užklausų. Palaukite minutę." },
-        { status: 429 }
+        { error: `Pasiektas DI užklausų limitas (${RATE_LIMIT}/min). Palaukite ${rate.retryAfterSec} s ir bandykite vėl.` },
+        { status: 429, headers: { "Retry-After": rate.retryAfterSec.toString() } }
       )
     }
 
@@ -85,6 +93,22 @@ export async function POST(request: Request) {
       )
     }
 
+    const validGrades = parsed.data.secondary_subject
+      ? getGradesIntersection(parsed.data.subject, parsed.data.secondary_subject)
+      : getGradesForSubject(parsed.data.subject)
+    if (validGrades.length === 0) {
+      return NextResponse.json(
+        { error: "Šie dalykai neturi bendrų klasių. Pasirinkite kitą derinį." },
+        { status: 400 }
+      )
+    }
+    if (!validGrades.includes(parsed.data.grade)) {
+      return NextResponse.json(
+        { error: `Klasė ${parsed.data.grade} netinka šiam dalykų deriniui.` },
+        { status: 400 }
+      )
+    }
+
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
       return NextResponse.json(
@@ -99,7 +123,10 @@ export async function POST(request: Request) {
       model: "claude-sonnet-4-20250514",
       max_tokens: 8192,
       system: buildLessonPlanSystemPrompt(),
-      messages: [{ role: "user", content: buildLessonPlanUserMessage(parsed.data) }],
+      messages: [{ role: "user", content: buildLessonPlanUserMessage({
+        ...parsed.data,
+        secondary_subject: parsed.data.secondary_subject ?? null,
+      }) }],
     })
 
     const textBlock = message.content.find((b) => b.type === "text")
