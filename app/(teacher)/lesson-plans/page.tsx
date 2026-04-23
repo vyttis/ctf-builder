@@ -87,8 +87,10 @@ export default async function LessonPlansPage({
   const { data: plans } = await query.order(sort.column, { ascending: sort.ascending })
 
   const hasAnyFilter = Boolean(search || subjectFilter || statusFilter)
-  const hasIntegratedPlan = plans?.some((p) => p.secondary_subject) ?? false
-  const showShowcase = !hasAnyFilter && !hasIntegratedPlan
+  // Keep the STEAM showcase visible whenever no filter is active — it
+  // promotes the headline two-subject integration feature continuously,
+  // not just on the first empty state. Discoverability over clutter.
+  const showShowcase = !hasAnyFilter
 
   return (
     <div>
