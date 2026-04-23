@@ -1,13 +1,17 @@
 import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, FileText, GraduationCap, Clock, ArrowRight, Sparkles, SearchX } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { getSubjectLabel } from "@/lib/curriculum/subjects"
+import { getSubjectLabel, SUBJECTS } from "@/lib/curriculum/subjects"
 import { LessonPlansFilterBar } from "@/components/teacher/lesson-plans-filter-bar"
 import { SteamTemplatesShowcase } from "@/components/teacher/steam-templates-showcase"
+
+const VALID_SUBJECT_IDS = new Set(SUBJECTS.map((s) => s.id))
+const VALID_STATUSES = new Set(["draft", "saved", "converted"])
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
   nauja_tema: "Nauja tema",
@@ -43,28 +47,41 @@ export default async function LessonPlansPage({
 }) {
   const params = await searchParams
   const search = params.q ?? ""
-  const subjectFilter = params.subject ?? ""
-  const statusFilter = params.status ?? ""
+  // Whitelist filter values — never trust client-supplied strings in .or() / .eq()
+  const subjectFilter = params.subject && VALID_SUBJECT_IDS.has(params.subject) ? params.subject : ""
+  const statusFilter = params.status && VALID_STATUSES.has(params.status) ? params.status : ""
   const sortKey = params.sort ?? "created_desc"
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  if (!user) {
+    redirect("/auth/login")
+  }
+
   const sort = SORT_CONFIG[sortKey] ?? SORT_CONFIG.created_desc
   let query = supabase
     .from("lesson_plans")
     .select("*")
-    .eq("teacher_id", user!.id)
+    .eq("teacher_id", user.id)
 
   if (subjectFilter) {
+    // Whitelisted subject id — safe to embed in PostgREST filter
     query = query.or(`subject.eq.${subjectFilter},secondary_subject.eq.${subjectFilter}`)
   }
   if (statusFilter) {
     query = query.eq("status", statusFilter)
   }
-  if (search) {
-    const safe = search.replace(/[%_]/g, "")
-    query = query.or(`title.ilike.%${safe}%,topic.ilike.%${safe}%`)
+  if (search.trim()) {
+    // Strip PostgREST filter-breaking characters before ILIKE interpolation.
+    // Remove anything that could break .or() syntax: (, ), comma, backslash, quote.
+    const safe = search
+      .trim()
+      .slice(0, 100)
+      .replace(/[()\\,"%_]/g, "")
+    if (safe) {
+      query = query.or(`title.ilike.%${safe}%,topic.ilike.%${safe}%`)
+    }
   }
 
   const { data: plans } = await query.order(sort.column, { ascending: sort.ascending })
