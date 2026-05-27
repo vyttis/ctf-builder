@@ -38,6 +38,57 @@ import {
 
 type Phase = "input" | "preview" | "saving"
 
+/**
+ * Multi-stage progress indicator shown while the AI generates a lesson plan.
+ * Lesson plan generation typically takes 20-40s with Opus 4.7 — a spinning
+ * loader alone makes teachers think the system is stuck.
+ */
+function GenerationProgress() {
+  const stages = [
+    { at: 0, label: "Analizuojama ugdymo programa..." },
+    { at: 5000, label: "Generuojamos pamokos veiklos..." },
+    { at: 25000, label: "Finalizuojamas planas..." },
+  ]
+  const [elapsedMs, setElapsedMs] = useState(0)
+
+  useEffect(() => {
+    const start = Date.now()
+    const id = setInterval(() => setElapsedMs(Date.now() - start), 250)
+    return () => clearInterval(id)
+  }, [])
+
+  const currentStageIndex = stages.reduce(
+    (acc, s, i) => (elapsedMs >= s.at ? i : acc),
+    0,
+  )
+  // Progress: 0..95% — never hit 100 until response actually arrives.
+  const progressPercent = Math.min(95, Math.floor((elapsedMs / 35000) * 100))
+
+  return (
+    <div className="rounded-lg border border-secondary/30 bg-secondary/5 p-4 space-y-3">
+      <div className="flex items-center gap-3">
+        <Loader2 className="h-5 w-5 animate-spin text-secondary shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-steam-dark">
+            {stages[currentStageIndex].label}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            DI ruošia pedagoginius pasiūlymus pagal Lietuvos BUP — gali užtrukti iki 40 sek.
+          </p>
+        </div>
+      </div>
+      <div className="h-1.5 rounded-full bg-secondary/15 overflow-hidden">
+        <motion.div
+          className="h-full bg-secondary"
+          initial={{ width: 0 }}
+          animate={{ width: `${progressPercent}%` }}
+          transition={{ ease: "linear", duration: 0.3 }}
+        />
+      </div>
+    </div>
+  )
+}
+
 export function LessonPlanGenerator() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -85,6 +136,7 @@ export function LessonPlanGenerator() {
   const [editTeacherNote, setEditTeacherNote] = useState("")
   const [editReflection, setEditReflection] = useState("")
   const [editCurriculumLink, setEditCurriculumLink] = useState("")
+  const [editCompetencies, setEditCompetencies] = useState<string[]>([])
   const [stages, setStages] = useState<LessonStage[]>([])
 
   // Derived
@@ -151,6 +203,7 @@ export function LessonPlanGenerator() {
       setEditCurriculumLink(plan.curriculum_link)
       setEditTeacherNote(plan.teacher_methodical_note)
       setEditReflection(plan.reflection_prompt)
+      setEditCompetencies(plan.competencies ?? [])
       setStages(plan.stages.map((s: LessonStage) => ({ ...s })))
       setPhase("preview")
     } catch (err) {
@@ -200,6 +253,7 @@ export function LessonPlanGenerator() {
           duration,
           goal: editGoal,
           curriculum_link: editCurriculumLink,
+          competencies: editCompetencies,
           stages,
           reflection_prompt: editReflection,
           teacher_methodical_note: editTeacherNote,
@@ -244,6 +298,7 @@ export function LessonPlanGenerator() {
           duration,
           goal: editGoal,
           curriculum_link: editCurriculumLink,
+          competencies: editCompetencies,
           stages,
           reflection_prompt: editReflection,
           teacher_methodical_note: editTeacherNote,
@@ -303,7 +358,9 @@ export function LessonPlanGenerator() {
           <CardContent className="space-y-5">
             {/* Subject */}
             <div className="space-y-2">
-              <Label htmlFor="lp-subject">Dalykas</Label>
+              <Label htmlFor="lp-subject">
+                Dalykas <span className="text-accent" aria-hidden="true">*</span>
+              </Label>
               <SubjectCombobox
                 id="lp-subject"
                 value={subject}
@@ -333,7 +390,9 @@ export function LessonPlanGenerator() {
                 animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2"
               >
-                <Label htmlFor="lp-grade">Klasė</Label>
+                <Label htmlFor="lp-grade">
+                  Klasė <span className="text-accent" aria-hidden="true">*</span>
+                </Label>
                 <Select
                   value={grade?.toString() ?? ""}
                   onValueChange={(v) => {
@@ -439,7 +498,9 @@ export function LessonPlanGenerator() {
                 animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2"
               >
-                <Label htmlFor="lp-topic">Tema</Label>
+                <Label htmlFor="lp-topic">
+                  Tema <span className="text-accent" aria-hidden="true">*</span>
+                </Label>
                 {curriculumTopics.length > 0 && (
                   <Select
                     value={topicId}
@@ -478,7 +539,9 @@ export function LessonPlanGenerator() {
 
             {/* Lesson type */}
             <div className="space-y-2">
-              <Label htmlFor="lp-type">Pamokos tipas</Label>
+              <Label htmlFor="lp-type">
+                Pamokos tipas <span className="text-accent" aria-hidden="true">*</span>
+              </Label>
               <Select value={lessonType} onValueChange={setLessonType}>
                 <SelectTrigger id="lp-type">
                   <SelectValue placeholder="Pasirinkite tipą" />
@@ -495,7 +558,9 @@ export function LessonPlanGenerator() {
 
             {/* Duration */}
             <div className="space-y-2">
-              <Label htmlFor="lp-duration">Trukmė</Label>
+              <Label htmlFor="lp-duration">
+                Trukmė <span className="text-accent" aria-hidden="true">*</span>
+              </Label>
               <Select
                 value={duration.toString()}
                 onValueChange={(v) => setDuration(parseInt(v, 10))}
@@ -567,15 +632,17 @@ export function LessonPlanGenerator() {
           </CardContent>
         </Card>
 
-        {/* Loading skeleton */}
+        {/* Loading: multi-stage status + skeleton */}
         <AnimatePresence>
           {loading && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="space-y-3"
+              className="space-y-4"
+              aria-live="polite"
             >
+              <GenerationProgress />
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}

@@ -89,7 +89,7 @@ export function HeroSection() {
           </Link>
 
           <div className="flex items-center gap-3 sm:gap-5">
-            <span className="hidden sm:inline text-xs text-white/40">
+            <span className="hidden sm:inline text-xs text-white/75">
               Partnerių mokyklų mokytojams
             </span>
             <Link
@@ -142,7 +142,7 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="text-base md:text-lg text-white/55 mt-5 leading-relaxed max-w-[540px]"
+                className="text-base md:text-lg text-white/80 mt-5 leading-relaxed max-w-[540px]"
               >
                 Kurkite pamokas pagal Lietuvos bendrojo ugdymo programą — su
                 komandinėmis užduotimis, iššūkiais, diskusijomis ir integruotomis
@@ -169,7 +169,7 @@ export function HeroSection() {
                 <Button
                   size="lg"
                   variant="ghost"
-                  className="w-full sm:w-auto gap-2 h-12 text-sm px-8 text-white/60 hover:text-white hover:bg-white/10"
+                  className="w-full sm:w-auto gap-2 h-12 text-sm px-8 text-white/80 hover:text-white hover:bg-white/10"
                   onClick={() => {
                     document
                       .getElementById("how-it-works")
@@ -194,7 +194,7 @@ export function HeroSection() {
                   return (
                     <span
                       key={i}
-                      className="flex items-center gap-2 text-[13px] text-white/40 font-medium"
+                      className="flex items-center gap-2 text-[13px] text-white/75 font-medium"
                     >
                       <Icon className="h-4 w-4 text-primary/70 shrink-0" />
                       {item.text}

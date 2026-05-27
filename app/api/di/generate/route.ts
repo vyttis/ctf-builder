@@ -16,7 +16,7 @@ import type {
   AiSuggestion,
   VerificationResult,
 } from "@/lib/ai/types"
-import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { getAnthropicClient, MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const generateSchema = z.object({
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     const anthropic = getAnthropicClient()
 
     // Step 1: Generate suggestions
-    const message = await anthropic.messages.create({
+    const message = await createWithFallback({
       model: MODELS.generate,
       max_tokens: 4096,
       system: cachedSystem(buildSystemPrompt()),
@@ -178,10 +178,22 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ suggestions: enrichedSuggestions })
   } catch (error) {
-    console.error("DI generate error:", error)
-    return NextResponse.json(
-      { error: "DI užduočių generavimas nepavyko. Bandykite dar kartą." },
-      { status: 500 }
-    )
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error("DI generate error:", errMsg, error)
+
+    // Surface the underlying Anthropic / model error so it's debuggable in the UI.
+    // (Internal API key isn't in the error message, so this is safe to return.)
+    const friendly = errMsg.includes("model")
+      ? `DI modelis neprieinamas: ${errMsg}`
+      : errMsg.includes("rate") || errMsg.includes("429")
+        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
+        : errMsg.includes("overloaded") || errMsg.includes("529")
+          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
+          : `DI užduočių generavimas nepavyko: ${errMsg}`
+
+    return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }
+
+// Allow up to 60s for generation + parallel verification
+export const maxDuration = 60

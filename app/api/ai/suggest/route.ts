@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { buildSystemPrompt, buildUserMessage } from "@/lib/ai/prompt"
 import { aiSuggestResponseSchema } from "@/lib/ai/schemas"
-import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const suggestSchema = z.object({
@@ -77,8 +77,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const anthropic = getAnthropicClient()
-    const message = await anthropic.messages.create({
+    const message = await createWithFallback({
       model: MODELS.generate,
       max_tokens: 4096,
       system: cachedSystem(buildSystemPrompt()),
@@ -98,10 +97,17 @@ export async function POST(request: Request) {
 
     return NextResponse.json(validated.data)
   } catch (error) {
-    console.error("AI suggest error:", error)
-    return NextResponse.json(
-      { error: "DI pasiūlymo generavimas nepavyko. Bandykite dar kartą." },
-      { status: 500 }
-    )
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error("AI suggest error:", errMsg, error)
+    const friendly = errMsg.includes("model")
+      ? `DI modelis neprieinamas: ${errMsg}`
+      : errMsg.includes("rate") || errMsg.includes("429")
+        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
+        : errMsg.includes("overloaded") || errMsg.includes("529")
+          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
+          : `DI pasiūlymo generavimas nepavyko: ${errMsg}`
+    return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }
+
+export const maxDuration = 30

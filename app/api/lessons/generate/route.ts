@@ -5,8 +5,9 @@ import { lessonGenerateRequestSchema, generatedLessonSchema } from "@/lib/ai/les
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 import type { AiSuggestion } from "@/lib/ai/types"
 import type { ChallengeType } from "@/types/game"
-import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
-import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
+import { MODELS, cachedSystem } from "@/lib/ai/client"
+import { createWithSchemaRetry } from "@/lib/ai/retry"
+import { checkAiRateLimit } from "@/lib/ai/rate-limit"
 
 export async function POST(request: Request) {
   try {
@@ -62,28 +63,16 @@ export async function POST(request: Request) {
       )
     }
 
-    const anthropic = getAnthropicClient()
-    const message = await anthropic.messages.create({
-      model: MODELS.generate,
-      max_tokens: 8192,
-      system: cachedSystem(buildLessonSystemPrompt()),
-      messages: [{ role: "user", content: buildLessonUserMessage(parsed.data) }],
-    })
-
-    const textBlock = message.content.find((b) => b.type === "text")
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from AI")
-    }
-
-    const rawLesson = parseAiJson(textBlock.text)
-    const validated = generatedLessonSchema.safeParse(rawLesson)
-    if (!validated.success) {
-      console.error("Lesson validation error:", validated.error.message)
-      throw new Error("Invalid lesson structure from AI")
-    }
-
-    // Run deterministic validation on activities where possible
-    const lesson = validated.data
+    const lesson = await createWithSchemaRetry(
+      {
+        model: MODELS.generate,
+        max_tokens: 8192,
+        system: cachedSystem(buildLessonSystemPrompt()),
+        messages: [{ role: "user", content: buildLessonUserMessage(parsed.data) }],
+      },
+      generatedLessonSchema,
+      { logPrefix: "lessons-generate", maxRetries: 1 },
+    )
     const activitiesWithVerification = lesson.activities.map((activity) => {
       const suggestion: AiSuggestion = {
         title: activity.title,
@@ -110,10 +99,17 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error("Lesson generate error:", error)
-    return NextResponse.json(
-      { error: "Pamokos generavimas nepavyko. Bandykite dar kartą." },
-      { status: 500 }
-    )
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error("Lesson generate error:", errMsg, error)
+    const friendly = errMsg.includes("model")
+      ? `DI modelis neprieinamas: ${errMsg}`
+      : errMsg.includes("rate") || errMsg.includes("429")
+        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
+        : errMsg.includes("overloaded") || errMsg.includes("529")
+          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
+          : `Pamokos generavimas nepavyko: ${errMsg}`
+    return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }
+
+export const maxDuration = 60

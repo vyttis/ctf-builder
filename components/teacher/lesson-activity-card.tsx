@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import type { LessonActivity } from "@/lib/ai/lesson-types"
+import { COMPETENCY_LABELS, BLOOM_LABELS } from "@/lib/ai/lesson-types"
 import type { VerificationResult } from "@/lib/ai/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +10,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   ChevronUp,
   ChevronDown,
@@ -68,6 +77,7 @@ export function LessonActivityCard({
   onMoveDown,
 }: LessonActivityCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const config = ACTIVITY_TYPE_CONFIG[activity.activity_type]
   const diffConfig = DIFFICULTY_CONFIG[activity.difficulty]
   const Icon = config.icon
@@ -121,41 +131,45 @@ export function LessonActivityCard({
             )}
           </div>
 
-          {/* Actions */}
+          {/* Actions — h-9 w-9 to meet 36px (WCAG-friendly compromise on density) */}
           <div className="flex items-center gap-0.5 shrink-0">
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0"
+              className="h-9 w-9 p-0"
               onClick={() => onMoveUp()}
               disabled={index === 0}
+              aria-label="Perkelti aukštyn"
             >
-              <ChevronUp className="h-3.5 w-3.5" />
+              <ChevronUp className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0"
+              className="h-9 w-9 p-0"
               onClick={() => onMoveDown()}
               disabled={index === total - 1}
+              aria-label="Perkelti žemyn"
             >
-              <ChevronDown className="h-3.5 w-3.5" />
+              <ChevronDown className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0"
+              className="h-9 w-9 p-0"
               onClick={() => setExpanded(!expanded)}
+              aria-label={expanded ? "Sutraukti" : "Redaguoti"}
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 text-accent hover:text-accent"
-              onClick={onRemove}
+              className="h-9 w-9 p-0 text-accent hover:text-accent"
+              onClick={() => setConfirmDelete(true)}
+              aria-label="Pašalinti veiklą"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -166,6 +180,22 @@ export function LessonActivityCard({
             <p className="text-xs text-muted-foreground line-clamp-2">
               {activity.description}
             </p>
+          </div>
+        )}
+
+        {/* Pedagogical metadata badges (visible by default if AI provided them) */}
+        {!expanded && (activity.bloom_level || (activity.competencies?.length ?? 0) > 0) && (
+          <div className="px-3 pb-2 flex flex-wrap gap-1">
+            {activity.bloom_level && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                {BLOOM_LABELS[activity.bloom_level]}
+              </Badge>
+            )}
+            {(activity.competencies ?? []).slice(0, 2).map((c) => (
+              <Badge key={c} variant="outline" className="text-[10px] px-1.5 py-0">
+                {COMPETENCY_LABELS[c]} kompetencija
+              </Badge>
+            ))}
           </div>
         )}
 
@@ -314,6 +344,31 @@ export function LessonActivityCard({
           </div>
         )}
       </CardContent>
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pašalinti veiklą?</DialogTitle>
+            <DialogDescription>
+              Veikla &bdquo;{activity.title}&ldquo; bus pašalinta iš pamokos plano. Šio veiksmo negalima atšaukti.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+              Atšaukti
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setConfirmDelete(false)
+                onRemove()
+              }}
+            >
+              Pašalinti
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

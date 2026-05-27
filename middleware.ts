@@ -1,6 +1,33 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 
+// In-memory onboarding-completed cache: user.id → { completed, expiresAt }.
+// 30s TTL is short enough to feel "live" but cuts ~30-50ms off every teacher
+// navigation. Cache is per-instance — irrelevant for correctness because the
+// values are read-only flags.
+type OnboardingCacheEntry = { completed: boolean; expiresAt: number }
+const ONBOARDING_TTL_MS = 30_000
+const onboardingCache = new Map<string, OnboardingCacheEntry>()
+
+async function isOnboardingCompleted(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+): Promise<boolean> {
+  const now = Date.now()
+  const cached = onboardingCache.get(userId)
+  if (cached && cached.expiresAt > now) return cached.completed
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_completed")
+    .eq("id", userId)
+    .single()
+
+  const completed = Boolean(profile?.onboarding_completed)
+  onboardingCache.set(userId, { completed, expiresAt: now + ONBOARDING_TTL_MS })
+  return completed
+}
+
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
   const url = request.nextUrl.clone()
@@ -88,15 +115,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Check onboarding completion for authenticated users
+    // Check onboarding completion for authenticated users (30s in-memory cache)
     if (user && !isOnboarding && !isOnboardingApi && !isAuthPage) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("id", user.id)
-        .single()
-
-      if (profile && !profile.onboarding_completed) {
+      const completed = await isOnboardingCompleted(supabase, user.id)
+      if (!completed) {
         url.pathname = "/onboarding"
         return NextResponse.redirect(url)
       }
@@ -135,13 +157,8 @@ export async function middleware(request: NextRequest) {
 
   // Check onboarding completion for authenticated users on teacher routes
   if (user && isTeacherRoute && !isOnboarding && !isOnboardingApi) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", user.id)
-      .single()
-
-    if (profile && !profile.onboarding_completed) {
+    const completed = await isOnboardingCompleted(supabase, user.id)
+    if (!completed) {
       url.pathname = "/onboarding"
       return NextResponse.redirect(url)
     }

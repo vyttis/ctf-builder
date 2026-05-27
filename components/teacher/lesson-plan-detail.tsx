@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { getSubjectLabel } from "@/lib/curriculum/subjects"
+import { COMPETENCY_LABELS, BLOOM_LABELS, type Competency, type BloomLevel } from "@/lib/ai/lesson-types"
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
   nauja_tema: "Nauja tema",
@@ -63,7 +64,10 @@ interface LessonPlanDetailProps {
       points: number
       hints: string[]
       explanation: string
+      competencies?: string[]
+      bloom_level?: string
     }>
+    competencies?: string[]
     reflection_prompt: string
     teacher_methodical_note: string
     status: string
@@ -181,6 +185,25 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
         </Card>
       )}
 
+      {/* Pamokos ugdomos kompetencijos */}
+      {(plan.competencies?.length ?? 0) > 0 && (
+        <Card className="border-primary/20 bg-primary/5 mb-6">
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-primary mb-2 flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              Ugdomos kompetencijos
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {(plan.competencies ?? []).map((c) => COMPETENCY_LABELS[c as Competency] ? (
+                <span key={c} className="text-xs px-2 py-0.5 rounded-md bg-white border border-primary/20 text-primary">
+                  {COMPETENCY_LABELS[c as Competency]}
+                </span>
+              ) : null)}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stages / lesson flow */}
       <div className="mb-6">
         <h2 className="text-sm font-medium text-steam-dark flex items-center gap-2 mb-3">
@@ -214,6 +237,20 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
                       </div>
                       <h3 className="font-medium text-steam-dark text-sm">{stage.title}</h3>
                       <p className="text-xs text-muted-foreground mt-1">{stage.description}</p>
+                      {(stage.bloom_level || (stage.competencies?.length ?? 0) > 0) && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {stage.bloom_level && BLOOM_LABELS[stage.bloom_level as BloomLevel] && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary/10 text-secondary border border-secondary/20">
+                              Bloom: {BLOOM_LABELS[stage.bloom_level as BloomLevel]}
+                            </span>
+                          )}
+                          {(stage.competencies ?? []).map((c) => COMPETENCY_LABELS[c as Competency] ? (
+                            <span key={c} className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                              {COMPETENCY_LABELS[c as Competency]}
+                            </span>
+                          ) : null)}
+                        </div>
+                      )}
                       {stage.explanation && (
                         <p className="text-xs text-muted-foreground mt-2 italic">
                           Paaiškinimas: {stage.explanation}
