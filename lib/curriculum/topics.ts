@@ -39,48 +39,6 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "algebra-11-12", label: "Algebra", subtopics: ["Kompleksiniai skaičiai", "Polinomai", "Matricų pagrindai"] },
     ],
   },
-  "lietuviu-kalba": {
-    "1-4": [
-      { id: "lk-rastingumas-1-4", label: "Raštingumas", subtopics: ["Abėcėlė", "Skaitymas", "Rašyba", "Skyryba"] },
-      { id: "lk-tekstai-1-4", label: "Tekstų suvokimas", subtopics: ["Pasakos", "Eilėraščiai", "Pasakojimai"] },
-      { id: "lk-kalbejimas-1-4", label: "Kalbėjimas", subtopics: ["Pasakojimas", "Aprašymas", "Dialogas"] },
-    ],
-    "5-6": [
-      { id: "lk-gramatika-5-6", label: "Gramatika", subtopics: ["Daiktavardis", "Būdvardis", "Veiksmažodis", "Linksniavimas"] },
-      { id: "lk-tautosaka", label: "Tautosaka", subtopics: ["Mitai", "Pasakos", "Patarlės", "Dainos"] },
-      { id: "lk-rasymas-5-6", label: "Teksto kūrimas", subtopics: ["Pasakojimas", "Aprašymas", "Laiškas"] },
-    ],
-    "7-8": [
-      { id: "lk-sintakse", label: "Sintaksė", subtopics: ["Sakinio dalys", "Sudėtiniai sakiniai", "Skyryba"] },
-      { id: "lk-literatura-7-8", label: "Literatūra", subtopics: ["Žanrai", "Kūrinio analizė", "Autoriai"] },
-      { id: "lk-rasymas-7-8", label: "Rašymas", subtopics: ["Samprotavimas", "Charakteristika", "Recenzija"] },
-    ],
-    "9-10": [
-      { id: "lk-literatura-9-10", label: "Lietuvių literatūra", subtopics: ["Donelaitis", "Maironis", "Žemaitė", "XX a. rašytojai"] },
-      { id: "lk-stilistika", label: "Stilistika", subtopics: ["Kalbos stiliai", "Meninės raiškos priemonės", "Tekstynas"] },
-      { id: "lk-argumentavimas", label: "Argumentavimas", subtopics: ["Teiginys", "Argumentai", "Samprotavimas"] },
-    ],
-    "11-12": [
-      { id: "lk-literatura-11-12", label: "Lietuvių ir pasaulio literatūra", subtopics: ["Klasikai", "Modernistai", "Šiuolaikiniai autoriai"] },
-      { id: "lk-analize", label: "Teksto analizė", subtopics: ["Kontekstas", "Prasmė", "Interpretacija"] },
-      { id: "lk-rasinys", label: "Samprotaujamasis rašinys", subtopics: ["Teiginio formulavimas", "Argumentavimas", "Išvados"] },
-    ],
-  },
-  "pasaulio-pazinimas": {
-    "1-4": [
-      { id: "pp-gamta", label: "Gamta aplink mus", subtopics: ["Augalai", "Gyvūnai", "Orai", "Metų laikai"] },
-      { id: "pp-zmogus", label: "Žmogus ir sveikata", subtopics: ["Kūno dalys", "Jausmai", "Mityba", "Saugumas"] },
-      { id: "pp-visuomene", label: "Visuomenė ir aplinka", subtopics: ["Šeima", "Miestas", "Lietuva", "Pasaulis"] },
-    ],
-  },
-  "gamta-ir-zmogus": {
-    "5-6": [
-      { id: "giz-gyvoji", label: "Gyvoji gamta", subtopics: ["Gyvų organizmų įvairovė", "Augalai", "Gyvūnai", "Grybai ir bakterijos"] },
-      { id: "giz-zmogus", label: "Žmogaus kūnas", subtopics: ["Judėjimo sistema", "Mityba ir virškinimas", "Higiena"] },
-      { id: "giz-ekosistemos", label: "Ekosistemos", subtopics: ["Mitybos grandinės", "Gamtos apsauga", "Aplinkos tarša"] },
-      { id: "giz-negyvoji", label: "Negyvoji gamta", subtopics: ["Vanduo", "Oras", "Dirvožemis", "Saulės sistema"] },
-    ],
-  },
   fizika: {
     "7-8": [
       { id: "fiz-mechanika-7-8", label: "Mechanika", subtopics: ["Greitis", "Jėga", "Inercija", "Svertai"] },
@@ -487,6 +445,59 @@ export const CURRICULUM_TOPICS: Record<string, Record<string, CurriculumTopic[]>
       { id: "sk-istorija-11-12", label: "Šokio istorija ir teorijos", subtopics: ["Šokio raida", "Žymūs choreografai", "Šiuolaikinės tendencijos"] },
       { id: "sk-projektas", label: "Šokio projektas", subtopics: ["Idėjos kūrimas", "Savarankiška choreografija", "Pristatymas", "Analizė"] },
       { id: "sk-analize-11-12", label: "Šokio analizė", subtopics: ["Stiliaus atpažinimas", "Kompozicijos vertinimas", "Kontekstas ir prasmė"] },
+    ],
+  },
+
+  "lietuviu-kalba": {
+    "1-4": [
+      { id: "lt-skaitymas-1-4", label: "Skaitymas", subtopics: ["Garsai ir raidės", "Skiemenavimas", "Sakinio skaitymas", "Teksto suvokimas", "Lietuvių autoriai vaikams"] },
+      { id: "lt-rasymas-1-4", label: "Rašymas", subtopics: ["Raidžių rašymas", "Žodžių rašyba", "Sakinių sudarymas", "Trumpi rašiniai"] },
+      { id: "lt-kalbos-turtinimas-1-4", label: "Kalbos turtinimas", subtopics: ["Žodynas", "Sinonimai ir antonimai", "Pasakojimas", "Aprašymas"] },
+      { id: "lt-tautosaka-1-4", label: "Lietuvių tautosaka", subtopics: ["Pasakos", "Mįslės", "Patarlės", "Skaičiuotės", "Liaudies dainos"] },
+    ],
+    "5-6": [
+      { id: "lt-tekstu-rusys-5-6", label: "Tekstų rūšys", subtopics: ["Pasakojimas", "Aprašymas", "Samprotavimas", "Laiškas", "Informacinis tekstas"] },
+      { id: "lt-skaitymas-5-6", label: "Literatūros skaitymas", subtopics: ["Apsakymas", "Eilėraštis", "Pasaka", "K. Donelaitis (pradžia)", "Vaikų literatūra"] },
+      { id: "lt-kalbos-sandara-5-6", label: "Kalbos sandara", subtopics: ["Fonetika", "Žodžių daryba", "Daiktavardis", "Veiksmažodis", "Būdvardis"] },
+      { id: "lt-rasyba-5-6", label: "Rašyba ir skyryba", subtopics: ["Balsių ir priebalsių rašyba", "Galūnių rašyba", "Kablelis sakinyje", "Tiesioginė kalba"] },
+    ],
+    "7-8": [
+      { id: "lt-literatura-7-8", label: "Literatūros istorija", subtopics: ["K. Donelaitis", "M. Mažvydas", "Lietuvių klasika", "Tautosaka ir literatūra", "Romantizmas"] },
+      { id: "lt-analize-7-8", label: "Tekstų analizė", subtopics: ["Kūrinio veikėjai", "Idėja ir tema", "Vaizdavimo priemonės", "Kompozicija"] },
+      { id: "lt-sintakse-7-8", label: "Sintaksė", subtopics: ["Sakinio dalys", "Sudėtinis sakinys", "Šalutinis sakinys", "Skyryba sudėtiniame sakinyje"] },
+      { id: "lt-stilius-7-8", label: "Stilistika", subtopics: ["Funkciniai stiliai", "Meninės priemonės", "Žodynas ir frazeologizmai"] },
+    ],
+    "9-10": [
+      { id: "lt-klasika-9-10", label: "Lietuvių klasika", subtopics: ["Maironis", "V. Krėvė", "J. Biliūnas", "Šatrijos Ragana", "V. Mykolaitis-Putinas"] },
+      { id: "lt-ese-9-10", label: "Esė ir rašiniai", subtopics: ["Argumentinis rašinys", "Esė struktūra", "Tezės pagrindimas", "Citatos vartojimas"] },
+      { id: "lt-sintakse-9-10", label: "Sudėtinė sintaksė", subtopics: ["Sudėtiniai prijungiamieji sakiniai", "Sudėtiniai sujungiamieji sakiniai", "Sintaksinis analizė"] },
+      { id: "lt-tarpukario-9-10", label: "Tarpukario literatūra", subtopics: ["Keturi vėjai", "Trečias frontas", "B. Sruoga", "J. Aistis", "S. Nėris"] },
+    ],
+    "11-12": [
+      { id: "lt-be-program-11-12", label: "Brandos egzamino autoriai", subtopics: ["K. Donelaitis (Metai)", "Maironis", "V. Mykolaitis-Putinas (Altorių šešėly)", "B. Sruoga (Dievų miškas)", "J. Biliūnas", "J. Aistis", "S. Nėris", "M. Katiliškis", "J. Marcinkevičius", "A. Škėma"] },
+      { id: "lt-teorija-11-12", label: "Literatūros teorija", subtopics: ["Literatūros kryptys", "Žanrai", "Stilistinė analizė", "Kontekstualizavimas"] },
+      { id: "lt-rasinys-11-12", label: "Brandos rašinys", subtopics: ["Samprotaujamasis rašinys", "Literatūrinis rašinys", "Teksto interpretacija", "Argumentavimas"] },
+      { id: "lt-uzsienio-11-12", label: "Užsienio literatūros kontekstas", subtopics: ["A. Mickevičius", "F. Dostojevskis", "F. Kafka", "Pasaulinė klasika"] },
+    ],
+  },
+
+  "pasaulio-pazinimas": {
+    "1-4": [
+      { id: "pp-aplinka", label: "Mano aplinka", subtopics: ["Šeima", "Mokykla", "Bendruomenė", "Lietuva", "Mano miestas/kaimas"] },
+      { id: "pp-gamta", label: "Gyvoji ir negyvoji gamta", subtopics: ["Augalai", "Gyvūnai", "Metų laikai", "Oras", "Vanduo, oras, žemė"] },
+      { id: "pp-zmogus", label: "Žmogaus kūnas ir sveikata", subtopics: ["Kūno dalys", "Pojūčiai", "Mityba", "Higiena", "Sportas ir judėjimas"] },
+      { id: "pp-istorija", label: "Lietuvos istorija ir tradicijos", subtopics: ["Valstybės simboliai", "Tautinės šventės", "Žymios asmenybės", "Pilys ir piliakalniai"] },
+      { id: "pp-geografija", label: "Lietuva ir pasaulis", subtopics: ["Žemėlapis", "Vandenynai ir žemynai", "Lietuvos miestai", "Kaimynai"] },
+    ],
+  },
+
+  "gamta-ir-zmogus": {
+    "5-6": [
+      { id: "gz-gyvi-organizmai", label: "Gyvieji organizmai", subtopics: ["Augalų sandara", "Gyvūnų klasifikacija", "Gyvenamosios aplinkos", "Mityba ir maisto grandinės"] },
+      { id: "gz-ekosistemos", label: "Ekosistemos", subtopics: ["Miškas", "Vandens telkiniai", "Pievos", "Žmogaus poveikis gamtai"] },
+      { id: "gz-zmogaus-kunas", label: "Žmogaus organizmas", subtopics: ["Skeletas ir raumenys", "Kraujotaka", "Kvėpavimas", "Virškinimas", "Pojūčiai"] },
+      { id: "gz-medziagos", label: "Medžiagos ir reiškiniai", subtopics: ["Medžiagų savybės", "Vanduo gamtoje", "Oras", "Šiluma ir temperatūra"] },
+      { id: "gz-zeme", label: "Žemė ir kosmosas", subtopics: ["Saulės sistema", "Žemės sandara", "Klimato zonos", "Stichinės nelaimės"] },
     ],
   },
 }

@@ -55,24 +55,25 @@ export default function LeaderboardPage() {
     if (!game) { setLoading(false); return }
     setGameId(game.id)
 
-    const { data } = await supabase
-      .from("teams")
-      .select("id, name, total_points, current_challenge_index, joined_at, updated_at")
-      .eq("game_id", game.id)
-      .order("total_points", { ascending: false })
-      .order("updated_at", { ascending: true })
+    // Teams + achievements in parallel
+    const [teamsRes, achievementsRes] = await Promise.all([
+      supabase
+        .from("teams")
+        .select("id, name, total_points, current_challenge_index, joined_at, updated_at")
+        .eq("game_id", game.id)
+        .order("total_points", { ascending: false })
+        .order("updated_at", { ascending: true }),
+      supabase
+        .from("achievements")
+        .select("*")
+        .eq("game_id", game.id),
+    ])
 
-    if (data) setTeams(data)
+    if (teamsRes.data) setTeams(teamsRes.data)
 
-    // Fetch achievements for all teams
-    const { data: achievements } = await supabase
-      .from("achievements")
-      .select("*")
-      .eq("game_id", game.id)
-
-    if (achievements) {
+    if (achievementsRes.data) {
       const grouped: Record<string, Achievement[]> = {}
-      for (const a of achievements) {
+      for (const a of achievementsRes.data) {
         if (!grouped[a.team_id]) grouped[a.team_id] = []
         grouped[a.team_id].push(a as Achievement)
       }

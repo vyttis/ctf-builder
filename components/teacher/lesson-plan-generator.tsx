@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject, getGradesIntersection, getSubjectLabel } from "@/lib/curriculum/subjects"
+import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject, getSubjectLabel } from "@/lib/curriculum/subjects"
 import { getTopicsForSubjectAndGrade, getCurriculumContext } from "@/lib/curriculum/topics"
 import { getLessonTemplate } from "@/lib/curriculum/lesson-templates"
 import { Switch } from "@/components/ui/switch"
@@ -88,11 +88,6 @@ export function LessonPlanGenerator() {
   const [stages, setStages] = useState<LessonStage[]>([])
 
   // Derived
-  const availableGrades = useMemo(() => {
-    if (!subject) return []
-    if (isIntegrated && secondarySubject) return getGradesIntersection(subject, secondarySubject)
-    return getGradesForSubject(subject)
-  }, [subject, secondarySubject, isIntegrated])
   const curriculumTopics = useMemo(
     () => (subject && grade && !isIntegrated ? getTopicsForSubjectAndGrade(subject, grade) : []),
     [subject, grade, isIntegrated]
@@ -320,13 +315,59 @@ export function LessonPlanGenerator() {
                   setSubject(v)
                   setGrade(null)
                   setTopicId("")
-                  if (v === secondarySubject) setSecondarySubject("")
+                  setSecondarySubject("")
+                  setIsIntegrated(false)
                 }}
               />
+              {subject && (
+                <p className="text-xs text-muted-foreground">
+                  Dėstoma {getGradesForSubject(subject)[0]}–{getGradesForSubject(subject).slice(-1)[0]} klasėse
+                </p>
+              )}
             </div>
 
-            {/* Integrated STEAM toggle */}
+            {/* Grade — show all grades for selected subject */}
             {subject && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="space-y-2"
+              >
+                <Label htmlFor="lp-grade">Klasė</Label>
+                <Select
+                  value={grade?.toString() ?? ""}
+                  onValueChange={(v) => {
+                    setGrade(parseInt(v, 10))
+                    setTopicId("")
+                    // Reset secondary subject if it doesn't cover the new grade
+                    if (
+                      secondarySubject &&
+                      !getGradesForSubject(secondarySubject).includes(parseInt(v, 10))
+                    ) {
+                      setSecondarySubject("")
+                    }
+                  }}
+                >
+                  <SelectTrigger id="lp-grade">
+                    <SelectValue placeholder="Pasirinkite klasę" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getGradesForSubject(subject).map((g) => (
+                      <SelectItem key={g} value={g.toString()}>
+                        {g} klasė
+                        {g <= 4 && " (pradinis ugdymas)"}
+                        {g >= 5 && g <= 8 && " (pagrindinis ugdymas)"}
+                        {g >= 9 && g <= 10 && " (pagrindinis ugdymas)"}
+                        {g >= 11 && " (vidurinis ugdymas)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </motion.div>
+            )}
+
+            {/* Integrated STEAM toggle — secondary subject filtered by chosen grade */}
+            {subject && grade && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -340,8 +381,6 @@ export function LessonPlanGenerator() {
                       setIsIntegrated(v)
                       if (!v) {
                         setSecondarySubject("")
-                        setGrade(null)
-                        setTopicId("")
                       }
                     }}
                   />
@@ -351,68 +390,45 @@ export function LessonPlanGenerator() {
                   </Label>
                 </div>
 
-                {isIntegrated && (
-                  <div className="space-y-2">
-                    <Label htmlFor="lp-secondary-subject">Antrasis dalykas</Label>
-                    <SubjectCombobox
-                      id="lp-secondary-subject"
-                      value={secondarySubject}
-                      options={SUBJECTS.filter((s) => s.id !== subject).map((s) => ({
-                        value: s.id,
-                        label: s.label,
-                      }))}
-                      placeholder="Pasirinkite antrą dalyką"
-                      searchPlaceholder="Ieškoti dalyko..."
-                      emptyText="Dalyko nerasta"
-                      onChange={(v) => {
-                        setSecondarySubject(v)
-                        setGrade(null)
-                        setTopicId("")
-                      }}
-                    />
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* Grade */}
-            {subject && (!isIntegrated || secondarySubject) && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="space-y-2"
-              >
-                <Label htmlFor="lp-grade">Klasė</Label>
-                {availableGrades.length === 0 ? (
-                  <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                    <span className="text-base leading-none">⚠️</span>
-                    <div>
-                      <p className="font-medium">Šie dalykai neturi bendrų klasių</p>
-                      <p className="mt-1 text-xs opacity-80">
-                        {`„${getSubjectLabel(subject)}" (${getGradesForSubject(subject)[0]}–${getGradesForSubject(subject).slice(-1)[0]} kl.) ir „${getSubjectLabel(secondarySubject)}" (${getGradesForSubject(secondarySubject)[0]}–${getGradesForSubject(secondarySubject).slice(-1)[0]} kl.) nesutampa. Pasirinkite kitą antrąjį dalyką.`}
-                      </p>
+                {isIntegrated && (() => {
+                  const compatibleSubjects = SUBJECTS.filter(
+                    (s) => s.id !== subject && s.grades.includes(grade)
+                  )
+                  return (
+                    <div className="space-y-2">
+                      <Label htmlFor="lp-secondary-subject">Antrasis dalykas</Label>
+                      {compatibleSubjects.length === 0 ? (
+                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                          <span className="text-base leading-none">⚠️</span>
+                          <p>
+                            {grade} klasėje nėra kitų dalykų, kuriais būtų galima integruoti su &bdquo;{getSubjectLabel(subject)}&ldquo;.
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <SubjectCombobox
+                            id="lp-secondary-subject"
+                            value={secondarySubject}
+                            options={compatibleSubjects.map((s) => ({
+                              value: s.id,
+                              label: s.label,
+                            }))}
+                            placeholder="Pasirinkite antrą dalyką"
+                            searchPlaceholder="Ieškoti dalyko..."
+                            emptyText="Dalyko nerasta"
+                            onChange={(v) => {
+                              setSecondarySubject(v)
+                              setTopicId("")
+                            }}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Rodomi tik dalykai, dėstomi {grade} klasėje
+                          </p>
+                        </>
+                      )}
                     </div>
-                  </div>
-                ) : (
-                  <Select
-                    value={grade?.toString() ?? ""}
-                    onValueChange={(v) => {
-                      setGrade(parseInt(v, 10))
-                      setTopicId("")
-                    }}
-                  >
-                    <SelectTrigger id="lp-grade">
-                      <SelectValue placeholder="Pasirinkite klasę" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableGrades.map((g) => (
-                        <SelectItem key={g} value={g.toString()}>
-                          {g} klasė
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                  )
+                })()}
               </motion.div>
             )}
 
