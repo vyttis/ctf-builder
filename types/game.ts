@@ -32,7 +32,9 @@ export interface Challenge {
   description: string | null
   type: ChallengeType
   points: number
-  answer_hash: string
+  // Server-only field — never selected by client/teacher pages. Optional so a
+  // Challenge fetched without answer_hash still typechecks.
+  answer_hash?: string
   hints: string[]
   options: string[] | null
   image_url: string | null

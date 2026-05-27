@@ -1,32 +1,16 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import Anthropic from "@anthropic-ai/sdk"
 import { buildGameSystemPrompt, buildGameUserMessage } from "@/lib/ai/prompt"
 import { aiGameSuggestResponseSchema } from "@/lib/ai/schemas"
+import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const suggestGameSchema = z.object({
   teacher_prompt: z.string().max(500).optional(),
   theme: z.string().max(100).optional(),
   count: z.number().min(1).max(5).default(3),
 })
-
-// Simple in-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 10
-const RATE_WINDOW = 60_000
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(userId)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW })
-    return true
-  }
-  if (entry.count >= RATE_LIMIT) return false
-  entry.count++
-  return true
-}
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -38,7 +22,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
-  if (!checkRateLimit(user.id)) {
+  if (!checkAiRateLimit("suggest-game", user.id, 10)) {
     return NextResponse.json(
       { error: "Per daug užklausų. Palaukite minutę." },
       { status: 429 }
@@ -62,8 +46,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: firstError }, { status: 400 })
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "DI paslauga nepasiekiama. Susisiekite su administratoriumi." },
       { status: 503 }
@@ -71,11 +54,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const anthropic = new Anthropic({ apiKey })
+    const anthropic = getAnthropicClient()
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: MODELS.generate,
       max_tokens: 2048,
-      system: buildGameSystemPrompt(),
+      system: cachedSystem(buildGameSystemPrompt()),
       messages: [{ role: "user", content: buildGameUserMessage(parsed.data) }],
     })
 
@@ -84,12 +67,7 @@ export async function POST(request: Request) {
       throw new Error("No text response from AI")
     }
 
-    let jsonText = textBlock.text.trim()
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
-    }
-
-    const rawParsed = JSON.parse(jsonText)
+    const rawParsed = parseAiJson(textBlock.text)
     const validated = aiGameSuggestResponseSchema.safeParse(rawParsed)
     if (!validated.success) {
       throw new Error("Invalid AI response structure: " + validated.error.message)

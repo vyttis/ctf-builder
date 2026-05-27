@@ -15,6 +15,16 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 
+interface PendingLibraryItem {
+  id: string
+  title: string
+  subject: string | null
+  grade_level: string | null
+  challenge_count: number
+  created_at: string
+  profiles: { full_name: string | null; email: string | null } | null
+}
+
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
@@ -145,8 +155,7 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {(pendingItems || []).map((item: any) => (
+              {((pendingItems as PendingLibraryItem[] | null) || []).map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center justify-between py-2"

@@ -29,10 +29,10 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
 }
 
 const ACTIVITY_TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  intro: { label: "Įvadas", color: "bg-blue-100 text-blue-700" },
-  challenge: { label: "Veikla", color: "bg-green-100 text-green-700" },
-  discussion: { label: "Diskusija", color: "bg-purple-100 text-purple-700" },
-  reflection: { label: "Refleksija", color: "bg-amber-100 text-amber-700" },
+  intro: { label: "Įvadas", color: "bg-secondary/10 text-secondary" },
+  challenge: { label: "Veikla", color: "bg-primary/10 text-primary" },
+  discussion: { label: "Diskusija", color: "bg-accent/10 text-accent" },
+  reflection: { label: "Refleksija", color: "bg-highlight/15 text-steam-dark" },
 }
 
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {

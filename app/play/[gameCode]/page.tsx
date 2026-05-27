@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,28 +42,33 @@ export default function JoinGamePage() {
   }, [gameCode, router])
 
   async function validateGame() {
-    const supabase = createClient()
-    const { data: game } = await supabase
-      .from("games")
-      .select("id, title, description, status")
-      .eq("game_code", gameCode)
-      .single()
+    try {
+      const res = await fetch(`/api/play/state?game_code=${encodeURIComponent(gameCode)}`)
+      if (!res.ok) {
+        setGameState({ status: "not_found" })
+        return
+      }
+      const data = await res.json()
+      const game = data?.game as { title: string; description: string | null; status: string } | null
 
-    if (!game) {
+      if (!game) {
+        setGameState({ status: "not_found" })
+        return
+      }
+
+      if (game.status !== "active") {
+        setGameState({ status: "inactive", gameStatus: game.status })
+        return
+      }
+
+      setGameState({
+        status: "ready",
+        title: game.title,
+        description: game.description,
+      })
+    } catch {
       setGameState({ status: "not_found" })
-      return
     }
-
-    if (game.status !== "active") {
-      setGameState({ status: "inactive", gameStatus: game.status })
-      return
-    }
-
-    setGameState({
-      status: "ready",
-      title: game.title,
-      description: game.description,
-    })
   }
 
   async function handleJoin(e: React.FormEvent) {

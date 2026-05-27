@@ -1,28 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import Anthropic from "@anthropic-ai/sdk"
 import { buildLessonSystemPrompt, buildLessonUserMessage } from "@/lib/ai/lesson-prompt"
 import { lessonGenerateRequestSchema, generatedLessonSchema } from "@/lib/ai/lesson-schema"
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 import type { AiSuggestion } from "@/lib/ai/types"
 import type { ChallengeType } from "@/types/game"
-
-// Simple in-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 5
-const RATE_WINDOW = 60_000
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(userId)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW })
-    return true
-  }
-  if (entry.count >= RATE_LIMIT) return false
-  entry.count++
-  return true
-}
+import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 export async function POST(request: Request) {
   try {
@@ -35,7 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
     }
 
-    if (!checkRateLimit(user.id)) {
+    if (!checkAiRateLimit("lessons-generate", user.id, 5)) {
       return NextResponse.json(
         { error: "Per daug užklausų. Palaukite minutę." },
         { status: 429 }
@@ -60,7 +44,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verify game ownership
     const { data: game } = await supabase
       .from("games")
       .select("id")
@@ -72,20 +55,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
         { error: "DI paslauga nepasiekiama. Susisiekite su administratoriumi." },
         { status: 503 }
       )
     }
 
-    const anthropic = new Anthropic({ apiKey })
-
+    const anthropic = getAnthropicClient()
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: MODELS.generate,
       max_tokens: 8192,
-      system: buildLessonSystemPrompt(),
+      system: cachedSystem(buildLessonSystemPrompt()),
       messages: [{ role: "user", content: buildLessonUserMessage(parsed.data) }],
     })
 
@@ -94,14 +75,7 @@ export async function POST(request: Request) {
       throw new Error("No text response from AI")
     }
 
-    let jsonText = textBlock.text.trim()
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText
-        .replace(/^```(?:json)?\n?/, "")
-        .replace(/\n?```$/, "")
-    }
-
-    const rawLesson = JSON.parse(jsonText)
+    const rawLesson = parseAiJson(textBlock.text)
     const validated = generatedLessonSchema.safeParse(rawLesson)
     if (!validated.success) {
       console.error("Lesson validation error:", validated.error.message)

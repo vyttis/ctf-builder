@@ -16,6 +16,8 @@ import type {
   AiSuggestion,
   VerificationResult,
 } from "@/lib/ai/types"
+import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const generateSchema = z.object({
   game_id: z.string().uuid(),
@@ -36,23 +38,6 @@ const generateSchema = z.object({
   scenario: z.enum(["quick_check", "investigation", "escape_room", "discussion"]).optional(),
 })
 
-// Simple in-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 10
-const RATE_WINDOW = 60_000
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(userId)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW })
-    return true
-  }
-  if (entry.count >= RATE_LIMIT) return false
-  entry.count++
-  return true
-}
-
 async function verifySuggestion(
   anthropic: Anthropic,
   suggestion: AiSuggestion
@@ -63,12 +48,12 @@ async function verifySuggestion(
     return deterministicResult
   }
 
-  // Step 2: Fall back to LLM verification
+  // Step 2: Fall back to LLM verification (cheap haiku model)
   try {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: MODELS.verify,
       max_tokens: 1024,
-      system: buildVerificationSystemPrompt(),
+      system: cachedSystem(buildVerificationSystemPrompt()),
       messages: [
         {
           role: "user",
@@ -86,14 +71,7 @@ async function verifySuggestion(
       }
     }
 
-    let jsonText = textBlock.text.trim()
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText
-        .replace(/^```(?:json)?\n?/, "")
-        .replace(/\n?```$/, "")
-    }
-
-    const rawParsed = JSON.parse(jsonText)
+    const rawParsed = parseAiJson(textBlock.text)
     const validated = verificationResultSchema.safeParse(rawParsed)
     if (!validated.success) {
       return {
@@ -123,7 +101,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
-  if (!checkRateLimit(user.id)) {
+  if (!checkAiRateLimit("di-generate", user.id, 10)) {
     return NextResponse.json(
       { error: "Per daug užklausų. Palaukite minutę." },
       { status: 429 }
@@ -160,8 +138,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "DI paslauga nepasiekiama. Susisiekite su administratoriumi." },
       { status: 503 }
@@ -169,13 +146,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const anthropic = new Anthropic({ apiKey })
+    const anthropic = getAnthropicClient()
 
     // Step 1: Generate suggestions
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: MODELS.generate,
       max_tokens: 4096,
-      system: buildSystemPrompt(),
+      system: cachedSystem(buildSystemPrompt()),
       messages: [{ role: "user", content: buildUserMessage(parsed.data, parsed.data.scenario) }],
     })
 
@@ -184,14 +161,7 @@ export async function POST(request: Request) {
       throw new Error("No text response from DI")
     }
 
-    let jsonText = textBlock.text.trim()
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText
-        .replace(/^```(?:json)?\n?/, "")
-        .replace(/\n?```$/, "")
-    }
-
-    const rawGenerated = JSON.parse(jsonText)
+    const rawGenerated = parseAiJson(textBlock.text)
     const validatedResponse = aiSuggestResponseSchema.safeParse(rawGenerated)
     if (!validatedResponse.success) {
       throw new Error("Invalid DI response structure: " + validatedResponse.error.message)

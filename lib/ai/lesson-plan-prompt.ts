@@ -77,7 +77,7 @@ VEIKLŲ TIPAI (type laukas):
 - "multiple_choice" — pasirinkimas iš variantų (pateik 3-4 options, correct_answer PRIVALO būti vienas iš jų)
 
 LAIKO PLANAVIMAS:
-- Paskirstyk minutes realstiškai tarp veiklų.
+- Paskirstyk minutes realistiškai tarp veiklų.
 - Intro: 3-5 min. Challenge: 5-10 min kiekvienas. Discussion: 5-7 min. Reflection: 3-5 min.
 - Bendra trukmė turi atitikti nurodytą pamokos trukmę.
 

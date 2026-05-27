@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import { Challenge } from "@/types/game"
 import { AiSuggestion } from "@/lib/ai/types"
@@ -44,10 +44,31 @@ export default function ChallengesPage() {
   const [prefillData, setPrefillData] = useState<AiSuggestion | null>(null)
   const [gameData, setGameData] = useState<GameData | null>(null)
 
-  useEffect(() => {
-    fetchChallenges()
-    fetchGameData()
+  const refetchChallenges = useCallback(async () => {
+    const res = await fetch(`/api/challenges?game_id=${gameId}`)
+    if (res.ok) {
+      const data = await res.json()
+      setChallenges(data)
+    }
+    setLoading(false)
   }, [gameId])
+
+  const fetchGameData = useCallback(async () => {
+    const res = await fetch(`/api/games/${gameId}`)
+    if (res.ok) {
+      const data = await res.json()
+      setGameData({
+        id: data.id,
+        title: data.title,
+        description: data.description,
+      })
+    }
+  }, [gameId])
+
+  useEffect(() => {
+    refetchChallenges()
+    fetchGameData()
+  }, [refetchChallenges, fetchGameData])
 
   // Check for AI prefill from game detail page navigation
   useEffect(() => {
@@ -66,27 +87,6 @@ export default function ChallengesPage() {
     }
   }, [searchParams])
 
-  async function fetchChallenges() {
-    const res = await fetch(`/api/challenges?game_id=${gameId}`)
-    if (res.ok) {
-      const data = await res.json()
-      setChallenges(data)
-    }
-    setLoading(false)
-  }
-
-  async function fetchGameData() {
-    const res = await fetch(`/api/games/${gameId}`)
-    if (res.ok) {
-      const data = await res.json()
-      setGameData({
-        id: data.id,
-        title: data.title,
-        description: data.description,
-      })
-    }
-  }
-
   async function confirmDelete() {
     if (!deleteTarget) return
     setDeleting(true)
@@ -95,7 +95,7 @@ export default function ChallengesPage() {
     })
     if (res.ok) {
       toast({ title: "Užduotis pašalinta!" })
-      fetchChallenges()
+      refetchChallenges()
     }
     setDeleting(false)
     setDeleteTarget(null)
@@ -145,7 +145,7 @@ export default function ChallengesPage() {
                     setShowForm(false)
                     setEditingChallenge(null)
                     setPrefillData(null)
-                    fetchChallenges()
+                    refetchChallenges()
                   }}
                   onCancel={() => {
                     setShowForm(false)
@@ -203,7 +203,7 @@ export default function ChallengesPage() {
           gameDescription={gameData.description}
           challenges={challenges}
           onChallengesChange={setChallenges}
-          onRefreshChallenges={fetchChallenges}
+          onRefreshChallenges={refetchChallenges}
           onEditChallenge={(challenge) => {
             setEditingChallenge(challenge)
             setPrefillData(null)

@@ -10,6 +10,8 @@ import {
 } from "@/lib/ai/verify-prompt"
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 import type { AiSuggestion, VerificationResult } from "@/lib/ai/types"
+import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const processSchema = z.object({
   storage_path: z.string().min(1),
@@ -28,6 +30,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
+  if (!checkAiRateLimit("import-process", user.id, 5)) {
+    return NextResponse.json(
+      { error: "Per daug užklausų. Palaukite minutę." },
+      { status: 429 }
+    )
+  }
+
   let body
   try {
     body = await request.json()
@@ -44,6 +53,12 @@ export async function POST(request: Request) {
       { error: parsed.error.issues[0]?.message || "Neteisingi duomenys" },
       { status: 400 }
     )
+  }
+
+  // Authorize: storage_path must live in this user's imports folder.
+  const expectedPrefix = `imports/${user.id}/`
+  if (!parsed.data.storage_path.startsWith(expectedPrefix)) {
+    return NextResponse.json({ error: "Prieiga uždrausta" }, { status: 403 })
   }
 
   try {
@@ -72,15 +87,14 @@ export async function POST(request: Request) {
     // Truncate to reasonable length for AI processing
     const truncatedText = text.slice(0, 8000)
 
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
         { error: "DI paslauga nepasiekiama" },
         { status: 503 }
       )
     }
 
-    const anthropic = new Anthropic({ apiKey })
+    const anthropic = getAnthropicClient()
 
     // Generate tasks from document content
     const systemPrompt = buildSystemPrompt()
@@ -97,9 +111,9 @@ ${truncatedText}
 Sugeneruok ${parsed.data.count} užduotis pagal šį dokumentą. Užduotys turi tikrinti mokinių supratimą apie dokumento turinį.`
 
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: MODELS.generate,
       max_tokens: 4096,
-      system: systemPrompt,
+      system: cachedSystem(systemPrompt),
       messages: [{ role: "user", content: userMessage }],
     })
 
@@ -148,11 +162,12 @@ async function extractText(blob: Blob, path: string): Promise<string> {
 
   if (ext === "pdf") {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse")
-      const buffer = Buffer.from(await blob.arrayBuffer())
-      const data = await pdfParse(buffer)
-      return data.text
+      const { PDFParse } = await import("pdf-parse")
+      const data = new Uint8Array(await blob.arrayBuffer())
+      const parser = new PDFParse({ data })
+      const result = await parser.getText()
+      await parser.destroy()
+      return result.text
     } catch {
       return ""
     }
@@ -181,9 +196,9 @@ async function verifySuggestion(
 
   try {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: MODELS.verify,
       max_tokens: 1024,
-      system: buildVerificationSystemPrompt(),
+      system: cachedSystem(buildVerificationSystemPrompt()),
       messages: [
         { role: "user", content: buildVerificationUserMessage(suggestion) },
       ],
@@ -194,12 +209,7 @@ async function verifySuggestion(
       return { verdict: "uncertain", issues: ["Patikra negauta"], confidence: 0 }
     }
 
-    let jsonText = textBlock.text.trim()
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
-    }
-
-    const rawParsed = JSON.parse(jsonText)
+    const rawParsed = parseAiJson(textBlock.text)
     const validated = verificationResultSchema.safeParse(rawParsed)
     if (!validated.success) {
       return { verdict: "uncertain", issues: ["Netikėtas formatas"], confidence: 0 }

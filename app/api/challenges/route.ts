@@ -130,30 +130,32 @@ export async function POST(request: Request) {
     err.message?.includes("column") || err.code === "42703"
 
   // Try with all columns, progressively fall back if columns don't exist
-  // Supabase dynamic select returns varying shapes, typed loosely for column fallback
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let result: { data: any; error: any } = await supabase
+  type ChallengeQueryResult = {
+    data: Record<string, unknown> | null
+    error: { message?: string; code?: string } | null
+  }
+  let result = (await supabase
     .from("challenges")
     .insert({ ...minimalPayload, ...extraPayload, ...diPayload })
     .select(SAFE_CHALLENGE_COLUMNS)
-    .single()
+    .single()) as ChallengeQueryResult
 
   if (result.error && isColumnError(result.error)) {
     console.warn("DI columns missing, retrying without them:", result.error.message)
-    result = await supabase
+    result = (await supabase
       .from("challenges")
       .insert({ ...minimalPayload, ...extraPayload })
       .select(BASE_CHALLENGE_COLUMNS)
-      .single()
+      .single()) as ChallengeQueryResult
   }
 
   if (result.error && isColumnError(result.error)) {
     console.warn("Extra columns missing, retrying with minimal:", result.error.message)
-    result = await supabase
+    result = (await supabase
       .from("challenges")
       .insert(minimalPayload)
       .select(MINIMAL_CHALLENGE_COLUMNS)
-      .single()
+      .single()) as ChallengeQueryResult
   }
 
   if (result.error) {
@@ -196,28 +198,31 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let result: { data: any; error: any } = await supabase
+  type ChallengeListResult = {
+    data: Record<string, unknown>[] | null
+    error: { message?: string; code?: string } | null
+  }
+  let result = (await supabase
     .from("challenges")
     .select(SAFE_CHALLENGE_COLUMNS)
     .eq("game_id", gameId)
-    .order("order_index", { ascending: true })
+    .order("order_index", { ascending: true })) as ChallengeListResult
 
   // Fall back progressively if columns don't exist yet
   if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
-    result = await supabase
+    result = (await supabase
       .from("challenges")
       .select(BASE_CHALLENGE_COLUMNS)
       .eq("game_id", gameId)
-      .order("order_index", { ascending: true })
+      .order("order_index", { ascending: true })) as ChallengeListResult
   }
 
   if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
-    result = await supabase
+    result = (await supabase
       .from("challenges")
       .select(MINIMAL_CHALLENGE_COLUMNS)
       .eq("game_id", gameId)
-      .order("order_index", { ascending: true })
+      .order("order_index", { ascending: true })) as ChallengeListResult
   }
 
   if (result.error) {

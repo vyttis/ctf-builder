@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import Anthropic from "@anthropic-ai/sdk"
 import {
   buildVerificationSystemPrompt,
   buildVerificationUserMessage,
@@ -9,6 +8,8 @@ import {
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 import { verificationResultSchema } from "@/lib/ai/schemas"
 import type { AiSuggestion } from "@/lib/ai/types"
+import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const verifySchema = z.object({
   suggestion: z.object({
@@ -32,6 +33,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
+  if (!checkAiRateLimit("di-verify", user.id, 30)) {
+    return NextResponse.json(
+      { error: "Per daug užklausų. Palaukite minutę." },
+      { status: 429 }
+    )
+  }
+
   let body
   try {
     body = await request.json()
@@ -50,8 +58,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "DI paslauga nepasiekiama." },
       { status: 503 }
@@ -66,13 +73,13 @@ export async function POST(request: Request) {
     return NextResponse.json(deterministicResult)
   }
 
-  // LLM verification
+  // LLM verification (cheap haiku model)
   try {
-    const anthropic = new Anthropic({ apiKey })
+    const anthropic = getAnthropicClient()
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: MODELS.verify,
       max_tokens: 1024,
-      system: buildVerificationSystemPrompt(),
+      system: cachedSystem(buildVerificationSystemPrompt()),
       messages: [
         {
           role: "user",
@@ -86,14 +93,7 @@ export async function POST(request: Request) {
       throw new Error("No verification response")
     }
 
-    let jsonText = textBlock.text.trim()
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText
-        .replace(/^```(?:json)?\n?/, "")
-        .replace(/\n?```$/, "")
-    }
-
-    const rawResult = JSON.parse(jsonText)
+    const rawResult = parseAiJson(textBlock.text)
     const validated = verificationResultSchema.safeParse(rawResult)
     if (!validated.success) {
       return NextResponse.json(
