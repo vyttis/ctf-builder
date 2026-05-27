@@ -11,10 +11,12 @@ export function getAnthropicClient(): Anthropic {
 }
 
 // Model selection — see Anthropic docs for latest IDs.
-// generate: high-quality content (lesson plans, challenges, suggestions)
-// verify:   cheap, fast verification step
+// deepGenerate: highest quality, used for long pedagogical content (lesson plans)
+// generate:     balanced cost/quality for routine generation (challenges, suggestions, import)
+// verify:       cheap, fast verification step
 export const MODELS = {
-  generate: "claude-sonnet-4-5-20250929",
+  deepGenerate: "claude-opus-4-7",
+  generate: "claude-sonnet-4-6",
   verify: "claude-haiku-4-5-20251001",
 } as const
 

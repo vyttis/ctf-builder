@@ -99,7 +99,7 @@ export async function POST(request: Request) {
 
     const anthropic = getAnthropicClient()
     const message = await anthropic.messages.create({
-      model: MODELS.generate,
+      model: MODELS.deepGenerate,
       max_tokens: 12288,
       system: cachedSystem(buildLessonPlanSystemPrompt()),
       messages: [{ role: "user", content: buildLessonPlanUserMessage({
