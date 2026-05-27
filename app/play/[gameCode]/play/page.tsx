@@ -711,8 +711,8 @@ export default function PlayPage() {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary shrink-0">
                     {currentIndex + 1}
                   </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-steam-dark">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg font-bold text-steam-dark leading-tight break-words">
                       {currentChallenge.title}
                     </h2>
                     <Badge variant="outline" className="text-xs mt-1">
@@ -781,6 +781,7 @@ export default function PlayPage() {
                   </div>
                 )}
 
+                {!feedback?.is_correct && (
                 <form onSubmit={handleSubmit} className="space-y-3" aria-label="Atsakymo forma">
                   {currentChallenge.type === "multiple_choice" && currentChallenge.options ? (
                     <div className="space-y-2">
@@ -828,6 +829,7 @@ export default function PlayPage() {
                     )}
                   </Button>
                 </form>
+                )}
 
                 <AnimatePresence>
                   {feedback && (

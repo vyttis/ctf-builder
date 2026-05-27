@@ -52,14 +52,16 @@ export function AchievementToast({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -40 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -40 }}
+        exit={{ opacity: 0, y: -20 }}
         transition={{ type: "spring", damping: 20, stiffness: 300 }}
-        className="fixed top-14 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2"
+        // Inline on mobile (pushes content down — no overlap with title);
+        // fixed top-right on desktop (out of the way).
+        className="relative z-[60] mb-3 w-full sm:fixed sm:right-4 sm:top-4 sm:mb-0 sm:w-auto sm:max-w-sm"
       >
         <div
-          className="flex items-center gap-3 rounded-xl border border-steam-yellow/30 bg-gradient-to-r from-steam-yellow/15 to-steam-yellow/5 px-4 py-3 shadow-lg backdrop-blur-sm"
+          className="flex items-start gap-3 rounded-xl border border-steam-yellow/30 bg-gradient-to-r from-steam-yellow/15 to-steam-yellow/5 px-4 py-3 shadow-lg backdrop-blur-sm"
         >
           <div
             className="flex shrink-0 items-center justify-center rounded-full"
@@ -72,11 +74,11 @@ export function AchievementToast({
             <Icon size={22} style={{ color: config.color }} strokeWidth={2.5} />
           </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-steam-dark">
+          <div className="min-w-0 flex-1 pr-1">
+            <p className="text-sm font-semibold text-steam-dark leading-tight">
               🏆 {config.name}
             </p>
-            <p className="text-xs text-steam-dark/70 leading-snug">
+            <p className="text-xs text-steam-dark/70 leading-snug mt-0.5">
               {description}
             </p>
           </div>
