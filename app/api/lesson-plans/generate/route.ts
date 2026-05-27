@@ -2,8 +2,9 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { buildLessonPlanSystemPrompt, buildLessonPlanUserMessage } from "@/lib/ai/lesson-plan-prompt"
 import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
-import { MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
-import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
+import { MODELS, cachedSystem } from "@/lib/ai/client"
+import { createWithSchemaRetry } from "@/lib/ai/retry"
+import { checkAiRateLimit } from "@/lib/ai/rate-limit"
 import { z } from "zod"
 
 const requestSchema = z.object({
@@ -20,6 +21,8 @@ const requestSchema = z.object({
   { message: "Antrasis dalykas turi skirtis nuo pirmojo", path: ["secondary_subject"] }
 )
 
+import { COMPETENCIES, BLOOM_LEVELS } from "@/lib/ai/schemas"
+
 const stageSchema = z.object({
   activity_type: z.enum(["intro", "challenge", "discussion", "reflection"]),
   title: z.string().min(1),
@@ -32,6 +35,8 @@ const stageSchema = z.object({
   points: z.number().min(10).max(500).default(100),
   duration_minutes: z.number().min(1).max(45).default(5),
   difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
+  competencies: z.array(z.enum(COMPETENCIES)).default([]),
+  bloom_level: z.enum(BLOOM_LEVELS).optional(),
 })
 
 const lessonPlanResponseSchema = z.object({
@@ -41,6 +46,7 @@ const lessonPlanResponseSchema = z.object({
   stages: z.array(stageSchema).min(1),
   reflection_prompt: z.string().default(""),
   teacher_methodical_note: z.string().default(""),
+  competencies: z.array(z.enum(COMPETENCIES)).default([]),
 })
 
 export async function POST(request: Request) {
@@ -97,29 +103,24 @@ export async function POST(request: Request) {
       )
     }
 
-    const message = await createWithFallback({
-      model: MODELS.generate,
-      max_tokens: 8192,
-      system: cachedSystem(buildLessonPlanSystemPrompt()),
-      messages: [{ role: "user", content: buildLessonPlanUserMessage({
-        ...parsed.data,
-        secondary_subject: parsed.data.secondary_subject ?? null,
-      }) }],
-    })
+    // Use deepGenerate (Opus 4.7) for lesson plans — this is the inspectable
+    // pedagogical output the Ministry will review. Quality > cost.
+    // Schema retry handles the most common failure (slightly off field names).
+    const lessonPlan = await createWithSchemaRetry(
+      {
+        model: MODELS.deepGenerate,
+        max_tokens: 8192,
+        system: cachedSystem(buildLessonPlanSystemPrompt()),
+        messages: [{ role: "user", content: buildLessonPlanUserMessage({
+          ...parsed.data,
+          secondary_subject: parsed.data.secondary_subject ?? null,
+        }) }],
+      },
+      lessonPlanResponseSchema,
+      { logPrefix: "lesson-plan-generate", maxRetries: 1 },
+    )
 
-    const textBlock = message.content.find((b) => b.type === "text")
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from AI")
-    }
-
-    const rawLesson = parseAiJson(textBlock.text)
-    const validated = lessonPlanResponseSchema.safeParse(rawLesson)
-    if (!validated.success) {
-      console.error("Lesson plan validation error:", validated.error.message)
-      throw new Error("Invalid lesson plan structure from AI")
-    }
-
-    return NextResponse.json({ lesson_plan: validated.data })
+    return NextResponse.json({ lesson_plan: lessonPlan })
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
     console.error("Lesson plan generate error:", errMsg, error)

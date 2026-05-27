@@ -62,10 +62,13 @@ export async function POST(request: Request) {
         .eq("challenge_id", parsed.data.challenge_id)
         .eq("is_correct", true)
         .maybeSingle(),
+      // Count only WRONG submissions for rate-limit — don't penalize a team
+      // that's correctly solving a fast streak of challenges.
       supabase
         .from("submissions")
         .select("*", { count: "exact", head: true })
         .eq("team_id", team.id)
+        .eq("is_correct", false)
         .gte("attempted_at", oneMinuteAgo),
       supabase
         .from("challenges")

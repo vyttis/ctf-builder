@@ -1,6 +1,8 @@
 // Lesson plan — teacher-facing planning object
 // Separate from student activities / games
 
+import type { Competency, BloomLevel } from "@/lib/ai/lesson-types"
+
 export type LessonPlanStatus = "draft" | "saved" | "converted"
 
 export type LessonStageType = "intro" | "challenge" | "discussion" | "reflection"
@@ -17,6 +19,8 @@ export interface LessonStage {
   points: number
   duration_minutes: number
   difficulty: "easy" | "medium" | "hard"
+  competencies?: Competency[]
+  bloom_level?: BloomLevel
 }
 
 export interface LessonPlan {
@@ -34,6 +38,7 @@ export interface LessonPlan {
   stages: LessonStage[]
   reflection_prompt: string
   teacher_methodical_note: string
+  competencies?: Competency[]
   status: LessonPlanStatus
   source_game_id: string | null // if converted to a student activity
   created_at: string

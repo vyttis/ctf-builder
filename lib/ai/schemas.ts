@@ -1,5 +1,24 @@
 import { z } from "zod"
 
+// LT BUP — 6 bendrosios kompetencijos
+export const COMPETENCIES = [
+  "komunikavimo",
+  "pazinimo",
+  "kulturine",
+  "kurybiskumo",
+  "pilietiskumo",
+  "socialine_emocine_ir_sveikos_gyvensenos",
+] as const
+
+export const BLOOM_LEVELS = [
+  "zinios",
+  "supratimas",
+  "taikymas",
+  "analize",
+  "sinteze",
+  "vertinimas",
+] as const
+
 export const aiSuggestionSchema = z.object({
   title: z.string(),
   description: z.string(),
@@ -10,6 +29,8 @@ export const aiSuggestionSchema = z.object({
   options: z.array(z.string()).nullable().default(null),
   explanation: z.string().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+  competencies: z.array(z.enum(COMPETENCIES)).default([]),
+  bloom_level: z.enum(BLOOM_LEVELS).optional(),
 })
 
 export const aiSuggestResponseSchema = z.object({

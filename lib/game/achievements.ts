@@ -32,16 +32,58 @@ export const ACHIEVEMENT_CONFIG: Record<
   streak: { name: "Sėkmės serija", icon: "Flame", color: "#008CB4" },
 }
 
+interface RpcEarnedAchievement {
+  type: AchievementType
+  challenge_id: string | null
+  metadata: Record<string, unknown>
+}
+
+// Postgres function_does_not_exist error code
+const PG_UNDEFINED_FUNCTION = "42883"
+
 /**
  * Evaluate which achievements a team has earned after a correct submission.
+ *
+ * Strategy: try the Postgres RPC `evaluate_achievements` (migration 00019)
+ * first — single round-trip, ~150ms faster than the JS fan-out. If the RPC
+ * is missing (migration not yet applied) or fails, fall back to the JS
+ * parallel checks.
  */
 export async function evaluateAchievements(
   supabase: SupabaseClient,
   ctx: AchievementEvalContext
 ): Promise<EarnedAchievement[]> {
+  // Fast path: Postgres RPC
+  try {
+    const { data, error } = await supabase.rpc("evaluate_achievements", {
+      p_team_id: ctx.teamId,
+      p_game_id: ctx.gameId,
+      p_challenge_id: ctx.challengeId,
+      p_hints_used: ctx.hintsUsed,
+    })
+
+    if (!error && Array.isArray(data)) {
+      return (data as RpcEarnedAchievement[]).map((row) => ({
+        type: row.type,
+        challengeId: row.challenge_id,
+        metadata: row.metadata ?? {},
+      }))
+    }
+
+    // PostgrestError shape from supabase-js
+    const code = (error as { code?: string } | null)?.code
+    if (code && code !== PG_UNDEFINED_FUNCTION) {
+      console.warn("evaluate_achievements RPC failed, falling back to JS:", error?.message)
+    } else if (code === PG_UNDEFINED_FUNCTION) {
+      console.warn("evaluate_achievements RPC not deployed yet — using JS fallback. Apply migration 00019.")
+    }
+  } catch (err) {
+    console.warn("evaluate_achievements RPC threw, falling back to JS:", err)
+  }
+
+  // Fallback: JS parallel checks (original implementation)
   const earned: EarnedAchievement[] = []
 
-  // Run independent checks in parallel
   const [firstSolver, speedDemon, streakResult, perfectGame] =
     await Promise.all([
       checkFirstSolver(supabase, ctx),

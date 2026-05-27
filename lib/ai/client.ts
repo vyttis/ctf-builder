@@ -11,12 +11,14 @@ export function getAnthropicClient(): Anthropic {
 }
 
 // Model selection — see Anthropic docs for latest IDs.
-// generate: balanced cost/quality (Sonnet 4.6 — best Sonnet, supports prompt
-//           caching with 1024 token minimum; works in all API tiers)
-// verify:   cheap, fast verification step (Haiku 4.5)
-// fallback: previous-gen stable Sonnet used if the primary model rejects
-//           (model_not_found, tier issues, transient errors)
+// deepGenerate: highest quality, used for inspectable pedagogical content
+//               (lesson plans the Ministry will review). Opus 4.7 — quality > cost.
+// generate:     balanced for routine generation (challenges, suggestions, import).
+// verify:       cheap, fast verification step.
+// fallback:     previous-gen stable Sonnet used if the primary model rejects
+//               (model_not_found, tier issues, transient errors).
 export const MODELS = {
+  deepGenerate: "claude-opus-4-7",
   generate: "claude-sonnet-4-6",
   verify: "claude-haiku-4-5-20251001",
   fallback: "claude-sonnet-4-5-20250929",

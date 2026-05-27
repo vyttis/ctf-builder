@@ -589,8 +589,21 @@ export default function PlayPage() {
             <div className="flex items-center gap-2">
               {timeLimitMinutes && remainingSeconds > 0 && (
                 <Badge
-                  variant={remainingSeconds <= 60 ? "destructive" : "outline"}
-                  className={`gap-1 font-mono text-xs tabular-nums ${remainingSeconds <= 60 ? "animate-pulse" : ""}`}
+                  variant={
+                    remainingSeconds <= 60
+                      ? "destructive"
+                      : remainingSeconds <= 300
+                        ? "default"
+                        : "outline"
+                  }
+                  className={`gap-1 font-mono text-xs tabular-nums ${
+                    remainingSeconds <= 60 ? "animate-pulse" : ""
+                  } ${
+                    remainingSeconds > 60 && remainingSeconds <= 300
+                      ? "bg-highlight text-highlight-foreground"
+                      : ""
+                  }`}
+                  aria-live={remainingSeconds <= 60 ? "assertive" : "off"}
                 >
                   <Clock className="h-3 w-3" />
                   {formatTime(remainingSeconds)}
@@ -639,7 +652,8 @@ export default function PlayPage() {
   const currentChallenge = challenges[currentIndex]
   const progressValue = (solvedIds.size / challenges.length) * 100
   const challengeHints = (currentChallenge.hints as string[]) || []
-  const isTimerWarning = timeLimitMinutes && remainingSeconds > 0 && remainingSeconds <= 60
+  const isTimerCritical = timeLimitMinutes && remainingSeconds > 0 && remainingSeconds <= 60
+  const isTimerWarning = timeLimitMinutes && remainingSeconds > 0 && remainingSeconds <= 300 // 5 min
 
   return (
     <div className="min-h-screen p-4 pb-8">
@@ -667,13 +681,14 @@ export default function PlayPage() {
             </Badge>
           </div>
           <div className="flex items-center gap-2">
-            {/* Timer badge */}
+            {/* Timer badge — outline > 5min, highlight ≤5min, destructive ≤60s (pulsing) */}
             {timeLimitMinutes && remainingSeconds > 0 && (
               <Badge
-                variant={isTimerWarning ? "destructive" : "outline"}
+                variant={isTimerCritical ? "destructive" : isTimerWarning ? "default" : "outline"}
                 className={`gap-1 font-mono text-xs tabular-nums ${
-                  isTimerWarning ? "animate-pulse" : ""
-                }`}
+                  isTimerCritical ? "animate-pulse" : ""
+                } ${isTimerWarning && !isTimerCritical ? "bg-highlight text-highlight-foreground" : ""}`}
+                aria-live={isTimerCritical ? "assertive" : "off"}
               >
                 <Clock className="h-3 w-3" />
                 {formatTime(remainingSeconds)}

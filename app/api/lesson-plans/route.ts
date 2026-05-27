@@ -81,7 +81,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -90,11 +90,18 @@ export async function GET() {
       return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
     }
 
-    const { data, error } = await supabase
+    // Cap at 100 newest plans to protect from OOM when a teacher accumulates
+    // hundreds of saved plans. Pagination via ?before=<iso> param if needed.
+    const url = new URL(request.url)
+    const before = url.searchParams.get("before")
+    let q = supabase
       .from("lesson_plans")
       .select("*")
       .eq("teacher_id", user.id)
       .order("created_at", { ascending: false })
+      .limit(100)
+    if (before) q = q.lt("created_at", before)
+    const { data, error } = await q
 
     if (error) {
       return NextResponse.json({ error: "Nepavyko gauti duomenų" }, { status: 500 })
