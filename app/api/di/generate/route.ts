@@ -16,7 +16,7 @@ import type {
   AiSuggestion,
   VerificationResult,
 } from "@/lib/ai/types"
-import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { getAnthropicClient, MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const generateSchema = z.object({
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     const anthropic = getAnthropicClient()
 
     // Step 1: Generate suggestions
-    const message = await anthropic.messages.create({
+    const message = await createWithFallback({
       model: MODELS.generate,
       max_tokens: 4096,
       system: cachedSystem(buildSystemPrompt()),

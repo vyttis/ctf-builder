@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { buildSystemPrompt, buildUserMessage } from "@/lib/ai/prompt"
 import { aiSuggestResponseSchema } from "@/lib/ai/schemas"
-import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const suggestSchema = z.object({
@@ -77,8 +77,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const anthropic = getAnthropicClient()
-    const message = await anthropic.messages.create({
+    const message = await createWithFallback({
       model: MODELS.generate,
       max_tokens: 4096,
       system: cachedSystem(buildSystemPrompt()),

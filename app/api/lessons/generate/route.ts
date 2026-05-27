@@ -5,7 +5,7 @@ import { lessonGenerateRequestSchema, generatedLessonSchema } from "@/lib/ai/les
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 import type { AiSuggestion } from "@/lib/ai/types"
 import type { ChallengeType } from "@/types/game"
-import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 export async function POST(request: Request) {
@@ -62,8 +62,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const anthropic = getAnthropicClient()
-    const message = await anthropic.messages.create({
+    const message = await createWithFallback({
       model: MODELS.generate,
       max_tokens: 8192,
       system: cachedSystem(buildLessonSystemPrompt()),

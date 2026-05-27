@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { buildLessonPlanSystemPrompt, buildLessonPlanUserMessage } from "@/lib/ai/lesson-plan-prompt"
 import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
-import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 import { z } from "zod"
 
@@ -97,10 +97,9 @@ export async function POST(request: Request) {
       )
     }
 
-    const anthropic = getAnthropicClient()
-    const message = await anthropic.messages.create({
-      model: MODELS.deepGenerate,
-      max_tokens: 12288,
+    const message = await createWithFallback({
+      model: MODELS.generate,
+      max_tokens: 8192,
       system: cachedSystem(buildLessonPlanSystemPrompt()),
       messages: [{ role: "user", content: buildLessonPlanUserMessage({
         ...parsed.data,

@@ -10,7 +10,7 @@ import {
 } from "@/lib/ai/verify-prompt"
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 import type { AiSuggestion, VerificationResult } from "@/lib/ai/types"
-import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { getAnthropicClient, MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const processSchema = z.object({
@@ -110,7 +110,7 @@ ${truncatedText}
 
 Sugeneruok ${parsed.data.count} užduotis pagal šį dokumentą. Užduotys turi tikrinti mokinių supratimą apie dokumento turinį.`
 
-    const message = await anthropic.messages.create({
+    const message = await createWithFallback({
       model: MODELS.generate,
       max_tokens: 4096,
       system: cachedSystem(systemPrompt),
