@@ -106,6 +106,30 @@ ATSAKYK TIK validžiu JSON formatu pagal šią struktūrą:
 }`
 }
 
+function getEducationStage(grade: number): string {
+  if (grade <= 4) return "pradinis ugdymas (1-4 klasės)"
+  if (grade <= 6) return "pagrindinio ugdymo I koncentras (5-6 klasės)"
+  if (grade <= 8) return "pagrindinio ugdymo II koncentras (7-8 klasės)"
+  if (grade <= 10) return "pagrindinio ugdymo baigiamasis etapas (9-10 klasės, PUPP)"
+  return "vidurinis ugdymas (11-12 klasės, gimnazija, brandos egzaminai)"
+}
+
+function getStageGuidance(grade: number): string {
+  if (grade <= 4) {
+    return `MOKINIŲ AMŽIUS: 7-11 metų. Naudok paprastą kalbą, konkrečius vaizdinius pavyzdžius iš vaiko aplinkos (šeima, mokykla, draugai, gyvūnai). Užduočių instrukcijos turi būti trumpos ir aiškios. Skatink judėjimą ir žaidybingumą.`
+  }
+  if (grade <= 6) {
+    return `MOKINIŲ AMŽIUS: 11-13 metų. Pereinama nuo konkretaus mąstymo prie abstraktaus. Pateik konkrečius pavyzdžius su gana lengvomis abstrakcijomis. Skatink bendradarbiavimą grupėse.`
+  }
+  if (grade <= 8) {
+    return `MOKINIŲ AMŽIUS: 13-15 metų. Mokiniai geba abstrakčiai mąstyti, ieškoti priežasties-pasekmės ryšių, kelti hipotezes. Įtrauk tyrimo, analizės elementų. Įvardink temos aktualumą jų gyvenime.`
+  }
+  if (grade <= 10) {
+    return `MOKINIŲ AMŽIUS: 15-17 metų. Ruošiamasi PUPP (pagrindinio ugdymo pasiekimų patikrinimui). Naudok temines sąvokas tiksliai, skatink kritinį mąstymą ir argumentavimą. Pavyzdžiai gali liesti pilietiškumo, karjeros, asmeninių vertybių klausimus.`
+  }
+  return `MOKINIŲ AMŽIUS: 17-19 metų. Gimnazija — ruošiamasi brandos egzaminams. Reikalauk akademinio tikslumo, savarankiško mąstymo, gilios analizės. Galima minėti ryšius su aukštosiomis mokyklomis, profesijomis, mokslo tyrimais.`
+}
+
 export function buildLessonPlanUserMessage(input: LessonPlanGenerateInput): string {
   const parts: string[] = []
 
@@ -118,9 +142,10 @@ export function buildLessonPlanUserMessage(input: LessonPlanGenerateInput): stri
   } else {
     parts.push(`Dalykas: ${primaryLabel}`)
   }
-  parts.push(`Klasė: ${input.grade}`)
+  parts.push(`Klasė: ${input.grade} (${getEducationStage(input.grade)})`)
   parts.push(`Tema: ${input.topic}`)
   parts.push(`Pamokos trukmė: ${input.duration} minučių`)
+  parts.push(`\n${getStageGuidance(input.grade)}`)
 
   const typeInstructions = LESSON_TYPE_INSTRUCTIONS[input.lesson_type]
   if (typeInstructions) {

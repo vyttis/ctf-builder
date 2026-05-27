@@ -82,11 +82,19 @@ ATSAKYK TIK validžiu JSON formatu pagal šią struktūrą:
 }`
 }
 
+function getEducationStage(grade: number): string {
+  if (grade <= 4) return "pradinis ugdymas (1-4 klasės, 7-11 m. mokiniai)"
+  if (grade <= 6) return "pagrindinio ugdymo I koncentras (5-6 klasės, 11-13 m.)"
+  if (grade <= 8) return "pagrindinio ugdymo II koncentras (7-8 klasės, 13-15 m.)"
+  if (grade <= 10) return "pagrindinio ugdymo baigiamasis etapas (9-10 klasės, 15-17 m., ruošiamasi PUPP)"
+  return "vidurinis ugdymas (11-12 klasės, 17-19 m., gimnazija, ruošiamasi brandos egzaminams)"
+}
+
 export function buildLessonUserMessage(request: LessonGenerateRequest): string {
   const parts: string[] = []
 
   parts.push(`Dalykas: ${request.subject}`)
-  parts.push(`Klasė: ${request.grade}`)
+  parts.push(`Klasė: ${request.grade} (${getEducationStage(request.grade)})`)
   parts.push(`Tema: ${request.topic}`)
   parts.push(`Pamokos trukmė: ${request.duration} minučių`)
 
