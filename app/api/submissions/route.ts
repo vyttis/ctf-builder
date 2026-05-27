@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient()
 
-    // Validate team via session_token
+    // Validate team via session_token first — every other query depends on team.id/game_id.
     const { data: team } = await supabase
       .from("teams")
       .select("id, game_id, total_points, current_challenge_index")
@@ -46,12 +46,38 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check game is still active before accepting submissions
-    const { data: game } = await supabase
-      .from("games")
-      .select("id, status, settings")
-      .eq("id", team.game_id)
-      .single()
+    // Parallel fan-out: game status, existing solve, rate-limit count, challenge details.
+    // Was 4 sequential round-trips; now one ~50-100ms wait instead of ~200-400ms.
+    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString()
+    const [gameRes, existingSolveRes, recentAttemptsRes, challengeRes] = await Promise.all([
+      supabase
+        .from("games")
+        .select("id, status, settings")
+        .eq("id", team.game_id)
+        .single(),
+      supabase
+        .from("submissions")
+        .select("id")
+        .eq("team_id", team.id)
+        .eq("challenge_id", parsed.data.challenge_id)
+        .eq("is_correct", true)
+        .maybeSingle(),
+      supabase
+        .from("submissions")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", team.id)
+        .gte("attempted_at", oneMinuteAgo),
+      supabase
+        .from("challenges")
+        .select("id, points, game_id, explanation, hint_penalty, hints, answer_hash")
+        .eq("id", parsed.data.challenge_id)
+        .single(),
+    ])
+
+    const game = gameRes.data
+    const existingSolve = existingSolveRes.data
+    const recentAttempts = recentAttemptsRes.count
+    const challenge = challengeRes.data
 
     if (!game || game.status !== "active") {
       const statusMessages: Record<string, string> = {
@@ -65,15 +91,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if already solved this challenge
-    const { data: existingSolve } = await supabase
-      .from("submissions")
-      .select("id")
-      .eq("team_id", team.id)
-      .eq("challenge_id", parsed.data.challenge_id)
-      .eq("is_correct", true)
-      .single()
-
     if (existingSolve) {
       return NextResponse.json({
         is_correct: true,
@@ -82,14 +99,6 @@ export async function POST(request: Request) {
         already_solved: true,
       })
     }
-
-    // Rate limiting: max 10 attempts per minute per team
-    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString()
-    const { count: recentAttempts } = await supabase
-      .from("submissions")
-      .select("*", { count: "exact", head: true })
-      .eq("team_id", team.id)
-      .gte("attempted_at", oneMinuteAgo)
 
     if (recentAttempts && recentAttempts >= 10) {
       return NextResponse.json(
@@ -115,13 +124,6 @@ export async function POST(request: Request) {
         )
       }
     }
-
-    // Get challenge details (include answer_hash for server-side bcrypt verification)
-    const { data: challenge } = await supabase
-      .from("challenges")
-      .select("id, points, game_id, explanation, hint_penalty, hints, answer_hash")
-      .eq("id", parsed.data.challenge_id)
-      .single()
 
     if (!challenge || challenge.game_id !== team.game_id) {
       return NextResponse.json(
