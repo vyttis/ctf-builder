@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
+import { COMPETENCIES, BLOOM_LEVELS } from "@/lib/ai/schemas"
 import { z } from "zod"
 
 const createSchema = z.object({
@@ -13,6 +14,7 @@ const createSchema = z.object({
   duration: z.number().min(25).max(90),
   goal: z.string().default(""),
   curriculum_link: z.string().default(""),
+  competencies: z.array(z.enum(COMPETENCIES)).default([]),
   stages: z.array(z.object({
     activity_type: z.enum(["intro", "challenge", "discussion", "reflection"]),
     title: z.string().min(1),
@@ -25,6 +27,8 @@ const createSchema = z.object({
     points: z.number().default(100),
     duration_minutes: z.number().default(5),
     difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
+    competencies: z.array(z.enum(COMPETENCIES)).default([]),
+    bloom_level: z.enum(BLOOM_LEVELS).optional(),
   })).min(1),
   reflection_prompt: z.string().default(""),
   teacher_methodical_note: z.string().default(""),
@@ -58,16 +62,33 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data, error } = await supabase
+    // Insert. Try with competencies column first; fall back to without it
+    // if migration 00019 hasn't been applied yet (column_does_not_exist 42703).
+    const fullPayload = {
+      teacher_id: user.id,
+      ...parsed.data,
+      secondary_subject: parsed.data.secondary_subject ?? null,
+      status: "saved" as const,
+    }
+
+    let { data, error } = await supabase
       .from("lesson_plans")
-      .insert({
-        teacher_id: user.id,
-        ...parsed.data,
-        secondary_subject: parsed.data.secondary_subject ?? null,
-        status: "saved",
-      })
+      .insert(fullPayload)
       .select()
       .single()
+
+    if (error?.code === "42703" && error.message?.includes("competencies")) {
+      // Strip competencies (top-level only — stages keep theirs inside JSON)
+      const { competencies: _competencies, ...payloadNoComp } = fullPayload
+      void _competencies
+      const retry = await supabase
+        .from("lesson_plans")
+        .insert(payloadNoComp)
+        .select()
+        .single()
+      data = retry.data
+      error = retry.error
+    }
 
     if (error) {
       console.error("Lesson plan insert error:", error)

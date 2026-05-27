@@ -136,6 +136,7 @@ export function LessonPlanGenerator() {
   const [editTeacherNote, setEditTeacherNote] = useState("")
   const [editReflection, setEditReflection] = useState("")
   const [editCurriculumLink, setEditCurriculumLink] = useState("")
+  const [editCompetencies, setEditCompetencies] = useState<string[]>([])
   const [stages, setStages] = useState<LessonStage[]>([])
 
   // Derived
@@ -202,6 +203,7 @@ export function LessonPlanGenerator() {
       setEditCurriculumLink(plan.curriculum_link)
       setEditTeacherNote(plan.teacher_methodical_note)
       setEditReflection(plan.reflection_prompt)
+      setEditCompetencies(plan.competencies ?? [])
       setStages(plan.stages.map((s: LessonStage) => ({ ...s })))
       setPhase("preview")
     } catch (err) {
@@ -251,6 +253,7 @@ export function LessonPlanGenerator() {
           duration,
           goal: editGoal,
           curriculum_link: editCurriculumLink,
+          competencies: editCompetencies,
           stages,
           reflection_prompt: editReflection,
           teacher_methodical_note: editTeacherNote,
@@ -295,6 +298,7 @@ export function LessonPlanGenerator() {
           duration,
           goal: editGoal,
           curriculum_link: editCurriculumLink,
+          competencies: editCompetencies,
           stages,
           reflection_prompt: editReflection,
           teacher_methodical_note: editTeacherNote,

@@ -1,10 +1,18 @@
--- Achievements RPC + composite index — consolidates 5 sequential queries
--- (lib/game/achievements.ts evaluateAchievements fan-out) into a single
--- Postgres call. ~150ms savings per correct submission.
+-- Achievements RPC + lesson plan competencies + composite index
 --
--- Backwards compatible: app code first tries the RPC; if it doesn't exist
--- (function_does_not_exist 42883), it falls back to the JS loop. So this
--- migration can be applied AFTER the corresponding app deploy.
+-- 1. evaluate_achievements RPC — consolidates 5 sequential queries
+--    (lib/game/achievements.ts evaluateAchievements fan-out) into a single
+--    Postgres call. ~150ms savings per correct submission. Backwards
+--    compatible: app code first tries the RPC; if it doesn't exist
+--    (function_does_not_exist 42883), it falls back to the JS loop.
+-- 2. lesson_plans.competencies column — stores plan-level LT BUP competencies.
+-- 3. idx_achievements_game_team — fast achievement lookups by (game, team).
+
+-- ============================================
+-- 0. Add competencies column to lesson_plans (top-level plan competencies)
+-- ============================================
+ALTER TABLE public.lesson_plans
+  ADD COLUMN IF NOT EXISTS competencies text[] NOT NULL DEFAULT '{}';
 
 -- ============================================
 -- 1. Composite index for fast achievement lookups by (game, team)
