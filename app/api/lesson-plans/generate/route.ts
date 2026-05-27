@@ -122,10 +122,18 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ lesson_plan: validated.data })
   } catch (error) {
-    console.error("Lesson plan generate error:", error)
-    return NextResponse.json(
-      { error: "Pamokos plano generavimas nepavyko. Bandykite dar kartą." },
-      { status: 500 }
-    )
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error("Lesson plan generate error:", errMsg, error)
+    const friendly = errMsg.includes("model")
+      ? `DI modelis neprieinamas: ${errMsg}`
+      : errMsg.includes("rate") || errMsg.includes("429")
+        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
+        : errMsg.includes("overloaded") || errMsg.includes("529")
+          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
+          : `Pamokos plano generavimas nepavyko: ${errMsg}`
+    return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }
+
+// Lesson plan generation with Opus 4.7 can take longer for full plans
+export const maxDuration = 60

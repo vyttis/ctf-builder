@@ -178,10 +178,22 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ suggestions: enrichedSuggestions })
   } catch (error) {
-    console.error("DI generate error:", error)
-    return NextResponse.json(
-      { error: "DI užduočių generavimas nepavyko. Bandykite dar kartą." },
-      { status: 500 }
-    )
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error("DI generate error:", errMsg, error)
+
+    // Surface the underlying Anthropic / model error so it's debuggable in the UI.
+    // (Internal API key isn't in the error message, so this is safe to return.)
+    const friendly = errMsg.includes("model")
+      ? `DI modelis neprieinamas: ${errMsg}`
+      : errMsg.includes("rate") || errMsg.includes("429")
+        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
+        : errMsg.includes("overloaded") || errMsg.includes("529")
+          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
+          : `DI užduočių generavimas nepavyko: ${errMsg}`
+
+    return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }
+
+// Allow up to 60s for generation + parallel verification
+export const maxDuration = 60

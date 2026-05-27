@@ -75,10 +75,17 @@ export async function POST(request: Request) {
 
     return NextResponse.json(validated.data)
   } catch (error) {
-    console.error("AI suggest-game error:", error)
-    return NextResponse.json(
-      { error: "DI pasiūlymo generavimas nepavyko. Bandykite dar kartą." },
-      { status: 500 }
-    )
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error("AI suggest-game error:", errMsg, error)
+    const friendly = errMsg.includes("model")
+      ? `DI modelis neprieinamas: ${errMsg}`
+      : errMsg.includes("rate") || errMsg.includes("429")
+        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
+        : errMsg.includes("overloaded") || errMsg.includes("529")
+          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
+          : `DI pasiūlymo generavimas nepavyko: ${errMsg}`
+    return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }
+
+export const maxDuration = 30

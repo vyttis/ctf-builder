@@ -110,10 +110,17 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error("Lesson generate error:", error)
-    return NextResponse.json(
-      { error: "Pamokos generavimas nepavyko. Bandykite dar kartą." },
-      { status: 500 }
-    )
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error("Lesson generate error:", errMsg, error)
+    const friendly = errMsg.includes("model")
+      ? `DI modelis neprieinamas: ${errMsg}`
+      : errMsg.includes("rate") || errMsg.includes("429")
+        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
+        : errMsg.includes("overloaded") || errMsg.includes("529")
+          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
+          : `Pamokos generavimas nepavyko: ${errMsg}`
+    return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }
+
+export const maxDuration = 60
