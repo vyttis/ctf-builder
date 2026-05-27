@@ -24,6 +24,27 @@ const nextConfig = {
           },
         ],
       },
+      // Long-cache static illustrations served from /public — they don't change
+      // between deploys (filename + Vercel asset versioning takes care of busting).
+      {
+        source: "/illustrations/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // /api/health is for uptime monitors — never cache.
+      {
+        source: "/api/health",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0",
+          },
+        ],
+      },
     ]
   },
 }
