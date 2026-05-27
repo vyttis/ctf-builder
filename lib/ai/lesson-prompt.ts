@@ -22,7 +22,7 @@ const LESSON_TYPE_INSTRUCTIONS: Record<string, string> = {
 - Taškų progresas aiškus: easy=50-100, medium=150-200, hard=250-400.`,
 
   projektine_veikla: `PAMOKOS TIPAS: Projektinė veikla
-- Įvadas (intro) — užduoties pristaymas, tikslai, kontekstas.
+- Įvadas (intro) — užduoties pristatymas, tikslai, kontekstas.
 - Etapinės užduotys (challenge) — kiekviena artina prie galutinio rezultato.
 - Diskusija (discussion) — komandinis aptarimas, idėjų generavimas.
 - Refleksija — ką sukūrėme, ko išmokome.
@@ -53,7 +53,7 @@ UŽDUOČIŲ TIPAI (type laukas):
 - "multiple_choice" — pasirinkimas iš variantų (pateik 3-4 options, correct_answer PRIVALO būti vienas iš jų)
 
 LAIKO PLANAVIMAS:
-- Paskirstyk minutes realstiškai tarp veiklų.
+- Paskirstyk minutes realistiškai tarp veiklų.
 - Intro: 3-5 min. Challenge: 5-10 min kiekvienas. Discussion: 5-7 min. Reflection: 3-5 min.
 - Bendra trukmė turi atitikti nurodytą pamokos trukmę.
 

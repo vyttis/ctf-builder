@@ -169,31 +169,30 @@ export default function PlayPage() {
   }, [gameCode, router])
 
   async function loadChallenges(s: PlayerSession) {
-    const supabase = createClient()
+    // Single round-trip via /api/play/state (game + challenges + solved submissions)
+    const res = await fetch(
+      `/api/play/state?game_code=${encodeURIComponent(gameCode)}&session_token=${encodeURIComponent(s.session_token)}`
+    )
+    if (!res.ok) return
+    const state = await res.json() as {
+      game: { id: string; settings: GameSettings | null } | null
+      challenges: PlayerChallenge[]
+      solved: { challenge_id: string; points_awarded: number }[]
+    }
 
-    const { data: game } = await supabase
-      .from("games")
-      .select("id, settings")
-      .eq("game_code", gameCode)
-      .single()
+    if (!state.game) return
 
-    if (!game) return
+    setGameId(state.game.id)
 
-    setGameId(game.id)
-
-    // Check time limit and path mode
-    const settings = game.settings as GameSettings | null
+    const settings = state.game.settings
     const timeLimit = settings?.time_limit_minutes ?? null
     setTimeLimitMinutes(timeLimit)
     setPathMode(settings?.challenge_path_mode || "linear")
 
-    // If no time limit, or if already started (has start time in localStorage), auto-start
     const storageKey = `ctf_start_${gameCode}`
     const existingStart = localStorage.getItem(storageKey)
     if (!timeLimit || existingStart) {
       setGameStarted(true)
-
-      // Check if time already expired
       if (timeLimit && existingStart) {
         const startTime = parseInt(existingStart, 10)
         const totalMs = timeLimit * 60 * 1000
@@ -203,34 +202,16 @@ export default function PlayPage() {
       }
     }
 
-    const { data } = await supabase
-      .from("challenges")
-      .select("id, title, description, type, points, hints, options, order_index, image_url, maps_url, hint_penalty, prerequisites")
-      .eq("game_id", game.id)
-      .order("order_index", { ascending: true })
+    setChallenges(state.challenges)
 
-    if (data) {
-      setChallenges(data as PlayerChallenge[])
-    }
+    const solved = new Set(state.solved.map((sub) => sub.challenge_id))
+    setSolvedIds(solved)
+    const points = state.solved.reduce((sum, sub) => sum + sub.points_awarded, 0)
+    setTotalPoints(points)
 
-    const { data: submissions } = await supabase
-      .from("submissions")
-      .select("challenge_id, points_awarded")
-      .eq("team_id", s.team_id)
-      .eq("is_correct", true)
-
-    if (submissions) {
-      const solved = new Set(submissions.map((sub) => sub.challenge_id))
-      setSolvedIds(solved)
-      const points = submissions.reduce((sum, sub) => sum + sub.points_awarded, 0)
-      setTotalPoints(points)
-
-      if (data) {
-        const firstUnsolved = data.findIndex((c) => !solved.has(c.id))
-        setCurrentIndex(firstUnsolved >= 0 ? firstUnsolved : data.length)
-        if (firstUnsolved < 0) setGameFinished(true)
-      }
-    }
+    const firstUnsolved = state.challenges.findIndex((c) => !solved.has(c.id))
+    setCurrentIndex(firstUnsolved >= 0 ? firstUnsolved : state.challenges.length)
+    if (firstUnsolved < 0) setGameFinished(true)
   }
 
   // Subscribe to game setting changes (time extensions, status changes)
@@ -299,8 +280,10 @@ export default function PlayPage() {
         return { is_correct: false, points_awarded: 0, message: "Per daug bandymų. Palaukite minutę." }
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result: any = await res.json()
+      const result: ExtendedSubmissionResult & {
+        achievements?: { type: AchievementType; metadata?: Record<string, unknown> }[]
+        total_points?: number
+      } = await res.json()
 
       if (result.is_correct) {
         setTotalPoints(result.total_points || totalPoints + result.points_awarded)
@@ -311,7 +294,8 @@ export default function PlayPage() {
         })
         // Show achievement if earned
         if (result.achievements && result.achievements.length > 0) {
-          setAchievementQueue((q) => [...q, ...result.achievements])
+          const earned = result.achievements
+          setAchievementQueue((q) => [...q, ...earned])
         }
         // Check if all solved
         if (solvedIds.size + 1 >= challenges.length) {
@@ -357,8 +341,9 @@ export default function PlayPage() {
         return
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result: ExtendedSubmissionResult & { achievements?: any[] } = await res.json()
+      const result: ExtendedSubmissionResult & {
+        achievements?: { type: AchievementType; metadata?: Record<string, unknown> }[]
+      } = await res.json()
       setFeedback(result)
 
       // Show achievement toast if earned

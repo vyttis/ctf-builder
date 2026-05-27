@@ -49,14 +49,15 @@ export function LibraryCard({ item }: LibraryCardProps) {
     }
   }
 
+  // Map subjects to project palette tokens (steam-*)
   const subjectColors: Record<string, string> = {
-    Fizika: "bg-blue-100 text-blue-700",
-    Chemija: "bg-green-100 text-green-700",
-    Biologija: "bg-emerald-100 text-emerald-700",
-    Matematika: "bg-purple-100 text-purple-700",
-    Informatika: "bg-orange-100 text-orange-700",
-    Technologijos: "bg-amber-100 text-amber-700",
-    Menas: "bg-pink-100 text-pink-700",
+    Fizika: "bg-secondary/10 text-secondary",
+    Chemija: "bg-primary/10 text-primary",
+    Biologija: "bg-primary/10 text-primary",
+    Matematika: "bg-accent/10 text-accent",
+    Informatika: "bg-highlight/15 text-steam-dark",
+    Technologijos: "bg-highlight/15 text-steam-dark",
+    Menas: "bg-accent/10 text-accent",
   }
 
   return (

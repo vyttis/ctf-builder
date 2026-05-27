@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CTF Builder
 
-## Getting Started
+STEAM LT Klaipėda — SaaS platforma mokytojams kurti CTF (Capture The Flag) žaidimus klasei.
 
-First, run the development server:
+## Architektūra
+
+- **Next.js 14 App Router** (TypeScript strict)
+- **Supabase** (Postgres, Auth, Realtime, Storage)
+- **Tailwind + shadcn/ui** (New York, CSS variables)
+- **Anthropic Claude** AI generavimui (pamokų planai, užduotys)
+- **Dvi aplinkos**: teacher (`app.*`) ir player (`play.*`)
+
+## Lokalus paleidimas
 
 ```bash
+npm install
+cp .env.local.example .env.local   # užpildyti reikšmes
+supabase start                      # lokali Postgres + auth
+supabase db reset                   # pritaikyti migracijas
+supabase gen types typescript --local > types/database.ts
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Atviras `http://app.localhost:3000` (mokytojas), `http://play.localhost:3000/<code>` (žaidėjas).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Skriptai
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` — dev server
+- `npm run build` / `npm start` — production
+- `npm run lint` — ESLint
+- `npx tsc --noEmit` — type check
 
-## Learn More
+## Svarbiausi principai
 
-To learn more about Next.js, take a look at the following resources:
+1. Atsakymų tikrinimas server-side (`/api/submissions`) — niekada plain text kliente.
+2. Player aplinka be auth — sesija per `session_token` localStorage.
+3. Player rašymo operacijos eina per service_role API route'us; anon INSERT lockdown DB sluoksnyje.
+4. AI tik **siūlo** — mokytojas visada patvirtina teisingą atsakymą.
+5. `answer_hash` niekada negrąžinamas į frontend — `SAFE_CHALLENGE_COLUMNS` whitelist.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Aplankų struktūra
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `app/` — Next.js App Router puslapiai ir `/api/*` routes
+- `app/(teacher)/` — autentifikuota teacher aplinka
+- `app/play/[gameCode]/` — žaidėjo flow (be auth)
+- `lib/ai/` — Claude prompts, schemas, helper'iai
+- `lib/supabase/` — trijų klientų pattern: `server.ts`, `client.ts`, `admin.ts`
+- `lib/auth/roles.ts` — RBAC: `teacher` / `admin` / `super_admin`
+- `lib/game/` — answer hashing, session, achievements, scoring
+- `supabase/migrations/` — DB schema (`00001` … `00018`)
+- `components/` — domain'ų pakaitinamai sugrupuoti (`teacher/`, `player/`, `admin/`, `landing/`, `ui/`)
 
-## Deploy on Vercel
+## Spalvų paletė (Tailwind)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Naudoti **tik** šiuos tokens (`steam-*` arba theme: `primary`, `secondary`, `accent`, `highlight`, `muted`):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- žalia `#00D296` (primary)
+- rožinė `#FA2864` (CTA / accent)
+- geltona `#FAC846` (highlight)
+- mėlyna `#008CB4` (secondary)
+- tamsi `#00323C` (dark)
+
+## Saugumas
+
+- RLS visose lentelėse, anon INSERT izoliuotas (00018).
+- bcrypt 10 rounds answer hashing.
+- `SECURITY DEFINER` funkcijos EXECUTE apribotos `service_role` (00018).
+- Documents storage bucket'as su user-folder RLS.
+
+## Kalba
+
+- UI: VISA lietuvių kalba su teisingomis raidėmis (ąčęėįšųūž).
+- Kodas, komentarai, kintamųjų vardai, git žinutės: anglų.

@@ -96,8 +96,7 @@ export async function PATCH(
   }
 
   // Build update payload carefully
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateData: Record<string, any> = {}
+  const updateData: Record<string, unknown> = {}
   if (parsed.data.title !== undefined) updateData.title = parsed.data.title
   if (parsed.data.description !== undefined) updateData.description = parsed.data.description
   if (parsed.data.status !== undefined) updateData.status = parsed.data.status

@@ -7,6 +7,12 @@ const ALLOWED_TYPES = [
   "image/gif",
   "image/webp",
 ]
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+}
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
 export async function POST(request: Request) {
@@ -43,7 +49,8 @@ export async function POST(request: Request) {
     )
   }
 
-  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg"
+  // Derive extension from validated MIME — never trust file.name
+  const ext = MIME_TO_EXT[file.type] || "jpg"
   const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`
 
   const { data, error } = await supabase.storage

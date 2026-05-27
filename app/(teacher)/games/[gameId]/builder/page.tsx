@@ -13,9 +13,13 @@ export default async function BuilderPage({
     data: { user },
   } = await supabase.auth.getUser()
 
+  // answer_hash intentionally excluded from select — teacher UI never needs it
+  const CHALLENGE_FIELDS =
+    "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites, created_at, updated_at"
+
   const { data: game } = await supabase
     .from("games")
-    .select("*, challenges(*)")
+    .select(`*, challenges(${CHALLENGE_FIELDS})`)
     .eq("id", params.gameId)
     .eq("teacher_id", user!.id)
     .single()

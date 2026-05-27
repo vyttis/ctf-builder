@@ -22,15 +22,15 @@ import { getPlayerSession } from "@/lib/game/session"
 import { AchievementBadge } from "@/components/player/achievement-badge"
 
 const podiumColors = [
-  "from-yellow-400/20 to-yellow-500/5 border-yellow-400/30",
-  "from-gray-300/20 to-gray-400/5 border-gray-300/30",
-  "from-orange-400/20 to-orange-500/5 border-orange-400/30",
+  "from-highlight/30 to-highlight/5 border-highlight/40",
+  "from-muted to-muted/30 border-border",
+  "from-accent/20 to-accent/5 border-accent/30",
 ]
 
 const podiumIcons = [
-  <Crown key="1" className="h-5 w-5 text-yellow-500" />,
-  <Medal key="2" className="h-5 w-5 text-gray-400" />,
-  <Medal key="3" className="h-5 w-5 text-orange-500" />,
+  <Crown key="1" className="h-5 w-5 text-highlight" />,
+  <Medal key="2" className="h-5 w-5 text-muted-foreground" />,
+  <Medal key="3" className="h-5 w-5 text-accent" />,
 ]
 
 export default function LeaderboardPage() {

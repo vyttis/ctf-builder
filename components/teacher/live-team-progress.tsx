@@ -36,7 +36,7 @@ function formatTimeSince(timestamp: string): string {
   return `prieš ${diffHours} val.`
 }
 
-function komandaLabel(n: number): string {
+function teamLabel(n: number): string {
   const mod10 = n % 10
   const mod100 = n % 100
   if (mod100 >= 11 && mod100 <= 19) return "komandų"
@@ -193,7 +193,7 @@ export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Users className="h-4 w-4" />
         <span>
-          {teams.length} {komandaLabel(teams.length)}
+          {teams.length} {teamLabel(teams.length)}
         </span>
       </div>
 

@@ -21,7 +21,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Create Supabase client for auth refresh
+  // Player routes: no auth, no Supabase calls — return immediately for fast page load
+  if (subdomain === "play") {
+    return NextResponse.next({ request })
+  }
+
+  // Create Supabase client for auth refresh (teacher routes only)
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -97,11 +102,6 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    return response
-  }
-
-  // Player routes: no auth needed
-  if (subdomain === "play") {
     return response
   }
 

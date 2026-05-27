@@ -8,6 +8,11 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "text/plain",
 ]
+const MIME_TO_EXT: Record<string, string> = {
+  "application/pdf": "pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "text/plain": "txt",
+}
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -45,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     const sessionId = nanoid(12)
-    const ext = file.name.split(".").pop() || "bin"
+    const ext = MIME_TO_EXT[file.type] || (file.name.toLowerCase().endsWith(".txt") ? "txt" : "bin")
     const storagePath = `imports/${user.id}/${sessionId}.${ext}`
 
     const arrayBuffer = await file.arrayBuffer()
