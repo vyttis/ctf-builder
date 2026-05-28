@@ -4,23 +4,22 @@ import { SectionWrapper } from "./section-wrapper"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
-import { Building2, Users, BookOpen } from "lucide-react"
 
 const audiences = [
   {
-    icon: Building2,
-    title: "Partnerių mokykloms",
-    text: "Įrankiu naudojasi mokytojai iš Klaipėdos universiteto STEAM centro partnerių mokyklų tinklo.",
+    quote: "Partnerių mokykloms",
+    body: "Įrankis dabar atviras KU STEAM centro partnerių mokyklų tinklui. Iš mokyklos — į kitą mokyklą.",
+    tag: "Tinklas",
   },
   {
-    icon: Users,
-    title: "Šiuolaikiškiems mokytojams",
-    text: "Skirta tiems, kurie ieško įtraukesnių darbo būdų ir nori, kad mokiniai pamokoje mąstytų, o ne tik klausytųsi.",
+    quote: "Šiuolaikiškiems mokytojams",
+    body: "Tiems, kurie ieško įtraukesnių darbo būdų. Norintiems, kad mokiniai pamokoje mąstytų, o ne tik klausytųsi.",
+    tag: "Praktika",
   },
   {
-    icon: BookOpen,
-    title: "Įvairioms veikloms",
-    text: "Tinka atskirų dalykų pamokoms, integruotoms STEAM veikloms, projektiniam darbui ir neformaliajam ugdymui.",
+    quote: "Atskiriems dalykams. Integruotai STEAM. Projektams.",
+    body: "Vienas įrankis — pradinių klasių pasaulio pažinimui, gimnazijos brandos egzaminų pasirengimui, projektinei savaitei.",
+    tag: "Lankstumas",
   },
 ]
 
@@ -29,71 +28,99 @@ export function ForWhomSection() {
 
   return (
     <SectionWrapper background="white">
-      <div className="grid lg:grid-cols-[1fr_440px] gap-12 lg:gap-20 items-center">
-        <div>
-          <motion.span
-            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-block text-xs font-semibold text-secondary uppercase tracking-widest mb-3"
-          >
-            Kam skirta
-          </motion.span>
-          <motion.h2
-            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-2xl sm:text-3xl md:text-[36px] font-bold text-steam-dark leading-tight tracking-tight mb-8"
-          >
-            Kam tai skirta
-          </motion.h2>
+      <div className="grid lg:grid-cols-12 gap-y-14 lg:gap-x-14 items-start">
+        <div className="lg:col-span-7">
+          {/* Editorial header */}
+          <div className="mb-14">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="inline-flex h-px w-10 bg-steam-dark/40" />
+              <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
+                §2 · Kam
+              </span>
+            </div>
+            <motion.h2
+              initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight"
+            >
+              Trims{" "}
+              <span className="font-display italic text-steam-dark/70">savaitėmis</span>
+              <br />
+              po brandos egzamino.
+            </motion.h2>
+            <motion.p
+              initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl leading-relaxed text-pretty"
+            >
+              Pradėjome 2026 m. pavasarį Klaipėdoje. Šiandien — šešios mokyklos,
+              keturiasdešimt mokytojų. Augame atsargiai, kad veiktų visiems.
+            </motion.p>
+          </div>
 
-          <div className="space-y-6">
-            {audiences.map((item, index) => {
-              const Icon = item.icon
-              return (
-                <motion.div
-                  key={index}
-                  initial={prefersReduced ? { opacity: 1 } : { opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                  className="flex gap-4"
-                >
-                  <div className="w-11 h-11 rounded-xl bg-secondary/8 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon className="h-5 w-5 text-secondary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-steam-dark text-[15px] mb-1">
-                      {item.title}
+          {/* Audience list — editorial cards */}
+          <div className="space-y-2">
+            {audiences.map((item, index) => (
+              <motion.article
+                key={index}
+                initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08, duration: 0.5 }}
+                className="group relative grid grid-cols-[auto_1fr] gap-5 py-6 border-t border-border/60 last:border-b last:border-b-border/60"
+              >
+                <div className="numeral-display text-2xl font-medium text-steam-dark/30 pt-1.5 tabular-nums">
+                  0{index + 1}
+                </div>
+                <div>
+                  <div className="flex items-baseline justify-between gap-3 mb-2">
+                    <h3 className="text-xl md:text-2xl font-bold text-steam-dark tracking-tight text-balance leading-tight">
+                      {item.quote}
                     </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {item.text}
-                    </p>
+                    <span className="hidden sm:inline shrink-0 text-[10px] uppercase tracking-[0.18em] text-secondary font-semibold">
+                      {item.tag}
+                    </span>
                   </div>
-                </motion.div>
-              )
-            })}
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl text-pretty">
+                    {item.body}
+                  </p>
+                </div>
+              </motion.article>
+            ))}
           </div>
         </div>
 
+        {/* Right — single image with editorial caption */}
         <motion.div
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.95 }}
+          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.97 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative hidden lg:block"
+          className="lg:col-span-5 lg:sticky lg:top-24"
         >
-          <div className="absolute -inset-4 bg-gradient-to-br from-secondary/8 to-primary/8 rounded-3xl blur-2xl opacity-60" />
-          <div className="relative rounded-2xl overflow-hidden shadow-xl shadow-steam-dark/8 border border-border/30 aspect-[3/4]">
-            <Image
-              src="/photos/activity-teachers.jpg"
-              alt="Mokytojai dalyvauja STEAM centro veiklose"
-              fill
-              className="object-cover"
-              sizes="440px"
-            />
-          </div>
+          <figure>
+            <div className="relative rounded-xl overflow-hidden shadow-xl shadow-steam-dark/10 border border-border/30 aspect-[4/5]">
+              <Image
+                src="/photos/activity-teachers.jpg"
+                alt="Mokytojai dalyvauja STEAM centro veiklose"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 460px"
+              />
+            </div>
+            <figcaption className="mt-4 flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
+              <span className="numeral-display text-[10px] uppercase tracking-wider text-secondary font-semibold shrink-0 mt-0.5">
+                Pav. 01
+              </span>
+              <span>
+                Mokytojai pirmajame KU STEAM partnerystės susitikime,
+                <span className="font-display italic"> 2026 m. balandis</span>.
+              </span>
+            </figcaption>
+          </figure>
         </motion.div>
       </div>
     </SectionWrapper>

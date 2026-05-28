@@ -1,38 +1,54 @@
 "use client"
 
 import { SteamLogo } from "@/components/steam-logo"
-import { Mail, Phone, MapPin } from "lucide-react"
+import { Mail, Phone, MapPin, ArrowUpRight } from "lucide-react"
 import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="py-12 md:py-16 border-t border-border/40 bg-white">
-      <div className="container mx-auto px-5 max-w-[1200px]">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+    <footer className="bg-white border-t border-border/40">
+      <div className="container mx-auto px-5 max-w-[1200px] py-16 md:py-20">
+        {/* Top: oversized signature */}
+        <div className="mb-16 md:mb-24">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="inline-flex h-px w-10 bg-steam-dark/30" />
+            <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/50 font-semibold">
+              KU STEAM
+            </span>
+          </div>
+          <p className="text-3xl md:text-5xl font-display italic text-steam-dark/85 leading-[1.1] max-w-3xl text-pretty">
+            &bdquo;Mokomės kartu su mokytojais — tam, kad mokiniai mokytųsi kartu su mumis.&ldquo;
+          </p>
+        </div>
+
+        {/* Bottom grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-12 gap-y-10 lg:gap-x-8 pt-10 border-t border-border/50">
           {/* Brand */}
-          <div>
-            <Link href="/" className="inline-flex hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
+          <div className="lg:col-span-4">
+            <Link
+              href="/"
+              className="inline-flex hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+            >
               <SteamLogo size="small" />
             </Link>
-            <p className="text-xs text-muted-foreground/60 mt-3 leading-relaxed max-w-[200px]">
-              Interaktyvių pamokų kūrimo įrankis partnerių mokykloms.
+            <p className="text-sm text-muted-foreground/80 mt-4 leading-relaxed max-w-xs">
+              Interaktyvių pamokų įrankis Klaipėdos universiteto STEAM metodinio centro
+              partnerių mokyklų tinklui.
             </p>
           </div>
 
-          {/* About */}
-          <div>
-            <h4 className="text-sm font-semibold text-steam-dark mb-4">
+          {/* Navigate */}
+          <div className="lg:col-span-2">
+            <h4 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/60 mb-4">
               Apie įrankį
             </h4>
             <ul className="space-y-2.5">
               <li>
                 <button
                   onClick={() =>
-                    document
-                      .getElementById("how-it-works")
-                      ?.scrollIntoView({ behavior: "smooth" })
+                    document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })
                   }
-                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="text-sm text-steam-dark hover:text-primary transition-colors"
                 >
                   Kaip veikia
                 </button>
@@ -40,30 +56,25 @@ export function Footer() {
               <li>
                 <button
                   onClick={() =>
-                    document
-                      .getElementById("access")
-                      ?.scrollIntoView({ behavior: "smooth" })
+                    document.getElementById("access")?.scrollIntoView({ behavior: "smooth" })
                   }
-                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="text-sm text-steam-dark hover:text-primary transition-colors"
                 >
-                  Kaip suteikiama prieiga
+                  Prieiga
                 </button>
               </li>
               <li>
-                <Link
-                  href="/auth/login"
-                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
-                >
-                  Prisijungimas mokytojams
+                <Link href="/auth/login" className="text-sm text-steam-dark hover:text-primary transition-colors">
+                  Prisijungimas
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* Institution */}
-          <div>
-            <h4 className="text-sm font-semibold text-steam-dark mb-4">
-              Klaipėdos universitetas
+          <div className="lg:col-span-3">
+            <h4 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/60 mb-4">
+              Institucija
             </h4>
             <ul className="space-y-2.5">
               <li>
@@ -71,9 +82,10 @@ export function Footer() {
                   href="https://www.ku.lt/steam"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="group inline-flex items-center gap-1.5 text-sm text-steam-dark hover:text-primary transition-colors"
                 >
                   STEAM metodinis centras
+                  <ArrowUpRight className="h-3 w-3 opacity-40 group-hover:opacity-100 transition-opacity" />
                 </a>
               </li>
               <li>
@@ -81,46 +93,51 @@ export function Footer() {
                   href="https://www.ku.lt"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground/60 hover:text-steam-dark transition-colors"
+                  className="group inline-flex items-center gap-1.5 text-sm text-steam-dark hover:text-primary transition-colors"
                 >
                   Klaipėdos universitetas
+                  <ArrowUpRight className="h-3 w-3 opacity-40 group-hover:opacity-100 transition-opacity" />
                 </a>
               </li>
             </ul>
           </div>
 
           {/* Contact */}
-          <div>
-            <h4 className="text-sm font-semibold text-steam-dark mb-4">
+          <div className="lg:col-span-3">
+            <h4 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/60 mb-4">
               Kontaktai
             </h4>
             <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm text-muted-foreground/60">
-                <Mail className="h-3.5 w-3.5 shrink-0" />
+              <li>
                 <a
                   href="mailto:steam@ku.lt"
-                  className="hover:text-steam-dark transition-colors"
+                  className="flex items-center gap-2 text-sm text-steam-dark hover:text-primary transition-colors"
                 >
+                  <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
                   steam@ku.lt
                 </a>
               </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground/60">
-                <Phone className="h-3.5 w-3.5 shrink-0" />
-                <span>+370 (46) 398 978</span>
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
+                +370 (46) 398 978
               </li>
-              <li className="flex items-start gap-2 text-sm text-muted-foreground/60">
-                <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span>Herkaus Manto g. 84, Klaipėda</span>
+              <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                Herkaus Manto g. 84
+                <br />
+                Klaipėda
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-8 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground/50">
-            &copy; {new Date().getFullYear()} Klaipėdos universiteto STEAM
-            metodinis centras
+        {/* Bottom bar — colophon */}
+        <div className="pt-8 mt-12 border-t border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground/70 font-mono">
+            © {new Date().getFullYear()} Klaipėdos universitetas. Sukurta su rūpesčiu Klaipėdoje.
+          </p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+            kusteam.app · v1.0
           </p>
         </div>
       </div>

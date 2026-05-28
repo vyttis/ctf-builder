@@ -76,6 +76,15 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "monospace"],
+        display: ["var(--font-display)", "Georgia", "serif"],
+      },
+      fontSize: {
+        // Editorial scale — used for landing display headlines & oversized numerals
+        "display-xs": ["clamp(1.75rem, 4vw, 2.5rem)", { lineHeight: "1.05", letterSpacing: "-0.02em" }],
+        "display-sm": ["clamp(2.25rem, 5vw, 3.25rem)", { lineHeight: "1.02", letterSpacing: "-0.025em" }],
+        "display-md": ["clamp(3rem, 7vw, 4.75rem)", { lineHeight: "0.98", letterSpacing: "-0.03em" }],
+        "display-lg": ["clamp(3.5rem, 9vw, 6.5rem)", { lineHeight: "0.95", letterSpacing: "-0.035em" }],
+        "numeral-xl": ["clamp(5rem, 14vw, 11rem)", { lineHeight: "0.85", letterSpacing: "-0.04em" }],
       },
       keyframes: {
         "accordion-down": {
