@@ -177,14 +177,14 @@ export default function LeaderboardPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    <Card className={`border transition-all ${
+                    <Card className={`border transition-all overflow-hidden ${
                       isMe
                         ? "border-primary/40 bg-primary/5 shadow-md shadow-primary/10"
                         : isTop3
                         ? `bg-gradient-to-r ${podiumColors[index]}`
                         : "border-border/50 bg-white"
                     }`}>
-                      <CardContent className="p-3.5 flex items-center gap-3">
+                      <CardContent className="p-3.5 flex items-start gap-3">
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
                           isTop3 ? "bg-white shadow-sm" : "bg-muted/50 text-muted-foreground"
                         }`}>
@@ -197,25 +197,39 @@ export default function LeaderboardPage() {
                               {team.name}
                             </span>
                             {isMe && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary shrink-0">
                                 Jūs
                               </Badge>
                             )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <p className="text-xs text-muted-foreground">
-                              {team.current_challenge_index} užd. išspręsta
-                            </p>
-                            {teamAchievements[team.id]?.map((a) => (
-                              <AchievementBadge key={a.id} type={a.type} size="sm" />
-                            ))}
-                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {team.current_challenge_index} užd. išspręsta
+                          </p>
+                          {(() => {
+                            const achievements = teamAchievements[team.id] ?? []
+                            const MAX_VISIBLE = 4
+                            const visible = achievements.slice(0, MAX_VISIBLE)
+                            const overflow = achievements.length - visible.length
+                            if (achievements.length === 0) return null
+                            return (
+                              <div className="flex items-center flex-wrap gap-1 mt-1.5">
+                                {visible.map((a) => (
+                                  <AchievementBadge key={a.id} type={a.type} size="sm" />
+                                ))}
+                                {overflow > 0 && (
+                                  <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
+                                    +{overflow}
+                                  </span>
+                                )}
+                              </div>
+                            )
+                          })()}
                         </div>
 
                         <div className="text-right shrink-0">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3.5 w-3.5 text-highlight" />
-                            <span className="font-bold text-lg text-steam-dark">{team.total_points}</span>
+                          <div className="flex items-center gap-1 justify-end">
+                            <Star className="h-3.5 w-3.5 text-highlight shrink-0" />
+                            <span className="font-bold text-lg text-steam-dark tabular-nums">{team.total_points}</span>
                           </div>
                           <p className="text-[10px] text-muted-foreground">taškų</p>
                         </div>
