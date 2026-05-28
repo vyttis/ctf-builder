@@ -9,35 +9,35 @@ const steps = [
     number: "01",
     title: "Pasirinkite temą",
     description:
-      "Dalykas, klasė, pamokos tipas — viskas iš LT bendrojo ugdymo programos. Sistema žino, ko galima tikėtis 3-oje klasėje ir ko — 11-oje.",
+      "Dalykas, klasė, pamokos tipas — pagal Lietuvos bendrojo ugdymo programą. Sistema pritaiko užduočių sudėtingumą amžiui.",
     accent: "primary",
   },
   {
     number: "02",
     title: "Kurkite užduotis",
     description:
-      "Rašykite patys arba dirbtinis intelektas pasiūlys. Visada redaguojate, niekada nepasiduodate.",
+      "Užduotis rašote patys arba pagal dirbtinio intelekto pasiūlymą. Galutinį turinį visada peržiūrite ir patvirtinate jūs.",
     accent: "highlight",
   },
   {
     number: "03",
     title: "Sudėliokite pamokos eigą",
     description:
-      "Įvadas → veiklos → diskusija → refleksija. Pritempkite, perkelkite, ištrinkite, kol jaučiasi tinkamai.",
+      "Įvadas, veiklos, diskusija, refleksija — vienoje vietoje. Užduotis perdėliokite, redaguokite ar pašalinkite, kol pamokos struktūra atitinka jūsų planą.",
     accent: "secondary",
   },
   {
     number: "04",
     title: "Mokiniai prisijungia",
     description:
-      "QR kodas arba 6 simbolių slaptažodis. Be paskyrų, be el. pašto. Per 10 sekundžių nuo telefono iki pirmos užduoties.",
+      "Per QR kodą arba 6 simbolių prisijungimo kodą. Mokiniams nereikia paskyrų ar elektroninio pašto — prisijungimas trunka kelias sekundes.",
     accent: "accent",
   },
   {
     number: "05",
-    title: "Stebėkite ir reaguokite",
+    title: "Stebėkite eigą",
     description:
-      "Atsakymai matomi realiu laiku. Pristabdykite žaidimą, kai reikia paaiškinti. Pratęskite laiką, kai matote, kad neužteks.",
+      "Komandų progresas ir mokinių atsakymai matomi realiu laiku. Pamoką galite pristabdyti paaiškinimui arba pratęsti laiką prireikus.",
     accent: "primary",
   },
 ] as const
@@ -84,8 +84,8 @@ export function HowItWorksSection() {
           iki klasės.
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
-          Nereikalauja IT specialisto. Nereikalauja papildomo mokymo. Vienas mokytojas,
-          vienas vakaras, viena pamoka — pasiruošusi.
+          Pamokai paruošti nereikia papildomos technikos ar IT specialisto. Visą eigą
+          mokytojas suvaldo savarankiškai.
         </p>
       </div>
 

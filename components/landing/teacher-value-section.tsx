@@ -6,24 +6,24 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const stats = [
   {
-    metric: "20 min",
-    label: "Pasiruošimas pamokai",
-    detail: "Vietoj dviejų valandų prie kompiuterio. Šeštadienio vakaras lieka šeimai.",
+    metric: "Greičiau",
+    label: "Pamokos paruošimas",
+    detail: "Standartinė pamoka paruošiama per kelias minutes, ne kelias valandas. Dirbtinis intelektas padeda ten, kur užtrunka daugiausia laiko.",
   },
   {
-    metric: "0",
-    label: "Mokinių paskyrų",
-    detail: "Niekas neregistruojasi, neprisimena slaptažodžių. QR kodas — ir klasė viduje.",
+    metric: "Be",
+    label: "Mokinių registracijos",
+    detail: "Mokiniai prisijungia per QR kodą — be paskyrų, elektroninio pašto ar slaptažodžių. Tinka pradinukams, gimnazistams ir tarp jų.",
   },
   {
-    metric: "100%",
-    label: "Mokytojo kontrolė",
-    detail: "Dirbtinis intelektas siūlo, jūs pasirenkate. Niekada nieko nepateikiama be jūsų patvirtinimo.",
+    metric: "100 %",
+    label: "Mokytojo sprendimas",
+    detail: "Dirbtinis intelektas teikia pasiūlymus, bet galutinį užduočių turinį visada peržiūri ir patvirtina pedagogas.",
   },
   {
-    metric: "Visa",
-    label: "Klasės eiga matoma",
-    detail: "Realiu laiku — kas užstrigo, kas pasiekė, kuri komanda artėja prie pabaigos.",
+    metric: "Reali",
+    label: "Pamokos eiga",
+    detail: "Komandų progresas ir mokinių atsakymai matomi realiu laiku — galima reaguoti dar pamokos metu.",
   },
 ] as const
 
@@ -42,11 +42,11 @@ export function TeacherValueSection() {
         </div>
         <h2 className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight">
           Keturi{" "}
-          <span className="font-display italic text-steam-dark/70">apčiuopiami</span>{" "}
-          dalykai.
+          <span className="font-display italic text-steam-dark/70">aiškūs</span>{" "}
+          principai.
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
-          Ne pažadai, ne marketingo blizgesys — konkretūs skaičiai ir konkretūs minutės.
+          Kuo įrankis naudingas mokytojo darbe — pristatome paprastai ir aiškiai.
         </p>
       </div>
 

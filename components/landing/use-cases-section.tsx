@@ -7,29 +7,29 @@ import Image from "next/image"
 
 const useCases = [
   {
-    when: "Pirmadienio rytą",
-    what: "Greitas žinių patikrinimas",
-    body: "5 minučių užduotis — ar klasė suprato penktadienio temą. Atsakymai akimirksniu, žinote, ar vesti naują temą, ar grįžti.",
+    when: "Pamokos pradžioje",
+    what: "Žinių patikrinimas",
+    body: "Trumpa užduotis padės įvertinti, ar klasė pasiruošusi naujai temai, ar reikia pakartoti ankstesnę medžiagą.",
   },
   {
-    when: "Visą pamoką",
-    what: "Komandinis iššūkis",
-    body: "5 komandos × 6 užduotys × 45 minutės. Mokiniai diskutuoja, ginčijasi, bendradarbiauja. Mokytojas mato kiekvieną žingsnį.",
+    when: "Pagrindinė pamoka",
+    what: "Komandinė veikla",
+    body: "Mokiniai dirba komandose, diskutuoja ir sprendžia užduotis kartu. Mokytojas mato kiekvienos komandos eigą realiu laiku.",
   },
   {
-    when: "Projektinę savaitę",
-    what: "Tyrimo scenarijus",
-    body: "Etapinė užduotis — mokiniai analizuoja, ieško informacijos, formuluoja išvadas. Kaip pirmieji moksliniai tyrimai mokykloje.",
+    when: "Projektinė veikla",
+    what: "Tyrimo užduotys",
+    body: "Etapinė užduotis, kuria mokiniai analizuoja informaciją, kelia hipotezes ir formuluoja išvadas pagal pateiktus duomenis.",
   },
   {
-    when: "STEAM dieną",
-    what: "Integruota veikla",
-    body: "Matematika su biologija. Fizika su technologijomis. Du dalykai jungiasi natūraliai — kaip realiame pasaulyje.",
+    when: "Integruota pamoka",
+    what: "STEAM veikla",
+    body: "Du dalykai jungiami į vieną pamoką (pvz., matematika ir fizika) — užduotys kuria natūralų ryšį tarp temų.",
   },
   {
-    when: "Prieš atostogas",
+    when: "Kartojimo pamoka",
     what: "Pasiekimų peržiūra",
-    body: "Mažas turnyras klasėje. Pasitikrina, kas išmokta. Atostogos prasideda su žaidimu, ne stresu.",
+    body: "Įvairios užduotys padeda mokiniams patiems įvertinti, ką jau supranta, o ką dar reikia pakartoti prieš pasiekimų patikrinimą.",
   },
 ] as const
 
@@ -61,8 +61,7 @@ export function UseCasesSection() {
               Pav. 02
             </span>
             <span>
-              <span className="font-display italic">&bdquo;Kai mokinys spaudžia atsakymą, mokytojas nustoja vesti monologą.&ldquo;</span>
-              {" "}— V. Bagdonienė, 7-os kl. matematika
+              Mokiniai sprendžia užduotis komandose pamokoje.
             </span>
           </figcaption>
         </motion.figure>
@@ -79,7 +78,7 @@ export function UseCasesSection() {
             </div>
             <h2 className="text-display-sm text-steam-dark leading-[0.98] tracking-tight">
               Penkios{" "}
-              <span className="font-display italic text-steam-dark/70">tikros</span>{" "}
+              <span className="font-display italic text-steam-dark/70">pamokos</span>{" "}
               situacijos.
             </h2>
           </div>

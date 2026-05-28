@@ -7,18 +7,18 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const audiences = [
   {
-    quote: "Partnerių mokykloms",
-    body: "Įrankis dabar atviras KU STEAM centro partnerių mokyklų tinklui. Iš mokyklos — į kitą mokyklą.",
+    quote: "Partnerių mokyklų mokytojams",
+    body: "Įrankis prieinamas Klaipėdos universiteto STEAM metodinio centro partnerių tinklo mokykloms.",
     tag: "Tinklas",
   },
   {
-    quote: "Šiuolaikiškiems mokytojams",
-    body: "Tiems, kurie ieško įtraukesnių darbo būdų. Norintiems, kad mokiniai pamokoje mąstytų, o ne tik klausytųsi.",
+    quote: "Šiuolaikiškiems pedagogams",
+    body: "Mokytojams, ieškantiems įtraukių darbo būdų — kad mokiniai pamokoje aktyviai mąstytų, diskutuotų ir spręstų.",
     tag: "Praktika",
   },
   {
-    quote: "Atskiriems dalykams. Integruotai STEAM. Projektams.",
-    body: "Vienas įrankis — pradinių klasių pasaulio pažinimui, gimnazijos brandos egzaminų pasirengimui, projektinei savaitei.",
+    quote: "Atskiroms ir integruotoms pamokoms",
+    body: "Tinka tiek dalykinėms pamokoms, tiek integruotoms STEAM veikloms, projektinei savaitei ar pasirengimui pasiekimų patikrinimams.",
     tag: "Lankstumas",
   },
 ]
@@ -44,10 +44,10 @@ export function ForWhomSection() {
               viewport={{ once: true }}
               className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight"
             >
-              Trims{" "}
-              <span className="font-display italic text-steam-dark/70">savaitėmis</span>
+              Mokytojui,{" "}
+              <span className="font-display italic text-steam-dark/70">kuris ieško</span>
               <br />
-              po brandos egzamino.
+              daugiau nei klausimynų.
             </motion.h2>
             <motion.p
               initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 12 }}
@@ -56,8 +56,8 @@ export function ForWhomSection() {
               transition={{ delay: 0.1 }}
               className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl leading-relaxed text-pretty"
             >
-              Pradėjome 2026 m. pavasarį Klaipėdoje. Šiandien — šešios mokyklos,
-              keturiasdešimt mokytojų. Augame atsargiai, kad veiktų visiems.
+              Įrankis skirtas Klaipėdos universiteto STEAM metodinio centro partnerių
+              tinklo mokytojams — pradinio, pagrindinio ir vidurinio ugdymo.
             </motion.p>
           </div>
 
@@ -116,8 +116,7 @@ export function ForWhomSection() {
                 Pav. 01
               </span>
               <span>
-                Mokytojai pirmajame KU STEAM partnerystės susitikime,
-                <span className="font-display italic"> 2026 m. balandis</span>.
+                Mokytojai KU STEAM partnerystės susitikime.
               </span>
             </figcaption>
           </figure>

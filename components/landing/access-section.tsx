@@ -9,20 +9,20 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
 const steps = [
   {
     number: "01",
-    title: "Partnerystė",
-    body: "Prieiga atvira mokykloms, priklausančioms Klaipėdos universiteto STEAM metodinio centro partnerių tinklui.",
+    title: "Partnerystė su STEAM centru",
+    body: "Įrankis prieinamas mokykloms, priklausančioms Klaipėdos universiteto STEAM metodinio centro partnerių tinklui.",
     accent: "secondary",
   },
   {
     number: "02",
-    title: "Mokymai",
-    body: "Prieš pradedant — praktiniai mokymai ir dirbtuvės kartu su STEAM centro komanda. Ne daugiau nei du susitikimai.",
+    title: "Praktiniai mokymai",
+    body: "Prieš pradedant naudoti įrankį, mokytojai dalyvauja praktiniuose mokymuose ir dirbtuvėse kartu su STEAM centro komanda.",
     accent: "primary",
   },
   {
     number: "03",
     title: "Asmeninė prieiga",
-    body: "Po mokymų — asmeninė paskyra. Nuo tada pamokas kuriate savarankiškai. Be papildomų leidimų, be administracinio kelio.",
+    body: "Po mokymų mokytojui suteikiama asmeninė paskyra. Pamokas kuriate savarankiškai, be papildomų leidimų ar administracinių procedūrų.",
     accent: "highlight",
   },
 ] as const
@@ -56,8 +56,8 @@ export function AccessSection() {
               iki paskyros.
             </h2>
             <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl leading-relaxed text-pretty">
-              Užtruksite tiek, kiek užima kava su STEAM centro komanda — bet pasiruošę
-              kursite savarankiškai dešimtmečius.
+              Pradinis kelias trumpas: partnerystė, praktiniai mokymai ir asmeninės
+              prieigos suteikimas. Visa kita — savarankiškas darbas pamokose.
             </p>
           </div>
 
@@ -113,8 +113,8 @@ export function AccessSection() {
                 <span className="font-display italic text-primary">partnerystę</span>?
               </h3>
               <p className="text-sm text-white/75 leading-relaxed mb-7 max-w-xs">
-                Parašykite STEAM metodiniam centrui — atsakysime per kelias dienas.
-                Be standartinių pardavimų kalbų.
+                Parašykite STEAM metodiniam centrui — pasikalbėsime apie jūsų mokyklos
+                poreikius ir tolesnius žingsnius.
               </p>
 
               <a href="mailto:steam@ku.lt" className="inline-block">

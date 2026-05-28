@@ -162,12 +162,12 @@ export function ClassroomExperienceSection() {
         </div>
         <h2 className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight">
           Dvi pusės{" "}
-          <span className="font-display italic text-steam-dark/70">to paties</span>{" "}
-          ekrano.
+          <span className="font-display italic text-steam-dark/70">tos pačios</span>{" "}
+          pamokos.
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl mx-auto leading-relaxed text-pretty">
-          Mokytojas mato — visą klasę vienu žvilgsniu. Mokinys mato — savo užduotis,
-          savo komandą, savo progresą.
+          Mokytojas mato visos klasės progresą vienu žvilgsniu. Mokinys mato savo
+          užduotis, komandos rezultatus ir asmeninį progresą.
         </p>
       </div>
 

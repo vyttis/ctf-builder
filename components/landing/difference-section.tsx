@@ -9,32 +9,32 @@ const rows = [
   {
     label: "Formatas",
     quiz: "Greiti klausimai su laikmačiu",
-    platform: "Struktūruotos veiklos su lanksčia eiga",
+    platform: "Struktūruota pamoka su lanksčia eiga",
   },
   {
     label: "Darbo būdas",
     quiz: "Individualus žaidimas",
-    platform: "Komandinis bendradarbiavimas",
+    platform: "Komandinis darbas ir bendradarbiavimas",
   },
   {
     label: "Atsakymai",
-    quiz: "Tik pasirinkimas",
-    platform: "Tekstas, skaičius, pasirinkimas",
+    quiz: "Tik pasirinkimas iš variantų",
+    platform: "Tekstas, skaičius arba pasirinkimas",
   },
   {
-    label: "Pagalba",
-    quiz: "Nėra užuominų",
-    platform: "Progresinės užuominos su taškų logika",
+    label: "Užuominos",
+    quiz: "Neteikiamos",
+    platform: "Progresinės užuominos su taškų sistema",
   },
   {
     label: "Stebėjimas",
-    quiz: "Rezultatai po žaidimo",
-    platform: "Realtime per pamoką",
+    quiz: "Rezultatai matomi po pabaigos",
+    platform: "Eiga matoma realiu laiku per pamoką",
   },
   {
-    label: "Kūrimas",
-    quiz: "Rankinis klausimų vedimas",
-    platform: "DI siūlo, mokytojas tvirtina",
+    label: "Užduočių kūrimas",
+    quiz: "Visi klausimai rašomi ranka",
+    platform: "Dirbtinis intelektas teikia siūlymus mokytojui",
   },
 ] as const
 
@@ -52,14 +52,13 @@ export function DifferenceSection() {
           </span>
         </div>
         <h2 className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight">
-          Tai{" "}
-          <span className="font-display italic text-steam-dark/70">ne dar viena</span>
-          <br />
-          quiz programa.
+          Daugiau{" "}
+          <span className="font-display italic text-steam-dark/70">nei testų</span>{" "}
+          programa.
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
-          Quiz įrankiai pateikia klausimus ir surenka atsakymus. Šis įrankis padeda
-          sukurti pamoką — su lanksčia struktūra, komandiniu darbu, refleksija.
+          Testų įrankiai pateikia klausimus ir surenka atsakymus. Šis įrankis padeda
+          sukurti visą pamoką — su aiškia struktūra, komandiniu darbu ir refleksija.
         </p>
       </div>
 
@@ -76,11 +75,11 @@ export function DifferenceSection() {
           <div className="flex items-center gap-2 mb-1">
             <X className="h-4 w-4 text-muted-foreground" strokeWidth={2.5} />
             <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-muted-foreground">
-              Quiz įrankis
+              Testų įrankis
             </span>
           </div>
           <h3 className="text-xl md:text-2xl font-display italic text-muted-foreground/80 leading-tight mb-7">
-            &bdquo;Surinkti atsakymus&ldquo;
+            Surenka atsakymus
           </h3>
           <dl className="space-y-4">
             {rows.map((row) => (
@@ -108,7 +107,7 @@ export function DifferenceSection() {
             </span>
           </div>
           <h3 className="text-xl md:text-2xl font-bold text-steam-dark leading-tight mb-7">
-            &bdquo;Sukurti pamoką&ldquo;
+            Padeda sukurti pamoką
           </h3>
           <dl className="space-y-4">
             {rows.map((row) => (

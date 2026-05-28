@@ -17,7 +17,7 @@ export function Footer() {
             </span>
           </div>
           <p className="text-3xl md:text-5xl font-display italic text-steam-dark/85 leading-[1.1] max-w-3xl text-pretty">
-            &bdquo;Mokomės kartu su mokytojais — tam, kad mokiniai mokytųsi kartu su mumis.&ldquo;
+            Pamoka, kurioje mokiniai galvoja kartu.
           </p>
         </div>
 
@@ -32,8 +32,8 @@ export function Footer() {
               <SteamLogo size="small" />
             </Link>
             <p className="text-sm text-muted-foreground/80 mt-4 leading-relaxed max-w-xs">
-              Interaktyvių pamokų įrankis Klaipėdos universiteto STEAM metodinio centro
-              partnerių mokyklų tinklui.
+              Interaktyvių pamokų kūrimo įrankis Klaipėdos universiteto STEAM metodinio
+              centro partnerių mokyklų tinklui.
             </p>
           </div>
 
@@ -134,7 +134,7 @@ export function Footer() {
         {/* Bottom bar — colophon */}
         <div className="pt-8 mt-12 border-t border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground/70 font-mono">
-            © {new Date().getFullYear()} Klaipėdos universitetas. Sukurta su rūpesčiu Klaipėdoje.
+            © {new Date().getFullYear()} Klaipėdos universitetas · STEAM metodinis centras
           </p>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
             kusteam.app · v1.0

@@ -41,14 +41,14 @@ export function FinalCtaSection() {
           </div>
 
           <h2 className="text-display-md md:text-display-lg text-white leading-[0.95] tracking-tight mb-7">
-            <span className="font-extrabold">Pamoka</span>{" "}
-            <span className="font-display italic text-white/75">prasideda</span>{" "}
-            <span className="font-extrabold">vakar.</span>
+            <span className="font-extrabold">Pradėkite</span>{" "}
+            <span className="font-display italic text-white/85">kurti</span>{" "}
+            <span className="font-extrabold">pamoką.</span>
           </h2>
 
           <p className="text-base md:text-lg text-white/70 max-w-2xl leading-relaxed text-pretty mb-10">
-            Vieną el. laišką STEAM metodiniam centrui — atsakysime per dvi darbo dienas.
-            Be pardavimų skambučių, be reklamų, be ko nors kito, ko nepaprašėte.
+            Parašykite STEAM metodiniam centrui — aptarsime partnerystę ir mokymus.
+            Po jų gausite asmeninę prieigą prie platformos.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -74,12 +74,12 @@ export function FinalCtaSection() {
             </a>
           </div>
 
-          {/* Editorial footer fragment */}
+          {/* Editorial footer fragment — capability strip */}
           <div className="grid sm:grid-cols-3 gap-y-6 sm:gap-x-8 mt-16 pt-10 border-t border-white/10">
             {[
-              { num: "2026", label: "Pradžia" },
-              { num: "6", label: "Mokyklos" },
-              { num: "40+", label: "Mokytojai" },
+              { num: "24", label: "BUP dalykai" },
+              { num: "1–12", label: "Klasių spektras" },
+              { num: "STEAM", label: "Integruotos veiklos" },
             ].map((stat) => (
               <div key={stat.label}>
                 <div className="numeral-display text-3xl font-medium text-white tabular-nums">
