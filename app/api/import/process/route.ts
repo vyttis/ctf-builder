@@ -10,7 +10,8 @@ import {
 } from "@/lib/ai/verify-prompt"
 import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 import type { AiSuggestion, VerificationResult } from "@/lib/ai/types"
-import { getAnthropicClient, MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
+import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { createWithSchemaRetry } from "@/lib/ai/retry"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const processSchema = z.object({
@@ -110,34 +111,20 @@ ${truncatedText}
 
 Sugeneruok ${parsed.data.count} užduotis pagal šį dokumentą. Užduotys turi tikrinti mokinių supratimą apie dokumento turinį.`
 
-    const message = await createWithFallback({
-      model: MODELS.generate,
-      max_tokens: 4096,
-      system: cachedSystem(systemPrompt),
-      messages: [{ role: "user", content: userMessage }],
-    })
-
-    const textBlock = message.content.find((b) => b.type === "text")
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from DI")
-    }
-
-    let jsonText = textBlock.text.trim()
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText
-        .replace(/^```(?:json)?\n?/, "")
-        .replace(/\n?```$/, "")
-    }
-
-    const rawGenerated = JSON.parse(jsonText)
-    const validated = aiSuggestResponseSchema.safeParse(rawGenerated)
-    if (!validated.success) {
-      throw new Error("Invalid DI response")
-    }
+    const validatedData = await createWithSchemaRetry(
+      {
+        model: MODELS.generate,
+        max_tokens: 4096,
+        system: cachedSystem(systemPrompt),
+        messages: [{ role: "user", content: userMessage }],
+      },
+      aiSuggestResponseSchema,
+      { logPrefix: "import-process", maxRetries: 1 },
+    )
 
     // Verify each suggestion
     const enriched = await Promise.all(
-      validated.data.suggestions.map(async (suggestion) => {
+      validatedData.suggestions.map(async (suggestion) => {
         const verification = await verifySuggestion(anthropic, suggestion)
         return { ...suggestion, verification }
       })

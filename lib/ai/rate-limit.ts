@@ -61,10 +61,20 @@ export function parseAiJson<T = unknown>(text: string): T {
   // Strict parse first — fast path
   try {
     return JSON.parse(jsonText) as T
-  } catch {
+  } catch (strictErr) {
     // Repair pass — handles trailing commas, missing quotes, unclosed strings,
     // smart quotes, comments, etc. that LLMs occasionally emit.
-    const repaired = jsonrepair(jsonText)
-    return JSON.parse(repaired) as T
+    try {
+      const repaired = jsonrepair(jsonText)
+      return JSON.parse(repaired) as T
+    } catch (repairErr) {
+      // Surface both errors so we can debug what the model emitted.
+      console.error("[parseAiJson] strict parse failed:", strictErr instanceof Error ? strictErr.message : strictErr)
+      console.error("[parseAiJson] repair failed:", repairErr instanceof Error ? repairErr.message : repairErr)
+      console.error("[parseAiJson] raw input (truncated to 500 chars):", jsonText.slice(0, 500))
+      throw new Error(
+        `JSON parse failed: ${strictErr instanceof Error ? strictErr.message : String(strictErr)}`,
+      )
+    }
   }
 }

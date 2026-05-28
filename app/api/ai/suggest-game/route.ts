@@ -3,8 +3,9 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { buildGameSystemPrompt, buildGameUserMessage } from "@/lib/ai/prompt"
 import { aiGameSuggestResponseSchema } from "@/lib/ai/schemas"
-import { MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
-import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
+import { MODELS, cachedSystem } from "@/lib/ai/client"
+import { createWithSchemaRetry } from "@/lib/ai/retry"
+import { checkAiRateLimit } from "@/lib/ai/rate-limit"
 
 const suggestGameSchema = z.object({
   teacher_prompt: z.string().max(500).optional(),
@@ -54,25 +55,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    const message = await createWithFallback({
-      model: MODELS.generate,
-      max_tokens: 2048,
-      system: cachedSystem(buildGameSystemPrompt()),
-      messages: [{ role: "user", content: buildGameUserMessage(parsed.data) }],
-    })
+    const data = await createWithSchemaRetry(
+      {
+        model: MODELS.generate,
+        max_tokens: 2048,
+        system: cachedSystem(buildGameSystemPrompt()),
+        messages: [{ role: "user", content: buildGameUserMessage(parsed.data) }],
+      },
+      aiGameSuggestResponseSchema,
+      { logPrefix: "ai-suggest-game", maxRetries: 1 },
+    )
 
-    const textBlock = message.content.find((b) => b.type === "text")
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from AI")
-    }
-
-    const rawParsed = parseAiJson(textBlock.text)
-    const validated = aiGameSuggestResponseSchema.safeParse(rawParsed)
-    if (!validated.success) {
-      throw new Error("Invalid AI response structure: " + validated.error.message)
-    }
-
-    return NextResponse.json(validated.data)
+    return NextResponse.json(data)
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
     console.error("AI suggest-game error:", errMsg, error)

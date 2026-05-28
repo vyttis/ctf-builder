@@ -16,7 +16,8 @@ import type {
   AiSuggestion,
   VerificationResult,
 } from "@/lib/ai/types"
-import { getAnthropicClient, MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
+import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
+import { createWithSchemaRetry } from "@/lib/ai/retry"
 import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
 
 const generateSchema = z.object({
@@ -148,25 +149,18 @@ export async function POST(request: Request) {
   try {
     const anthropic = getAnthropicClient()
 
-    // Step 1: Generate suggestions
-    const message = await createWithFallback({
-      model: MODELS.generate,
-      max_tokens: 4096,
-      system: cachedSystem(buildSystemPrompt()),
-      messages: [{ role: "user", content: buildUserMessage(parsed.data, parsed.data.scenario) }],
-    })
-
-    const textBlock = message.content.find((b) => b.type === "text")
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from DI")
-    }
-
-    const rawGenerated = parseAiJson(textBlock.text)
-    const validatedResponse = aiSuggestResponseSchema.safeParse(rawGenerated)
-    if (!validatedResponse.success) {
-      throw new Error("Invalid DI response structure: " + validatedResponse.error.message)
-    }
-    const generatedResponse = validatedResponse.data
+    // Step 1: Generate suggestions (with schema retry — re-prompts the model
+    // if the output doesn't fit aiSuggestResponseSchema)
+    const generatedResponse = await createWithSchemaRetry(
+      {
+        model: MODELS.generate,
+        max_tokens: 4096,
+        system: cachedSystem(buildSystemPrompt()),
+        messages: [{ role: "user", content: buildUserMessage(parsed.data, parsed.data.scenario) }],
+      },
+      aiSuggestResponseSchema,
+      { logPrefix: "di-generate", maxRetries: 1 },
+    )
 
     // Step 2: Verify each suggestion in parallel
     const enrichedSuggestions = await Promise.all(

@@ -3,8 +3,9 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { buildSystemPrompt, buildUserMessage } from "@/lib/ai/prompt"
 import { aiSuggestResponseSchema } from "@/lib/ai/schemas"
-import { MODELS, cachedSystem, createWithFallback } from "@/lib/ai/client"
-import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
+import { MODELS, cachedSystem } from "@/lib/ai/client"
+import { createWithSchemaRetry } from "@/lib/ai/retry"
+import { checkAiRateLimit } from "@/lib/ai/rate-limit"
 
 const suggestSchema = z.object({
   game_id: z.string().uuid(),
@@ -77,25 +78,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    const message = await createWithFallback({
-      model: MODELS.generate,
-      max_tokens: 4096,
-      system: cachedSystem(buildSystemPrompt()),
-      messages: [{ role: "user", content: buildUserMessage(parsed.data) }],
-    })
+    const data = await createWithSchemaRetry(
+      {
+        model: MODELS.generate,
+        max_tokens: 4096,
+        system: cachedSystem(buildSystemPrompt()),
+        messages: [{ role: "user", content: buildUserMessage(parsed.data) }],
+      },
+      aiSuggestResponseSchema,
+      { logPrefix: "ai-suggest", maxRetries: 1 },
+    )
 
-    const textBlock = message.content.find((b) => b.type === "text")
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from AI")
-    }
-
-    const rawParsed = parseAiJson(textBlock.text)
-    const validated = aiSuggestResponseSchema.safeParse(rawParsed)
-    if (!validated.success) {
-      throw new Error("Invalid AI response structure: " + validated.error.message)
-    }
-
-    return NextResponse.json(validated.data)
+    return NextResponse.json(data)
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
     console.error("AI suggest error:", errMsg, error)
