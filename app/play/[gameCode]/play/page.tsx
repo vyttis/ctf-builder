@@ -805,15 +805,15 @@ export default function PlayPage() {
                           key={i}
                           type="button"
                           variant={answer === option ? "default" : "outline"}
-                          className={`w-full justify-start h-auto py-3 px-4 text-left ${
+                          className={`w-full justify-start items-start h-auto min-h-12 py-3 px-4 text-left whitespace-normal break-words ${
                             answer === option ? "bg-primary text-white" : ""
                           }`}
                           onClick={() => setAnswer(option)}
                         >
-                          <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold mr-3 shrink-0">
+                          <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">
                             {String.fromCharCode(65 + i)}
                           </span>
-                          {option}
+                          <span className="flex-1 leading-relaxed">{option}</span>
                         </Button>
                       ))}
                     </div>
