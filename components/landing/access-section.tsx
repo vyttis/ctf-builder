@@ -1,130 +1,132 @@
 "use client"
 
 import { SectionWrapper } from "./section-wrapper"
-import { Handshake, GraduationCap, KeyRound, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Mail, ArrowUpRight } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const steps = [
   {
     number: "01",
-    icon: Handshake,
-    title: "Bendradarbiavimas su STEAM centru",
-    description:
-      "Prieiga suteikiama mokykloms, priklausančioms Klaipėdos universiteto STEAM metodinio centro partnerių tinklui.",
-    color: "bg-secondary/10 text-secondary",
+    title: "Partnerystė",
+    body: "Prieiga atvira mokykloms, priklausančioms Klaipėdos universiteto STEAM metodinio centro partnerių tinklui.",
+    accent: "secondary",
   },
   {
     number: "02",
-    icon: GraduationCap,
-    title: "Mokymai ir dirbtuvės",
-    description:
-      "Prieš pradedant dirbti, mokytojai kartu su STEAM centro komanda praeina praktinius mokymus ir dirbtuves.",
-    color: "bg-primary/10 text-primary",
+    title: "Mokymai",
+    body: "Prieš pradedant — praktiniai mokymai ir dirbtuvės kartu su STEAM centro komanda. Ne daugiau nei du susitikimai.",
+    accent: "primary",
   },
   {
     number: "03",
-    icon: KeyRound,
     title: "Asmeninė prieiga",
-    description:
-      "Po mokymų mokytojui suteikiama asmeninė prieiga — nuo tada pamokas kursite savarankiškai.",
-    color: "bg-highlight/10 text-highlight",
+    body: "Po mokymų — asmeninė paskyra. Nuo tada pamokas kuriate savarankiškai. Be papildomų leidimų, be administracinio kelio.",
+    accent: "highlight",
   },
-]
+] as const
+
+const ACCENT_CLASS: Record<string, string> = {
+  primary: "text-primary",
+  secondary: "text-secondary",
+  highlight: "text-highlight",
+}
 
 export function AccessSection() {
   const prefersReduced = useReducedMotion()
 
   return (
     <SectionWrapper background="muted" id="access">
-      <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-        {/* Left — steps */}
-        <div>
-          <motion.span
-            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-block text-xs font-semibold text-highlight uppercase tracking-widest mb-3"
-          >
-            Prieiga
-          </motion.span>
-          <motion.h2
-            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-2xl sm:text-3xl md:text-[36px] font-bold text-steam-dark leading-tight tracking-tight mb-10"
-          >
-            Kaip gauti prieigą
-          </motion.h2>
-
-          <div className="space-y-8">
-            {steps.map((step, index) => {
-              const Icon = step.icon
-              return (
-                <motion.div
-                  key={index}
-                  initial={
-                    prefersReduced ? { opacity: 1 } : { opacity: 0, x: -20 }
-                  }
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.15, duration: 0.5 }}
-                  className="flex gap-5 items-start"
-                >
-                  <div className="relative shrink-0">
-                    <div
-                      className={`w-14 h-14 rounded-2xl ${step.color} flex items-center justify-center`}
-                    >
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <span className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-steam-dark text-white text-[11px] font-bold flex items-center justify-center shadow-sm">
-                      {step.number}
-                    </span>
-                    {index < steps.length - 1 && (
-                      <div className="absolute top-14 left-1/2 -translate-x-1/2 w-px h-8 bg-border/40" />
-                    )}
-                  </div>
-                  <div className="pt-1">
-                    <h3 className="font-semibold text-steam-dark text-base mb-1.5">
-                      {step.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {step.description}
-                    </p>
-                  </div>
-                </motion.div>
-              )
-            })}
+      <div className="grid lg:grid-cols-12 gap-y-14 lg:gap-x-14 items-start">
+        {/* Left — process */}
+        <div className="lg:col-span-7">
+          {/* Editorial header */}
+          <div className="mb-14">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="inline-flex h-px w-10 bg-highlight" />
+              <span className="text-[11px] uppercase tracking-[0.22em] text-highlight font-semibold">
+                §8 · Prieiga
+              </span>
+            </div>
+            <h2 className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight">
+              Trys{" "}
+              <span className="font-display italic text-steam-dark/70">žingsniai</span>
+              <br />
+              iki paskyros.
+            </h2>
+            <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl leading-relaxed text-pretty">
+              Užtruksite tiek, kiek užima kava su STEAM centro komanda — bet pasiruošę
+              kursite savarankiškai dešimtmečius.
+            </p>
           </div>
+
+          <ol className="space-y-px bg-border/60 border-y border-border/60">
+            {steps.map((step) => (
+              <motion.li
+                key={step.number}
+                initial={prefersReduced ? { opacity: 1 } : { opacity: 0, x: -16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="grid grid-cols-[auto_1fr] gap-6 bg-muted/30 px-2 py-6 sm:px-6"
+              >
+                <div className={`numeral-display font-medium text-3xl tabular-nums shrink-0 ${ACCENT_CLASS[step.accent]}`}>
+                  {step.number}
+                </div>
+                <div>
+                  <h3 className="text-xl md:text-2xl font-bold text-steam-dark tracking-tight leading-tight mb-2 text-balance">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl text-pretty">
+                    {step.body}
+                  </p>
+                </div>
+              </motion.li>
+            ))}
+          </ol>
         </div>
 
-        {/* Right — contact card */}
+        {/* Right — contact card, editorial */}
         <motion.div
           initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.3, duration: 0.5 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="lg:col-span-5 lg:sticky lg:top-24"
         >
-          <div className="p-8 md:p-10 rounded-2xl bg-white border border-border/50 shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center mb-6">
-              <Mail className="h-6 w-6 text-secondary" />
+          <div className="relative p-8 md:p-10 rounded-2xl bg-steam-dark text-white overflow-hidden">
+            {/* Decorative geometric lines */}
+            <div className="absolute inset-0 construction-lines opacity-30 mix-blend-overlay" />
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-primary/20 blur-3xl" />
+
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="inline-flex h-px w-8 bg-primary/60" />
+                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-semibold">
+                  Susisiekti
+                </span>
+              </div>
+
+              <h3 className="text-3xl font-bold tracking-tight leading-tight mb-4">
+                Svarstote{" "}
+                <span className="font-display italic text-primary">partnerystę</span>?
+              </h3>
+              <p className="text-sm text-white/75 leading-relaxed mb-7 max-w-xs">
+                Parašykite STEAM metodiniam centrui — atsakysime per kelias dienas.
+                Be standartinių pardavimų kalbų.
+              </p>
+
+              <a href="mailto:steam@ku.lt" className="inline-block">
+                <Button
+                  className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30 h-11 px-6"
+                >
+                  <Mail className="h-4 w-4" />
+                  steam@ku.lt
+                  <ArrowUpRight className="h-3.5 w-3.5 opacity-70" />
+                </Button>
+              </a>
             </div>
-            <h3 className="text-lg font-bold text-steam-dark mb-3">
-              Norite prisijungti?
-            </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              Jei jūsų mokykla svarsto tapti partnere arba tiesiog turite klausimų —
-              parašykite STEAM metodiniam centrui, pasikalbėsime.
-            </p>
-            <a href="mailto:steam@ku.lt">
-              <Button
-                className="gap-2 bg-secondary hover:bg-secondary/90 text-white shadow-sm"
-              >
-                <Mail className="h-4 w-4" />
-                Susisiekti su STEAM centru
-              </Button>
-            </a>
           </div>
         </motion.div>
       </div>

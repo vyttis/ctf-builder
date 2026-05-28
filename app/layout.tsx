@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
+import { Instrument_Serif } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { MotionProvider } from "@/components/shared/motion-provider"
@@ -14,6 +15,18 @@ const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+})
+
+// Editorial display serif — used for landing hero / section headlines.
+// Instrument Serif is a contemporary humanist serif with optical-size feel,
+// pairs naturally with Geist Sans (geometric grotesque) on landing pages
+// and supports full Latin Extended (LT diacritics ąčęėįšųūž).
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin", "latin-ext"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-display",
+  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -61,7 +74,7 @@ export default function RootLayout({
   return (
     <html lang="lt" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} font-sans antialiased`}
       >
         <MotionProvider>
           {children}

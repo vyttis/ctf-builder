@@ -1,8 +1,7 @@
 "use client"
 
 import { SectionWrapper } from "./section-wrapper"
-import { SectionHeader } from "./section-header"
-import { CheckCircle2, Minus } from "lucide-react"
+import { Check, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
@@ -10,17 +9,17 @@ const rows = [
   {
     label: "Formatas",
     quiz: "Greiti klausimai su laikmačiu",
-    platform: "Struktūruotos užduotys su lanksčiu laiko valdymu",
+    platform: "Struktūruotos veiklos su lanksčia eiga",
   },
   {
     label: "Darbo būdas",
     quiz: "Individualus žaidimas",
-    platform: "Komandinis darbas ir bendradarbiavimas",
+    platform: "Komandinis bendradarbiavimas",
   },
   {
     label: "Atsakymai",
-    quiz: "Pasirinkimas iš variantų",
-    platform: "Laisvas atsakymas arba pasirinkimas",
+    quiz: "Tik pasirinkimas",
+    platform: "Tekstas, skaičius, pasirinkimas",
   },
   {
     label: "Pagalba",
@@ -30,85 +29,99 @@ const rows = [
   {
     label: "Stebėjimas",
     quiz: "Rezultatai po žaidimo",
-    platform: "Progresas realiu laiku pamokos metu",
+    platform: "Realtime per pamoką",
   },
   {
     label: "Kūrimas",
     quiz: "Rankinis klausimų vedimas",
-    platform: "DI padėjėjas pasiūlo pagal temą",
+    platform: "DI siūlo, mokytojas tvirtina",
   },
-]
+] as const
 
 export function DifferenceSection() {
   const prefersReduced = useReducedMotion()
 
   return (
     <SectionWrapper background="white">
-      <SectionHeader title="Ne tik atsakymams rinkti" />
-
-      <div className="max-w-3xl mx-auto mb-8">
-        <motion.div
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="space-y-2.5"
-        >
-          <p className="text-[15px] text-muted-foreground leading-relaxed text-center">
-            Dauguma skaitmeninių įrankių tiesiog pateikia klausimus ir surenka
-            atsakymus. Mes eisime toliau — padėsime sukurti visavertę pamoką su
-            lanksčia struktūra, komandiniu darbu ir skirtingo tipo užduotimis.
-          </p>
-        </motion.div>
+      {/* Editorial header */}
+      <div className="max-w-3xl mb-16">
+        <div className="flex items-center gap-3 mb-5">
+          <span className="inline-flex h-px w-10 bg-accent" />
+          <span className="text-[11px] uppercase tracking-[0.22em] text-accent font-semibold">
+            §7 · Skirtumas
+          </span>
+        </div>
+        <h2 className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight">
+          Tai{" "}
+          <span className="font-display italic text-steam-dark/70">ne dar viena</span>
+          <br />
+          quiz programa.
+        </h2>
+        <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
+          Quiz įrankiai pateikia klausimus ir surenka atsakymus. Šis įrankis padeda
+          sukurti pamoką — su lanksčia struktūra, komandiniu darbu, refleksija.
+        </p>
       </div>
 
+      {/* Comparison table — editorial, two-column with vs. */}
       <motion.div
-        initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 30 }}
+        initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="max-w-4xl mx-auto"
+        className="grid md:grid-cols-2 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60 max-w-5xl"
       >
-        <div className="rounded-xl border border-border/50 overflow-hidden shadow-sm">
-          {/* Header */}
-          <div className="grid grid-cols-[1fr_1fr] sm:grid-cols-[160px_1fr_1fr]">
-            <div className="hidden sm:block bg-[#F6F8FA] border-b border-r border-border/30" />
-            <div className="px-6 py-4 bg-[#F6F8FA] border-b border-r border-border/30">
-              <p className="text-sm font-medium text-muted-foreground">
-                Tradiciniai quiz įrankiai
-              </p>
-            </div>
-            <div className="px-6 py-4 bg-primary/[0.04] border-b border-border/30">
-              <p className="text-sm font-bold text-steam-dark">
-                Šis įrankis
-              </p>
-            </div>
+        {/* Quiz column */}
+        <div className="bg-muted/30 p-8 md:p-10">
+          <div className="flex items-center gap-2 mb-1">
+            <X className="h-4 w-4 text-muted-foreground" strokeWidth={2.5} />
+            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-muted-foreground">
+              Quiz įrankis
+            </span>
           </div>
-
-          {/* Rows */}
-          {rows.map((row, index) => (
-            <div
-              key={index}
-              className="grid grid-cols-[1fr_1fr] sm:grid-cols-[160px_1fr_1fr] border-b last:border-b-0 border-border/20"
-            >
-              <div className="hidden sm:flex items-center px-6 py-4 bg-[#F6F8FA] border-r border-border/20">
-                <span className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+          <h3 className="text-xl md:text-2xl font-display italic text-muted-foreground/80 leading-tight mb-7">
+            &bdquo;Surinkti atsakymus&ldquo;
+          </h3>
+          <dl className="space-y-4">
+            {rows.map((row) => (
+              <div key={row.label} className="border-t border-border/40 pt-3">
+                <dt className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold mb-1">
                   {row.label}
-                </span>
-              </div>
-              <div className="flex items-center gap-2.5 px-6 py-4 border-r border-border/20 bg-white">
-                <Minus className="h-3.5 w-3.5 text-muted-foreground/25 shrink-0" />
-                <span className="text-sm text-muted-foreground">
+                </dt>
+                <dd className="text-sm text-muted-foreground leading-snug">
                   {row.quiz}
-                </span>
+                </dd>
               </div>
-              <div className="flex items-center gap-2.5 px-6 py-4 bg-primary/[0.02]">
-                <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-sm font-medium text-steam-dark">
+            ))}
+          </dl>
+        </div>
+
+        {/* Platform column */}
+        <div className="bg-primary/[0.03] p-8 md:p-10 relative">
+          <div className="absolute top-8 right-8 md:right-10 numeral-display font-display italic text-5xl text-primary/15">
+            vs.
+          </div>
+          <div className="flex items-center gap-2 mb-1">
+            <Check className="h-4 w-4 text-primary" strokeWidth={2.5} />
+            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-primary">
+              Šis įrankis
+            </span>
+          </div>
+          <h3 className="text-xl md:text-2xl font-bold text-steam-dark leading-tight mb-7">
+            &bdquo;Sukurti pamoką&ldquo;
+          </h3>
+          <dl className="space-y-4">
+            {rows.map((row) => (
+              <div key={row.label} className="border-t border-primary/15 pt-3">
+                <dt className="text-[10px] uppercase tracking-wider text-primary/80 font-bold mb-1">
+                  {row.label}
+                </dt>
+                <dd className="text-sm font-medium text-steam-dark leading-snug">
                   {row.platform}
-                </span>
+                </dd>
               </div>
-            </div>
-          ))}
+            ))}
+          </dl>
         </div>
       </motion.div>
     </SectionWrapper>

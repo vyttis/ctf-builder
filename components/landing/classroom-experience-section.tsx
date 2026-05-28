@@ -1,7 +1,6 @@
 "use client"
 
 import { SectionWrapper } from "./section-wrapper"
-import { SectionHeader } from "./section-header"
 import {
   Settings,
   Users,
@@ -151,11 +150,26 @@ export function ClassroomExperienceSection() {
   const prefersReduced = useReducedMotion()
 
   return (
-    <SectionWrapper background="muted">
-      <SectionHeader
-        title="Kaip tai atrodo pamokoje"
-        subtitle="Mokiniai sprendžia, analizuoja ir diskutuoja komandose — o mokytojas mato visą eigą realiu laiku."
-      />
+    <SectionWrapper background="paper">
+      {/* Editorial header */}
+      <div className="max-w-3xl mb-16 md:mb-20 text-center mx-auto">
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <span className="inline-flex h-px w-10 bg-steam-dark/40" />
+          <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
+            §4 · Pamokoje
+          </span>
+          <span className="inline-flex h-px w-10 bg-steam-dark/40" />
+        </div>
+        <h2 className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight">
+          Dvi pusės{" "}
+          <span className="font-display italic text-steam-dark/70">to paties</span>{" "}
+          ekrano.
+        </h2>
+        <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl mx-auto leading-relaxed text-pretty">
+          Mokytojas mato — visą klasę vienu žvilgsniu. Mokinys mato — savo užduotis,
+          savo komandą, savo progresą.
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
         {/* Teacher view */}
