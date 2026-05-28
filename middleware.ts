@@ -53,6 +53,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
+  // Defensive redirect: students who land on app.* with a /play/<code> path
+  // (e.g. from an old QR code or a shared link) should bounce to play.* —
+  // otherwise the auth guard below would redirect them to /auth/login,
+  // a dead end for students who have no account.
+  if (subdomain === "app" && url.pathname.startsWith("/play/")) {
+    const playHost = hostname.replace(/^app\./, "play.")
+    const playUrl = url.clone()
+    playUrl.host = playHost
+    // Keep the full /play/<code> path — Next.js route shape is the same
+    // on both subdomains.
+    return NextResponse.redirect(playUrl)
+  }
+
   // Create Supabase client for auth refresh (teacher routes only)
   let response = NextResponse.next({ request })
 
