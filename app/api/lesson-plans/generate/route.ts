@@ -21,7 +21,7 @@ const requestSchema = z.object({
   { message: "Antrasis dalykas turi skirtis nuo pirmojo", path: ["secondary_subject"] }
 )
 
-import { COMPETENCIES, BLOOM_LEVELS } from "@/lib/ai/schemas"
+import { competenciesSchema, bloomLevelSchema } from "@/lib/ai/schemas"
 
 const stageSchema = z.object({
   activity_type: z.enum(["intro", "challenge", "discussion", "reflection"]),
@@ -35,19 +35,37 @@ const stageSchema = z.object({
   points: z.number().min(10).max(500).default(100),
   duration_minutes: z.number().min(1).max(45).default(5),
   difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
-  competencies: z.array(z.enum(COMPETENCIES)).default([]),
-  bloom_level: z.enum(BLOOM_LEVELS).optional(),
+  competencies: competenciesSchema,
+  bloom_level: bloomLevelSchema,
 })
 
-const lessonPlanResponseSchema = z.object({
-  title: z.string().min(1),
-  goal: z.string().min(1),
-  curriculum_link: z.string().default(""),
-  stages: z.array(stageSchema).min(1),
-  reflection_prompt: z.string().default(""),
-  teacher_methodical_note: z.string().default(""),
-  competencies: z.array(z.enum(COMPETENCIES)).default([]),
-})
+// Accept both "stages" (current prompt) and "activities" (old prompt) — the
+// model occasionally outputs either depending on grade / context.
+const lessonPlanResponseSchema = z
+  .object({
+    title: z.string().min(1),
+    goal: z.string().min(1),
+    curriculum_link: z.string().default(""),
+    stages: z.array(stageSchema).min(1).optional(),
+    activities: z.array(stageSchema).min(1).optional(),
+    reflection_prompt: z.string().default(""),
+    reflection_question: z.string().default("").optional(),
+    teacher_methodical_note: z.string().default(""),
+    teacher_note: z.string().default("").optional(),
+    competencies: competenciesSchema,
+  })
+  .transform((obj) => ({
+    title: obj.title,
+    goal: obj.goal,
+    curriculum_link: obj.curriculum_link,
+    stages: obj.stages ?? obj.activities ?? [],
+    reflection_prompt: obj.reflection_prompt || obj.reflection_question || "",
+    teacher_methodical_note: obj.teacher_methodical_note || obj.teacher_note || "",
+    competencies: obj.competencies,
+  }))
+  .refine((obj) => obj.stages.length > 0, {
+    message: "Lesson plan must contain at least one stage/activity",
+  })
 
 export async function POST(request: Request) {
   try {

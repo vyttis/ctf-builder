@@ -8,37 +8,37 @@ const capabilities = [
   {
     label: "Užduotys",
     title: "Klausimai, iššūkiai, scenarijai",
-    body: "Atviro teksto atsakymai, skaitiniai uždaviniai, daugianariai pasirinkimai. Komandinės veiklos ir individualūs sprendimai vienoje vietoje.",
+    body: "Atviro teksto, skaitinio atsakymo ir pasirinkimo užduotys. Tinka tiek individualiam, tiek komandiniam darbui.",
     accent: "primary",
   },
   {
     label: "Pamoka",
-    title: "Pamokos eiga per kelias minutes",
-    body: "Įvadas, pagrindinės veiklos, diskusija, refleksija. Pritempkite, perkelkite, ištrinkite — kol tilpsta į 45 minutes.",
+    title: "Aiški pamokos struktūra",
+    body: "Įvadas, pagrindinės veiklos, diskusija, refleksija — vienoje vietoje. Užduotis lengvai perdėliojate pagal pamokos laiką.",
     accent: "secondary",
   },
   {
     label: "DI",
-    title: "Dirbtinis intelektas siūlo, jūs sprendžiate",
-    body: "AI generuoja idėjas, klausimus, užuominas pagal LT BUP. Visada redaguojate. Niekada nepateikiama be jūsų akivaizdos.",
+    title: "Dirbtinis intelektas — mokytojo pagalbininkas",
+    body: "Dirbtinis intelektas siūlo užduočių idėjas pagal LT BUP. Galutinį turinį visada peržiūri ir patvirtina mokytojas.",
     accent: "highlight",
   },
   {
     label: "Realtime",
-    title: "Matote, ką klasė daro — dabar",
-    body: "Atsakymai matomi akimirksniu. Kas išsprendė, kas užstrigo, kuris klausimas buvo per sunkus. Reaguokite iškart.",
+    title: "Pamokos eiga realiu laiku",
+    body: "Komandų progresas, mokinių atsakymai ir sudėtingos vietos matomi iškart. Galite reaguoti per pamoką, o ne po jos.",
     accent: "accent",
   },
   {
     label: "Komandos",
-    title: "Bendradarbiavimas, ne konkurencija",
-    body: "Komandos ar individualus darbas. Be paskyrų, be el. pašto. Vienas QR kodas — visa klasė viduje.",
+    title: "Komandinis arba individualus darbas",
+    body: "Mokiniai prisijungia per QR kodą — be paskyrų ar elektroninio pašto. Vienas kodas — visa klasė platformoje.",
     accent: "secondary",
   },
   {
     label: "Refleksija",
-    title: "Po pamokos — analizė",
-    body: "Kurios užduotys buvo per sudėtingos. Kur klasė užstrigo. Ką verta dar kartą aptarti. Tikra pedagoginė refleksija.",
+    title: "Pedagoginė pamokos analizė",
+    body: "Po pamokos matote, kurios užduotys buvo sudėtingiausios ir kuriose temose mokiniams reikia papildomo paaiškinimo.",
     accent: "primary",
   },
 ] as const
@@ -65,12 +65,12 @@ export function WhatYouCanDoSection() {
         </div>
         <h2 className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight">
           Šešios{" "}
-          <span className="font-display italic text-steam-dark/70">paprastos</span>{" "}
+          <span className="font-display italic text-steam-dark/70">esminės</span>{" "}
           galimybės.
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
-          Vienoje platformoje, vienoje sesijoje, vienam mokytojui. Be papildomos infrastruktūros,
-          be IT pagalbos, be mokymų savaitgaliais.
+          Visi pagrindiniai pamokos kūrimo įrankiai vienoje platformoje. Mokytojas
+          paruošia ir veda pamoką savarankiškai, be papildomos technikos.
         </p>
       </div>
 

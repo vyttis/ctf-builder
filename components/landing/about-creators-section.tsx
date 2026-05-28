@@ -31,8 +31,9 @@ export function AboutCreatorsSection() {
           viewport={{ once: true }}
           className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight"
         >
-          Iš Klaipėdos —{" "}
-          <span className="font-display italic text-steam-dark/70">visiems</span>.
+          Kūryba iš{" "}
+          <span className="font-display italic text-steam-dark/70">Klaipėdos</span>{" "}
+          universiteto.
         </motion.h2>
         <motion.p
           initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 12 }}
@@ -41,9 +42,9 @@ export function AboutCreatorsSection() {
           transition={{ delay: 0.1 }}
           className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty"
         >
-          Klaipėdos universiteto STEAM metodinis centras dirba su mokytojais, mokiniais
-          ir švietimo bendruomene jau šešerius metus. Šis įrankis — iš to darbo,
-          ne iš startup&rsquo;o.
+          Klaipėdos universiteto STEAM metodinis centras dirba su mokytojais ir
+          švietimo bendruomene. Įrankis sukurtas siekiant praktinių mokyklų poreikių —
+          remiantis realiu mokytojų darbu klasėse.
         </motion.p>
       </div>
 

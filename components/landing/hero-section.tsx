@@ -23,11 +23,14 @@ const reveal = {
 
 // Interactive demo: a single question that lets the visitor experience the
 // flow before clicking any CTA. Demonstrates product feel in <3 clicks.
+// Interactive demo: a single question that lets the visitor experience the
+// flow before clicking any CTA. Demonstrates product feel in <3 clicks.
+// Neutral biology topic — works for grades 5-8, no geographic bias.
 const DEMO_OPTIONS = [
-  { id: "a", label: "Vilnius", correct: false },
-  { id: "b", label: "Kaunas", correct: false },
-  { id: "c", label: "Klaipėda", correct: true },
-  { id: "d", label: "Šiauliai", correct: false },
+  { id: "a", label: "Bitė ir žiedinis augalas", correct: true },
+  { id: "b", label: "Lapė ir kiškis", correct: false },
+  { id: "c", label: "Du tos pačios rūšies vilkai", correct: false },
+  { id: "d", label: "Erkė ant šuns", correct: false },
 ] as const
 
 export function HeroSection() {
@@ -40,7 +43,7 @@ export function HeroSection() {
   const parallaxY = useTransform(scrollYProgress, [0, 1], [0, prefersReduced ? 0 : -80])
 
   const [picked, setPicked] = useState<string | null>(null)
-  const correctPicked = picked === "c"
+  const correctPicked = picked === "a"
 
   return (
     <section ref={containerRef} className="relative overflow-hidden">
@@ -139,10 +142,10 @@ export function HeroSection() {
                 variants={reveal}
                 className="text-base md:text-lg text-white/75 mt-7 leading-relaxed max-w-[580px] text-pretty"
               >
-                Mokytojo įrankis, kuris pamoką paverčia žaidimu — komandinės užduotys,
-                iššūkiai, akimirksniu matomi atsakymai. Pritaikyta{" "}
-                <span className="text-white font-medium">Lietuvos bendrojo ugdymo programai</span>,
-                24 dalykams, 1–12 klasėms.
+                Pamokų kūrimo įrankis mokytojams: komandinės užduotys, iššūkiai,
+                realiu laiku matomi mokinių atsakymai. Pritaikyta{" "}
+                <span className="text-white font-medium">Lietuvos bendrojo ugdymo programai</span>{" "}
+                — 24 dalykams nuo 1 iki 12 klasės.
               </motion.p>
 
               {/* CTAs */}
@@ -187,7 +190,7 @@ export function HeroSection() {
               >
                 {[
                   { num: "24", label: "BUP dalykai" },
-                  { num: "1–12", label: "klasių spektras" },
+                  { num: "1–12", label: "klasės" },
                   { num: "5+", label: "veiklos tipai" },
                 ].map((stat, i) => (
                   <div key={i}>
@@ -227,7 +230,7 @@ export function HeroSection() {
                       <span className="w-2.5 h-2.5 rounded-full bg-primary/60" />
                     </div>
                     <span className="text-[10px] font-mono text-muted-foreground tracking-wider">
-                      pamoka.live • 8 kl. geografija
+                      pamoka.live • 7 kl. biologija
                     </span>
                   </div>
 
@@ -244,12 +247,12 @@ export function HeroSection() {
                     </div>
 
                     <h3 className="text-display-xs text-steam-dark font-extrabold leading-tight mb-1">
-                      Kuriame mieste{" "}
-                      <span className="font-display italic font-normal">įsikūręs</span>{" "}
-                      STEAM centras?
+                      Kuri pora{" "}
+                      <span className="font-display italic font-normal">geriausiai</span>{" "}
+                      iliustruoja simbiozę?
                     </h3>
                     <p className="text-xs text-muted-foreground mb-5">
-                      Vienas iš didžiausių Lietuvos uostamiesčių.
+                      Simbiozė — abipusiškai naudingas dviejų skirtingų rūšių santykis.
                     </p>
 
                     <div className="space-y-2">
@@ -300,12 +303,13 @@ export function HeroSection() {
                       >
                         {correctPicked ? (
                           <>
-                            <strong>Teisingai!</strong> Klaipėdoje veikia KU STEAM centras —
-                            čia ir gimsta ši platforma.
+                            <strong>Teisingai!</strong> Bitė renka nektarą — augalą apdulkina.
+                            Abu organizmai gauna naudą. Tai klasikinė simbiozė (mutualizmas).
                           </>
                         ) : (
                           <>
-                            <strong>Beveik.</strong> KU STEAM centras yra Klaipėdoje.{" "}
+                            <strong>Beveik.</strong> Ieškokite poros, kurioje abu gauna naudą —
+                            ne plėšrūnas-auka, ne tos pačios rūšies, ne parazitas.{" "}
                             <button
                               onClick={() => setPicked(null)}
                               className="underline hover:no-underline"
@@ -349,11 +353,11 @@ export function HeroSection() {
                   "Klaipėdos universitetas",
                   "STEAM metodinis centras",
                   "Bendrojo ugdymo programa",
-                  "Atviro kodo Lietuvai",
+                  "Mokytojų partnerystės tinklas",
                   "Klaipėdos universitetas",
                   "STEAM metodinis centras",
                   "Bendrojo ugdymo programa",
-                  "Atviro kodo Lietuvai",
+                  "Mokytojų partnerystės tinklas",
                 ].map((item, i) => (
                   <span key={`${dup}-${i}`} className="flex items-center">
                     <span className="px-8 font-medium tracking-wider">{item}</span>

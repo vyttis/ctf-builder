@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { COMPETENCIES, BLOOM_LEVELS } from "./schemas"
+import { competenciesSchema, bloomLevelSchema } from "./schemas"
 
 export const lessonActivitySchema = z.object({
   activity_type: z.enum(["intro", "challenge", "discussion", "reflection"]),
@@ -13,8 +13,8 @@ export const lessonActivitySchema = z.object({
   points: z.number().min(10).max(500).default(100),
   duration_minutes: z.number().min(1).max(45).default(5),
   difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
-  competencies: z.array(z.enum(COMPETENCIES)).default([]),
-  bloom_level: z.enum(BLOOM_LEVELS).optional(),
+  competencies: competenciesSchema,
+  bloom_level: bloomLevelSchema,
 })
 
 export const generatedLessonSchema = z.object({
@@ -24,7 +24,7 @@ export const generatedLessonSchema = z.object({
   activities: z.array(lessonActivitySchema).min(1),
   reflection_question: z.string().default(""),
   teacher_note: z.string().default(""),
-  competencies: z.array(z.enum(COMPETENCIES)).default([]),
+  competencies: competenciesSchema,
 })
 
 export const lessonGenerateRequestSchema = z.object({
