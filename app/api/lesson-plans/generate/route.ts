@@ -154,4 +154,4 @@ export async function POST(request: Request) {
 }
 
 // Lesson plan generation with Opus 4.7 can take longer for full plans
-export const maxDuration = 60
+export const maxDuration = 300
