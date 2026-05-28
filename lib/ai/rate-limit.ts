@@ -3,6 +3,8 @@
 // serverless deployments, migrate to Upstash/Vercel KV or a Postgres-backed counter.
 // Keyed by `${endpoint}:${userId}` to keep limits independent per endpoint.
 
+import { jsonrepair } from "jsonrepair"
+
 type Entry = { count: number; resetAt: number }
 const map = new Map<string, Entry>()
 
@@ -24,13 +26,24 @@ export function checkAiRateLimit(
   return true
 }
 
-// Strip ```json fences and parse safely.
+/**
+ * Parse JSON from an LLM response, tolerating common failure modes:
+ * - Markdown code fences (```json ... ```)
+ * - Surrounding prose ("Here is the JSON: { ... } Hope this helps!")
+ * - Mid-string escape glitches, trailing commas, unquoted keys —
+ *   handled by jsonrepair as a second pass when the strict parse fails.
+ *
+ * Throws only if both passes fail.
+ */
 export function parseAiJson<T = unknown>(text: string): T {
   let jsonText = text.trim()
+
+  // Strip markdown fences
   if (jsonText.startsWith("```")) {
     jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
   }
-  // Be lenient: if the model wraps the JSON in prose, extract the first {...} or [...] block.
+
+  // Extract the first {...} or [...] block if wrapped in prose
   if (!jsonText.startsWith("{") && !jsonText.startsWith("[")) {
     const objStart = jsonText.indexOf("{")
     const arrStart = jsonText.indexOf("[")
@@ -38,12 +51,20 @@ export function parseAiJson<T = unknown>(text: string): T {
       objStart === -1 ? arrStart : arrStart === -1 ? objStart : Math.min(objStart, arrStart)
     if (start > -1) {
       jsonText = jsonText.slice(start)
-      // Try to trim trailing prose after final } or ]
       const lastObj = jsonText.lastIndexOf("}")
       const lastArr = jsonText.lastIndexOf("]")
       const end = Math.max(lastObj, lastArr)
       if (end > -1) jsonText = jsonText.slice(0, end + 1)
     }
   }
-  return JSON.parse(jsonText) as T
+
+  // Strict parse first — fast path
+  try {
+    return JSON.parse(jsonText) as T
+  } catch {
+    // Repair pass — handles trailing commas, missing quotes, unclosed strings,
+    // smart quotes, comments, etc. that LLMs occasionally emit.
+    const repaired = jsonrepair(jsonText)
+    return JSON.parse(repaired) as T
+  }
 }
