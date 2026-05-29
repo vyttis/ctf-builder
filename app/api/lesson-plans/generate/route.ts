@@ -4,7 +4,7 @@ import { buildLessonPlanSystemPrompt, buildLessonPlanUserMessage } from "@/lib/a
 import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
 import { MODELS, cachedSystem } from "@/lib/ai/client"
 import { createWithSchemaRetry } from "@/lib/ai/retry"
-import { checkAiRateLimit } from "@/lib/ai/rate-limit"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 import { z } from "zod"
 
 const requestSchema = z.object({
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
     }
 
-    if (!checkAiRateLimit("lesson-plans-generate", user.id, 5)) {
+    if (!(await checkAiRateLimitAsync("lesson-plans-generate", user.id, 5))) {
       return NextResponse.json(
         { error: "Pasiektas DI užklausų limitas (5/min). Palaukite minutę ir bandykite vėl." },
         { status: 429, headers: { "Retry-After": "60" } }

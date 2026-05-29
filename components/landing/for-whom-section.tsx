@@ -57,7 +57,9 @@ export function ForWhomSection() {
               className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl leading-relaxed text-pretty"
             >
               Įrankis skirtas Klaipėdos universiteto STEAM metodinio centro partnerių
-              tinklo mokytojams — pradinio, pagrindinio ir vidurinio ugdymo.
+              tinklo mokytojams — pradinio, pagrindinio ir vidurinio ugdymo. Atitinka
+              Lietuvos bendrąją ugdymo programą (BUP): 24 dalykai, 1–12 klasės,
+              6 bendrosios kompetencijos.
             </motion.p>
           </div>
 

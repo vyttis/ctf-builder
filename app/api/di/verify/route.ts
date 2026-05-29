@@ -9,7 +9,7 @@ import { validateDeterministic } from "@/lib/ai/deterministic-validator"
 import { verificationResultSchema } from "@/lib/ai/schemas"
 import type { AiSuggestion } from "@/lib/ai/types"
 import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
-import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
+import { checkAiRateLimitAsync, parseAiJson } from "@/lib/ai/rate-limit"
 
 const verifySchema = z.object({
   suggestion: z.object({
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
-  if (!checkAiRateLimit("di-verify", user.id, 30)) {
+  if (!(await checkAiRateLimitAsync("di-verify", user.id, 30))) {
     return NextResponse.json(
       { error: "Per daug užklausų. Palaukite minutę." },
       { status: 429 }
