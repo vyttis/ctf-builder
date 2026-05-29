@@ -1,13 +1,20 @@
-// Simple in-memory rate limiter for AI endpoints.
-// NOTE: Resets on every server restart and is per-instance — for production
-// serverless deployments, migrate to Upstash/Vercel KV or a Postgres-backed counter.
-// Keyed by `${endpoint}:${userId}` to keep limits independent per endpoint.
+// Rate limiter for AI and high-traffic endpoints.
+//
+// Backed by Vercel KV when KV_REST_API_URL is configured (recommended for
+// production serverless), falls back to an in-memory Map otherwise. The
+// in-memory path is per-instance — fine for single-node dev, not safe at
+// classroom scale (30 students hitting different Vercel instances can each
+// burn the full budget).
 
 import { jsonrepair } from "jsonrepair"
+import { incrAtomic } from "./kv-rate-limit"
 
 type Entry = { count: number; resetAt: number }
 const map = new Map<string, Entry>()
 
+// Synchronous wrapper kept for backwards compatibility with existing call
+// sites. Uses the in-memory map only; new call sites prefer
+// `checkAiRateLimitAsync` which goes through KV.
 export function checkAiRateLimit(
   endpoint: string,
   userId: string,
@@ -24,6 +31,26 @@ export function checkAiRateLimit(
   if (entry.count >= limit) return false
   entry.count++
   return true
+}
+
+/**
+ * Cross-instance rate limiter. Tries Vercel KV first (atomic INCR + EXPIRE),
+ * falls back to the per-instance Map if KV is unavailable.
+ *
+ * Returns `true` if the request is allowed, `false` if the limit is exceeded.
+ */
+export async function checkAiRateLimitAsync(
+  endpoint: string,
+  userId: string,
+  limit = 10,
+  windowMs = 60_000,
+): Promise<boolean> {
+  const key = `rl:${endpoint}:${userId}`
+  const kvResult = await incrAtomic(key, windowMs)
+  if (kvResult !== null) {
+    return kvResult <= limit
+  }
+  return checkAiRateLimit(endpoint, userId, limit, windowMs)
 }
 
 /**

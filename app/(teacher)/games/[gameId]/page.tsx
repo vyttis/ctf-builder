@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { PublishDialog } from "@/components/teacher/publish-dialog"
 import { LiveActivityFeed } from "@/components/teacher/live-activity-feed"
 import { LiveControlCenter } from "@/components/teacher/live-control-center"
+import { GameResultsSummary } from "@/components/teacher/game-results-summary"
 import {
   ArrowLeft,
   Puzzle,
@@ -173,6 +174,12 @@ export default async function GameDetailPage({
           {/* Live activity feed — visible when game is active or paused */}
           {(game.status === "active" || game.status === "paused") && (
             <LiveActivityFeed gameId={game.id} />
+          )}
+
+          {/* Pedagogical post-game summary — visible whenever the class has
+              produced any data (live or after finish). */}
+          {game.status !== "draft" && challenges.length > 0 && (
+            <GameResultsSummary gameId={game.id} totalChallenges={challenges.length} />
           )}
 
           {/* Challenges section */}

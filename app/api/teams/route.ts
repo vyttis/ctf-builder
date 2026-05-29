@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { generateSessionToken } from "@/lib/game/code-generator"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -8,28 +9,14 @@ const createTeamSchema = z.object({
   team_name: z.string().min(1, "Komandos vardas privalomas").max(30),
 })
 
-// In-memory rate limiter by IP
-// Higher limit for classroom environments where many teams share the same network
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+// Higher limit for classroom environments where many teams share the same NAT.
 const RATE_LIMIT = 30
 const RATE_WINDOW = 60_000
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW })
-    return true
-  }
-  if (entry.count >= RATE_LIMIT) return false
-  entry.count++
-  return true
-}
 
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-    if (!checkRateLimit(ip)) {
+    if (!(await checkAiRateLimitAsync("teams", ip, RATE_LIMIT, RATE_WINDOW))) {
       return NextResponse.json(
         { error: "Per daug užklausų. Palaukite minutę." },
         { status: 429 }

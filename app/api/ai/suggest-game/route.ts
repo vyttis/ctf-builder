@@ -5,7 +5,7 @@ import { buildGameSystemPrompt, buildGameUserMessage } from "@/lib/ai/prompt"
 import { aiGameSuggestResponseSchema } from "@/lib/ai/schemas"
 import { MODELS, cachedSystem } from "@/lib/ai/client"
 import { createWithSchemaRetry } from "@/lib/ai/retry"
-import { checkAiRateLimit } from "@/lib/ai/rate-limit"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 
 const suggestGameSchema = z.object({
   teacher_prompt: z.string().max(500).optional(),
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
-  if (!checkAiRateLimit("suggest-game", user.id, 10)) {
+  if (!(await checkAiRateLimitAsync("suggest-game", user.id, 10))) {
     return NextResponse.json(
       { error: "Per daug užklausų. Palaukite minutę." },
       { status: 429 }

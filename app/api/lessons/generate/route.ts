@@ -7,7 +7,7 @@ import type { AiSuggestion } from "@/lib/ai/types"
 import type { ChallengeType } from "@/types/game"
 import { MODELS, cachedSystem } from "@/lib/ai/client"
 import { createWithSchemaRetry } from "@/lib/ai/retry"
-import { checkAiRateLimit } from "@/lib/ai/rate-limit"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
     }
 
-    if (!checkAiRateLimit("lessons-generate", user.id, 5)) {
+    if (!(await checkAiRateLimitAsync("lessons-generate", user.id, 5))) {
       return NextResponse.json(
         { error: "Per daug užklausų. Palaukite minutę." },
         { status: 429 }

@@ -18,7 +18,7 @@ import type {
 } from "@/lib/ai/types"
 import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
 import { createWithSchemaRetry } from "@/lib/ai/retry"
-import { checkAiRateLimit, parseAiJson } from "@/lib/ai/rate-limit"
+import { checkAiRateLimitAsync, parseAiJson } from "@/lib/ai/rate-limit"
 
 const generateSchema = z.object({
   game_id: z.string().uuid(),
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
   }
 
-  if (!checkAiRateLimit("di-generate", user.id, 10)) {
+  if (!(await checkAiRateLimitAsync("di-generate", user.id, 10))) {
     return NextResponse.json(
       { error: "Per daug užklausų. Palaukite minutę." },
       { status: 429 }
