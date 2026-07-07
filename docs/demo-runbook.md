@@ -56,7 +56,7 @@ Kiekvieną — peržiūrėti, kad matoma:
 ### Pre-generated demo žaidimas
 Sukurti vieną žaidimą iš lesson plan'o #1:
 - Konvertuoti per „Konvertuoti į veiklą mokiniams"
-- Aktyvuoti (status = active)
+- Pradėti žaidimą (status = active)
 - Įsiminti žaidimo kodą (pvz., DEMO7K)
 - Patikrinti, kad QR puslapis veikia
 

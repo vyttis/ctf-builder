@@ -11,8 +11,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MyLibrarySubmissions } from "@/components/teacher/my-library-submissions"
 import { LibraryItem } from "@/types/game"
-import { BookOpen, Search, Loader2 } from "lucide-react"
+import { BookOpen, Search, Loader2, Send } from "lucide-react"
 
 const subjects = [
   { value: "all", label: "Visi dalykai" },
@@ -86,6 +88,19 @@ export default function LibraryPage() {
         </div>
       </div>
 
+      <Tabs defaultValue="public">
+        <TabsList className="mb-6">
+          <TabsTrigger value="public" className="gap-2">
+            <BookOpen className="h-4 w-4" />
+            Vieši šablonai
+          </TabsTrigger>
+          <TabsTrigger value="mine" className="gap-2">
+            <Send className="h-4 w-4" />
+            Mano pateikimai
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="public">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <form onSubmit={handleSearchSubmit} className="flex-1">
@@ -156,6 +171,12 @@ export default function LibraryPage() {
           </p>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="mine">
+          <MyLibrarySubmissions />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
