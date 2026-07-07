@@ -31,7 +31,7 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
   }
 
   return (
-    <nav className="bg-white border-b border-border/50 sticky top-0 z-50 backdrop-blur-xl bg-white/80">
+    <nav className="bg-white border-b border-border/50 sticky top-0 z-50 backdrop-blur-xl bg-white/80 print:hidden">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex items-center justify-between h-16">
           {/* Left side */}
