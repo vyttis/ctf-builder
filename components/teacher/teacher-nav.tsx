@@ -17,9 +17,18 @@ interface TeacherNavProps {
   fullName: string
   role?: UserRole
   avatarUrl?: string | null
+  // The teacher's currently running game (active/paused), if any — renders
+  // a prominent LIVE shortcut to the class screen
+  activeGame?: { id: string; title: string } | null
 }
 
-export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: TeacherNavProps) {
+export function TeacherNav({
+  email,
+  fullName,
+  role = "teacher",
+  avatarUrl,
+  activeGame = null,
+}: TeacherNavProps) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -72,6 +81,21 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
 
           {/* Right side */}
           <div className="flex items-center gap-3">
+            {activeGame && (
+              <Link href={`/games/${activeGame.id}/live`} className="hidden sm:block">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-accent/40 text-accent hover:bg-accent/5 font-semibold"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+                  </span>
+                  LIVE — {activeGame.title.length > 24 ? `${activeGame.title.slice(0, 24)}…` : activeGame.title}
+                </Button>
+              </Link>
+            )}
             <div className="hidden sm:flex items-center gap-3">
               {avatarUrl ? (
                 <Image src={avatarUrl} alt="" width={32} height={32} className="rounded-full" />
@@ -127,6 +151,22 @@ export function TeacherNav({ email, fullName, role = "teacher", avatarUrl }: Tea
                 {fullName && <p className="text-xs text-muted-foreground">{email}</p>}
               </div>
             </div>
+
+            {/* Live game shortcut */}
+            {activeGame && (
+              <Link href={`/games/${activeGame.id}/live`} onClick={() => setMobileMenuOpen(false)}>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-3 h-11 border-accent/40 text-accent font-semibold"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+                  </span>
+                  LIVE — {activeGame.title}
+                </Button>
+              </Link>
+            )}
 
             {/* Nav links */}
             <Link href="/lesson-plans" onClick={() => setMobileMenuOpen(false)}>

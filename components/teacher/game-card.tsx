@@ -17,8 +17,10 @@ import {
   Puzzle,
   Edit3,
   Trash2,
+  MonitorPlay,
 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 const statusConfig: Record<
   GameStatus,
@@ -53,9 +55,11 @@ interface GameCardProps {
 }
 
 export function GameCard({ game, index, onUpdate }: GameCardProps) {
+  const router = useRouter()
   const status = statusConfig[game.status as GameStatus]
   const challengeCount = game.challenges?.[0]?.count || 0
   const isDraft = game.status === "draft"
+  const isLive = game.status === "active" || game.status === "paused"
 
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -138,6 +142,21 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
+              )}
+              {isLive && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/5"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    router.push(`/games/${game.id}/live`)
+                  }}
+                >
+                  <MonitorPlay className="h-3.5 w-3.5" />
+                  Klasės ekranas
+                </Button>
               )}
               <div className="flex-1" />
               <span className="text-xs text-muted-foreground">

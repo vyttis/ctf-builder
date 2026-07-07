@@ -38,16 +38,17 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
   const [message, setMessage] = useState("")
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [sending, setSending] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   const fetchAnnouncements = useCallback(async () => {
+    setLoadError(false)
     try {
       const res = await fetch(`/api/games/${gameId}/announcements`)
-      if (res.ok) {
-        const data = await res.json()
-        setAnnouncements(data)
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setAnnouncements(data)
     } catch {
-      // Silently fail on fetch error
+      setLoadError(true)
     }
   }, [gameId])
 
@@ -134,6 +135,20 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
             </Button>
           </div>
         </div>
+
+        {/* Load error */}
+        {loadError && (
+          <div className="border-t border-border/40 pt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>Nepavyko įkelti pranešimų.</span>
+            <button
+              type="button"
+              onClick={fetchAnnouncements}
+              className="text-steam-blue hover:underline font-medium"
+            >
+              Bandyti dar kartą
+            </button>
+          </div>
+        )}
 
         {/* Announcements list */}
         {announcements.length > 0 && (

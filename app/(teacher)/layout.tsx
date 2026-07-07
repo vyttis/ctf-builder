@@ -17,11 +17,18 @@ export default async function TeacherLayout({
     redirect("/auth/login")
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single()
+  const [{ data: profile }, { data: liveGames }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    // Cheap indexed lookup for the nav LIVE shortcut; refreshed on every
+    // navigation (status changes call router.refresh())
+    supabase
+      .from("games")
+      .select("id, title")
+      .eq("teacher_id", user.id)
+      .in("status", ["active", "paused"])
+      .order("updated_at", { ascending: false })
+      .limit(1),
+  ])
 
   return (
     <div className="min-h-screen bg-muted">
@@ -30,6 +37,7 @@ export default async function TeacherLayout({
         fullName={profile?.full_name || ""}
         role={profile?.role || "teacher"}
         avatarUrl={profile?.avatar_url}
+        activeGame={liveGames?.[0] ?? null}
       />
       <main className="container mx-auto px-4 py-6 max-w-6xl">
         <TeacherErrorBoundary>{children}</TeacherErrorBoundary>

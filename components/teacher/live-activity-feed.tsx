@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { LiveConnectionBanner } from "./live-connection-banner"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Activity,
@@ -24,32 +25,46 @@ interface ActivityEvent {
 
 interface LiveActivityFeedProps {
   gameId: string
+  // "projector" renders a translucent dark card with larger text for the
+  // class-screen live view
+  variant?: "default" | "projector"
 }
 
-export function LiveActivityFeed({ gameId }: LiveActivityFeedProps) {
+export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFeedProps) {
   const [events, setEvents] = useState<ActivityEvent[]>([])
   const [teamCount, setTeamCount] = useState(0)
-  const maxEvents = 50
+  const [degraded, setDegraded] = useState(false)
+  const [retryNonce, setRetryNonce] = useState(0)
+  const isProjector = variant === "projector"
+  const maxEvents = isProjector ? 8 : 50
   const initialLoadDone = useRef(false)
+
+  const retry = useCallback(() => setRetryNonce((n) => n + 1), [])
 
   useEffect(() => {
     const supabase = createClient()
+    let pollInterval: NodeJS.Timeout | null = null
+    let cancelled = false
 
     // Load recent activity on mount
     async function loadRecent() {
       // Get team count
-      const { count } = await supabase
+      const { count, error: countError } = await supabase
         .from("teams")
         .select("*", { count: "exact", head: true })
         .eq("game_id", gameId)
 
+      if (countError) throw countError
+
       setTeamCount(count || 0)
 
       // Get teams for this game, then fetch their submissions
-      const { data: teams } = await supabase
+      const { data: teams, error: teamsError } = await supabase
         .from("teams")
         .select("id, name")
         .eq("game_id", gameId)
+
+      if (teamsError) throw teamsError
 
       if (!teams || teams.length === 0) {
         initialLoadDone.current = true
@@ -82,13 +97,43 @@ export function LiveActivityFeed({ gameId }: LiveActivityFeedProps) {
           points: s.points_awarded,
           timestamp: s.attempted_at,
         }))
-        setEvents(recentEvents)
+        setEvents(recentEvents.slice(0, maxEvents))
       }
 
       initialLoadDone.current = true
     }
 
-    loadRecent()
+    function startPolling() {
+      if (pollInterval) return
+      pollInterval = setInterval(() => {
+        loadRecent().catch(() => {})
+      }, 30000)
+    }
+
+    function stopPolling() {
+      if (pollInterval) {
+        clearInterval(pollInterval)
+        pollInterval = null
+      }
+    }
+
+    const handleChannelStatus = (status: string) => {
+      if (cancelled) return
+      if (status === "SUBSCRIBED") {
+        setDegraded(false)
+        stopPolling()
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        setDegraded(true)
+        startPolling()
+      }
+    }
+
+    loadRecent().catch(() => {
+      if (!cancelled) {
+        setDegraded(true)
+        startPolling()
+      }
+    })
 
     // Subscribe to new submissions
     const submissionChannel = supabase
@@ -134,7 +179,7 @@ export function LiveActivityFeed({ gameId }: LiveActivityFeedProps) {
           setEvents(prev => [event, ...prev].slice(0, maxEvents))
         }
       )
-      .subscribe()
+      .subscribe(handleChannelStatus)
 
     // Subscribe to new team joins
     const teamChannel = supabase
@@ -156,13 +201,15 @@ export function LiveActivityFeed({ gameId }: LiveActivityFeedProps) {
           setTeamCount(prev => prev + 1)
         }
       )
-      .subscribe()
+      .subscribe(handleChannelStatus)
 
     return () => {
+      cancelled = true
       supabase.removeChannel(submissionChannel)
       supabase.removeChannel(teamChannel)
+      stopPolling()
     }
-  }, [gameId])
+  }, [gameId, maxEvents, retryNonce])
 
   function formatTimestamp(ts: string) {
     const date = new Date(ts)
@@ -213,29 +260,19 @@ export function LiveActivityFeed({ gameId }: LiveActivityFeedProps) {
     }
   }
 
-  return (
-    <Card className="border-border/50 bg-white">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-primary" />
-            Gyva veikla
-          </span>
-          <Badge variant="secondary" className="gap-1 text-xs font-normal">
-            <Zap className="h-3 w-3" />
-            {teamCount} komandų
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+  if (isProjector) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur p-4">
+        <div className="flex items-center gap-2 text-white/70 text-sm font-medium mb-3">
+          <Activity className="h-4 w-4" />
+          Gyva veikla
+        </div>
         {events.length === 0 ? (
-          <div className="text-center py-8 text-sm text-muted-foreground">
-            <Activity className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            <p>Laukiama veiklos...</p>
-            <p className="text-xs mt-1">Čia matysite komandų veiksmus realiu laiku</p>
-          </div>
+          <p className="text-white/40 text-sm py-4 text-center">
+            Laukiama veiklos...
+          </p>
         ) : (
-          <div className="space-y-1 max-h-[400px] overflow-y-auto">
+          <div className="space-y-1.5">
             <AnimatePresence initial={false}>
               {events.map((event) => (
                 <motion.div
@@ -244,13 +281,13 @@ export function LiveActivityFeed({ gameId }: LiveActivityFeedProps) {
                   animate={{ opacity: 1, height: "auto", y: 0 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-start gap-2.5 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors"
+                  className="flex items-start gap-2.5 py-1.5 text-white/80"
                 >
-                  <div className="mt-0.5 shrink-0">{getIcon(event.type)}</div>
-                  <div className="flex-1 min-w-0 text-sm text-muted-foreground leading-snug">
+                  <div className="mt-1 shrink-0">{getIcon(event.type)}</div>
+                  <div className="flex-1 min-w-0 text-base leading-snug [&_.text-steam-dark]:text-white [&_.font-medium]:text-white/90">
                     {getMessage(event)}
                   </div>
-                  <span className="text-[10px] text-muted-foreground/60 shrink-0 tabular-nums mt-0.5">
+                  <span className="text-xs text-white/40 shrink-0 tabular-nums mt-1">
                     {formatTimestamp(event.timestamp)}
                   </span>
                 </motion.div>
@@ -258,7 +295,59 @@ export function LiveActivityFeed({ gameId }: LiveActivityFeedProps) {
             </AnimatePresence>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {degraded && <LiveConnectionBanner onRetry={retry} />}
+      <Card className="border-border/50 bg-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" />
+              Gyva veikla
+            </span>
+            <Badge variant="secondary" className="gap-1 text-xs font-normal">
+              <Zap className="h-3 w-3" />
+              {teamCount} komandų
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {events.length === 0 ? (
+            <div className="text-center py-8 text-sm text-muted-foreground">
+              <Activity className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <p>Laukiama veiklos...</p>
+              <p className="text-xs mt-1">Čia matysite komandų veiksmus realiu laiku</p>
+            </div>
+          ) : (
+            <div className="space-y-1 max-h-[400px] overflow-y-auto">
+              <AnimatePresence initial={false}>
+                {events.map((event) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, height: 0, y: -10 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-start gap-2.5 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="mt-0.5 shrink-0">{getIcon(event.type)}</div>
+                    <div className="flex-1 min-w-0 text-sm text-muted-foreground leading-snug">
+                      {getMessage(event)}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground/60 shrink-0 tabular-nums mt-0.5">
+                      {formatTimestamp(event.timestamp)}
+                    </span>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }
