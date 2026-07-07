@@ -36,7 +36,7 @@ export default async function GameDetailPage({
 
   // answer_hash intentionally excluded
   const CHALLENGE_FIELDS =
-    "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites, created_at, updated_at"
+    "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites, needs_answer, created_at, updated_at"
 
   const { data: game } = await supabase
     .from("games")
@@ -108,7 +108,6 @@ export default async function GameDetailPage({
               settings: settings || { max_teams: 50, time_limit_minutes: null, show_leaderboard: true, shuffle_challenges: false },
               game_code: game.game_code,
             }}
-            challenges={challenges}
           />
         </div>
       </div>

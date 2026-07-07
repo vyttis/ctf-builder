@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Challenge, GameStatus, GameSettings } from "@/types/game"
-import { AiAssistantPanel } from "./ai-assistant-panel"
+import { GameStatus, GameSettings } from "@/types/game"
 import { GameEditDialog } from "./game-edit-dialog"
 import { GameDeleteDialog } from "./game-delete-dialog"
 import { GameDuplicateDialog } from "./game-duplicate-dialog"
@@ -20,34 +19,29 @@ interface GameDetailClientProps {
     settings: GameSettings
     game_code: string
   }
-  challenges: Challenge[]
 }
 
-export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
+export function GameDetailClient({ game }: GameDetailClientProps) {
   const router = useRouter()
-  const [aiSheetOpen, setAiSheetOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
-
-  function handleSuggestionsAdded() {
-    setAiSheetOpen(false)
-    router.refresh()
-  }
 
   return (
     <>
       {/* Action buttons */}
       <div className="flex items-center gap-2">
-        <Button
-          onClick={() => setAiSheetOpen(true)}
-          variant="outline"
-          size="sm"
-          className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
-        >
-          <Sparkles className="h-4 w-4" />
-          DI Padėjėjas
-        </Button>
+        {/* Single AI surface: the builder's DI tab (verified generation pipeline) */}
+        <Link href={`/games/${game.id}/builder`}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
+          >
+            <Sparkles className="h-4 w-4" />
+            DI Padėjėjas
+          </Button>
+        </Link>
         <Link href={`/games/${game.id}/lesson`}>
           <Button
             variant="outline"
@@ -90,17 +84,6 @@ export function GameDetailClient({ game, challenges }: GameDetailClientProps) {
           </>
         )}
       </div>
-
-      {/* DI Assistant Panel */}
-      <AiAssistantPanel
-        open={aiSheetOpen}
-        onOpenChange={setAiSheetOpen}
-        gameId={game.id}
-        gameTitle={game.title}
-        gameDescription={game.description}
-        existingChallenges={challenges}
-        onSuggestionsAdded={handleSuggestionsAdded}
-      />
 
       {/* Edit Dialog */}
       {game.status === "draft" && (

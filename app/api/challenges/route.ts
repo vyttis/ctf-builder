@@ -9,7 +9,9 @@ const EXTRA_COLUMNS = ", explanation, difficulty, hint_penalty"
 const BASE_CHALLENGE_COLUMNS = MINIMAL_CHALLENGE_COLUMNS + EXTRA_COLUMNS
 const DI_COLUMNS = ", generated_by_di, verification_verdict, verification_issues, verification_confidence"
 const PATH_COLUMNS = ", prerequisites"
-const SAFE_CHALLENGE_COLUMNS = BASE_CHALLENGE_COLUMNS + DI_COLUMNS + PATH_COLUMNS
+const LEGACY_CHALLENGE_COLUMNS = BASE_CHALLENGE_COLUMNS + DI_COLUMNS + PATH_COLUMNS
+const NEEDS_ANSWER_COLUMNS = ", needs_answer"
+const SAFE_CHALLENGE_COLUMNS = LEGACY_CHALLENGE_COLUMNS + NEEDS_ANSWER_COLUMNS
 
 const createChallengeSchema = z.object({
   game_id: z.string().uuid(),
@@ -17,7 +19,10 @@ const createChallengeSchema = z.object({
   description: z.string().max(5000).default(""),
   type: z.enum(["text", "number", "multiple_choice"]).default("text"),
   points: z.coerce.number().min(1).max(1000).default(100),
-  correct_answer: z.coerce.string().min(1, "Atsakymas privalomas"),
+  correct_answer: z.coerce.string().min(1, "Atsakymas privalomas").optional(),
+  // Duplicated/cloned challenges arrive without an answer: they get an
+  // unguessable random answer_hash and are flagged until the teacher sets one.
+  needs_answer: z.boolean().default(false),
   hints: z.array(z.string()).max(10).default([]),
   options: z.array(z.string()).nullable().default(null),
   order_index: z.number().default(0),
@@ -37,6 +42,9 @@ const createChallengeSchema = z.object({
   verification_issues: z.array(z.string()).default([]),
   verification_confidence: z.number().min(0).max(1).nullable().optional(),
   prerequisites: z.array(z.string().uuid()).default([]),
+}).refine((d) => d.needs_answer || (d.correct_answer && d.correct_answer.length > 0), {
+  message: "Atsakymas privalomas",
+  path: ["correct_answer"],
 })
 
 export async function POST(request: Request) {
@@ -98,18 +106,28 @@ export async function POST(request: Request) {
 
   const orderIndex = parsed.data.order_index || (count || 0)
 
+  // needs_answer challenges get a random unguessable answer so no fixed
+  // magic string (like the old "placeholder") can ever solve them
+  const answerToHash = parsed.data.needs_answer
+    ? crypto.randomUUID()
+    : parsed.data.correct_answer!
+
   const minimalPayload = {
     game_id: parsed.data.game_id,
     title: parsed.data.title,
     description: parsed.data.description,
     type: parsed.data.type,
     points: parsed.data.points,
-    answer_hash: await hashAnswer(parsed.data.correct_answer),
+    answer_hash: await hashAnswer(answerToHash),
     hints: parsed.data.hints,
     options: parsed.data.options,
     order_index: orderIndex,
     image_url: parsed.data.image_url ?? null,
     maps_url: parsed.data.maps_url ?? null,
+  }
+
+  const needsAnswerPayload = {
+    needs_answer: parsed.data.needs_answer,
   }
 
   const extraPayload = {
@@ -136,9 +154,18 @@ export async function POST(request: Request) {
   }
   let result = (await supabase
     .from("challenges")
-    .insert({ ...minimalPayload, ...extraPayload, ...diPayload })
+    .insert({ ...minimalPayload, ...extraPayload, ...diPayload, ...needsAnswerPayload })
     .select(SAFE_CHALLENGE_COLUMNS)
     .single()) as ChallengeQueryResult
+
+  if (result.error && isColumnError(result.error)) {
+    console.warn("needs_answer column missing, retrying without it:", result.error.message)
+    result = (await supabase
+      .from("challenges")
+      .insert({ ...minimalPayload, ...extraPayload, ...diPayload })
+      .select(LEGACY_CHALLENGE_COLUMNS)
+      .single()) as ChallengeQueryResult
+  }
 
   if (result.error && isColumnError(result.error)) {
     console.warn("DI columns missing, retrying without them:", result.error.message)
@@ -209,6 +236,14 @@ export async function GET(request: Request) {
     .order("order_index", { ascending: true })) as ChallengeListResult
 
   // Fall back progressively if columns don't exist yet
+  if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
+    result = (await supabase
+      .from("challenges")
+      .select(LEGACY_CHALLENGE_COLUMNS)
+      .eq("game_id", gameId)
+      .order("order_index", { ascending: true })) as ChallengeListResult
+  }
+
   if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
     result = (await supabase
       .from("challenges")

@@ -64,26 +64,39 @@ export async function POST(
     // Create challenges from snapshot
     const challengeData = item.challenge_data as ChallengeSnapshot[]
     if (challengeData && challengeData.length > 0) {
-      // Placeholder hash — teacher must set real answers before activating game
-      const placeholderHash = await hashAnswer("__placeholder__")
+      // Snapshots never carry answers. Each clone gets a random unguessable
+      // hash + needs_answer flag; activation is blocked until answers are set.
+      const buildChallenges = async (withNeedsAnswer: boolean) =>
+        Promise.all(
+          challengeData.map(async (c: ChallengeSnapshot) => ({
+            game_id: game.id,
+            title: c.title,
+            description: c.description || "",
+            type: c.type || "text",
+            points: c.points || 100,
+            answer_hash: await hashAnswer(crypto.randomUUID()),
+            hints: c.hints || [],
+            options: c.options || null,
+            order_index: c.order_index || 0,
+            image_url: c.image_url || null,
+            maps_url: c.maps_url || null,
+            ...(withNeedsAnswer ? { needs_answer: true } : {}),
+          }))
+        )
 
-      const challenges = challengeData.map((c: ChallengeSnapshot) => ({
-        game_id: game.id,
-        title: c.title,
-        description: c.description || "",
-        type: c.type || "text",
-        points: c.points || 100,
-        answer_hash: placeholderHash,
-        hints: c.hints || [],
-        options: c.options || null,
-        order_index: c.order_index || 0,
-        image_url: c.image_url || null,
-        maps_url: c.maps_url || null,
-      }))
-
-      const { error: challengeError } = await supabase
+      let { error: challengeError } = await supabase
         .from("challenges")
-        .insert(challenges)
+        .insert(await buildChallenges(true))
+
+      // needs_answer column may not exist on unmigrated DBs — retry without it
+      if (
+        challengeError &&
+        (challengeError.message?.includes("column") || challengeError.code === "42703")
+      ) {
+        ;({ error: challengeError } = await supabase
+          .from("challenges")
+          .insert(await buildChallenges(false)))
+      }
 
       if (challengeError) {
         // Game was created but challenges failed — still return the game

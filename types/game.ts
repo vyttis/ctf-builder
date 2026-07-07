@@ -55,17 +55,6 @@ export interface Challenge {
   updated_at: string
 }
 
-export interface ChallengeFormData {
-  title: string
-  description: string
-  type: ChallengeType
-  points: number
-  correct_answer: string
-  hints: string[]
-  options: string[] | null
-  order_index: number
-}
-
 export interface PlayerSession {
   team_id: string
   session_token: string
