@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { GamesGrid } from "@/components/teacher/games-grid"
+import { OnboardingChecklist } from "@/components/teacher/onboarding-checklist"
+import { CreateSampleGameButton } from "@/components/teacher/create-sample-game-button"
 import { GameWithChallengeCount } from "@/types/game"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,12 +17,51 @@ export default async function DashboardPage() {
 
   const { data: games } = await supabase
     .from("games")
-    .select("*, challenges(count)")
+    .select("*, challenges(count), teams(count)")
     .eq("teacher_id", user!.id)
     .order("created_at", { ascending: false })
 
+  // First-success checklist state, derived from the teacher's actual data
+  type GameRow = GameWithChallengeCount & { teams?: { count: number }[] }
+  const gameRows = (games || []) as GameRow[]
+  const hasGame = gameRows.length > 0
+  const gameWithTasks = gameRows.find((g) => (g.challenges?.[0]?.count || 0) > 0)
+  const startedGame = gameRows.find((g) => g.status !== "draft")
+  const gameWithResults = gameRows.find(
+    (g) => (g.teams?.[0]?.count || 0) > 0 || g.status === "finished"
+  )
+  const latestGame = gameRows[0]
+
+  const onboardingSteps = [
+    { label: "Sukurkite veiklą", done: hasGame, href: "/games/new" },
+    {
+      label: "Pridėkite užduočių",
+      done: !!gameWithTasks,
+      href: latestGame ? `/games/${latestGame.id}/builder` : "/games/new",
+    },
+    {
+      label: "Paleiskite žaidimą su QR kodu",
+      done: !!startedGame,
+      href: gameWithTasks ? `/games/${gameWithTasks.id}` : "/games/new",
+    },
+    {
+      label: "Peržiūrėkite rezultatus",
+      done: !!gameWithResults,
+      href: startedGame ? `/games/${startedGame.id}/analytics` : "/games/new",
+    },
+  ]
+  const showChecklist = onboardingSteps.some((s) => !s.done)
+
   return (
     <div>
+      {/* First-success checklist (hides itself when all steps are done) */}
+      {showChecklist && (
+        <OnboardingChecklist
+          steps={onboardingSteps}
+          showSampleGameButton={!gameWithTasks}
+        />
+      )}
+
       {/* Two clear paths */}
       <div className="grid sm:grid-cols-2 gap-4 mb-8">
         {/* Path 1: Lesson plans */}
@@ -98,7 +139,7 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground mb-6 max-w-sm">
             Sukurkite interaktyvią veiklą savo klasei arba pradėkite nuo pamokos plano
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             <Link href="/lesson-plans/new">
               <Button variant="outline" className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5">
                 <GraduationCap className="h-4 w-4" />
@@ -111,6 +152,7 @@ export default async function DashboardPage() {
                 Kurti veiklą
               </Button>
             </Link>
+            <CreateSampleGameButton />
           </div>
         </div>
       )}
