@@ -48,6 +48,9 @@ export interface Challenge {
   verification_issues: string[]
   verification_confidence: number | null
   prerequisites: string[]
+  // True when the challenge was duplicated/cloned and the teacher has not yet
+  // set a real answer. Blocks game activation.
+  needs_answer?: boolean
   created_at: string
   updated_at: string
 }
@@ -78,6 +81,10 @@ export interface LeaderboardEntry {
   current_challenge_index: number
   joined_at: string
   updated_at: string
+  // Correct submissions embedded by leaderboard queries (one row per solved
+  // challenge). current_challenge_index only advances in linear path mode,
+  // so solved counts must be derived from these.
+  submissions?: { challenge_id: string }[]
 }
 
 export interface SubmissionResult {

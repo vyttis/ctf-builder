@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 import { LibraryItem } from "@/types/game"
 import { BookOpen, Search, Loader2 } from "lucide-react"
 
@@ -36,22 +37,28 @@ const gradeLevels = [
 export default function LibraryPage() {
   const [items, setItems] = useState<LibraryItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [search, setSearch] = useState("")
   const [subject, setSubject] = useState("all")
   const [gradeLevel, setGradeLevel] = useState("all")
 
   const fetchItems = useCallback(async () => {
     setLoading(true)
+    setError(false)
     const params = new URLSearchParams()
+    params.set("status", "approved")
     if (subject !== "all") params.set("subject", subject)
     if (gradeLevel !== "all") params.set("grade_level", gradeLevel)
     if (search) params.set("search", search)
 
-    const res = await fetch(`/api/library?${params.toString()}`)
-    if (res.ok) {
+    try {
+      const res = await fetch(`/api/library?${params.toString()}`)
+      if (!res.ok) throw new Error("library fetch failed")
       const data = await res.json()
-      // Only show approved items on this page
-      setItems(data.filter((i: LibraryItem) => i.status === "approved"))
+      setItems(data.items || [])
+    } catch {
+      setItems([])
+      setError(true)
     }
     setLoading(false)
   }, [subject, gradeLevel, search])
@@ -122,6 +129,16 @@ export default function LibraryPage() {
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : error ? (
+        <div className="text-center py-20">
+          <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+          <p className="text-muted-foreground text-sm mb-4">
+            Nepavyko įkelti bibliotekos.
+          </p>
+          <Button variant="outline" size="sm" onClick={fetchItems}>
+            Bandyti dar kartą
+          </Button>
         </div>
       ) : items.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

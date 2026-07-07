@@ -17,6 +17,8 @@ interface Team {
 interface Submission {
   id: string
   team_id: string
+  challenge_id: string
+  is_correct: boolean
   attempted_at: string
 }
 
@@ -50,6 +52,11 @@ export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
   const [lastSubmissions, setLastSubmissions] = useState<Map<string, string>>(
     new Map()
   )
+  // Unique correct solves per team — current_challenge_index only advances in
+  // linear path mode, so free-mode counts must come from submissions.
+  const [solvedCounts, setSolvedCounts] = useState<Map<string, Set<string>>>(
+    new Map()
+  )
   const [, setTick] = useState(0)
 
   const fetchInitialData = useCallback(async () => {
@@ -65,23 +72,31 @@ export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
     if (teamsData) {
       setTeams(teamsData)
 
-      // Fetch latest submission per team
+      // Fetch submissions: latest per team + correct solves per team
       const teamIds = teamsData.map((t) => t.id)
       if (teamIds.length > 0) {
         const { data: subs } = await supabase
           .from("submissions")
-          .select("id, team_id, attempted_at")
+          .select("id, team_id, challenge_id, is_correct, attempted_at")
           .in("team_id", teamIds)
           .order("attempted_at", { ascending: false })
 
         if (subs) {
           const latestMap = new Map<string, string>()
+          const solvedMap = new Map<string, Set<string>>()
           for (const sub of subs) {
             if (!latestMap.has(sub.team_id)) {
               latestMap.set(sub.team_id, sub.attempted_at)
             }
+            if (sub.is_correct) {
+              if (!solvedMap.has(sub.team_id)) {
+                solvedMap.set(sub.team_id, new Set())
+              }
+              solvedMap.get(sub.team_id)!.add(sub.challenge_id)
+            }
           }
           setLastSubmissions(latestMap)
+          setSolvedCounts(solvedMap)
         }
       }
     }
@@ -149,6 +164,16 @@ export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
             next.set(sub.team_id, sub.attempted_at)
             return next
           })
+
+          if (sub.is_correct) {
+            setSolvedCounts((prev) => {
+              const next = new Map(prev)
+              const solved = new Set(next.get(sub.team_id) ?? [])
+              solved.add(sub.challenge_id)
+              next.set(sub.team_id, solved)
+              return next
+            })
+          }
         }
       )
       .subscribe()
@@ -239,7 +264,7 @@ export function LiveTeamProgress({ gameId }: LiveTeamProgressProps) {
                       Užduočių išspręsta
                     </p>
                     <p className="font-bold text-lg text-steam-dark leading-none">
-                      {team.current_challenge_index}
+                      {solvedCounts.get(team.id)?.size ?? 0}
                     </p>
                   </div>
                 </div>

@@ -25,11 +25,12 @@ export async function GET(request: Request) {
     const gradeLevel = searchParams.get("grade_level")
     const search = searchParams.get("search")
     const status = searchParams.get("status") // for admin: pending_review, rejected
+    const mine = searchParams.get("mine") === "true" // own submissions, any status
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)))
 
-    // Only admins can filter by non-approved status
-    if (status && status !== "approved") {
+    // Only admins can filter by non-approved status (own items are always allowed)
+    if (status && status !== "approved" && !mine) {
       const role = await getUserRole(supabase)
       if (!canApproveLibrary(role)) {
         return NextResponse.json(
@@ -43,6 +44,11 @@ export async function GET(request: Request) {
       .from("library_items")
       .select("*, profiles!library_items_published_by_fkey(full_name, email)", { count: "exact" })
       .order("created_at", { ascending: false })
+
+    // Own submissions in any status (RLS already scopes reads to own rows)
+    if (mine) {
+      query = query.eq("published_by", user.id)
+    }
 
     // Filter by status (admins can see pending_review)
     if (status) {
