@@ -6,7 +6,7 @@ import { Challenge } from "@/types/game"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { GripVertical, Edit3, Trash2, Copy, Sparkles } from "lucide-react"
+import { GripVertical, Edit3, Trash2, Copy, Sparkles, AlertTriangle } from "lucide-react"
 
 interface SortableTaskCardProps {
   challenge: Challenge
@@ -85,6 +85,18 @@ export function SortableTaskCard({
                 )}
               </div>
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                {challenge.needs_answer && (
+                  <Badge
+                    className="text-[10px] px-1.5 py-0 bg-accent/10 text-accent border-accent/40 hover:bg-accent/15 gap-0.5"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelect(challenge)
+                    }}
+                  >
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    Trūksta atsakymo
+                  </Badge>
+                )}
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                   {challenge.points} tšk.
                 </Badge>

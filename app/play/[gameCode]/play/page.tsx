@@ -82,6 +82,11 @@ export default function PlayPage() {
   const [currentExplanation, setCurrentExplanation] = useState<string | null>(null)
   const [gameFinished, setGameFinished] = useState(false)
   const [reflectionDone, setReflectionDone] = useState(false)
+  // Live game status: paused shows a full-screen overlay, finished ends the
+  // game even mid-play (teacher-ended)
+  const [gameStatus, setGameStatus] = useState<string>("active")
+  const [endedByTeacher, setEndedByTeacher] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   // Free mode state
   const [pathMode, setPathMode] = useState<"linear" | "free">("linear")
@@ -170,19 +175,36 @@ export default function PlayPage() {
 
   async function loadChallenges(s: PlayerSession) {
     // Single round-trip via /api/play/state (game + challenges + solved submissions)
-    const res = await fetch(
-      `/api/play/state?game_code=${encodeURIComponent(gameCode)}&session_token=${encodeURIComponent(s.session_token)}`
-    )
-    if (!res.ok) return
-    const state = await res.json() as {
-      game: { id: string; settings: GameSettings | null } | null
+    setLoadError(false)
+    let state: {
+      game: { id: string; status?: string; settings: GameSettings | null } | null
       challenges: PlayerChallenge[]
       solved: { challenge_id: string; points_awarded: number }[]
     }
+    try {
+      const res = await fetch(
+        `/api/play/state?game_code=${encodeURIComponent(gameCode)}&session_token=${encodeURIComponent(s.session_token)}`
+      )
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      state = await res.json()
+    } catch {
+      setLoadError(true)
+      return
+    }
 
-    if (!state.game) return
+    if (!state.game) {
+      setLoadError(true)
+      return
+    }
 
     setGameId(state.game.id)
+    if (state.game.status) {
+      setGameStatus(state.game.status)
+      if (state.game.status === "finished") {
+        setEndedByTeacher(true)
+        setGameFinished(true)
+      }
+    }
 
     const settings = state.game.settings
     const timeLimit = settings?.time_limit_minutes ?? null
@@ -240,8 +262,12 @@ export default function PlayPage() {
               }
             }
           }
-          if (updated.status === "paused" || updated.status === "finished") {
-            // Could show a notification, but at minimum stop accepting submissions
+          if (updated.status) {
+            setGameStatus(updated.status)
+            if (updated.status === "finished") {
+              setEndedByTeacher(true)
+              setGameFinished(true)
+            }
           }
         }
       )
@@ -249,6 +275,33 @@ export default function PlayPage() {
 
     return () => { supabase.removeChannel(channel) }
   }, [gameId, gameCode, timeExpired])
+
+  // Status polling safety net: paused games may be invisible to anon realtime
+  // (RLS), so realtime alone cannot be trusted to deliver pause events
+  useEffect(() => {
+    if (gameFinished) return
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `/api/play/status?game_code=${encodeURIComponent(gameCode)}`,
+          { cache: "no-store" }
+        )
+        if (!res.ok) return
+        const data = (await res.json()) as { status: string | null }
+        if (!data.status) return
+        setGameStatus(data.status)
+        if (data.status === "finished") {
+          setEndedByTeacher(true)
+          setGameFinished(true)
+        }
+      } catch {
+        // Network hiccup — next poll retries
+      }
+    }, 20000)
+
+    return () => clearInterval(interval)
+  }, [gameCode, gameFinished])
 
   function handleStart() {
     const storageKey = `ctf_start_${gameCode}`
@@ -389,11 +442,70 @@ export default function PlayPage() {
     }
   }
 
+  // Load error state (network failure or game unavailable)
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
+            <AlertTriangle className="h-8 w-8 text-accent" />
+          </div>
+          <h1 className="text-xl font-bold text-steam-dark mb-2">
+            Nepavyko įkelti žaidimo
+          </h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            Patikrinkite interneto ryšį arba paklauskite mokytojo, ar žaidimas
+            vis dar vyksta.
+          </p>
+          <Button
+            onClick={() => session && loadChallenges(session)}
+            className="w-full bg-primary hover:bg-primary/90 text-white"
+          >
+            Bandyti dar kartą
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   // Loading state
   if (!session || challenges.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Paused by the teacher — full-screen overlay until the game resumes
+  if (gameStatus === "paused" && !gameFinished) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-steam-dark">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm text-center text-white"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
+            <Clock className="h-10 w-10 text-highlight" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Žaidimas pristabdytas</h1>
+          <p className="text-white/70 mb-6">
+            Palaukite, kol mokytojas tęs žaidimą. Jūsų taškai išsaugoti.
+          </p>
+          <div className="bg-white/5 rounded-2xl p-4 mb-2">
+            <p className="text-2xl font-bold">{totalPoints} tšk.</p>
+            <p className="text-sm text-white/60">
+              Komanda: {session.team_name}
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 mt-4 text-xs text-white/50">
+            <div className="w-2 h-2 rounded-full bg-highlight animate-pulse" />
+            Laukiama tęsimo...
+          </div>
+        </motion.div>
       </div>
     )
   }
@@ -523,10 +635,14 @@ export default function PlayPage() {
         >
           <Image src="/illustrations/celebration.svg" alt="" width={192} height={192} className="mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-steam-dark mb-2">
-            Sveikiname! 🎉
+            {endedByTeacher && solvedIds.size < challenges.length
+              ? "Žaidimas baigtas!"
+              : "Sveikiname! 🎉"}
           </h1>
           <p className="text-muted-foreground mb-4">
-            Jūs išsprendėte visas užduotis!
+            {endedByTeacher && solvedIds.size < challenges.length
+              ? `Mokytojas užbaigė žaidimą. Išsprendėte ${solvedIds.size} iš ${challenges.length} užduočių.`
+              : "Jūs išsprendėte visas užduotis!"}
           </p>
 
           <div className="bg-primary/5 rounded-2xl p-6 mb-6">

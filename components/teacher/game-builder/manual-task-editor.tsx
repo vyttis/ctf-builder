@@ -27,6 +27,7 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
+  AlertTriangle,
 } from "lucide-react"
 import { ImageUpload } from "../image-upload"
 import { MapsEmbed } from "@/components/shared/maps-embed"
@@ -117,7 +118,10 @@ export function ManualTaskEditor({
       })
       return
     }
-    if (!challenge && !correctAnswer.trim()) {
+    // New tasks and duplicated/cloned tasks without a confirmed answer
+    // (needs_answer) must get one; ordinary edits may leave it blank to keep
+    // the existing answer.
+    if ((!challenge || challenge.needs_answer) && !correctAnswer.trim()) {
       toast({
         title: "Atsakymas privalomas",
         variant: "destructive",
@@ -203,6 +207,17 @@ export function ManualTaskEditor({
         <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20 text-sm text-steam-dark">
           <Sparkles className="h-4 w-4 text-highlight shrink-0" />
           <span>Užpildyta pagal DI pasiūlymą. Peržiūrėkite ir patvirtinkite.</span>
+        </div>
+      )}
+
+      {/* Needs-answer notice for duplicated/cloned tasks */}
+      {challenge?.needs_answer && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20 text-sm text-steam-dark">
+          <AlertTriangle className="h-4 w-4 text-accent shrink-0" />
+          <span>
+            Ši užduotis dar neturi teisingo atsakymo — įveskite jį žemiau, kad
+            galėtumėte pradėti žaidimą.
+          </span>
         </div>
       )}
 
@@ -315,14 +330,22 @@ export function ManualTaskEditor({
       {type !== "multiple_choice" && (
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">
-            Teisingas atsakymas {challenge ? "(palikite tuščią, jei nekeičiate)" : "*"}
+            Teisingas atsakymas{" "}
+            {challenge && !challenge.needs_answer
+              ? "(palikite tuščią, jei nekeičiate)"
+              : "*"}
           </Label>
           <Input
             type={type === "number" ? "number" : "text"}
             value={correctAnswer}
             onChange={(e) => setCorrectAnswer(e.target.value)}
             placeholder="Tikslus teisingas atsakymas"
-            className="bg-white border-primary/30 focus:border-primary"
+            autoFocus={challenge?.needs_answer === true}
+            className={`bg-white ${
+              challenge?.needs_answer
+                ? "border-accent/50 focus:border-accent"
+                : "border-primary/30 focus:border-primary"
+            }`}
           />
           <p className="text-[10px] text-muted-foreground">
             Atsakymas bus normalizuotas (be didžiųjų raidžių, be tarpų)

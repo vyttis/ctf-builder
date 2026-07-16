@@ -93,6 +93,26 @@ export async function PATCH(
         { status: 400 }
       )
     }
+
+    // Block activation while duplicated/cloned challenges lack a real answer.
+    // Tolerate a missing needs_answer column (unmigrated DB) by skipping.
+    const { data: pendingTasks, error: pendingError } = await supabase
+      .from("challenges")
+      .select("id, title")
+      .eq("game_id", params.gameId)
+      .eq("needs_answer", true)
+      .order("order_index", { ascending: true })
+
+    if (!pendingError && pendingTasks && pendingTasks.length > 0) {
+      const titles = pendingTasks.map((t) => `„${t.title}“`).join(", ")
+      return NextResponse.json(
+        {
+          error: `Šios užduotys neturi nustatyto atsakymo: ${titles}. Nustatykite atsakymus prieš pradėdami žaidimą.`,
+          tasks_needing_answer: pendingTasks,
+        },
+        { status: 400 }
+      )
+    }
   }
 
   // Build update payload carefully
@@ -100,6 +120,20 @@ export async function PATCH(
   if (parsed.data.title !== undefined) updateData.title = parsed.data.title
   if (parsed.data.description !== undefined) updateData.description = parsed.data.description
   if (parsed.data.status !== undefined) updateData.status = parsed.data.status
+
+  // Anchor the class-wide clock on first activation (projector countdown)
+  if (parsed.data.status === "active") {
+    const { data: current } = await supabase
+      .from("games")
+      .select("starts_at")
+      .eq("id", params.gameId)
+      .eq("teacher_id", user.id)
+      .single()
+
+    if (current && !current.starts_at) {
+      updateData.starts_at = new Date().toISOString()
+    }
+  }
 
   // Deep merge settings to avoid destroying unmentioned fields
   if (parsed.data.settings) {

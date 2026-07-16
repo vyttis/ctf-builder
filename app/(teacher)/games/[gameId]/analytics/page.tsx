@@ -4,10 +4,12 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { AnalyticsCards } from "@/components/teacher/analytics-cards"
 import { ChallengeStatsTable } from "@/components/teacher/challenge-stats-table"
+import { TeamResultsTable } from "@/components/teacher/team-results-table"
 import { ReflectionsTable } from "@/components/teacher/reflections-table"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GameStats } from "@/types/game"
+import type { DetailedStats } from "@/lib/game/detailed-stats"
 import { ArrowLeft, BarChart3, Loader2, MessageSquare } from "lucide-react"
 import Link from "next/link"
 
@@ -24,6 +26,7 @@ export default function GameAnalyticsPage() {
   const params = useParams()
   const gameId = params.gameId as string
   const [stats, setStats] = useState<GameStats | null>(null)
+  const [detailed, setDetailed] = useState<DetailedStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -36,12 +39,18 @@ export default function GameAnalyticsPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch(`/api/games/${gameId}/analytics`)
-        if (!res.ok) {
+        const [basicRes, detailedRes] = await Promise.all([
+          fetch(`/api/games/${gameId}/analytics`),
+          fetch(`/api/games/${gameId}/analytics/detailed`),
+        ])
+        if (!basicRes.ok) {
           throw new Error("Nepavyko gauti statistikos")
         }
-        const data = await res.json()
-        setStats(data)
+        setStats(await basicRes.json())
+        // Detailed stats are an enhancement — the page still renders without
+        if (detailedRes.ok) {
+          setDetailed(await detailedRes.json())
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Nežinoma klaida")
       } finally {
@@ -134,7 +143,20 @@ export default function GameAnalyticsPage() {
           {stats && (
             <div className="space-y-6">
               <AnalyticsCards stats={stats} />
-              <ChallengeStatsTable stats={stats.challenge_stats || []} />
+              {detailed && detailed.team_stats.length > 0 && (
+                <TeamResultsTable
+                  teamStats={detailed.team_stats}
+                  totalChallenges={
+                    detailed.challenge_stats.length ||
+                    stats.challenge_stats?.length ||
+                    0
+                  }
+                />
+              )}
+              <ChallengeStatsTable
+                stats={stats.challenge_stats || []}
+                detailedStats={detailed?.challenge_stats}
+              />
             </div>
           )}
         </TabsContent>

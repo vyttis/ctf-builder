@@ -59,8 +59,11 @@ export default function LeaderboardPage() {
     const [teamsRes, achievementsRes] = await Promise.all([
       supabase
         .from("teams")
-        .select("id, name, total_points, current_challenge_index, joined_at, updated_at")
+        .select(
+          "id, name, total_points, current_challenge_index, joined_at, updated_at, submissions(challenge_id)"
+        )
         .eq("game_id", game.id)
+        .eq("submissions.is_correct", true)
         .order("total_points", { ascending: false })
         .order("updated_at", { ascending: true }),
       supabase
@@ -203,7 +206,7 @@ export default function LeaderboardPage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {team.current_challenge_index} užd. išspręsta
+                            {new Set((team.submissions ?? []).map((s) => s.challenge_id)).size} užd. išspręsta
                           </p>
                           {(() => {
                             const achievements = teamAchievements[team.id] ?? []

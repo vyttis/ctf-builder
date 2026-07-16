@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
@@ -12,7 +13,9 @@ import {
   Square,
   Loader2,
   AlertCircle,
+  AlertTriangle,
   Rocket,
+  Wrench,
 } from "lucide-react"
 import {
   Dialog,
@@ -28,17 +31,23 @@ interface GameStatusActionsProps {
   gameId: string
   status: GameStatus
   challengeCount: number
+  // Duplicated/cloned tasks that still need a confirmed answer — blocks start
+  tasksNeedingAnswer?: { id: string; title: string }[]
 }
 
 export function GameStatusActions({
   gameId,
   status,
   challengeCount,
+  tasksNeedingAnswer = [],
 }: GameStatusActionsProps) {
   const [loading, setLoading] = useState(false)
   const [showActivateDialog, setShowActivateDialog] = useState(false)
+  const [showFinishDialog, setShowFinishDialog] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+
+  const hasPendingAnswers = tasksNeedingAnswer.length > 0
 
   async function updateStatus(newStatus: GameStatus) {
     setLoading(true)
@@ -55,16 +64,22 @@ export function GameStatusActions({
       }
 
       toast({
-        title: "Būsena atnaujinta!",
+        title:
+          newStatus === "active"
+            ? "Žaidimas pradėtas!"
+            : newStatus === "finished"
+            ? "Žaidimas baigtas"
+            : "Žaidimas pristabdytas",
         description:
           newStatus === "active"
-            ? "Žaidimas aktyvuotas! Mokiniai gali prisijungti."
+            ? "Mokiniai gali prisijungti nuskaitę QR kodą."
             : newStatus === "finished"
-            ? "Žaidimas baigtas."
-            : "Žaidimas pristabdytas.",
+            ? "Rezultatai ir analitika paruošti peržiūrai."
+            : "Mokiniai matys pauzės pranešimą.",
       })
 
       setShowActivateDialog(false)
+      setShowFinishDialog(false)
       router.refresh()
     } catch (error: unknown) {
       toast({
@@ -77,6 +92,47 @@ export function GameStatusActions({
     }
   }
 
+  const finishDialog = (
+    <Dialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          disabled={loading}
+          className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
+        >
+          <Square className="h-4 w-4" />
+          {status === "paused" ? "Baigti" : "Baigti žaidimą"}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Baigti žaidimą?</DialogTitle>
+          <DialogDescription>
+            Mokiniai nebegalės pateikti atsakymų, o jūs matysite rezultatų
+            suvestinę. Šio veiksmo negalima atšaukti.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowFinishDialog(false)}>
+            Atšaukti
+          </Button>
+          <Button
+            onClick={() => updateStatus("finished")}
+            disabled={loading}
+            className="bg-accent hover:bg-accent/90 text-white gap-2"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Square className="h-4 w-4" />
+            )}
+            Baigti žaidimą
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+
   if (status === "draft") {
     return (
       <Dialog open={showActivateDialog} onOpenChange={setShowActivateDialog}>
@@ -86,12 +142,12 @@ export function GameStatusActions({
             disabled={challengeCount === 0}
           >
             <Rocket className="h-4 w-4" />
-            Aktyvuoti žaidimą
+            Pradėti žaidimą
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Aktyvuoti žaidimą?</DialogTitle>
+            <DialogTitle>Pradėti žaidimą?</DialogTitle>
             <DialogDescription>
               Mokiniai galės prisijungti nuskaitę QR kodą arba įvedę žaidimo
               kodą. Galėsite bet kada pristabdyti ar baigti žaidimą.
@@ -100,7 +156,30 @@ export function GameStatusActions({
           {challengeCount === 0 && (
             <div className="flex items-center gap-2 text-accent text-sm">
               <AlertCircle className="h-4 w-4" />
-              Pridėkite bent 1 užduotį prieš aktyvuodami
+              Pridėkite bent 1 užduotį prieš pradėdami
+            </div>
+          )}
+          {hasPendingAnswers && (
+            <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-2">
+              <div className="flex items-center gap-2 text-accent text-sm font-medium">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                Šios užduotys neturi nustatyto atsakymo:
+              </div>
+              <ul className="text-sm text-steam-dark list-disc pl-6 space-y-0.5">
+                {tasksNeedingAnswer.map((t) => (
+                  <li key={t.id}>{t.title}</li>
+                ))}
+              </ul>
+              <Link href={`/games/${gameId}/builder`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 mt-1 border-accent/30 text-accent hover:bg-accent/5"
+                >
+                  <Wrench className="h-3.5 w-3.5" />
+                  Taisyti užduotis
+                </Button>
+              </Link>
             </div>
           )}
           <DialogFooter>
@@ -112,7 +191,7 @@ export function GameStatusActions({
             </Button>
             <Button
               onClick={() => updateStatus("active")}
-              disabled={loading || challengeCount === 0}
+              disabled={loading || challengeCount === 0 || hasPendingAnswers}
               className="bg-primary hover:bg-primary/90 text-white gap-2"
             >
               {loading ? (
@@ -120,7 +199,7 @@ export function GameStatusActions({
               ) : (
                 <Play className="h-4 w-4" />
               )}
-              Aktyvuoti
+              Pradėti
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -144,15 +223,7 @@ export function GameStatusActions({
           )}
           Pristabdyti
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => updateStatus("finished")}
-          disabled={loading}
-          className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
-        >
-          <Square className="h-4 w-4" />
-          Baigti žaidimą
-        </Button>
+        {finishDialog}
       </div>
     )
   }
@@ -172,15 +243,7 @@ export function GameStatusActions({
           )}
           Tęsti
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => updateStatus("finished")}
-          disabled={loading}
-          className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
-        >
-          <Square className="h-4 w-4" />
-          Baigti
-        </Button>
+        {finishDialog}
       </div>
     )
   }

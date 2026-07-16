@@ -26,6 +26,7 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
   const { toast } = useToast()
   const [items, setItems] = useState<LibraryItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   const [search, setSearch] = useState("")
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [addingIds, setAddingIds] = useState<Set<string>>(new Set())
@@ -36,14 +37,14 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
 
   async function fetchItems() {
     setLoading(true)
+    setError(false)
     try {
       const res = await fetch("/api/library?status=approved&limit=50")
-      if (res.ok) {
-        const data = await res.json()
-        setItems(data.items || [])
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setItems(data.items || [])
     } catch {
-      // silent fail
+      setError(true)
     } finally {
       setLoading(false)
     }
@@ -74,13 +75,18 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
           description: snap.description || "",
           type: snap.type,
           points: snap.points,
-          correct_answer: "placeholder",
+          // Library snapshots never carry answers; the copy is flagged until
+          // the teacher sets a real answer (blocks activation)
+          needs_answer: true,
           hints: snap.hints || [],
           options: snap.options,
         }),
       })
       if (res.ok) {
-        toast({ title: `Užduotis "${snap.title}" pridėta` })
+        toast({
+          title: `Užduotis "${snap.title}" pridėta`,
+          description: "Nepamirškite nustatyti teisingo atsakymo.",
+        })
         onTaskAdded()
       } else {
         throw new Error("fail")
@@ -126,7 +132,19 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
         </div>
       )}
 
-      {!loading && filtered.length === 0 && (
+      {!loading && error && (
+        <div className="text-center py-8">
+          <BookOpen className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground mb-3">
+            Nepavyko įkelti bibliotekos.
+          </p>
+          <Button variant="outline" size="sm" onClick={fetchItems}>
+            Bandyti dar kartą
+          </Button>
+        </div>
+      )}
+
+      {!loading && !error && filtered.length === 0 && (
         <div className="text-center py-8">
           <BookOpen className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">

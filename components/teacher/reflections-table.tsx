@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Download, Search, MessageSquare, ChevronDown, ChevronUp } from "lucide-react"
+import { exportCsv } from "@/lib/csv"
 
 interface Reflection {
   id: string
@@ -88,38 +89,23 @@ export function ReflectionsTable({ reflections, totalTeams }: ReflectionsTablePr
   }, [reflections, search, challengeFilter])
 
   function exportCSV() {
-    const BOM = "\uFEFF"
-    const headers = [
-      "Komanda",
-      "Sudėtingiausia užduotis",
-      "Ką darytų kitaip",
-      "Kas patiko",
-      "Data",
-    ]
-
-    const rows = reflections.map((r) => [
-      r.team_name,
-      r.hardest_challenge_title || "—",
-      r.improvement_text,
-      r.liked_text || "—",
-      new Date(r.created_at).toLocaleString("lt-LT"),
-    ])
-
-    const csvContent =
-      BOM +
-      [headers, ...rows]
-        .map((row) =>
-          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-        )
-        .join("\n")
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `refleksijos_${new Date().toISOString().slice(0, 10)}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    exportCsv(
+      `refleksijos_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        "Komanda",
+        "Sudėtingiausia užduotis",
+        "Ką darytų kitaip",
+        "Kas patiko",
+        "Data",
+      ],
+      reflections.map((r) => [
+        r.team_name,
+        r.hardest_challenge_title || "—",
+        r.improvement_text,
+        r.liked_text || "—",
+        new Date(r.created_at).toLocaleString("lt-LT"),
+      ])
+    )
   }
 
   if (reflections.length === 0) {

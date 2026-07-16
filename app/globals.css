@@ -203,3 +203,29 @@
     animation: float-slow 6s ease-in-out infinite;
   }
 }
+
+/* Print styles for the game report (print-to-PDF) */
+@media print {
+  body {
+    background: white !important;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+
+  table,
+  section {
+    break-inside: avoid;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+}

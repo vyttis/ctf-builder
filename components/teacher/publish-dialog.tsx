@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { BookOpen, Loader2 } from "lucide-react"
+import { Share2, Loader2 } from "lucide-react"
 import { SUBJECTS } from "@/lib/curriculum/subjects"
 
 interface PublishDialogProps {
@@ -50,6 +51,7 @@ export function PublishDialog({
   const [gradeLevel, setGradeLevel] = useState("")
   const [tags, setTags] = useState("")
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
   const { toast } = useToast()
 
   async function handlePublish() {
@@ -81,10 +83,11 @@ export function PublishDialog({
       toast({
         title: "Pateikta peržiūrai!",
         description:
-          "Jūsų CTF šablonas bus matomas bibliotekoje po administratoriaus patvirtinimo.",
+          "Šablono būseną galite sekti bibliotekos skiltyje „Mano pateikimai“.",
       })
 
       setOpen(false)
+      router.refresh()
     } catch (error: unknown) {
       toast({
         title: "Klaida",
@@ -104,14 +107,14 @@ export function PublishDialog({
           size="sm"
           className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5"
         >
-          <BookOpen className="h-4 w-4" />
-          Publikuoti į biblioteką
+          <Share2 className="h-4 w-4" />
+          Dalintis bibliotekoje
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-steam-dark">
-            Publikuoti į biblioteką
+            Dalintis bibliotekoje
           </DialogTitle>
           <DialogDescription>
             Jūsų CTF šablonas bus prieinamas kitiems mokytojams po
@@ -203,9 +206,9 @@ export function PublishDialog({
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <BookOpen className="h-4 w-4" />
+              <Share2 className="h-4 w-4" />
             )}
-            Publikuoti
+            Pateikti peržiūrai
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,10 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { AiSuggestion } from "@/lib/ai/types"
 import { Challenge } from "@/types/game"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { AnimatePresence } from "framer-motion"
 import { DraggableSuggestionCard } from "./draggable-suggestion-card"
 import { motion } from "framer-motion"
@@ -76,6 +85,7 @@ export function SuggestionsPanel({
   onReject,
   generationSuccess,
 }: SuggestionsPanelProps) {
+  const [regenerateConfirmOpen, setRegenerateConfirmOpen] = useState(false)
   const selectableCount = suggestions.filter(
     (s, i) => s.verification?.verdict !== "fail" && !addedIds.has(i)
   ).length
@@ -291,21 +301,45 @@ export function SuggestionsPanel({
             variant="outline"
             size="sm"
             className="text-xs gap-1 flex-1 text-accent border-accent/30 hover:bg-accent/5"
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Ar tikrai norite pergeneruoti? Dabartiniai pasiūlymai bus pakeisti."
-                )
-              ) {
-                onGenerate()
-              }
-            }}
+            onClick={() => setRegenerateConfirmOpen(true)}
           >
             <RefreshCw className="h-3 w-3" />
             Regeneruoti
           </Button>
         </div>
       )}
+
+      {/* Regenerate confirmation */}
+      <Dialog open={regenerateConfirmOpen} onOpenChange={setRegenerateConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 text-accent" />
+              Pergeneruoti pasiūlymus?
+            </DialogTitle>
+            <DialogDescription>
+              Dabartiniai pasiūlymai bus pakeisti naujais.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRegenerateConfirmOpen(false)}
+            >
+              Atšaukti
+            </Button>
+            <Button
+              className="bg-accent hover:bg-accent/90 text-white"
+              onClick={() => {
+                setRegenerateConfirmOpen(false)
+                onGenerate()
+              }}
+            >
+              Pergeneruoti
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Empty state */}
       {!loading && suggestions.length === 0 && !error && (

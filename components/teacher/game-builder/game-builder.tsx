@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
   DndContext,
@@ -23,7 +23,7 @@ import { Challenge, GameStatus, GameSettings } from "@/types/game"
 import { AiSuggestion, DiGenerateResponse, ScenarioPreset } from "@/lib/ai/types"
 import { BuilderHeader } from "./builder-header"
 import { BuilderSettings } from "./builder-settings"
-import { OnboardingBanner } from "./onboarding-banner"
+import { TaskDeleteDialog } from "./task-delete-dialog"
 import { TaskListPanel } from "./task-list-panel"
 import { TaskWorkspace } from "./task-workspace"
 import { TaskCardOverlay } from "./sortable-task-card"
@@ -92,13 +92,9 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   const [generationSuccess, setGenerationSuccess] = useState<number | null>(null)
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Onboarding
-  const [onboardingDismissed, setOnboardingDismissed] = useState(true)
-  useEffect(() => {
-    setOnboardingDismissed(
-      localStorage.getItem("ctf-builder-onboarding-dismissed") === "true"
-    )
-  }, [])
+  // Delete confirmation
+  const [deletingChallenge, setDeletingChallenge] = useState<Challenge | null>(null)
+  const [deleteInProgress, setDeleteInProgress] = useState(false)
 
   // Sensors
   const sensors = useSensors(
@@ -115,18 +111,21 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   const refreshChallenges = useCallback(async () => {
     try {
       const res = await fetch(`/api/challenges?game_id=${game.id}`)
-      if (res.ok) {
-        const data = await res.json()
-        const list = Array.isArray(data) ? data : (data.challenges || [])
-        const sorted = list.sort(
-          (a: Challenge, b: Challenge) => a.order_index - b.order_index
-        )
-        setChallenges(sorted)
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      const list = Array.isArray(data) ? data : (data.challenges || [])
+      const sorted = list.sort(
+        (a: Challenge, b: Challenge) => a.order_index - b.order_index
+      )
+      setChallenges(sorted)
     } catch {
-      // silent
+      toast({
+        title: "Nepavyko atnaujinti užduočių sąrašo",
+        description: "Rodomas ankstesnis sąrašas. Bandykite dar kartą.",
+        variant: "destructive",
+      })
     }
-  }, [game.id])
+  }, [game.id, toast])
 
   // ========== DI Generation ==========
   const handleGenerate = useCallback(
@@ -331,22 +330,30 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
     setActiveTab("manual")
   }
 
-  async function handleDeleteChallenge(challenge: Challenge) {
-    if (!window.confirm(`Ar tikrai norite ištrinti "${challenge.title}"?`)) return
+  function handleDeleteChallenge(challenge: Challenge) {
+    setDeletingChallenge(challenge)
+  }
+
+  async function confirmDeleteChallenge() {
+    if (!deletingChallenge) return
+    const challenge = deletingChallenge
+    setDeleteInProgress(true)
     try {
       const res = await fetch(`/api/challenges/${challenge.id}`, {
         method: "DELETE",
       })
-      if (res.ok) {
-        toast({ title: "Užduotis ištrinta" })
-        if (editingChallenge?.id === challenge.id) {
-          setEditingChallenge(null)
-          setIsCreatingNew(false)
-        }
-        refreshChallenges()
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      toast({ title: "Užduotis ištrinta" })
+      if (editingChallenge?.id === challenge.id) {
+        setEditingChallenge(null)
+        setIsCreatingNew(false)
       }
+      refreshChallenges()
     } catch {
       toast({ title: "Nepavyko ištrinti", variant: "destructive" })
+    } finally {
+      setDeleteInProgress(false)
+      setDeletingChallenge(null)
     }
   }
 
@@ -361,7 +368,9 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
           description: challenge.description || "",
           type: challenge.type,
           points: challenge.points,
-          correct_answer: "placeholder",
+          // answer_hash can't be copied client-side; the copy is flagged until
+          // the teacher sets a real answer (blocks activation)
+          needs_answer: true,
           hints: challenge.hints || [],
           options: challenge.options,
           explanation: challenge.explanation,
@@ -369,10 +378,12 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
           hint_penalty: challenge.hint_penalty,
         }),
       })
-      if (res.ok) {
-        toast({ title: "Užduotis nukopijuota" })
-        refreshChallenges()
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      toast({
+        title: "Užduotis nukopijuota",
+        description: "Kopijai reikia nustatyti teisingą atsakymą.",
+      })
+      refreshChallenges()
     } catch {
       toast({ title: "Nepavyko kopijuoti", variant: "destructive" })
     }
@@ -496,14 +507,15 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
         }}
       />
 
-      {challenges.length === 0 && !onboardingDismissed && (
-        <OnboardingBanner
-          onDismiss={() => {
-            setOnboardingDismissed(true)
-            localStorage.setItem("ctf-builder-onboarding-dismissed", "true")
-          }}
-        />
-      )}
+      <TaskDeleteDialog
+        open={deletingChallenge !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeletingChallenge(null)
+        }}
+        taskTitle={deletingChallenge?.title || ""}
+        deleting={deleteInProgress}
+        onConfirm={confirmDeleteChallenge}
+      />
 
       <DndContext
         sensors={sensors}

@@ -4,7 +4,8 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 // Safe columns to return (never include answer_hash)
-const SAFE_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites, created_at, updated_at"
+const LEGACY_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites, created_at, updated_at"
+const SAFE_CHALLENGE_COLUMNS = LEGACY_CHALLENGE_COLUMNS + ", needs_answer"
 
 const updateChallengeSchema = z.object({
   title: z.string().min(1).optional(),
@@ -31,6 +32,7 @@ const updateChallengeSchema = z.object({
 
 type ChallengeUpdatePayload = z.infer<typeof updateChallengeSchema> & {
   answer_hash?: string
+  needs_answer?: boolean
   correct_answer?: never
 }
 
@@ -99,17 +101,30 @@ export async function PATCH(
   const { correct_answer, ...rest } = parsed.data
   const updateData: ChallengeUpdatePayload = { ...rest }
 
-  // If answer is being updated, hash it with bcrypt (never stored/returned in plaintext)
+  // If answer is being updated, hash it with bcrypt (never stored/returned in
+  // plaintext) and clear the needs_answer flag set on duplicated/cloned tasks
   if (correct_answer) {
     updateData.answer_hash = await hashAnswer(correct_answer)
+    updateData.needs_answer = false
   }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("challenges")
     .update(updateData)
     .eq("id", params.challengeId)
     .select(SAFE_CHALLENGE_COLUMNS)
     .single()
+
+  // needs_answer column may not exist on unmigrated DBs — retry without it
+  if (error && (error.message?.includes("column") || error.code === "42703")) {
+    delete updateData.needs_answer
+    ;({ data, error } = await supabase
+      .from("challenges")
+      .update(updateData)
+      .eq("id", params.challengeId)
+      .select(LEGACY_CHALLENGE_COLUMNS)
+      .single())
+  }
 
   if (error) {
     console.error("Challenge UPDATE error:", error)

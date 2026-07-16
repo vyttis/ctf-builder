@@ -2,7 +2,7 @@
 
 import { Challenge } from "@/types/game"
 import { AiSuggestion, ScenarioPreset } from "@/lib/ai/types"
-import { SuggestionsPanel } from "../challenge-builder/suggestions-panel"
+import { SuggestionsPanel } from "./suggestions-panel"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import {
