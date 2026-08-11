@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { MapsEmbed } from "@/components/shared/maps-embed"
+import { pluralizeLt } from "@/lib/utils"
 import Image from "next/image"
 
 interface ChallengeDetailModalProps {
@@ -113,7 +114,10 @@ export function ChallengeDetailModal({
         className="max-h-[90vh] overflow-y-auto rounded-t-2xl px-4 pb-8 pt-6 sm:px-6"
       >
         <SheetHeader className="mb-4">
-          <div className="flex items-center gap-3">
+          {/* pr-8 keeps the points badge clear of Radix's absolute top-right
+              close button — otherwise the badge sits underneath it and taps
+              on it close the sheet */}
+          <div className="flex items-center gap-3 pr-8">
             <Button
               variant="ghost"
               size="icon"
@@ -245,8 +249,8 @@ export function ChallengeDetailModal({
               </div>
             ) : (
               <Input
-                type={challenge.type === "number" ? "number" : "text"}
-                inputMode={challenge.type === "number" ? "numeric" : "text"}
+                type="text"
+                inputMode={challenge.type === "number" ? "decimal" : "text"}
                 placeholder="Jūsų atsakymas..."
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
@@ -308,7 +312,8 @@ export function ChallengeDetailModal({
                   </p>
                   {feedback.is_correct && feedback.points_awarded > 0 && (
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      +{feedback.points_awarded} taškų
+                      +{feedback.points_awarded}{" "}
+                      {pluralizeLt(feedback.points_awarded, "taškas", "taškai", "taškų")}
                     </p>
                   )}
                 </div>

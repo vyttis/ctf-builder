@@ -29,10 +29,16 @@ export function QRDisplay({ gameCode, size = 200 }: QRDisplayProps) {
 
   const playUrl = getPlayUrl(gameCode)
 
-  function handleCopy() {
-    navigator.clipboard.writeText(playUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  async function handleCopy() {
+    // Only report success when the copy actually happened — clipboard access
+    // can be denied (insecure origin, permissions)
+    try {
+      await navigator.clipboard.writeText(playUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      window.prompt("Nukopijuokite nuorodą rankiniu būdu:", playUrl)
+    }
   }
 
   const handleDownload = useCallback(() => {

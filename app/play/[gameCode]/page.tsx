@@ -183,12 +183,25 @@ export default function JoinGamePage() {
           <p className="text-muted-foreground mb-6">
             {messages[gameState.gameStatus] || "Žaidimas šiuo metu nepasiekiamas."}
           </p>
-          <Link href="/play">
-            <Button variant="outline" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Įvesti kitą kodą
-            </Button>
-          </Link>
+          <div className="flex flex-col gap-2 items-center">
+            {(gameState.gameStatus === "draft" || gameState.gameStatus === "paused") && (
+              <Button
+                onClick={() => {
+                  setGameState({ status: "loading" })
+                  validateGame()
+                }}
+                className="gap-2 bg-primary hover:bg-primary/90 text-white"
+              >
+                Patikrinti dar kartą
+              </Button>
+            )}
+            <Link href="/play">
+              <Button variant="outline" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Įvesti kitą kodą
+              </Button>
+            </Link>
+          </div>
         </motion.div>
       </div>
     )

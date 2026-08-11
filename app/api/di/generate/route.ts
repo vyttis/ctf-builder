@@ -175,15 +175,16 @@ export async function POST(request: Request) {
     const errMsg = error instanceof Error ? error.message : String(error)
     console.error("DI generate error:", errMsg, error)
 
-    // Surface the underlying Anthropic / model error so it's debuggable in the UI.
-    // (Internal API key isn't in the error message, so this is safe to return.)
-    const friendly = errMsg.includes("model")
-      ? `DI modelis neprieinamas: ${errMsg}`
-      : errMsg.includes("rate") || errMsg.includes("429")
+    // Fixed Lithuanian messages only — raw SDK errors (English) end up
+    // rendered verbatim in the teacher UI. Details stay in the server log.
+    const friendly =
+      errMsg.includes("rate") || errMsg.includes("429")
         ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
         : errMsg.includes("overloaded") || errMsg.includes("529")
           ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
-          : `DI užduočių generavimas nepavyko: ${errMsg}`
+          : errMsg.includes("model")
+            ? "DI modelis šiuo metu neprieinamas. Bandykite vėliau."
+            : "DI užduočių generavimas nepavyko. Bandykite dar kartą."
 
     return NextResponse.json({ error: friendly }, { status: 500 })
   }

@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
+import { pluralizeLt } from "@/lib/utils"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -144,8 +145,11 @@ export async function POST(request: Request) {
     const hintPenalty = hintsUsed * (challenge.hint_penalty || 0)
     const pointsAwarded = isCorrect ? Math.max(0, challenge.points - hintPenalty) : 0
 
-    // Record submission with hints_used
-    await supabase.from("submissions").insert({
+    // Record submission with hints_used. The insert result MUST be checked:
+    // two concurrent submits can both pass the existingSolve guard above, and
+    // the loser hits idx_submissions_unique_solve (23505). Skipping the check
+    // would double-award points via increment_team_score below.
+    const { error: insertError } = await supabase.from("submissions").insert({
       team_id: team.id,
       challenge_id: parsed.data.challenge_id,
       answer: parsed.data.answer,
@@ -153,6 +157,22 @@ export async function POST(request: Request) {
       points_awarded: pointsAwarded,
       hints_used: hintsUsed,
     })
+
+    if (insertError) {
+      if (insertError.code === "23505") {
+        return NextResponse.json({
+          is_correct: true,
+          points_awarded: 0,
+          message: "Ši užduotis jau išspręsta!",
+          already_solved: true,
+        })
+      }
+      console.error("Submission insert failed:", insertError.message)
+      return NextResponse.json(
+        { error: "Nepavyko išsaugoti atsakymo. Bandykite dar kartą." },
+        { status: 500 }
+      )
+    }
 
     // If correct, update team score atomically via RPC
     let earnedAchievements: { type: string; challengeId: string | null; metadata: Record<string, unknown> }[] = []
@@ -197,7 +217,7 @@ export async function POST(request: Request) {
       is_correct: isCorrect,
       points_awarded: pointsAwarded,
       message: isCorrect
-        ? `Teisingai! +${pointsAwarded} taškų`
+        ? `Teisingai! +${pointsAwarded} ${pluralizeLt(pointsAwarded, "taškas", "taškai", "taškų")}`
         : "Neteisingai. Bandykite dar kartą!",
       total_points: newTotalPoints,
       explanation: isCorrect ? (challenge.explanation || null) : null,

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { pluralizeLt } from "@/lib/utils"
 import { LiveConnectionBanner } from "./live-connection-banner"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -48,10 +49,12 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
 
     // Load recent activity on mount
     async function loadRecent() {
-      // Get team count
+      // Get team count. Count on a named column, not "*": client roles have
+      // column-level SELECT grants on teams (session_token is revoked), and
+      // "*" expands to the revoked column → permission denied.
       const { count, error: countError } = await supabase
         .from("teams")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("game_id", gameId)
 
       if (countError) throw countError
@@ -117,14 +120,23 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
       }
     }
 
-    const handleChannelStatus = (status: string) => {
+    // Per-channel status: healthy only when BOTH channels are subscribed —
+    // a shared handler would let one healthy channel clear the degraded state
+    // (and stop polling) while the other is broken.
+    const channelStatuses = new Map<string, string>()
+    const handleChannelStatus = (channelKey: string) => (status: string) => {
       if (cancelled) return
-      if (status === "SUBSCRIBED") {
-        setDegraded(false)
-        stopPolling()
-      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+      channelStatuses.set(channelKey, status)
+      const statuses = Array.from(channelStatuses.values())
+      if (statuses.some((s) => s === "CHANNEL_ERROR" || s === "TIMED_OUT")) {
         setDegraded(true)
         startPolling()
+      } else if (
+        statuses.length === 2 &&
+        statuses.every((s) => s === "SUBSCRIBED")
+      ) {
+        setDegraded(false)
+        stopPolling()
       }
     }
 
@@ -179,7 +191,7 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
           setEvents(prev => [event, ...prev].slice(0, maxEvents))
         }
       )
-      .subscribe(handleChannelStatus)
+      .subscribe(handleChannelStatus("submissions"))
 
     // Subscribe to new team joins
     const teamChannel = supabase
@@ -201,7 +213,7 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
           setTeamCount(prev => prev + 1)
         }
       )
-      .subscribe(handleChannelStatus)
+      .subscribe(handleChannelStatus("teams"))
 
     return () => {
       cancelled = true
@@ -311,7 +323,7 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
             </span>
             <Badge variant="secondary" className="gap-1 text-xs font-normal">
               <Zap className="h-3 w-3" />
-              {teamCount} komandų
+              {teamCount} {pluralizeLt(teamCount, "komanda", "komandos", "komandų")}
             </Badge>
           </CardTitle>
         </CardHeader>

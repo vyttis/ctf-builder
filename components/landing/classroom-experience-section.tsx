@@ -196,7 +196,7 @@ export function ClassroomExperienceSection() {
                 </div>
                 <div className="flex-1 mx-4">
                   <div className="bg-white rounded-md h-5 flex items-center justify-center text-[9px] text-muted-foreground/40 font-mono border border-border/30">
-                    app.kusteam.lt
+                    app.kusteam.app
                   </div>
                 </div>
               </div>
@@ -232,7 +232,7 @@ export function ClassroomExperienceSection() {
                 </div>
                 <div className="flex-1 mx-4">
                   <div className="bg-white rounded-md h-5 flex items-center justify-center text-[9px] text-muted-foreground/40 font-mono border border-border/30">
-                    play.kusteam.lt
+                    play.kusteam.app
                   </div>
                 </div>
               </div>

@@ -24,6 +24,9 @@ interface BuilderHeaderProps {
   }
   challengeCount: number
   totalPoints: number
+  // Tasks still lacking a confirmed answer — the start dialog must warn about
+  // them, otherwise the server rejects activation with a raw error toast
+  tasksNeedingAnswer?: { id: string; title: string }[]
   onOpenSettings: () => void
 }
 
@@ -45,6 +48,7 @@ export function BuilderHeader({
   game,
   challengeCount,
   totalPoints,
+  tasksNeedingAnswer = [],
   onOpenSettings,
 }: BuilderHeaderProps) {
   const [launchOpen, setLaunchOpen] = useState(false)
@@ -100,6 +104,7 @@ export function BuilderHeader({
               gameId={game.id}
               status={game.status}
               challengeCount={challengeCount}
+              tasksNeedingAnswer={tasksNeedingAnswer}
             />
             <Button
               size="sm"

@@ -133,15 +133,18 @@ async function checkSpeedDemon(
   supabase: SupabaseClient,
   ctx: AchievementEvalContext
 ): Promise<EarnedAchievement | null> {
-  // Get the team's first attempt on this challenge
+  // Get the team's first WRONG attempt on this challenge. The current correct
+  // submission is already inserted when this runs, so including it would make
+  // every first-try solve measure ~0s and award the badge unconditionally.
   const { data: firstAttempt } = await supabase
     .from("submissions")
     .select("attempted_at")
     .eq("team_id", ctx.teamId)
     .eq("challenge_id", ctx.challengeId)
+    .eq("is_correct", false)
     .order("attempted_at", { ascending: true })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   if (!firstAttempt) return null
 

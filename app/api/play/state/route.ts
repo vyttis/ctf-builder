@@ -2,15 +2,19 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-// GET /api/play/state?game_code=ABC123&session_token=xxx
+// GET /api/play/state?game_code=ABC123 with x-session-token header
 // Single round-trip player state lookup — replaces 3 sequential anon queries.
 // Backwards compatible: if the get_player_game_state RPC isn't deployed yet
 // (function_does_not_exist 42883), falls back to parallel raw queries that
 // produce the same shape.
+// The session token is accepted via the x-session-token header (preferred —
+// query strings end up in proxy/access logs, and the token is the team's only
+// credential) with the legacy ?session_token= query param as fallback.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const gameCode = searchParams.get("game_code")?.toUpperCase()
-  const sessionToken = searchParams.get("session_token")
+  const sessionToken =
+    request.headers.get("x-session-token") || searchParams.get("session_token")
 
   if (!gameCode || gameCode.length < 6) {
     return NextResponse.json({ error: "Netinkamas žaidimo kodas" }, { status: 400 })
@@ -50,15 +54,35 @@ async function fetchPlayerStateRaw(
   gameCode: string,
   sessionToken: string | null,
 ) {
+  // Status list must mirror the RPC (00022): draft games are visible so the
+  // join page can show "not started yet"; paused so a mid-pause refresh
+  // doesn't degrade to "game not found".
   const { data: game } = await supabase
     .from("games")
     .select("id, title, description, status, settings")
     .eq("game_code", gameCode)
-    .in("status", ["active", "finished"])
+    .in("status", ["draft", "active", "paused", "finished"])
     .maybeSingle()
 
   if (!game) {
     return { game: null }
+  }
+
+  // Draft games expose only title + status — no challenges or settings before
+  // the teacher starts the game.
+  if (game.status === "draft") {
+    return {
+      game: {
+        id: game.id,
+        title: game.title,
+        description: null,
+        status: game.status,
+        settings: {},
+      },
+      challenges: [],
+      team: null,
+      solved: [],
+    }
   }
 
   // Parallel: challenges + (if session_token) team

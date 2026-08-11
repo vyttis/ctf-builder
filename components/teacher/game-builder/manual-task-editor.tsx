@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useId } from "react"
 import { Challenge, ChallengeType } from "@/types/game"
 import { AiSuggestion } from "@/lib/ai/types"
 import { Button } from "@/components/ui/button"
@@ -50,6 +50,10 @@ export function ManualTaskEditor({
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [showExtras, setShowExtras] = useState(false)
+  // Unique per editor instance: the workspace is mounted twice (desktop panel
+  // + mobile sheet), and a shared radio `name` would merge both mounts into
+  // one DOM radio group. Also used to pair labels with inputs (a11y).
+  const fieldId = useId()
 
   // Form state
   const [title, setTitle] = useState("")
@@ -66,6 +70,10 @@ export function ManualTaskEditor({
     "easy" | "medium" | "hard" | null
   >(null)
   const [hintPenalty, setHintPenalty] = useState(20)
+  // Options as loaded from the server — used to detect edits that invalidate
+  // the stored answer hash (we can never recover the original answer, only
+  // its hash, so changed options force the teacher to re-mark the answer).
+  const [initialOptions, setInitialOptions] = useState<string[] | null>(null)
 
   // Initialize from challenge or prefill
   useEffect(() => {
@@ -77,6 +85,7 @@ export function ManualTaskEditor({
       setCorrectAnswer("")
       setHints(challenge.hints || [])
       setOptions(challenge.options || [])
+      setInitialOptions(challenge.options || [])
       setImageUrl(challenge.image_url)
       setMapsUrl(challenge.maps_url || "")
       setExplanation(challenge.explanation || "")
@@ -129,6 +138,44 @@ export function ManualTaskEditor({
       return
     }
 
+    if (type === "multiple_choice") {
+      const cleanOptions = options.map((o) => o.trim()).filter(Boolean)
+      if (cleanOptions.length < 2) {
+        toast({
+          title: "Reikia bent dviejų atsakymo variantų",
+          variant: "destructive",
+        })
+        return
+      }
+      // A marked answer must still exist among the options (it may have been
+      // deleted or renamed after being marked).
+      if (correctAnswer.trim() && !cleanOptions.includes(correctAnswer.trim())) {
+        toast({
+          title: "Pažymėkite teisingą atsakymą",
+          description: "Pažymėtas atsakymas nebesutampa su nė vienu variantu.",
+          variant: "destructive",
+        })
+        return
+      }
+      // Editing options without re-marking the answer would leave the stored
+      // hash pointing at an option string that no longer exists — the task
+      // would become unsolvable for students.
+      const optionsChanged =
+        challenge &&
+        initialOptions !== null &&
+        JSON.stringify(cleanOptions) !==
+          JSON.stringify(initialOptions.map((o) => o.trim()).filter(Boolean))
+      if (optionsChanged && !correctAnswer.trim()) {
+        toast({
+          title: "Pažymėkite teisingą atsakymą",
+          description:
+            "Pakeitus atsakymų variantus būtina iš naujo pažymėti teisingą.",
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const isEditing = !!challenge
@@ -138,7 +185,10 @@ export function ManualTaskEditor({
         type,
         points,
         hints: hints.filter((h) => h.trim()),
-        options: type === "multiple_choice" ? options.filter((o) => o.trim()) : null,
+        options:
+          type === "multiple_choice"
+            ? options.map((o) => o.trim()).filter(Boolean)
+            : null,
         image_url: imageUrl || null,
         maps_url: mapsUrl.trim() || null,
         explanation: explanation.trim() || null,
@@ -223,8 +273,11 @@ export function ManualTaskEditor({
 
       {/* Title */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-medium">Pavadinimas *</Label>
+        <Label htmlFor={`${fieldId}-title`} className="text-xs font-medium">
+          Pavadinimas *
+        </Label>
         <Input
+          id={`${fieldId}-title`}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="pvz., Demografinis detektyvas"
@@ -234,8 +287,11 @@ export function ManualTaskEditor({
 
       {/* Description */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-medium">Aprašymas / klausimas</Label>
+        <Label htmlFor={`${fieldId}-description`} className="text-xs font-medium">
+          Aprašymas / klausimas
+        </Label>
         <Textarea
+          id={`${fieldId}-description`}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Detalus užduoties aprašymas mokiniams..."
@@ -260,8 +316,11 @@ export function ManualTaskEditor({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Taškai</Label>
+          <Label htmlFor={`${fieldId}-points`} className="text-xs font-medium">
+            Taškai
+          </Label>
           <Input
+            id={`${fieldId}-points`}
             type="number"
             min={1}
             max={1000}
@@ -282,7 +341,8 @@ export function ManualTaskEditor({
             <div key={i} className="flex items-center gap-2">
               <input
                 type="radio"
-                name="correct_option"
+                name={`${fieldId}-correct-option`}
+                aria-label={`Teisingas atsakymas: variantas ${i + 1}`}
                 checked={correctAnswer === option && option.trim() !== ""}
                 onChange={() => setCorrectAnswer(option)}
                 disabled={!option.trim()}
@@ -329,13 +389,14 @@ export function ManualTaskEditor({
       {/* Correct answer (non-multiple-choice or editing) */}
       {type !== "multiple_choice" && (
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">
+          <Label htmlFor={`${fieldId}-answer`} className="text-xs font-medium">
             Teisingas atsakymas{" "}
             {challenge && !challenge.needs_answer
               ? "(palikite tuščią, jei nekeičiate)"
               : "*"}
           </Label>
           <Input
+            id={`${fieldId}-answer`}
             type={type === "number" ? "number" : "text"}
             value={correctAnswer}
             onChange={(e) => setCorrectAnswer(e.target.value)}

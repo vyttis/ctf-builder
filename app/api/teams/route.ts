@@ -101,6 +101,14 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
+      // Two students can submit the same name at once — both pass the
+      // pre-check above, the loser hits unique(game_id, name).
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "Šis komandos vardas jau užimtas" },
+          { status: 400 }
+        )
+      }
       console.error("Team insert failed:", error.message)
       return NextResponse.json({ error: "Nepavyko sukurti komandos" }, { status: 500 })
     }

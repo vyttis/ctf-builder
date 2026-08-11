@@ -116,13 +116,31 @@ export async function POST(
         verification_verdict: c.verification_verdict,
         verification_issues: c.verification_issues,
         verification_confidence: c.verification_confidence,
+        // needs_answer MUST travel with the copy: dropping it would let a
+        // duplicate of an answer-less task (dummy hash) pass the activation
+        // guard and ship unsolvable tasks to a live class.
+        needs_answer: c.needs_answer ?? false,
         // Insert without prerequisites first, remap after
       }))
 
-      const { data: newChallenges, error: insertError } = await supabase
+      let { data: newChallenges, error: insertError } = await supabase
         .from("challenges")
         .insert(challengePayloads)
         .select("id, order_index")
+
+      // Tolerate an unmigrated DB (needs_answer column missing, 42703) the
+      // same way the activation guard does — retry without the column.
+      if (insertError && insertError.code === "42703") {
+        const legacyPayloads = challengePayloads.map((payload) => {
+          const rest = { ...payload } as Record<string, unknown>
+          delete rest.needs_answer
+          return rest
+        })
+        ;({ data: newChallenges, error: insertError } = await supabase
+          .from("challenges")
+          .insert(legacyPayloads)
+          .select("id, order_index"))
+      }
 
       if (insertError) {
         console.error("Challenge duplication error:", insertError)

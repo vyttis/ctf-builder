@@ -46,9 +46,17 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${redirectOrigin}${next}`)
     }
 
-    // Pass specific error for debugging
+    // PKCE verifier cookie is host-only: if Supabase redirected the OAuth code
+    // to a different host than the one where login started (Site URL fallback
+    // when redirect_to is not allow-listed), the exchange fails here. Surface
+    // a stable error code so the login page can show an actionable message.
+    const isVerifierError =
+      error.message.toLowerCase().includes("code verifier") ||
+      error.code === "validation_failed"
     return NextResponse.redirect(
-      `${getRedirectOrigin(request, origin)}/auth/login?error=${encodeURIComponent(error.message)}`
+      `${getRedirectOrigin(request, origin)}/auth/login?error=${
+        isVerifierError ? "pkce_mismatch" : encodeURIComponent(error.message)
+      }`
     )
   }
 

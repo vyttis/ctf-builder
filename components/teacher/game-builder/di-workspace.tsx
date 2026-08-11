@@ -33,7 +33,7 @@ const scenarios: {
   {
     id: "escape_room",
     label: "Pabėgimo kambarys",
-    description: "Nuoseklios galvosūkiai, kiekvienas atrakiną kitą",
+    description: "Nuoseklūs galvosūkiai, kiekvienas atrakina kitą",
     icon: <DoorOpen className="h-5 w-5" />,
   },
   {

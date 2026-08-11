@@ -71,6 +71,15 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
   const [timeLimit, setTimeLimit] = useState<number | null>(game.time_limit_minutes)
   const [nowTick, setNowTick] = useState(() => Date.now())
 
+  // Sync from props: GameStatusActions finishes with router.refresh(), which
+  // updates props but not this local state. Without this, when the games
+  // realtime channel is down, "Baigti žaidimą" appears to do nothing.
+  useEffect(() => {
+    setStatus(game.status)
+    setStartsAt(game.starts_at)
+    setTimeLimit(game.time_limit_minutes)
+  }, [game.status, game.starts_at, game.time_limit_minutes])
+
   // Presentation mode hides the control bar (projector shows only the board)
   const [presentationMode, setPresentationMode] = useState(false)
 

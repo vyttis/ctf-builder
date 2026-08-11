@@ -19,8 +19,15 @@ import { AiGameIdea } from "@/lib/ai/types"
 const gameFormSchema = z.object({
   title: z.string().min(3, "Pavadinimas turi būti bent 3 simbolių"),
   description: z.string().optional(),
-  max_teams: z.number().min(2).max(100),
-  time_limit_minutes: z.number().nullable(),
+  max_teams: z
+    .number({ message: "Įveskite komandų skaičių (2–100)" })
+    .min(2, "Mažiausiai 2 komandos")
+    .max(100, "Daugiausiai 100 komandų"),
+  time_limit_minutes: z
+    .number({ message: "Įveskite laiką minutėmis" })
+    .min(10, "Mažiausiai 10 min.")
+    .max(300, "Daugiausiai 300 min.")
+    .nullable(),
   show_leaderboard: z.boolean(),
   shuffle_challenges: z.boolean(),
 })
@@ -180,6 +187,9 @@ export function GameForm({ prefillData }: GameFormProps) {
                   className="bg-white"
                   {...register("max_teams", { valueAsNumber: true })}
                 />
+                {errors.max_teams && (
+                  <p className="text-sm text-accent">{errors.max_teams.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="time_limit">
@@ -196,10 +206,16 @@ export function GameForm({ prefillData }: GameFormProps) {
                     const val = e.target.value
                     setValue(
                       "time_limit_minutes",
-                      val ? parseInt(val) : null
+                      val ? parseInt(val) : null,
+                      { shouldValidate: true }
                     )
                   }}
                 />
+                {errors.time_limit_minutes && (
+                  <p className="text-sm text-accent">
+                    {errors.time_limit_minutes.message}
+                  </p>
+                )}
               </div>
             </div>
 

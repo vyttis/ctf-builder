@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { SteamLogo } from "@/components/steam-logo"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { LogOut, Gamepad2, GraduationCap, BookOpen, Shield, Menu } from "lucide-react"
@@ -136,6 +136,7 @@ export function TeacherNav({
       {/* Mobile menu dialog */}
       <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <DialogContent className="sm:hidden top-0 translate-y-0 data-[state=open]:slide-in-from-top-2 max-w-full h-auto rounded-none border-0 border-b p-0">
+          <DialogTitle className="sr-only">Navigacijos meniu</DialogTitle>
           <div className="p-4 space-y-1">
             {/* User info */}
             <div className="flex items-center gap-3 pb-3 mb-3 border-b border-border/50">

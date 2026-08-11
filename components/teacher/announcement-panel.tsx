@@ -72,6 +72,15 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
         const created = await res.json()
         setAnnouncements((prev) => [created, ...prev])
         setMessage("")
+      } else {
+        // Mid-lesson a silent failure means the teacher believes the class
+        // was notified — always surface the error
+        const err = (await res.json().catch(() => null)) as { error?: string } | null
+        toast({
+          title: "Nepavyko išsiųsti pranešimo",
+          description: err?.error || "Bandykite dar kartą.",
+          variant: "destructive",
+        })
       }
     } catch {
       toast({
