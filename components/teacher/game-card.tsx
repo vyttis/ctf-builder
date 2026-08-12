@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { GameWithChallengeCount, GameStatus } from "@/types/game"
+import { pluralizeLt } from "@/lib/utils"
 import { GameEditDialog } from "./game-edit-dialog"
 import { GameDeleteDialog } from "./game-delete-dialog"
 import { motion } from "framer-motion"
@@ -100,11 +101,7 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
                 <Puzzle className="h-3.5 w-3.5" />
                 <span>
                   {challengeCount}{" "}
-                  {challengeCount === 1
-                    ? "užduotis"
-                    : challengeCount >= 10 && challengeCount <= 20
-                    ? "užduočių"
-                    : "užduotys"}
+                  {pluralizeLt(challengeCount, "užduotis", "užduotys", "užduočių")}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 font-mono text-xs bg-muted/50 px-2 py-0.5 rounded">

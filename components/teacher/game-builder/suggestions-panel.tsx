@@ -215,7 +215,7 @@ export function SuggestionsPanel({
           >
             <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
             <span className="text-sm font-medium text-steam-dark">
-              {generationSuccess} užduotys sugeneruotos
+              Sugeneruota užduočių: {generationSuccess}
             </span>
           </motion.div>
         )}

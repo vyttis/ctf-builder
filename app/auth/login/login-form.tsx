@@ -37,11 +37,15 @@ export function LoginForm() {
   useEffect(() => {
     const error = searchParams.get("error")
     if (error) {
+      const friendlyMessages: Record<string, string> = {
+        auth_failed: "Bandykite dar kartą arba naudokite kitą prisijungimo būdą.",
+        pkce_mismatch:
+          "Prisijungimas nutrūko tarp skirtingų adresų. Bandykite dar kartą šiame puslapyje — jei klaida kartojasi, praneškite administratoriui.",
+        access_denied: "Prisijungimas atšauktas. Bandykite dar kartą.",
+      }
       toast({
         title: "Prisijungimas nepavyko",
-        description: error === "auth_failed"
-          ? "Bandykite dar kartą arba naudokite kitą prisijungimo būdą."
-          : error,
+        description: friendlyMessages[error] ?? error,
         variant: "destructive",
       })
     }

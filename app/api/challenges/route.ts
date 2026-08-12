@@ -98,13 +98,22 @@ export async function POST(request: Request) {
     )
   }
 
-  // Get next order_index
-  const { count } = await supabase
+  // Get next order_index from max(order_index)+1 — a row count collides with
+  // existing indexes after deletions or concurrent inserts, and duplicated
+  // order_index values silently break the duplicate route's prerequisite
+  // remapping (it maps old→new ids by order_index).
+  const { data: maxRow } = await supabase
     .from("challenges")
-    .select("*", { count: "exact", head: true })
+    .select("order_index")
     .eq("game_id", parsed.data.game_id)
+    .order("order_index", { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  const orderIndex = parsed.data.order_index || (count || 0)
+  // order_index defaults to 0 in the schema, so 0 means "auto-assign"
+  const orderIndex =
+    parsed.data.order_index ||
+    (maxRow ? (maxRow.order_index as number) + 1 : 0)
 
   // needs_answer challenges get a random unguessable answer so no fixed
   // magic string (like the old "placeholder") can ever solve them

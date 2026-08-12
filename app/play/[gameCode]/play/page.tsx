@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
 import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
+import { pluralizeLt } from "@/lib/utils"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ReflectionForm } from "@/components/player/reflection-form"
 import { AnnouncementBanner } from "@/components/player/announcement-banner"
@@ -58,9 +59,17 @@ interface ExtendedSubmissionResult extends SubmissionResult {
 
 function formatTime(seconds: number): string {
   if (seconds <= 0) return "00:00"
-  const m = Math.floor(seconds / 60)
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
   const s = seconds % 60
-  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
+  const mmss = `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
+  return h > 0 ? `${h}:${mmss}` : mmss
+}
+
+// Number challenges accept both decimal separators — Lithuanian mobile
+// keypads type "3,14", teachers hash "3.14".
+function normalizeNumericAnswer(value: string): string {
+  return value.trim().replace(",", ".")
 }
 
 export default function PlayPage() {
@@ -87,6 +96,9 @@ export default function PlayPage() {
   const [gameStatus, setGameStatus] = useState<string>("active")
   const [endedByTeacher, setEndedByTeacher] = useState(false)
   const [loadError, setLoadError] = useState(false)
+  // Distinguishes "still loading" from "loaded, but the game has no challenges"
+  const [stateLoaded, setStateLoaded] = useState(false)
+  const [showLeaderboard, setShowLeaderboard] = useState(true)
 
   // Free mode state
   const [pathMode, setPathMode] = useState<"linear" | "free">("linear")
@@ -179,11 +191,13 @@ export default function PlayPage() {
     let state: {
       game: { id: string; status?: string; settings: GameSettings | null } | null
       challenges: PlayerChallenge[]
+      team: { id: string; name: string } | null
       solved: { challenge_id: string; points_awarded: number }[]
     }
     try {
       const res = await fetch(
-        `/api/play/state?game_code=${encodeURIComponent(gameCode)}&session_token=${encodeURIComponent(s.session_token)}`
+        `/api/play/state?game_code=${encodeURIComponent(gameCode)}`,
+        { headers: { "x-session-token": s.session_token } }
       )
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       state = await res.json()
@@ -194,6 +208,16 @@ export default function PlayPage() {
 
     if (!state.game) {
       setLoadError(true)
+      return
+    }
+
+    // Session token no longer matches a team in this game (team deleted,
+    // token from another game/device) — without this check every submit 401s
+    // with no way out, because the join page redirects back here while any
+    // stored session exists.
+    if (state.team === null && state.game.status !== "draft") {
+      clearPlayerSession(gameCode)
+      router.replace(`/play/${gameCode}`)
       return
     }
 
@@ -210,6 +234,7 @@ export default function PlayPage() {
     const timeLimit = settings?.time_limit_minutes ?? null
     setTimeLimitMinutes(timeLimit)
     setPathMode(settings?.challenge_path_mode || "linear")
+    setShowLeaderboard(settings?.show_leaderboard !== false)
 
     const storageKey = `ctf_start_${gameCode}`
     const existingStart = localStorage.getItem(storageKey)
@@ -233,7 +258,8 @@ export default function PlayPage() {
 
     const firstUnsolved = state.challenges.findIndex((c) => !solved.has(c.id))
     setCurrentIndex(firstUnsolved >= 0 ? firstUnsolved : state.challenges.length)
-    if (firstUnsolved < 0) setGameFinished(true)
+    if (state.challenges.length > 0 && firstUnsolved < 0) setGameFinished(true)
+    setStateLoaded(true)
   }
 
   // Subscribe to game setting changes (time extensions, status changes)
@@ -324,13 +350,31 @@ export default function PlayPage() {
         body: JSON.stringify({
           session_token: session.session_token,
           challenge_id: challenge.id,
-          answer: submittedAnswer.trim(),
+          answer:
+            challenge.type === "number"
+              ? normalizeNumericAnswer(submittedAnswer)
+              : submittedAnswer.trim(),
           hints_used: hintsUsed,
         }),
       })
 
       if (res.status === 429) {
         return { is_correct: false, points_awarded: 0, message: "Per daug bandymų. Palaukite minutę." }
+      }
+
+      // Error responses carry { error } — surface the message instead of an
+      // empty red feedback box; a dead session gets a way out.
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null
+        if (res.status === 401) {
+          clearPlayerSession(gameCode)
+          router.replace(`/play/${gameCode}`)
+        }
+        return {
+          is_correct: false,
+          points_awarded: 0,
+          message: err?.error || "Nepavyko pateikti atsakymo. Bandykite dar kartą.",
+        }
       }
 
       const result: ExtendedSubmissionResult & {
@@ -379,7 +423,10 @@ export default function PlayPage() {
         body: JSON.stringify({
           session_token: session.session_token,
           challenge_id: challenges[currentIndex].id,
-          answer: answer.trim(),
+          answer:
+            challenges[currentIndex].type === "number"
+              ? normalizeNumericAnswer(answer)
+              : answer.trim(),
           hints_used: revealedHintCount,
         }),
       })
@@ -388,6 +435,24 @@ export default function PlayPage() {
         toast({
           title: "Per daug bandymų",
           description: "Palaukite minutę ir bandykite dar kartą.",
+          variant: "destructive",
+        })
+        setLoading(false)
+        return
+      }
+
+      // Error responses carry { error }, not a SubmissionResult — showing
+      // them as feedback rendered an empty red box with no message.
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null
+        if (res.status === 401) {
+          clearPlayerSession(gameCode)
+          router.replace(`/play/${gameCode}`)
+          return
+        }
+        toast({
+          title: "Nepavyko pateikti atsakymo",
+          description: err?.error || "Bandykite dar kartą.",
           variant: "destructive",
         })
         setLoading(false)
@@ -463,16 +528,57 @@ export default function PlayPage() {
           >
             Bandyti dar kartą
           </Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              clearPlayerSession(gameCode)
+              router.replace(`/play/${gameCode}`)
+            }}
+            className="w-full mt-2 text-muted-foreground gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Prisijungti iš naujo
+          </Button>
         </div>
       </div>
     )
   }
 
   // Loading state
-  if (!session || challenges.length === 0) {
+  if (!session || !stateLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // The game was reverted to draft, or has no challenges (e.g. the teacher
+  // deleted them mid-game) — an explicit message instead of a forever-spinner.
+  if (gameStatus === "draft" || (challenges.length === 0 && !gameFinished)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-highlight/10 flex items-center justify-center">
+            <Clock className="h-8 w-8 text-highlight" />
+          </div>
+          <h1 className="text-xl font-bold text-steam-dark mb-2">
+            {gameStatus === "draft"
+              ? "Žaidimas dar neprasidėjo"
+              : "Žaidime dar nėra užduočių"}
+          </h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            {gameStatus === "draft"
+              ? "Palaukite, kol mokytojas paleis žaidimą, ir bandykite dar kartą."
+              : "Paklauskite mokytojo, ar žaidimas paruoštas, ir bandykite dar kartą."}
+          </p>
+          <Button
+            onClick={() => session && loadChallenges(session)}
+            className="w-full bg-primary hover:bg-primary/90 text-white"
+          >
+            Atnaujinti
+          </Button>
+        </div>
       </div>
     )
   }
@@ -543,12 +649,14 @@ export default function PlayPage() {
             Komanda: {session.team_name}
           </p>
 
-          <Link href={`/play/${gameCode}/leaderboard`}>
-            <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Rezultatų lentelė
-            </Button>
-          </Link>
+          {showLeaderboard && (
+            <Link href={`/play/${gameCode}/leaderboard`}>
+              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Rezultatų lentelė
+              </Button>
+            </Link>
+          )}
 
           {!reflectionDone && (
             <ReflectionForm
@@ -655,12 +763,14 @@ export default function PlayPage() {
             Komanda: {session.team_name}
           </p>
 
-          <Link href={`/play/${gameCode}/leaderboard`}>
-            <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Rezultatų lentelė
-            </Button>
-          </Link>
+          {showLeaderboard && (
+            <Link href={`/play/${gameCode}/leaderboard`}>
+              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Rezultatų lentelė
+              </Button>
+            </Link>
+          )}
 
           {!reflectionDone && (
             <ReflectionForm
@@ -725,12 +835,14 @@ export default function PlayPage() {
                   {formatTime(remainingSeconds)}
                 </Badge>
               )}
-              <Link href={`/play/${gameCode}/leaderboard`}>
-                <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                  <BarChart3 className="h-3.5 w-3.5" />
-                  Lentelė
-                </Button>
-              </Link>
+              {showLeaderboard && (
+                <Link href={`/play/${gameCode}/leaderboard`}>
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                    <BarChart3 className="h-3.5 w-3.5" />
+                    Lentelė
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -810,12 +922,14 @@ export default function PlayPage() {
                 {formatTime(remainingSeconds)}
               </Badge>
             )}
-            <Link href={`/play/${gameCode}/leaderboard`}>
-              <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                <BarChart3 className="h-3.5 w-3.5" />
-                Lentelė
-              </Button>
-            </Link>
+            {showLeaderboard && (
+              <Link href={`/play/${gameCode}/leaderboard`}>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  Lentelė
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -847,7 +961,8 @@ export default function PlayPage() {
                       {currentChallenge.title}
                     </h2>
                     <Badge variant="outline" className="text-xs mt-1">
-                      {currentChallenge.points} taškų
+                      {currentChallenge.points}{" "}
+                      {pluralizeLt(currentChallenge.points, "taškas", "taškai", "taškų")}
                     </Badge>
                   </div>
                 </div>
@@ -935,8 +1050,8 @@ export default function PlayPage() {
                     </div>
                   ) : (
                     <Input
-                      type={currentChallenge.type === "number" ? "number" : "text"}
-                      inputMode={currentChallenge.type === "number" ? "numeric" : "text"}
+                      type="text"
+                      inputMode={currentChallenge.type === "number" ? "decimal" : "text"}
                       placeholder="Jūsų atsakymas..."
                       value={answer}
                       onChange={(e) => setAnswer(e.target.value)}

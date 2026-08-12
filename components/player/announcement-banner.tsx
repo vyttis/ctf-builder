@@ -16,14 +16,61 @@ interface AnnouncementBannerProps {
 }
 
 const AUTO_DISMISS_MS = 15000
+// On mount, show the latest announcement if it's still fresh — students who
+// reload or join late would otherwise never see it (realtime only delivers
+// INSERTs that happen while subscribed).
+const RECENT_WINDOW_MS = 2 * 60 * 1000
 
 export function AnnouncementBanner({ gameId }: AnnouncementBannerProps) {
   const [activeAnnouncement, setActiveAnnouncement] =
     useState<AnnouncementItem | null>(null)
 
   const dismiss = useCallback(() => {
-    setActiveAnnouncement(null)
-  }, [])
+    setActiveAnnouncement((current) => {
+      // Remember the dismissal across remounts (e.g. leaderboard round-trip)
+      if (current) {
+        try {
+          sessionStorage.setItem(`ctf_seen_announcement_${gameId}`, current.id)
+        } catch {
+          // Storage unavailable — worst case the banner reappears
+        }
+      }
+      return null
+    })
+  }, [gameId])
+
+  // Initial fetch: latest recent announcement (missed while not subscribed)
+  useEffect(() => {
+    const supabase = createClient()
+    let cancelled = false
+
+    async function fetchLatest() {
+      const { data } = await supabase
+        .from("announcements")
+        .select("id, message, created_at")
+        .eq("game_id", gameId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (cancelled || !data) return
+      let dismissedId: string | null = null
+      try {
+        dismissedId = sessionStorage.getItem(`ctf_seen_announcement_${gameId}`)
+      } catch {
+        // Storage unavailable
+      }
+      const age = Date.now() - new Date(data.created_at).getTime()
+      if (age < RECENT_WINDOW_MS && data.id !== dismissedId) {
+        setActiveAnnouncement(data)
+      }
+    }
+
+    fetchLatest()
+    return () => {
+      cancelled = true
+    }
+  }, [gameId])
 
   // Auto-dismiss timer
   useEffect(() => {
@@ -68,9 +115,12 @@ export function AnnouncementBanner({ gameId }: AnnouncementBannerProps) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed top-0 left-0 right-0 z-50"
+          className="sticky top-2 z-50 mb-3"
         >
-          <div className="bg-steam-blue text-white shadow-lg">
+          {/* In-flow (sticky) instead of fixed: a fixed banner covered the
+              header row — game code, points and the countdown timer — for the
+              whole 15s on mobile */}
+          <div className="bg-steam-blue text-white shadow-lg rounded-xl">
             <div className="max-w-2xl mx-auto px-4 py-3 flex items-start gap-3">
               <Megaphone className="h-5 w-5 shrink-0 mt-0.5" />
               <p className="flex-1 text-sm font-medium leading-snug">

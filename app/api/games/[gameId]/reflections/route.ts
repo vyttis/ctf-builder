@@ -48,10 +48,12 @@ export async function GET(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Get total teams count for this game
+    // Get total teams count for this game. Count on a named column, not "*" —
+    // the authenticated role has column-level SELECT grants on teams
+    // (session_token is revoked) and "*" would expand to the revoked column.
     const { count: totalTeams } = await supabase
       .from("teams")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("game_id", params.gameId)
 
     return NextResponse.json({

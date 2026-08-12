@@ -4,7 +4,10 @@ import { createServerClient } from "@supabase/ssr"
 // In-memory onboarding-completed cache: user.id → { completed, expiresAt }.
 // 30s TTL is short enough to feel "live" but cuts ~30-50ms off every teacher
 // navigation. Cache is per-instance — irrelevant for correctness because the
-// values are read-only flags.
+// values are read-only flags. Only `completed: true` is cached: onboarding is
+// one-way, so true never goes stale, while caching false would bounce a user
+// who just finished onboarding back to /onboarding for up to 30s (the API
+// route runs in a different runtime and cannot bust this cache).
 type OnboardingCacheEntry = { completed: boolean; expiresAt: number }
 const ONBOARDING_TTL_MS = 30_000
 const onboardingCache = new Map<string, OnboardingCacheEntry>()
@@ -24,7 +27,9 @@ async function isOnboardingCompleted(
     .single()
 
   const completed = Boolean(profile?.onboarding_completed)
-  onboardingCache.set(userId, { completed, expiresAt: now + ONBOARDING_TTL_MS })
+  if (completed) {
+    onboardingCache.set(userId, { completed, expiresAt: now + ONBOARDING_TTL_MS })
+  }
   return completed
 }
 
@@ -149,7 +154,8 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/games") ||
     url.pathname.startsWith("/admin") ||
-    url.pathname.startsWith("/library")
+    url.pathname.startsWith("/library") ||
+    url.pathname.startsWith("/lesson-plans")
 
   // Always let /auth/callback through — it exchanges the OAuth code
   if (isAuthCallback) {

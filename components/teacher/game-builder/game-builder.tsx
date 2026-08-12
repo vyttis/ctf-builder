@@ -54,8 +54,10 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   const router = useRouter()
   const { toast } = useToast()
 
-  // Game state
-  const [game] = useState(initialGame)
+  // Game state: derived from props, not frozen in useState — after a save the
+  // page calls router.refresh(), the server component re-renders with fresh
+  // data, and the header/settings must reflect it (title, status badge).
+  const game = initialGame
   const [challenges, setChallenges] = useState<Challenge[]>(initialChallenges)
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null)
 
@@ -438,17 +440,30 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
       const newIdx = challenges.findIndex((c) => `challenge-${c.id}` === overStr)
       if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return
 
+      const previous = challenges
       const reordered = arrayMove(challenges, oldIdx, newIdx)
       setChallenges(reordered)
 
-      await fetch("/api/challenges/reorder", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          game_id: game.id,
-          order: reordered.map((c, i) => ({ id: c.id, order_index: i })),
-        }),
-      })
+      // Roll back the optimistic reorder if the server rejects it — otherwise
+      // the list looks reordered but silently reverts on the next load
+      try {
+        const res = await fetch("/api/challenges/reorder", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            game_id: game.id,
+            order: reordered.map((c, i) => ({ id: c.id, order_index: i })),
+          }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      } catch {
+        setChallenges(previous)
+        toast({
+          title: "Nepavyko išsaugoti tvarkos",
+          description: "Patikrinkite ryšį ir bandykite dar kartą.",
+          variant: "destructive",
+        })
+      }
     }
 
     // Drop suggestion into challenge list
@@ -492,6 +507,9 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
         game={game}
         challengeCount={challenges.length}
         totalPoints={totalPoints}
+        tasksNeedingAnswer={challenges
+          .filter((c) => c.needs_answer)
+          .map((c) => ({ id: c.id, title: c.title }))}
         onOpenSettings={() => setSettingsOpen(true)}
       />
 

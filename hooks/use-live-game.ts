@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 
 export interface LiveTeam {
@@ -28,6 +28,10 @@ interface UseLiveGameResult {
 // realtime subscriptions and a polling fallback when the channel degrades.
 export function useLiveGame(gameId: string): UseLiveGameResult {
   const [teams, setTeams] = useState<LiveTeam[]>([])
+  // Mirror of the known team ids for cheap membership checks inside realtime
+  // callbacks (avoids a DB round-trip per submission event)
+  const teamIdsRef = useRef<Set<string>>(new Set())
+  teamIdsRef.current = new Set(teams.map((t) => t.id))
   const [solvedSets, setSolvedSets] = useState<Map<string, Set<string>>>(new Map())
   const [lastSubmissions, setLastSubmissions] = useState<Map<string, string>>(new Map())
   const [connectionState, setConnectionState] = useState<LiveConnectionState>("connecting")
@@ -105,14 +109,24 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
         }
       })
 
-    const handleChannelStatus = (status: string) => {
+    // Per-channel status: "live" only when EVERY channel is subscribed.
+    // A single shared handler would let a healthy submissions channel report
+    // SUBSCRIBED and cancel the polling that a broken teams channel needs —
+    // the teacher would see a healthy indicator over a frozen leaderboard.
+    const channelStatuses = new Map<string, string>()
+    const handleChannelStatus = (channelKey: string) => (status: string) => {
       if (cancelled) return
-      if (status === "SUBSCRIBED") {
-        setConnectionState("live")
-        stopPolling()
-      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+      channelStatuses.set(channelKey, status)
+      const statuses = Array.from(channelStatuses.values())
+      if (statuses.some((s) => s === "CHANNEL_ERROR" || s === "TIMED_OUT")) {
         setConnectionState("degraded")
         startPolling()
+      } else if (
+        statuses.length === 2 &&
+        statuses.every((s) => s === "SUBSCRIBED")
+      ) {
+        setConnectionState("live")
+        stopPolling()
       }
     }
 
@@ -147,7 +161,7 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
           }
         }
       )
-      .subscribe(handleChannelStatus)
+      .subscribe(handleChannelStatus("teams"))
 
     const submissionChannel = supabase
       .channel(`live_game_subs_${gameId}`)
@@ -162,14 +176,17 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
             attempted_at: string
           }
 
-          // The submissions table has no game_id — verify membership
-          const { data: team } = await supabase
-            .from("teams")
-            .select("game_id")
-            .eq("id", sub.team_id)
-            .single()
-
-          if (team?.game_id !== gameId) return
+          // The submissions table has no game_id — verify membership.
+          // Check the already-loaded teams first; only unknown team ids
+          // (e.g. a team that joined after initial load) cost a query.
+          if (!teamIdsRef.current.has(sub.team_id)) {
+            const { data: team } = await supabase
+              .from("teams")
+              .select("game_id")
+              .eq("id", sub.team_id)
+              .single()
+            if (team?.game_id !== gameId) return
+          }
 
           setLastSubmissions((prev) => {
             const next = new Map(prev)
@@ -188,7 +205,7 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
           }
         }
       )
-      .subscribe(handleChannelStatus)
+      .subscribe(handleChannelStatus("submissions"))
 
     return () => {
       cancelled = true

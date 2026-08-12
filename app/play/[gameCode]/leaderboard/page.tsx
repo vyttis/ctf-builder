@@ -19,6 +19,7 @@ import Link from "next/link"
 import Image from "next/image"
 import type { LeaderboardEntry, Achievement } from "@/types/game"
 import { getPlayerSession } from "@/lib/game/session"
+import { pluralizeLt } from "@/lib/utils"
 import { AchievementBadge } from "@/components/player/achievement-badge"
 
 const podiumColors = [
@@ -39,6 +40,8 @@ export default function LeaderboardPage() {
 
   const [teams, setTeams] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
+  const [leaderboardDisabled, setLeaderboardDisabled] = useState(false)
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
   const [teamAchievements, setTeamAchievements] = useState<Record<string, Achievement[]>>({})
@@ -48,11 +51,24 @@ export default function LeaderboardPage() {
   const fetchLeaderboard = useCallback(async () => {
     const { data: game } = await supabase
       .from("games")
-      .select("id")
+      .select("id, settings")
       .eq("game_code", gameCode)
-      .single()
+      .maybeSingle()
 
-    if (!game) { setLoading(false); return }
+    // Unknown code (or a game hidden from players) — an explicit error beats
+    // an empty board that quietly never updates.
+    if (!game) {
+      setNotFound(true)
+      setLoading(false)
+      return
+    }
+
+    const settings = (game.settings as Record<string, unknown> | null) ?? {}
+    if (settings.show_leaderboard === false) {
+      setLeaderboardDisabled(true)
+      setLoading(false)
+      return
+    }
     setGameId(game.id)
 
     // Teams + achievements in parallel
@@ -139,6 +155,30 @@ export default function LeaderboardPage() {
     )
   }
 
+  if (notFound || leaderboardDisabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+          <h1 className="text-xl font-bold text-steam-dark mb-2">
+            {notFound ? "Žaidimas nerastas" : "Rezultatų lentelė išjungta"}
+          </h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            {notFound
+              ? `Kodas ${gameCode} neatitinka jokio žaidimo.`
+              : "Mokytojas išjungė rezultatų lentelę šiame žaidime."}
+          </p>
+          <Link href={notFound ? "/play" : `/play/${gameCode}/play`}>
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              {notFound ? "Įvesti kitą kodą" : "Grįžti į žaidimą"}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen p-4 pb-8">
       <div className="max-w-lg mx-auto">
@@ -157,7 +197,7 @@ export default function LeaderboardPage() {
           <h1 className="text-2xl font-bold text-steam-dark">Rezultatų lentelė</h1>
           <div className="flex items-center justify-center gap-2 mt-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
-            <span>{teams.length} {(() => { const m10 = teams.length % 10, m100 = teams.length % 100; if (m100 >= 11 && m100 <= 19) return "komandų"; if (m10 === 1) return "komanda"; if (m10 >= 2 && m10 <= 9) return "komandos"; return "komandų"; })()}</span>
+            <span>{teams.length} {pluralizeLt(teams.length, "komanda", "komandos", "komandų")}</span>
           </div>
           <div className="flex items-center justify-center gap-1 mt-1">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -234,7 +274,9 @@ export default function LeaderboardPage() {
                             <Star className="h-3.5 w-3.5 text-highlight shrink-0" />
                             <span className="font-bold text-lg text-steam-dark tabular-nums">{team.total_points}</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">taškų</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {pluralizeLt(team.total_points, "taškas", "taškai", "taškų")}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
