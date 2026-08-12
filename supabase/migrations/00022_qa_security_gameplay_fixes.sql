@@ -34,6 +34,17 @@ DECLARE
   v_challenges json;
   v_solved json;
 BEGIN
+  -- v_team is only assigned inside the session-token branch below, and
+  -- reading a field of a never-assigned record raises 55000 ("record is not
+  -- assigned yet") in the final RETURN. Initialize it to an all-NULL tuple so
+  -- token-less calls (the join page validating a code) return team: NULL
+  -- instead of erroring.
+  SELECT NULL::uuid    AS id,
+         NULL::text    AS name,
+         NULL::integer AS total_points,
+         NULL::integer AS current_challenge_index
+  INTO v_team;
+
   -- Game lookup by code (draft included so the join page can say
   -- "not started yet" instead of "not found")
   SELECT id, title, description, status, settings
