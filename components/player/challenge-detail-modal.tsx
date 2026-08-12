@@ -50,6 +50,9 @@ interface ChallengeDetailModalProps {
     explanation?: string | null
   }>
   isSolved: boolean
+  // Called when the student reveals a hint (0-based index), so the parent can
+  // record it server-side for the hint penalty.
+  onRevealHint?: (hintIndex: number) => void
 }
 
 export function ChallengeDetailModal({
@@ -58,6 +61,7 @@ export function ChallengeDetailModal({
   onOpenChange,
   onSubmit,
   isSolved,
+  onRevealHint,
 }: ChallengeDetailModalProps) {
   const [answer, setAnswer] = useState("")
   const [loading, setLoading] = useState(false)
@@ -205,7 +209,10 @@ export function ChallengeDetailModal({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setRevealedHintCount((prev) => prev + 1)}
+                onClick={() => {
+                  onRevealHint?.(revealedHintCount)
+                  setRevealedHintCount((prev) => prev + 1)
+                }}
                 className="text-steam-yellow hover:text-steam-yellow/80 gap-1.5"
               >
                 <Lightbulb className="h-3.5 w-3.5" />

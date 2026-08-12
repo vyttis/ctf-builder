@@ -68,6 +68,7 @@ interface DiWorkspaceProps {
   selectedScenario: ScenarioPreset | null
   onScenarioChange: (scenario: ScenarioPreset | null) => void
   generationSuccess?: number | null
+  onImportedSuggestions?: (suggestions: AiSuggestion[]) => void
 }
 
 export function DiWorkspace({
@@ -93,6 +94,7 @@ export function DiWorkspace({
   selectedScenario,
   onScenarioChange,
   generationSuccess,
+  onImportedSuggestions,
 }: DiWorkspaceProps) {
   return (
     <div className="space-y-4">
@@ -172,6 +174,7 @@ export function DiWorkspace({
         onBulkAdd={onBulkAdd}
         onReject={onReject}
         generationSuccess={generationSuccess}
+        onImportedSuggestions={onImportedSuggestions}
       />
     </div>
   )

@@ -34,11 +34,32 @@ export async function POST(request: Request) {
     const supabase = createAdminClient()
 
     // Validate team via session_token first — every other query depends on team.id/game_id.
-    const { data: team } = await supabase
-      .from("teams")
-      .select("id, game_id, total_points, current_challenge_index")
-      .eq("session_token", parsed.data.session_token)
-      .single()
+    // started_at drives the server-side time-limit check below; tolerate its
+    // absence (migration 00023 not applied yet) with a column-less retry.
+    let team: {
+      id: string
+      game_id: string
+      total_points: number
+      current_challenge_index: number
+      started_at?: string | null
+    } | null = null
+    {
+      const withStart = await supabase
+        .from("teams")
+        .select("id, game_id, total_points, current_challenge_index, started_at")
+        .eq("session_token", parsed.data.session_token)
+        .maybeSingle()
+      if (withStart.error?.code === "42703") {
+        const legacy = await supabase
+          .from("teams")
+          .select("id, game_id, total_points, current_challenge_index")
+          .eq("session_token", parsed.data.session_token)
+          .maybeSingle()
+        team = legacy.data
+      } else {
+        team = withStart.data
+      }
+    }
 
     if (!team) {
       return NextResponse.json(
@@ -47,10 +68,11 @@ export async function POST(request: Request) {
       )
     }
 
-    // Parallel fan-out: game status, existing solve, rate-limit count, challenge details.
-    // Was 4 sequential round-trips; now one ~50-100ms wait instead of ~200-400ms.
+    // Parallel fan-out: game status, existing solve, rate-limit count, challenge
+    // details, and server-recorded hint reveals for this challenge.
+    // Was sequential round-trips; now one ~50-100ms wait.
     const oneMinuteAgo = new Date(Date.now() - 60000).toISOString()
-    const [gameRes, existingSolveRes, recentAttemptsRes, challengeRes] = await Promise.all([
+    const [gameRes, existingSolveRes, recentAttemptsRes, challengeRes, hintRevealsRes] = await Promise.all([
       supabase
         .from("games")
         .select("id, status, settings")
@@ -76,6 +98,13 @@ export async function POST(request: Request) {
         .select("id, points, game_id, explanation, hint_penalty, hints, answer_hash")
         .eq("id", parsed.data.challenge_id)
         .single(),
+      // Authoritative hint count (00024). If the table is missing the query
+      // errors and we fall back to the client-declared count below.
+      supabase
+        .from("hint_reveals")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", team.id)
+        .eq("challenge_id", parsed.data.challenge_id),
     ])
 
     const game = gameRes.data
@@ -111,8 +140,29 @@ export async function POST(request: Request) {
       )
     }
 
-    // In free mode, verify challenge is unlocked
     const gameSettings = (game.settings as Record<string, unknown>) || {}
+
+    // Server-side time limit: reject submissions past the team's deadline.
+    // Anchored on teams.started_at (stamped by /api/play/start), not a
+    // client clock, so clearing localStorage / switching devices can't buy
+    // extra time. Skipped when there's no limit or the team hasn't started
+    // (started_at NULL, or column absent on an unmigrated DB).
+    const timeLimitMinutes =
+      typeof gameSettings.time_limit_minutes === "number"
+        ? gameSettings.time_limit_minutes
+        : null
+    if (timeLimitMinutes && team.started_at) {
+      const deadlineMs =
+        new Date(team.started_at).getTime() + timeLimitMinutes * 60_000
+      if (Date.now() > deadlineMs) {
+        return NextResponse.json(
+          { error: "Laikas baigėsi. Rezultatai išsaugoti." },
+          { status: 403 }
+        )
+      }
+    }
+
+    // In free mode, verify challenge is unlocked
     const pathMode = (gameSettings.challenge_path_mode as string) || "linear"
 
     if (pathMode === "free") {
@@ -139,9 +189,17 @@ export async function POST(request: Request) {
     // Verify answer server-side with bcrypt (supports legacy plaintext hashes)
     const isCorrect = await verifyAnswer(parsed.data.answer, challenge.answer_hash)
 
-    // Server-side hint penalty: cap hints_used to actual available hints
+    // Hint penalty from server-recorded reveals (00024), not the client-declared
+    // count — otherwise a student could reveal hints and submit hints_used: 0.
+    // Falls back to the client count only when the table is missing (the count
+    // query errors and hintRevealsRes.count is null on an unmigrated DB).
     const availableHints = Array.isArray(challenge.hints) ? challenge.hints.length : 0
-    const hintsUsed = Math.min(parsed.data.hints_used, availableHints)
+    const serverHintCount =
+      typeof hintRevealsRes.count === "number" ? hintRevealsRes.count : null
+    const hintsUsed = Math.min(
+      serverHintCount ?? parsed.data.hints_used,
+      availableHints
+    )
     const hintPenalty = hintsUsed * (challenge.hint_penalty || 0)
     const pointsAwarded = isCorrect ? Math.max(0, challenge.points - hintPenalty) : 0
 

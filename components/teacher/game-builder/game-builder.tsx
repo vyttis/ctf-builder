@@ -29,6 +29,7 @@ import { TaskWorkspace } from "./task-workspace"
 import { TaskCardOverlay } from "./sortable-task-card"
 import { AiSuggestionCard } from "../ai-suggestion-card"
 import { useToast } from "@/hooks/use-toast"
+import { useIsDesktop } from "@/hooks/use-is-desktop"
 import {
   Sheet,
   SheetContent,
@@ -58,6 +59,12 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   // page calls router.refresh(), the server component re-renders with fresh
   // data, and the header/settings must reflect it (title, status badge).
   const game = initialGame
+  const pathMode: "linear" | "free" = game.settings?.challenge_path_mode ?? "linear"
+  // Render the workspace in exactly one place: the desktop panel OR the mobile
+  // sheet, never both. A CSS-hidden desktop panel stays mounted on mobile,
+  // producing two live editors (duplicate radio groups, duplicated /api/library
+  // fetches, double autoFocus) whenever the mobile sheet is open.
+  const isDesktop = useIsDesktop()
   const [challenges, setChallenges] = useState<Challenge[]>(initialChallenges)
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null)
 
@@ -179,6 +186,16 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
     },
     [game.id, game.title, game.description, challenges, teacherPrompt, selectedScenario]
   )
+
+  // Document import produces the same AiSuggestion shape as DI generation —
+  // append them and reuse the success banner.
+  function handleImported(imported: AiSuggestion[]) {
+    if (imported.length === 0) return
+    setSuggestions((prev) => [...prev, ...imported])
+    if (successTimerRef.current) clearTimeout(successTimerRef.current)
+    setGenerationSuccess(imported.length)
+    successTimerRef.current = setTimeout(() => setGenerationSuccess(null), 3000)
+  }
 
   // ========== Suggestion helpers ==========
   function handleReject(index: number) {
@@ -571,11 +588,14 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
               </div>
             </div>
 
-            {/* Right panel: Workspace (desktop) */}
+            {/* Right panel: Workspace (desktop only — mobile uses the sheet
+                below, so the editor never mounts twice) */}
+            {isDesktop && (
             <div className="hidden lg:block">
               <div className="rounded-lg border border-border/50 bg-white p-4">
                 <TaskWorkspace
                   gameId={game.id}
+                  pathMode={pathMode}
                   gameTitle={game.title}
                   gameDescription={game.description}
                   challenges={challenges}
@@ -605,17 +625,23 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
                   selectedScenario={selectedScenario}
                   onScenarioChange={setSelectedScenario}
                   generationSuccess={generationSuccess}
+                  onImportedSuggestions={handleImported}
                   onTaskAdded={refreshChallenges}
                   activeTab={activeTab}
                   onTabChange={setActiveTab}
                 />
               </div>
             </div>
+            )}
           </div>
         </div>
 
-        {/* Mobile: Workspace as Sheet */}
-        <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+        {/* Mobile: Workspace as Sheet — only mounted below lg, so it can't
+            coexist with the desktop panel */}
+        <Sheet
+          open={!isDesktop && mobileSheetOpen}
+          onOpenChange={setMobileSheetOpen}
+        >
           <SheetContent
             side="right"
             className="w-full sm:w-[440px] sm:max-w-[440px] flex flex-col overflow-hidden p-0"
@@ -631,6 +657,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
             <div className="flex-1 overflow-y-auto px-6 py-4">
               <TaskWorkspace
                 gameId={game.id}
+                pathMode={pathMode}
                 gameTitle={game.title}
                 gameDescription={game.description}
                 challenges={challenges}
@@ -666,6 +693,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
                 selectedScenario={selectedScenario}
                 onScenarioChange={setSelectedScenario}
                 generationSuccess={generationSuccess}
+                onImportedSuggestions={handleImported}
                 onTaskAdded={refreshChallenges}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}

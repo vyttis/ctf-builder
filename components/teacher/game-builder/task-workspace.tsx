@@ -14,6 +14,8 @@ interface TaskWorkspaceProps {
   gameTitle: string
   gameDescription: string | null
   challenges: Challenge[]
+  // Path mode drives the free-mode prerequisites picker in the editor
+  pathMode: "linear" | "free"
   // Editor state
   editingChallenge: Challenge | null
   prefillData: AiSuggestion | null
@@ -43,6 +45,7 @@ interface TaskWorkspaceProps {
   selectedScenario: ScenarioPreset | null
   onScenarioChange: (scenario: ScenarioPreset | null) => void
   generationSuccess?: number | null
+  onImportedSuggestions?: (suggestions: AiSuggestion[]) => void
   // Library
   onTaskAdded: () => void
   // Active tab
@@ -55,6 +58,7 @@ export function TaskWorkspace({
   gameTitle,
   gameDescription,
   challenges,
+  pathMode,
   editingChallenge,
   prefillData,
   isCreatingNew,
@@ -81,6 +85,7 @@ export function TaskWorkspace({
   selectedScenario,
   onScenarioChange,
   generationSuccess,
+  onImportedSuggestions,
   onTaskAdded,
   activeTab,
   onTabChange,
@@ -106,6 +111,8 @@ export function TaskWorkspace({
           prefillData={prefillData}
           onSuccess={onEditorSuccess}
           onCancel={onEditorCancel}
+          pathMode={pathMode}
+          allChallenges={challenges}
         />
       </div>
     )
@@ -163,6 +170,7 @@ export function TaskWorkspace({
           selectedScenario={selectedScenario}
           onScenarioChange={onScenarioChange}
           generationSuccess={generationSuccess}
+          onImportedSuggestions={onImportedSuggestions}
         />
       </TabsContent>
 
