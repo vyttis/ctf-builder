@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { AnimatePresence } from "framer-motion"
 import { DraggableSuggestionCard } from "./draggable-suggestion-card"
+import { ImportDialog } from "./import-dialog"
 import { motion } from "framer-motion"
 import {
   Sparkles,
@@ -61,6 +62,9 @@ interface SuggestionsPanelProps {
   onBulkAdd: () => void
   onReject: (index: number) => void
   generationSuccess?: number | null
+  // When provided, an "Importuoti" action lets the teacher generate
+  // suggestions from an uploaded document (PDF/DOCX/TXT).
+  onImportedSuggestions?: (suggestions: AiSuggestion[]) => void
 }
 
 export function SuggestionsPanel({
@@ -84,6 +88,7 @@ export function SuggestionsPanel({
   onBulkAdd,
   onReject,
   generationSuccess,
+  onImportedSuggestions,
 }: SuggestionsPanelProps) {
   const [regenerateConfirmOpen, setRegenerateConfirmOpen] = useState(false)
   const selectableCount = suggestions.filter(
@@ -138,6 +143,13 @@ export function SuggestionsPanel({
               {action.label}
             </Button>
           ))}
+          {onImportedSuggestions && (
+            <ImportDialog
+              gameTitle={gameTitle}
+              gameDescription={gameDescription}
+              onImported={onImportedSuggestions}
+            />
+          )}
         </div>
       </div>
 

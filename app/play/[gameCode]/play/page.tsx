@@ -72,6 +72,44 @@ function normalizeNumericAnswer(value: string): string {
   return value.trim().replace(",", ".")
 }
 
+// Stamp the team's server-side start (idempotent). Best-effort: the countdown
+// UI runs off localStorage regardless; this is what /api/submissions enforces
+// the deadline against.
+async function stampGameStart(token: string): Promise<void> {
+  try {
+    await fetch("/api/play/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_token: token }),
+    })
+  } catch {
+    // Ignored — enforcement still works from whenever started_at first gets set.
+  }
+}
+
+// Record a hint reveal server-side so the penalty is computed from stored rows,
+// not the client-declared count. Best-effort: a failed call just means the
+// student keeps the benefit of the doubt on that hint.
+async function recordHintReveal(
+  token: string,
+  challengeId: string,
+  hintIndex: number
+): Promise<void> {
+  try {
+    await fetch("/api/play/hint", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_token: token,
+        challenge_id: challengeId,
+        hint_index: hintIndex,
+      }),
+    })
+  } catch {
+    // Ignored — best effort.
+  }
+}
+
 export default function PlayPage() {
   const params = useParams()
   const router = useRouter()
@@ -241,6 +279,9 @@ export default function PlayPage() {
     if (!timeLimit || existingStart) {
       setGameStarted(true)
       if (timeLimit && existingStart) {
+        // Already started on this device — ensure the server has a started_at
+        // so deadline enforcement works even for pre-existing runs (idempotent).
+        stampGameStart(s.session_token)
         const startTime = parseInt(existingStart, 10)
         const totalMs = timeLimit * 60 * 1000
         if (Date.now() > startTime + totalMs) {
@@ -335,6 +376,8 @@ export default function PlayPage() {
     localStorage.setItem(storageKey, now.toString())
     startTimeRef.current = now
     setGameStarted(true)
+    // Anchor the server-side deadline on the moment the student taps start.
+    if (session) stampGameStart(session.session_token)
   }
 
   // Free mode: handle submission from challenge detail modal
@@ -858,6 +901,11 @@ export default function PlayPage() {
             onOpenChange={(open) => { if (!open) setSelectedChallengeIndex(null) }}
             onSubmit={handleFreeSubmit}
             isSolved={selectedChallengeIndex !== null ? solvedIds.has(challenges[selectedChallengeIndex].id) : false}
+            onRevealHint={(idx) => {
+              if (session && selectedChallengeIndex !== null) {
+                recordHintReveal(session.session_token, challenges[selectedChallengeIndex].id, idx)
+              }
+            }}
           />
 
           <div className="text-center text-sm text-muted-foreground mt-4">
@@ -1010,7 +1058,13 @@ export default function PlayPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setRevealedHintCount((prev) => prev + 1)}
+                        onClick={() => {
+                          const idx = revealedHintCount
+                          setRevealedHintCount((prev) => prev + 1)
+                          if (session) {
+                            recordHintReveal(session.session_token, currentChallenge.id, idx)
+                          }
+                        }}
                         className="text-highlight hover:text-highlight/80 gap-1.5"
                       >
                         <Lightbulb className="h-3.5 w-3.5" />

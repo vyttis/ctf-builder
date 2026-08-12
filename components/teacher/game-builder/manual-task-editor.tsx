@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import { ImageUpload } from "../image-upload"
 import { MapsEmbed } from "@/components/shared/maps-embed"
+import { ChallengePrerequisites } from "../challenge-prerequisites"
 
 interface ManualTaskEditorProps {
   gameId: string
@@ -38,6 +39,16 @@ interface ManualTaskEditorProps {
   prefillData?: AiSuggestion | null
   onSuccess: () => void
   onCancel: () => void
+  // Free-mode prerequisites: which challenges must be solved first. Only shown
+  // in free path mode when editing a saved challenge (needs a real id + the
+  // full challenge list to build/validate the dependency graph).
+  pathMode?: "linear" | "free"
+  allChallenges?: Array<{
+    id: string
+    title: string
+    order_index: number
+    prerequisites?: string[]
+  }>
 }
 
 export function ManualTaskEditor({
@@ -46,6 +57,8 @@ export function ManualTaskEditor({
   prefillData,
   onSuccess,
   onCancel,
+  pathMode = "linear",
+  allChallenges = [],
 }: ManualTaskEditorProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
@@ -70,10 +83,13 @@ export function ManualTaskEditor({
     "easy" | "medium" | "hard" | null
   >(null)
   const [hintPenalty, setHintPenalty] = useState(20)
+  const [prerequisites, setPrerequisites] = useState<string[]>([])
   // Options as loaded from the server — used to detect edits that invalidate
   // the stored answer hash (we can never recover the original answer, only
   // its hash, so changed options force the teacher to re-mark the answer).
   const [initialOptions, setInitialOptions] = useState<string[] | null>(null)
+
+  const showPrerequisites = pathMode === "free" && !!challenge
 
   // Initialize from challenge or prefill
   useEffect(() => {
@@ -91,11 +107,13 @@ export function ManualTaskEditor({
       setExplanation(challenge.explanation || "")
       setDifficulty(challenge.difficulty)
       setHintPenalty(challenge.hint_penalty)
+      setPrerequisites(challenge.prerequisites || [])
       if (
         challenge.explanation ||
         challenge.difficulty ||
         challenge.image_url ||
-        challenge.maps_url
+        challenge.maps_url ||
+        (challenge.prerequisites && challenge.prerequisites.length > 0)
       ) {
         setShowExtras(true)
       }
@@ -211,6 +229,10 @@ export function ManualTaskEditor({
       } else {
         if (correctAnswer.trim()) {
           payload.correct_answer = correctAnswer.trim()
+        }
+        // Prerequisites are only editable in free mode on a saved challenge.
+        if (showPrerequisites) {
+          payload.prerequisites = prerequisites
         }
       }
 
@@ -454,6 +476,17 @@ export function ManualTaskEditor({
           Pridėti užuominą
         </Button>
       </div>
+
+      {/* Free-mode prerequisites (only for saved challenges) */}
+      {showPrerequisites && challenge && (
+        <ChallengePrerequisites
+          challengeId={challenge.id}
+          gameId={gameId}
+          allChallenges={allChallenges}
+          currentPrerequisites={prerequisites}
+          onChange={setPrerequisites}
+        />
+      )}
 
       {/* Collapsible extras */}
       <button
