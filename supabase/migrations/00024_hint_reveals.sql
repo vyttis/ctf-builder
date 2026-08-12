@@ -27,8 +27,14 @@ CREATE TABLE IF NOT EXISTS public.hint_reveals (
 
 ALTER TABLE public.hint_reveals ENABLE ROW LEVEL SECURITY;
 
--- No anon/authenticated policies: writes and reads happen only through the
--- service-role client in /api/play/hint and /api/submissions (service_role
--- bypasses RLS). This mirrors submissions/teams/reflections (00018).
+-- Enabling RLS is NOT enough on Supabase: ALTER DEFAULT PRIVILEGES on the
+-- public schema auto-grants anon/authenticated on every new table, so the
+-- table would still be exposed via PostgREST and one future policy would open
+-- it. Revoke explicitly (stricter than the submissions/teams model, which
+-- keeps anon INSERT under RLS grace) — the client never touches this table,
+-- only the service-role routes /api/play/hint and /api/submissions do, and
+-- service_role bypasses both grants and RLS.
+REVOKE ALL ON public.hint_reveals FROM anon, authenticated;
+
 COMMENT ON TABLE public.hint_reveals IS
-  'One row per (team, challenge, hint) reveal. INSERT/SELECT only via service_role from /api/play/hint and /api/submissions.';
+  'One row per (team, challenge, hint) reveal. INSERT/SELECT only via service_role from /api/play/hint and /api/submissions; anon/authenticated grants revoked (RLS on with no policies alone is not closed under Supabase default privileges).';
