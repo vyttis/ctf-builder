@@ -112,10 +112,9 @@ export function BuilderHeader({
               size="sm"
               className="bg-accent hover:bg-accent/90 text-white gap-1.5 h-8"
               onClick={() => setLaunchOpen(true)}
-              aria-label="Paleisti veiklą"
             >
               <Rocket className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="hidden sm:inline">Paleisti</span>
+              Paleisti
             </Button>
           </div>
         </div>
