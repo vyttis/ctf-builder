@@ -14,7 +14,9 @@ Iki 2026-11-05 produkcijoje trūko `00021` (`challenges.needs_answer`), nors
 2026-11-05 `00021` pritaikyta (prieš tai `public.challenges` nukopijuota į
 `backup_20261105.challenges`), taip pat pritaikyta `00025` (Security Advisor
 pataisos). Lentelės `templates` produkcijoje nėra, nors `00001` ją kuria: ji buvo
-pašalinta ranka. Dabar visi `00001`–`00025` pakeitimai yra DB, tik CLI apie tai
+pašalinta ranka. Taip pat sutaisytos dviejų 2026-03-03 komandų taškų sumos, kurių
+`increment_team_score` tuo metu neatnaujino (senos reikšmės
+`backup_20261105.team_totals`). Dabar visi `00001`–`00025` pakeitimai yra DB, tik CLI apie tai
 „nežino". Praktinės pasekmės:
 
 - `supabase db push` bandytų taikyti **visą** `00001…` seką iš naujo → lūžtų ties
