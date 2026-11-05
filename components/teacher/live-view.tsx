@@ -187,8 +187,9 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
                 variant="ghost"
                 size="sm"
                 className="gap-2 text-white/60 hover:text-white hover:bg-white/10"
+                aria-label="Grįžti į veiklą"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
           )}
@@ -231,6 +232,7 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
             onClick={handleFullscreen}
             className="text-white/60 hover:text-white hover:bg-white/10"
             title="Visas ekranas"
+            aria-label="Visas ekranas"
           >
             <Maximize2 className="h-4 w-4" />
           </Button>
@@ -240,6 +242,7 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
             onClick={() => setPresentationMode((p) => !p)}
             className="gap-2 text-white/60 hover:text-white hover:bg-white/10"
             title={presentationMode ? "Rodyti valdiklius (Esc)" : "Pateikties režimas"}
+            aria-label={presentationMode ? "Rodyti valdiklius" : "Pateikties režimas"}
           >
             {presentationMode ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             <span className="hidden sm:inline">

@@ -54,6 +54,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
           size="sm"
           className="h-7 w-7 p-0"
           onClick={onClose}
+          aria-label="Uždaryti peržiūrą"
         >
           <X className="h-3.5 w-3.5" />
         </Button>

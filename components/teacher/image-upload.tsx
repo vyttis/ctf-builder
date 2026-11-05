@@ -127,6 +127,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             size="sm"
             onClick={handleRemove}
             className="absolute top-2 right-2 h-7 w-7 p-0 rounded-full shadow-lg"
+            aria-label="Pašalinti paveiksliuką"
           >
             <X className="h-3.5 w-3.5" />
           </Button>
