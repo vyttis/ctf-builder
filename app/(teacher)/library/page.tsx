@@ -80,10 +80,10 @@ export default function LibraryPage() {
         <div>
           <h1 className="text-2xl font-bold text-steam-dark flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-secondary" />
-            CTF Biblioteka
+            Veiklų biblioteka
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Patvirtinti CTF šablonai — klonuokite ir naudokite savo pamokose
+            Patvirtinti veiklų šablonai. Nusikopijuokite ir naudokite savo pamokose
           </p>
         </div>
       </div>

@@ -62,19 +62,29 @@ export default async function GameDetailPage({
   const CHALLENGE_FIELDS =
     "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites, needs_answer, created_at, updated_at"
 
-  const { data: game } = await supabase
+  // teams has column-level grants only (00022), so embed the granted `id`
+  // column; a `teams(count)` embed fails with "permission denied".
+  const { data: game, error: gameError } = await supabase
     .from("games")
-    .select(`*, challenges(${CHALLENGE_FIELDS}), teams(count)`)
+    .select(`*, challenges(${CHALLENGE_FIELDS}), teams(id)`)
     .eq("id", params.gameId)
     .eq("teacher_id", user!.id)
-    .single()
+    .maybeSingle()
+
+  if (gameError) {
+    console.error("[game-detail] game query failed", {
+      code: gameError.code,
+      message: gameError.message,
+    })
+    throw new Error("Nepavyko įkelti veiklos")
+  }
 
   if (!game) {
     notFound()
   }
 
   const challenges = (game.challenges || []) as Challenge[]
-  const teamCount = (game.teams as { count: number }[])?.[0]?.count || 0
+  const teamCount = ((game.teams as { id: string }[] | null) || []).length
   const settings = game.settings as GameSettings | null
   const status = game.status as GameStatus
   const isLive = status === "active" || status === "paused"

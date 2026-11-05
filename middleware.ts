@@ -55,6 +55,12 @@ export async function middleware(request: NextRequest) {
 
   // Player routes: no auth, no Supabase calls — return immediately for fast page load
   if (subdomain === "play") {
+    // Students who type play.kusteam.app by hand should land on the
+    // code entry screen, not the teacher-facing landing page.
+    if (url.pathname === "/") {
+      url.pathname = "/play"
+      return NextResponse.redirect(url)
+    }
     return NextResponse.next({ request })
   }
 
