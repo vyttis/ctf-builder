@@ -36,11 +36,11 @@ const LIBRARY_STATUS_BADGES: Record<
 > = {
   pending_review: {
     label: "Biblioteka: laukia peržiūros",
-    className: "border-highlight/40 text-highlight",
+    className: "border-highlight/40 text-highlight-ink",
   },
   approved: {
     label: "Biblioteka: patvirtinta",
-    className: "border-primary/40 text-primary",
+    className: "border-primary/40 text-primary-ink",
   },
   rejected: {
     label: "Biblioteka: atmesta",
@@ -48,11 +48,12 @@ const LIBRARY_STATUS_BADGES: Record<
   },
 }
 
-export default async function GameDetailPage({
-  params,
-}: {
-  params: { gameId: string }
-}) {
+export default async function GameDetailPage(
+  props: {
+    params: Promise<{ gameId: string }>
+  }
+) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },
@@ -163,7 +164,7 @@ export default async function GameDetailPage({
         <Link href={`/games/${game.id}/builder`}>
           <Button
             size="sm"
-            className="bg-primary hover:bg-primary/90 text-white gap-1"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
           >
             <Settings className="h-3.5 w-3.5" />
             Valdyti
@@ -180,7 +181,7 @@ export default async function GameDetailPage({
                   key={challenge.id}
                   className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/30"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary-ink shrink-0">
                     {index + 1}
                   </div>
                   {challenge.image_url && (
@@ -220,7 +221,7 @@ export default async function GameDetailPage({
             <Link href={`/games/${game.id}/builder`}>
               <Button
                 size="sm"
-                className="bg-primary hover:bg-primary/90 text-white gap-1"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 Kurti užduotis
@@ -311,7 +312,7 @@ export default async function GameDetailPage({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                className="gap-2 border-primary/30 text-primary-ink hover:bg-primary/5"
               >
                 <BarChart3 className="h-4 w-4" />
                 Analitika
@@ -366,7 +367,7 @@ export default async function GameDetailPage({
               totalChallenges={challenges.length}
             />
           )}
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">{challengeList}</div>
             <div className="space-y-6">
               {statsCards}
@@ -376,7 +377,7 @@ export default async function GameDetailPage({
         </div>
       ) : isLive ? (
         /* ============ ACTIVE/PAUSED: live view first ============ */
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <LiveControlCenter
               gameId={game.id}
@@ -403,7 +404,7 @@ export default async function GameDetailPage({
         </div>
       ) : (
         /* ============ DRAFT: builder-centric ============ */
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <DraftReadinessChecklist
               challengeCount={challenges.length}

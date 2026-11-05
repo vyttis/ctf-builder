@@ -190,7 +190,7 @@ export default function JoinGamePage() {
                   setGameState({ status: "loading" })
                   validateGame()
                 }}
-                className="gap-2 bg-primary hover:bg-primary/90 text-white"
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Patikrinti dar kartą
               </Button>
@@ -228,7 +228,7 @@ export default function JoinGamePage() {
           <CardHeader className="text-center pb-2">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Gamepad2 className="h-5 w-5 text-primary" />
-              <span className="font-mono text-sm font-bold text-primary tracking-widest">
+              <span className="font-mono text-sm font-bold text-primary-ink tracking-widest">
                 {gameCode}
               </span>
             </div>
@@ -265,7 +265,7 @@ export default function JoinGamePage() {
               <Button
                 type="submit"
                 disabled={loading || !teamName.trim()}
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold text-base shadow-lg shadow-primary/25"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base shadow-lg shadow-primary/25"
               >
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />

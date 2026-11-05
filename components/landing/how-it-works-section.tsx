@@ -102,7 +102,7 @@ export function HowItWorksSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="relative grid md:grid-cols-12 gap-y-3 md:gap-x-8 items-start"
+              className="relative grid grid-cols-1 md:grid-cols-12 gap-y-3 md:gap-x-8 items-start"
             >
               {/* Big numeral — display serif, takes 4 cols on md+ */}
               <div className={`md:col-span-4 ${isEven ? "md:order-1" : "md:order-2 md:text-right"}`}>

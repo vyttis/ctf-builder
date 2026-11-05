@@ -121,6 +121,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
           size="sm"
           onClick={stopScanner}
           className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70 h-8 w-8 p-0 rounded-full z-10"
+          aria-label="Uždaryti skenerį"
         >
           <X className="h-4 w-4" />
         </Button>

@@ -54,6 +54,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
           size="sm"
           className="h-7 w-7 p-0"
           onClick={onClose}
+          aria-label="Uždaryti peržiūrą"
         >
           <X className="h-3.5 w-3.5" />
         </Button>
@@ -78,7 +79,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
                   variant="outline"
                   className={`text-xs ${
                     challenge.difficulty === "easy"
-                      ? "text-primary border-primary/30"
+                      ? "text-primary-ink border-primary/30"
                       : challenge.difficulty === "hard"
                       ? "text-accent border-accent/30"
                       : "text-highlight border-highlight/30"
@@ -200,7 +201,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
           )}
 
           {/* Submit button preview */}
-          <Button className="w-full bg-primary hover:bg-primary/90 text-white gap-2">
+          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
             Atsakyti
             <ChevronRight className="h-4 w-4" />
           </Button>

@@ -1,3 +1,4 @@
+import tailwindcssAnimate from "tailwindcss-animate"
 import type { Config } from "tailwindcss"
 
 const config: Config = {
@@ -25,6 +26,7 @@ const config: Config = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          ink: "hsl(var(--primary-ink))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -45,6 +47,7 @@ const config: Config = {
         highlight: {
           DEFAULT: "hsl(var(--highlight))",
           foreground: "hsl(var(--highlight-foreground))",
+          ink: "hsl(var(--highlight-ink))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -136,7 +139,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 }
 
 export default config

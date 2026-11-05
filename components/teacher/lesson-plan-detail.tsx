@@ -31,7 +31,7 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
 
 const ACTIVITY_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   intro: { label: "Įvadas", color: "bg-secondary/10 text-secondary" },
-  challenge: { label: "Veikla", color: "bg-primary/10 text-primary" },
+  challenge: { label: "Veikla", color: "bg-primary/10 text-primary-ink" },
   discussion: { label: "Diskusija", color: "bg-accent/10 text-accent" },
   reflection: { label: "Refleksija", color: "bg-highlight/15 text-steam-dark" },
 }
@@ -189,13 +189,13 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
       {(plan.competencies?.length ?? 0) > 0 && (
         <Card className="border-primary/20 bg-primary/5 mb-6">
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-primary mb-2 flex items-center gap-1">
+            <p className="text-xs font-medium text-primary-ink mb-2 flex items-center gap-1">
               <Sparkles className="h-3 w-3" />
               Ugdomos kompetencijos
             </p>
             <div className="flex flex-wrap gap-1.5">
               {(plan.competencies ?? []).map((c) => COMPETENCY_LABELS[c as Competency] ? (
-                <span key={c} className="text-xs px-2 py-0.5 rounded-md bg-white border border-primary/20 text-primary">
+                <span key={c} className="text-xs px-2 py-0.5 rounded-md bg-white border border-primary/20 text-primary-ink">
                   {COMPETENCY_LABELS[c as Competency]}
                 </span>
               ) : null)}
@@ -245,7 +245,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
                             </span>
                           )}
                           {(stage.competencies ?? []).map((c) => COMPETENCY_LABELS[c as Competency] ? (
-                            <span key={c} className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                            <span key={c} className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary-ink border border-primary/20">
                               {COMPETENCY_LABELS[c as Competency]}
                             </span>
                           ) : null)}
@@ -316,7 +316,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
         ) : plan.source_game_id ? (
           <Link href={`/games/${plan.source_game_id}`} className="flex-1">
             <Button
-              className="w-full gap-2 bg-primary hover:bg-primary/90 text-white"
+              className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
               size="lg"
             >
               <PlayCircle className="h-4 w-4" />

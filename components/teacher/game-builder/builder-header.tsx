@@ -39,7 +39,7 @@ const statusLabels: Record<GameStatus, string> = {
 
 const statusColors: Record<GameStatus, string> = {
   draft: "bg-muted text-muted-foreground",
-  active: "bg-primary/10 text-primary border-primary/20",
+  active: "bg-primary/10 text-primary-ink border-primary/20",
   paused: "bg-highlight/10 text-highlight border-highlight/20",
   finished: "bg-secondary/10 text-secondary border-secondary/20",
 }
@@ -56,13 +56,14 @@ export function BuilderHeader({
   return (
     <>
       <div className="border-b border-border/50 bg-white -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
             <Link href={`/games/${game.id}`}>
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 text-muted-foreground shrink-0"
+                aria-label="Grįžti į veiklą"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -91,12 +92,13 @@ export function BuilderHeader({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 text-muted-foreground"
               onClick={onOpenSettings}
+              aria-label="Veiklos nustatymai"
             >
               <Settings className="h-4 w-4" />
             </Button>
@@ -111,8 +113,8 @@ export function BuilderHeader({
               className="bg-accent hover:bg-accent/90 text-white gap-1.5 h-8"
               onClick={() => setLaunchOpen(true)}
             >
-              <Rocket className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Paleisti</span>
+              <Rocket className="h-3.5 w-3.5" aria-hidden="true" />
+              Paleisti
             </Button>
           </div>
         </div>

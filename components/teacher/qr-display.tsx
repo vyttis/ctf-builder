@@ -113,6 +113,7 @@ export function QRDisplay({ gameCode, size = 200 }: QRDisplayProps) {
                 size="sm"
                 onClick={handleCopy}
                 className="shrink-0 h-7 w-7 p-0"
+                aria-label={copied ? "Nuoroda nukopijuota" : "Kopijuoti nuorodą"}
               >
                 {copied ? (
                   <Check className="h-3.5 w-3.5 text-primary" />

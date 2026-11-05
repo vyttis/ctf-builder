@@ -75,7 +75,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Two clear paths */}
-      <div className="grid sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {/* Path 1: Lesson plans */}
         <Link href="/lesson-plans/new">
           <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 to-secondary/10 hover:shadow-lg hover:shadow-secondary/10 transition-all duration-300 group cursor-pointer h-full">
@@ -128,7 +128,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Link href="/games/new">
-          <Button className="bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20 gap-2">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 gap-2">
             <Plus className="h-4 w-4" />
             Nauja veikla
           </Button>
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
               </Button>
             </Link>
             <Link href="/games/new">
-              <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 gap-2">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 gap-2">
                 <Plus className="h-4 w-4" />
                 Kurti veiklą
               </Button>

@@ -60,7 +60,7 @@ export default function PlayerLandingPage() {
               <Button
                 type="submit"
                 disabled={code.trim().length < 6}
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/25 gap-2"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/25 gap-2"
               >
                 Prisijungti
                 <ArrowRight className="h-4 w-4" />

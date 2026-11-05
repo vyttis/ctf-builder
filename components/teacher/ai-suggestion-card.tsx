@@ -30,7 +30,7 @@ function VerdictBadge({ verdict }: { verdict?: VerificationVerdict }) {
   const config = {
     pass: {
       label: "Patikrinta",
-      className: "bg-primary/10 text-primary border-primary/20",
+      className: "bg-primary/10 text-primary-ink border-primary/20",
       Icon: ShieldCheck,
     },
     uncertain: {
@@ -136,7 +136,7 @@ export function AiSuggestionCard({
                 <div className="mt-1.5">
                   <Badge
                     variant="outline"
-                    className="text-xs bg-primary/10 text-primary border-primary/20 gap-1"
+                    className="text-xs bg-primary/10 text-primary-ink border-primary/20 gap-1"
                   >
                     <CheckCircle2 className="h-3 w-3" />
                     Pridėta
@@ -240,7 +240,7 @@ export function AiSuggestionCard({
                 variant="ghost"
                 onClick={() => onAdd(index)}
                 disabled={adding}
-                className="text-primary hover:text-primary/80 gap-1.5 text-xs h-8"
+                className="text-primary-ink hover:text-primary/80 gap-1.5 text-xs h-8"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Pridėti

@@ -4,10 +4,8 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 // GET /api/library/[itemId] — get single library item
-export async function GET(
-  _request: Request,
-  { params }: { params: { itemId: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ itemId: string }> }) {
+  const params = await props.params;
   try {
     const supabase = await createClient()
     const {
@@ -46,10 +44,8 @@ const reviewSchema = z.object({
 })
 
 // PATCH /api/library/[itemId] — approve/reject (admin+ only)
-export async function PATCH(
-  request: Request,
-  { params }: { params: { itemId: string } }
-) {
+export async function PATCH(request: Request, props: { params: Promise<{ itemId: string }> }) {
+  const params = await props.params;
   try {
     const supabase = await createClient()
     await requireRole(supabase, "admin", "super_admin")
@@ -92,10 +88,8 @@ export async function PATCH(
 }
 
 // DELETE /api/library/[itemId] — delete (super_admin only)
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { itemId: string } }
-) {
+export async function DELETE(_request: Request, props: { params: Promise<{ itemId: string }> }) {
+  const params = await props.params;
   try {
     const supabase = await createClient()
     await requireRole(supabase, "super_admin")

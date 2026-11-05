@@ -137,7 +137,7 @@ export function SuggestionsPanel({
               size="sm"
               disabled={loading}
               onClick={() => onGenerate(action.prompt)}
-              className="text-xs h-7 gap-1 border-highlight/30 text-highlight hover:bg-highlight/5"
+              className="text-xs h-7 gap-1 border-highlight/40 text-highlight-ink hover:bg-highlight/10"
             >
               <Wand2 className="h-3 w-3" />
               {action.label}
@@ -258,7 +258,7 @@ export function SuggestionsPanel({
           </div>
           <Button
             size="sm"
-            className="bg-primary hover:bg-primary/90 text-white text-xs h-7 gap-1"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-7 gap-1"
             disabled={selectedIds.size === 0 || adding}
             onClick={onBulkAdd}
           >

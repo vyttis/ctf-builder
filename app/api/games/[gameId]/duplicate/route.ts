@@ -8,10 +8,8 @@ const duplicateSchema = z.object({
 })
 
 // POST /api/games/[gameId]/duplicate — duplicate a game with all challenges
-export async function POST(
-  request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   try {
     const supabase = await createClient()
     const {

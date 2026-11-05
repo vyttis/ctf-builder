@@ -42,7 +42,7 @@ function TruncatedText({ text, maxLength = 100 }: { text: string; maxLength?: nu
       {expanded ? text : `${text.slice(0, maxLength)}...`}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="ml-1 text-primary hover:text-primary/80 text-xs font-medium inline-flex items-center gap-0.5"
+        className="ml-1 text-primary-ink hover:text-primary/80 text-xs font-medium inline-flex items-center gap-0.5"
       >
         {expanded ? (
           <>

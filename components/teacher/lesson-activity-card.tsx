@@ -50,13 +50,13 @@ interface LessonActivityCardProps {
 
 const ACTIVITY_TYPE_CONFIG = {
   intro: { label: "Įvadas", icon: Play, color: "text-secondary", bg: "bg-secondary/10" },
-  challenge: { label: "Užduotis", icon: Zap, color: "text-primary", bg: "bg-primary/10" },
+  challenge: { label: "Užduotis", icon: Zap, color: "text-primary-ink", bg: "bg-primary/10" },
   discussion: { label: "Diskusija", icon: MessageSquare, color: "text-highlight", bg: "bg-highlight/10" },
   reflection: { label: "Refleksija", icon: BookOpen, color: "text-accent", bg: "bg-accent/10" },
 }
 
 const DIFFICULTY_CONFIG = {
-  easy: { label: "Lengva", className: "bg-primary/10 text-primary border-primary/20" },
+  easy: { label: "Lengva", className: "bg-primary/10 text-primary-ink border-primary/20" },
   medium: { label: "Vidutinė", className: "bg-highlight/10 text-highlight border-highlight/20" },
   hard: { label: "Sunki", className: "bg-accent/10 text-accent border-accent/20" },
 }
@@ -115,7 +115,7 @@ export function LessonActivityCard({
               <Clock className="h-3 w-3" />
               {activity.duration_minutes}m
             </span>
-            <span className="text-xs font-medium text-primary">
+            <span className="text-xs font-medium text-primary-ink">
               {activity.points} tšk.
             </span>
 
@@ -271,7 +271,7 @@ export function LessonActivityCard({
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0 ${
                           opt === activity.correct_answer
-                            ? "bg-primary/20 text-primary"
+                            ? "bg-primary/20 text-primary-ink"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >

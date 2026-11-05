@@ -803,7 +803,7 @@ export function LessonPlanGenerator() {
           <Button
             onClick={handleSave}
             disabled={stages.length === 0 || phase === "saving"}
-            className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2"
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             size="lg"
           >
             {phase === "saving" ? (

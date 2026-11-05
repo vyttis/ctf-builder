@@ -6,10 +6,8 @@ const createAnnouncementSchema = z.object({
   message: z.string().min(1, "Pranešimas negali būti tuščias").max(500, "Pranešimas per ilgas (max 500 simbolių)"),
 })
 
-export async function POST(
-  request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   try {
   const supabase = await createClient()
   const {
@@ -75,10 +73,8 @@ export async function POST(
   }
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   try {
   const supabase = await createClient()
   const {

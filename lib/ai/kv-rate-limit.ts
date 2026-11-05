@@ -1,5 +1,6 @@
 /**
- * Vercel KV (Redis-compatible) atomic counter helper for rate limiting.
+ * Upstash Redis atomic counter helper for rate limiting (the store that
+ * replaced Vercel KV; it keeps the KV_REST_API_* variable names).
  *
  * Returns the new counter value after this request, or `null` if KV is not
  * configured (env vars missing or import fails). Callers should fall back to
@@ -24,11 +25,14 @@ async function getKv(): Promise<KvClient | null> {
     return null
   }
   try {
-    const mod = await import("@vercel/kv")
-    cachedClient = mod.kv as unknown as KvClient
+    const { Redis } = await import("@upstash/redis")
+    cachedClient = new Redis({
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+    }) as unknown as KvClient
     return cachedClient
   } catch (err) {
-    console.warn("[rate-limit] @vercel/kv import failed, falling back:", err)
+    console.warn("[rate-limit] Redis client init failed, falling back:", err)
     cachedClient = null
     return null
   }

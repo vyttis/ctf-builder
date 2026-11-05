@@ -33,7 +33,7 @@ async function isOnboardingCompleted(
   return completed
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
   const url = request.nextUrl.clone()
 

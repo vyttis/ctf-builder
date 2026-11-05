@@ -51,7 +51,7 @@ export function TeacherValueSection() {
       </div>
 
       {/* Stats grid — editorial numeric */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-y-12 lg:gap-x-8 max-w-6xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-12 lg:gap-x-8 max-w-6xl">
         {stats.map((stat, index) => (
           <motion.div
             key={index}

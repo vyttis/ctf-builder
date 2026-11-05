@@ -12,7 +12,7 @@ export function Footer() {
         <div className="mb-16 md:mb-24">
           <div className="flex items-center gap-3 mb-5">
             <span className="inline-flex h-px w-10 bg-steam-dark/30" />
-            <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/50 font-semibold">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/70 font-semibold">
               KU STEAM
             </span>
           </div>
@@ -22,7 +22,7 @@ export function Footer() {
         </div>
 
         {/* Bottom grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-12 gap-y-10 lg:gap-x-8 pt-10 border-t border-border/50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-y-10 lg:gap-x-8 pt-10 border-t border-border/50">
           {/* Brand */}
           <div className="lg:col-span-4">
             <Link
@@ -31,7 +31,7 @@ export function Footer() {
             >
               <SteamLogo size="small" />
             </Link>
-            <p className="text-sm text-muted-foreground/80 mt-4 leading-relaxed max-w-xs">
+            <p className="text-sm text-muted-foreground mt-4 leading-relaxed max-w-xs">
               Interaktyvių pamokų kūrimo įrankis Klaipėdos universiteto STEAM metodinio
               centro partnerių mokyklų tinklui.
             </p>
@@ -39,9 +39,9 @@ export function Footer() {
 
           {/* Navigate */}
           <div className="lg:col-span-2">
-            <h4 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/60 mb-4">
+            <h2 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
               Apie įrankį
-            </h4>
+            </h2>
             <ul className="space-y-2.5">
               <li>
                 <button
@@ -73,9 +73,9 @@ export function Footer() {
 
           {/* Institution */}
           <div className="lg:col-span-3">
-            <h4 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/60 mb-4">
+            <h2 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
               Institucija
-            </h4>
+            </h2>
             <ul className="space-y-2.5">
               <li>
                 <a
@@ -104,9 +104,9 @@ export function Footer() {
 
           {/* Contact */}
           <div className="lg:col-span-3">
-            <h4 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/60 mb-4">
+            <h2 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
               Kontaktai
-            </h4>
+            </h2>
             <ul className="space-y-3">
               <li>
                 <a
@@ -133,10 +133,10 @@ export function Footer() {
 
         {/* Bottom bar — colophon */}
         <div className="pt-8 mt-12 border-t border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground/70 font-mono">
+          <p className="text-xs text-muted-foreground font-mono">
             © {new Date().getFullYear()} Klaipėdos universitetas · STEAM metodinis centras
           </p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
             kusteam.app · v1.0
           </p>
         </div>

@@ -3,11 +3,12 @@ import { notFound, redirect } from "next/navigation"
 import { LiveView } from "@/components/teacher/live-view"
 import type { GameSettings, GameStatus } from "@/types/game"
 
-export default async function LiveViewPage({
-  params,
-}: {
-  params: { gameId: string }
-}) {
+export default async function LiveViewPage(
+  props: {
+    params: Promise<{ gameId: string }>
+  }
+) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },

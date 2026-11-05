@@ -236,10 +236,22 @@ export async function POST(request: Request) {
     let earnedAchievements: { type: string; challengeId: string | null; metadata: Record<string, unknown> }[] = []
 
     if (isCorrect) {
-      await supabase.rpc("increment_team_score", {
+      const { error: scoreError } = await supabase.rpc("increment_team_score", {
         p_team_id: team.id,
         p_points: pointsAwarded,
       })
+      if (scoreError) {
+        // The submission is already stored; without this log a failed score
+        // update stays invisible (as it did for two teams in March 2026).
+        console.error(
+          JSON.stringify({
+            event: "team_score_update_failed",
+            team_id: team.id,
+            code: scoreError.code,
+            message: scoreError.message,
+          })
+        )
+      }
 
       // Evaluate and save achievements
       try {

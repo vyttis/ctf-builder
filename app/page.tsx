@@ -16,17 +16,19 @@ import {
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
-      <HeroSection />
-      <ForWhomSection />
-      <WhatYouCanDoSection />
-      <HowItWorksSection />
-      <ClassroomExperienceSection />
-      <UseCasesSection />
-      <TeacherValueSection />
-      <DifferenceSection />
-      <AccessSection />
-      <AboutCreatorsSection />
-      <FinalCtaSection />
+      <main>
+        <HeroSection />
+        <ForWhomSection />
+        <WhatYouCanDoSection />
+        <HowItWorksSection />
+        <ClassroomExperienceSection />
+        <UseCasesSection />
+        <TeacherValueSection />
+        <DifferenceSection />
+        <AccessSection />
+        <AboutCreatorsSection />
+        <FinalCtaSection />
+      </main>
       <Footer />
     </div>
   )

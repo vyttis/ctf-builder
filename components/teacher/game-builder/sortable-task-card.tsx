@@ -70,7 +70,7 @@ export function SortableTaskCard({
               onClick={(e) => e.stopPropagation()}
             >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-bold text-primary w-5 text-center">
+              <span className="text-xs font-bold text-primary-ink w-5 text-center">
                 {index + 1}
               </span>
             </button>
@@ -112,7 +112,7 @@ export function SortableTaskCard({
                     variant="outline"
                     className={`text-[10px] px-1.5 py-0 ${
                       challenge.difficulty === "easy"
-                        ? "text-primary border-primary/30"
+                        ? "text-primary-ink border-primary/30"
                         : challenge.difficulty === "hard"
                         ? "text-accent border-accent/30"
                         : "text-highlight border-highlight/30"
@@ -178,7 +178,7 @@ export function TaskCardOverlay({
       <CardContent className="p-3">
         <div className="flex items-center gap-2">
           <GripVertical className="h-4 w-4 text-primary" />
-          <span className="text-xs font-bold text-primary">{index + 1}</span>
+          <span className="text-xs font-bold text-primary-ink">{index + 1}</span>
           <h3 className="font-medium text-sm text-steam-dark truncate flex-1">
             {challenge.title}
           </h3>

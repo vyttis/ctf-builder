@@ -4,10 +4,8 @@ import { computeDetailedStats } from "@/lib/game/detailed-stats"
 import { unauthorized, forbidden, notFound, serverError } from "@/lib/api/responses"
 
 // GET /api/games/[gameId]/analytics/detailed — per-challenge + per-team detailed stats
-export async function GET(
-  _request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   try {
     const supabase = await createClient()
     const {

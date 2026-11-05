@@ -14,7 +14,10 @@
     --popover-foreground: 186 100% 12%;
 
     --primary: 163 100% 41%;
-    --primary-foreground: 0 0% 100%;
+    /* Navy on brand green: 6.9:1 (white was 2:1). */
+    --primary-foreground: 186 100% 12%;
+    /* Darker green for green text on light surfaces: 5.4:1 on white. */
+    --primary-ink: 163 100% 24%;
 
     --secondary: 193 100% 35%;
     --secondary-foreground: 0 0% 100%;
@@ -27,6 +30,8 @@
 
     --highlight: 43 95% 63%;
     --highlight-foreground: 186 100% 12%;
+    /* Darker amber for yellow-tinted text on light surfaces (5.7:1 on white). */
+    --highlight-ink: 36 90% 30%;
 
     --destructive: 343 95% 57%;
     --destructive-foreground: 0 0% 100%;
@@ -52,7 +57,10 @@
     --popover-foreground: 210 20% 98%;
 
     --primary: 163 100% 41%;
-    --primary-foreground: 0 0% 100%;
+    /* Navy on brand green: 6.9:1 (white was 2:1). */
+    --primary-foreground: 186 100% 12%;
+    /* Darker green for green text on light surfaces: 5.4:1 on white. */
+    --primary-ink: 163 100% 24%;
 
     --secondary: 193 100% 35%;
     --secondary-foreground: 0 0% 100%;
@@ -65,6 +73,8 @@
 
     --highlight: 43 95% 63%;
     --highlight-foreground: 186 100% 12%;
+    /* Darker amber for yellow-tinted text on light surfaces (5.7:1 on white). */
+    --highlight-ink: 36 90% 30%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 20% 98%;

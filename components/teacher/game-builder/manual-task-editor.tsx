@@ -525,7 +525,7 @@ export function ManualTaskEditor({
             <div className="flex gap-2">
               {(
                 [
-                  { value: "easy", label: "Lengva", color: "text-primary border-primary/30 hover:bg-primary/5" },
+                  { value: "easy", label: "Lengva", color: "text-primary-ink border-primary/30 hover:bg-primary/5" },
                   { value: "medium", label: "Vidutinė", color: "text-highlight border-highlight/30 hover:bg-highlight/5" },
                   { value: "hard", label: "Sunki", color: "text-accent border-accent/30 hover:bg-accent/5" },
                 ] as const
@@ -593,7 +593,7 @@ export function ManualTaskEditor({
         <Button
           onClick={handleSave}
           disabled={loading || !title.trim()}
-          className="bg-primary hover:bg-primary/90 text-white gap-2"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />

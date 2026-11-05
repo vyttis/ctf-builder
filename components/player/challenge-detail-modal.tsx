@@ -241,7 +241,7 @@ export function ChallengeDetailModal({
                     variant={answer === option ? "default" : "outline"}
                     className={`w-full justify-start items-start h-auto min-h-12 py-3 px-4 text-left whitespace-normal break-words ${
                       answer === option
-                        ? "bg-steam-green text-white hover:bg-steam-green/90"
+                        ? "bg-steam-green text-primary-foreground hover:bg-steam-green/90"
                         : ""
                     }`}
                     onClick={() => setAnswer(option)}
@@ -270,7 +270,7 @@ export function ChallengeDetailModal({
             <Button
               type="submit"
               disabled={loading || !answer.trim()}
-              className="w-full h-12 bg-steam-green hover:bg-steam-green/90 text-white font-semibold shadow-lg shadow-steam-green/25 gap-2"
+              className="w-full h-12 bg-steam-green hover:bg-steam-green/90 text-primary-foreground font-semibold shadow-lg shadow-steam-green/25 gap-2"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -346,7 +346,7 @@ export function ChallengeDetailModal({
                   </div>
                   <Button
                     onClick={handleClose}
-                    className="w-full bg-steam-green hover:bg-steam-green/90 text-white gap-2"
+                    className="w-full bg-steam-green hover:bg-steam-green/90 text-primary-foreground gap-2"
                   >
                     Grįžti
                     <ArrowLeft className="h-4 w-4" />
@@ -358,7 +358,7 @@ export function ChallengeDetailModal({
               {feedback.is_correct && !feedback.explanation && (
                 <Button
                   onClick={handleClose}
-                  className="w-full bg-steam-green hover:bg-steam-green/90 text-white gap-2"
+                  className="w-full bg-steam-green hover:bg-steam-green/90 text-primary-foreground gap-2"
                 >
                   Grįžti
                   <ArrowLeft className="h-4 w-4" />

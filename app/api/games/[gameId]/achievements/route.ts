@@ -3,10 +3,8 @@ import { NextResponse } from "next/server"
 import { ACHIEVEMENT_CONFIG, type AchievementType } from "@/lib/game/achievements"
 
 // GET /api/games/[gameId]/achievements — achievement distribution for teacher
-export async function GET(
-  _request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   try {
     const supabase = await createClient()
     const {

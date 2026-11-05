@@ -1,10 +1,10 @@
-# CTF Builder
+# KU STEAM CLASSROOM (repozitorija `ctf-builder`)
 
-STEAM LT Klaipėda — SaaS platforma mokytojams kurti CTF (Capture The Flag) žaidimus klasei.
+STEAM LT Klaipėda mokytojų platforma: pamokų planai su DI pagalba ir komandinės veiklos klasei. Mokytojams `https://app.kusteam.app`, mokiniams `https://play.kusteam.app`. Platforma yra KU STEAM AI LAB ekosistemos dalis (`https://kusteam.app`).
 
 ## Architektūra
 
-- **Next.js 14 App Router** (TypeScript strict)
+- **Next.js 16 App Router** (TypeScript strict, React 19, Turbopack)
 - **Supabase** (Postgres, Auth, Realtime, Storage)
 - **Tailwind + shadcn/ui** (New York, CSS variables)
 - **Anthropic Claude** AI generavimui (pamokų planai, užduotys)
@@ -27,8 +27,10 @@ Atviras `http://app.localhost:3000` (mokytojas), `http://play.localhost:3000/<co
 
 - `npm run dev` — dev server
 - `npm run build` / `npm start` — production
-- `npm run lint` — ESLint
+- `npm run lint` — ESLint (flat config, `eslint.config.mjs`)
 - `npx tsc --noEmit` — type check
+- `npm test` — vienetų testai (Vitest)
+- `npm run test:e2e` — produkcijos smoke testai (Playwright, tik skaitymas). CI juos paleidžia po kiekvieno produkcijos diegimo ir kasdien.
 
 ## Svarbiausi principai
 
@@ -44,10 +46,11 @@ Atviras `http://app.localhost:3000` (mokytojas), `http://play.localhost:3000/<co
 - `app/(teacher)/` — autentifikuota teacher aplinka
 - `app/play/[gameCode]/` — žaidėjo flow (be auth)
 - `lib/ai/` — Claude prompts, schemas, helper'iai
+- `proxy.ts` — subdomenų maršrutizavimas ir mokytojo sesijos atnaujinimas (Next 16 `proxy`, anksčiau `middleware`)
 - `lib/supabase/` — trijų klientų pattern: `server.ts`, `client.ts`, `admin.ts`
 - `lib/auth/roles.ts` — RBAC: `teacher` / `admin` / `super_admin`
 - `lib/game/` — answer hashing, session, achievements, scoring
-- `supabase/migrations/` — DB schema (`00001` … `00018`)
+- `supabase/migrations/` — DB schema (`00001` … `00025`, žr. `docs/migration-history.md`)
 - `components/` — domain'ų pakaitinamai sugrupuoti (`teacher/`, `player/`, `admin/`, `landing/`, `ui/`)
 
 ## Spalvų paletė (Tailwind)

@@ -567,7 +567,7 @@ export default function PlayPage() {
           </p>
           <Button
             onClick={() => session && loadChallenges(session)}
-            className="w-full bg-primary hover:bg-primary/90 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             Bandyti dar kartą
           </Button>
@@ -617,7 +617,7 @@ export default function PlayPage() {
           </p>
           <Button
             onClick={() => session && loadChallenges(session)}
-            className="w-full bg-primary hover:bg-primary/90 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             Atnaujinti
           </Button>
@@ -694,7 +694,7 @@ export default function PlayPage() {
 
           {showLeaderboard && (
             <Link href={`/play/${gameCode}/leaderboard`}>
-              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white gap-2">
+              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
                 <BarChart3 className="h-4 w-4" />
                 Rezultatų lentelė
               </Button>
@@ -745,15 +745,15 @@ export default function PlayPage() {
 
           <div className="space-y-3 text-left mb-6 text-sm text-muted-foreground">
             <div className="flex items-start gap-2">
-              <span className="text-primary font-bold mt-0.5">•</span>
+              <span className="text-primary-ink font-bold mt-0.5">•</span>
               <span>Užduočių skaičius: <strong className="text-steam-dark">{challenges.length}</strong></span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-primary font-bold mt-0.5">•</span>
+              <span className="text-primary-ink font-bold mt-0.5">•</span>
               <span>Pasibaigus laikui, žaidimas bus automatiškai sustabdytas</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-primary font-bold mt-0.5">•</span>
+              <span className="text-primary-ink font-bold mt-0.5">•</span>
               <span>Jūsų rezultatai bus išsaugoti</span>
             </div>
           </div>
@@ -761,7 +761,7 @@ export default function PlayPage() {
           <Button
             size="lg"
             onClick={handleStart}
-            className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/25 gap-3"
+            className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg shadow-lg shadow-primary/25 gap-3"
           >
             <Play className="h-6 w-6" />
             Pradėti žaidimą
@@ -808,7 +808,7 @@ export default function PlayPage() {
 
           {showLeaderboard && (
             <Link href={`/play/${gameCode}/leaderboard`}>
-              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white gap-2">
+              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
                 <BarChart3 className="h-4 w-4" />
                 Rezultatų lentelė
               </Button>
@@ -1001,7 +1001,7 @@ export default function PlayPage() {
             <Card className="border-border/50 bg-white shadow-lg mb-4">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary-ink shrink-0">
                     {currentIndex + 1}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1091,7 +1091,7 @@ export default function PlayPage() {
                           type="button"
                           variant={answer === option ? "default" : "outline"}
                           className={`w-full justify-start items-start h-auto min-h-12 py-3 px-4 text-left whitespace-normal break-words ${
-                            answer === option ? "bg-primary text-white" : ""
+                            answer === option ? "bg-primary text-primary-foreground" : ""
                           }`}
                           onClick={() => setAnswer(option)}
                         >
@@ -1117,7 +1117,7 @@ export default function PlayPage() {
                   <Button
                     type="submit"
                     disabled={loading || !answer.trim()}
-                    className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/25 gap-2"
+                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/25 gap-2"
                   >
                     {loading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -1154,7 +1154,7 @@ export default function PlayPage() {
                           <XCircle className="h-6 w-6 text-accent shrink-0" />
                         )}
                         <div>
-                          <p className={`font-medium ${feedback.is_correct ? "text-primary" : "text-accent"}`}>
+                          <p className={`font-medium ${feedback.is_correct ? "text-primary-ink" : "text-accent"}`}>
                             {feedback.message}
                           </p>
                           {feedback.is_correct && !showExplanation && (
@@ -1195,7 +1195,7 @@ export default function PlayPage() {
                                 setGameFinished(true)
                               }
                             }}
-                            className="w-full bg-primary hover:bg-primary/90 text-white gap-2"
+                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
                           >
                             Toliau
                             <ChevronRight className="h-4 w-4" />

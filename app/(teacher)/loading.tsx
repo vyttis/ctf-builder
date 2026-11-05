@@ -12,7 +12,7 @@ export default function TeacherLoading() {
       </div>
 
       {/* Two CTA cards */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[0, 1].map((i) => (
           <div
             key={i}
@@ -28,7 +28,7 @@ export default function TeacherLoading() {
       </div>
 
       {/* Cards grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}

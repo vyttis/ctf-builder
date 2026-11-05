@@ -68,7 +68,7 @@ export function DifferenceSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="grid md:grid-cols-2 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60 max-w-5xl"
+        className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60 max-w-5xl"
       >
         {/* Quiz column */}
         <div className="bg-muted/30 p-8 md:p-10">

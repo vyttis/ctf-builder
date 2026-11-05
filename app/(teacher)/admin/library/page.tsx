@@ -124,7 +124,7 @@ export default function AdminLibraryPage() {
                       </p>
                     )}
                   </div>
-                  <Badge className="bg-highlight/10 text-highlight border-highlight/20 shrink-0">
+                  <Badge className="bg-highlight/10 text-highlight-ink border-highlight/20 shrink-0">
                     Laukia peržiūros
                   </Badge>
                 </div>
@@ -167,7 +167,7 @@ export default function AdminLibraryPage() {
                           key={i}
                           className="flex items-center gap-2 text-sm"
                         >
-                          <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                          <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary-ink shrink-0">
                             {i + 1}
                           </span>
                           <span className="text-steam-dark truncate">
@@ -211,7 +211,7 @@ export default function AdminLibraryPage() {
                   <Button
                     onClick={() => handleReview(item.id, "approved")}
                     disabled={actionId === item.id}
-                    className="bg-primary hover:bg-primary/90 text-white gap-2"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
                   >
                     {actionId === item.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

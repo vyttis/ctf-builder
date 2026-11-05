@@ -123,7 +123,7 @@ export default async function LessonPlansPage({
 
       {/* Plans list */}
       {plans && plans.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => {
             const stageCount = Array.isArray(plan.stages) ? plan.stages.length : 0
             const status = STATUS_LABELS[plan.status] || STATUS_LABELS.draft

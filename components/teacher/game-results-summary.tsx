@@ -143,7 +143,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
 
           {/* Hardest / easiest split */}
           {hardest.length > 0 && (
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ChallengeListPanel
                 title="Sudėtingiausios užduotys"
                 hint="Kur klasė užstrigo — verta aptarti."
@@ -189,7 +189,7 @@ function KpiCard({
   tint: "primary" | "secondary" | "highlight" | "accent"
 }) {
   const tints: Record<string, string> = {
-    primary: "bg-primary/10 text-primary",
+    primary: "bg-primary/10 text-primary-ink",
     secondary: "bg-secondary/10 text-secondary",
     highlight: "bg-highlight/15 text-steam-dark",
     accent: "bg-accent/10 text-accent",
@@ -247,7 +247,7 @@ function ChallengeListPanel({
               </div>
               <Badge
                 variant="outline"
-                className={`text-[10px] shrink-0 ${tone === "primary" ? "border-primary/30 text-primary" : "border-accent/30 text-accent"}`}
+                className={`text-[10px] shrink-0 ${tone === "primary" ? "border-primary/30 text-primary-ink" : "border-accent/30 text-accent"}`}
               >
                 {coveragePct}% klasės
               </Badge>

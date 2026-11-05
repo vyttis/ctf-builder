@@ -52,8 +52,8 @@ export function LibraryCard({ item }: LibraryCardProps) {
   // Map subjects to project palette tokens (steam-*)
   const subjectColors: Record<string, string> = {
     Fizika: "bg-secondary/10 text-secondary",
-    Chemija: "bg-primary/10 text-primary",
-    Biologija: "bg-primary/10 text-primary",
+    Chemija: "bg-primary/10 text-primary-ink",
+    Biologija: "bg-primary/10 text-primary-ink",
     Matematika: "bg-accent/10 text-accent",
     Informatika: "bg-highlight/15 text-steam-dark",
     Technologijos: "bg-highlight/15 text-steam-dark",
@@ -111,7 +111,7 @@ export function LibraryCard({ item }: LibraryCardProps) {
             size="sm"
             onClick={handleClone}
             disabled={cloning}
-            className="bg-primary hover:bg-primary/90 text-white gap-1.5 text-xs h-8"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 text-xs h-8"
           >
             <Copy className="h-3 w-3" />
             {cloning ? "Kopijuojama..." : "Naudoti šabloną"}

@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
         <StatsCards stats={stats} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent users */}
         <Card className="border-border/50 bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -107,7 +107,7 @@ export default async function AdminDashboardPage() {
                     {user.avatar_url ? (
                       <Image src={user.avatar_url} alt="" width={32} height={32} className="rounded-full" />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary-ink">
                         {(user.full_name || user.email)[0].toUpperCase()}
                       </div>
                     )}
@@ -144,7 +144,7 @@ export default async function AdminDashboardPage() {
               <BookOpen className="h-4 w-4 text-highlight" />
               Laukia patvirtinimo
               {stats.library_items_pending > 0 && (
-                <Badge className="bg-highlight/10 text-highlight border-highlight/20 text-xs">
+                <Badge className="bg-highlight/10 text-highlight-ink border-highlight/20 text-xs">
                   {stats.library_items_pending}
                 </Badge>
               )}
@@ -175,7 +175,7 @@ export default async function AdminDashboardPage() {
                   </div>
                   <Badge
                     variant="outline"
-                    className="bg-highlight/10 text-highlight border-highlight/20 text-xs"
+                    className="bg-highlight/10 text-highlight-ink border-highlight/20 text-xs"
                   >
                     Laukia
                   </Badge>

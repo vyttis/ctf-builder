@@ -143,7 +143,7 @@ export function TeacherNav({
               {avatarUrl ? (
                 <Image src={avatarUrl} alt="" width={40} height={40} className="rounded-full" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary-ink font-semibold">
                   {(fullName || email).charAt(0).toUpperCase()}
                 </div>
               )}
