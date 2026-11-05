@@ -49,8 +49,11 @@ export async function proxy(request: NextRequest) {
     url.search,
     process.env.CANONICAL_CLASSROOM_HOST,
   )
+  // 307 (temporary) while the switch is new: browsers do not cache it, so
+  // unsetting the variable really rolls back. Move to 308 once it has been
+  // stable for a while.
   if (canonical) {
-    return NextResponse.redirect(canonical, 308)
+    return NextResponse.redirect(canonical, 307)
   }
 
   // Participant routes on play.*: no auth, no Supabase calls, fast first paint.
