@@ -9,8 +9,13 @@ ne per `supabase db push`. Todėl CLI istorijos lentelė yra tuščia:
 SELECT count(*) FROM supabase_migrations.schema_migrations;  -- 0
 ```
 
-Schema pilnai subrandinta (visi `00001`–`00024` pakeitimai jau DB), tik CLI apie
-tai „nežino". Praktinės pasekmės:
+Iki 2026-11-05 produkcijoje trūko `00021` (`challenges.needs_answer`), nors
+`00022`–`00024` buvo pritaikytos. Tai laužė veiklos puslapį ir užduočių kūrimą.
+2026-11-05 `00021` pritaikyta (prieš tai `public.challenges` nukopijuota į
+`backup_20261105.challenges`), taip pat pritaikyta `00025` (Security Advisor
+pataisos). Lentelės `templates` produkcijoje nėra, nors `00001` ją kuria: ji buvo
+pašalinta ranka. Dabar visi `00001`–`00025` pakeitimai yra DB, tik CLI apie tai
+„nežino". Praktinės pasekmės:
 
 - `supabase db push` bandytų taikyti **visą** `00001…` seką iš naujo → lūžtų ties
   `already exists`. **Nenaudokite `db push`, kol neatliktas žemiau aprašytas
@@ -42,7 +47,7 @@ function`), todėl saugu jam suteikti naują, unikalią versiją gale sekos:
 
 ```bash
 git mv supabase/migrations/00007_bcrypt_answer_hash.sql \
-       supabase/migrations/00025_bcrypt_answer_hash.sql
+       supabase/migrations/00026_bcrypt_answer_hash.sql
 ```
 
 `00007_di_verification_columns.sql` lieka `00007` (jis privalo būti prieš
@@ -60,13 +65,13 @@ be `_` ir aprašymo). Po 1 žingsnio galutinis sąrašas:
 ```bash
 for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
          00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
-         00021 00022 00023 00024 00025; do
+         00021 00022 00023 00024 00025 00026; do
   supabase migration repair --status applied "$v"
 done
 ```
 
 > `00007` čia = `00007_di_verification_columns` (vienintelis likęs `00007`).
-> `00025` = pervadintas bcrypt. `00023`/`00024` = šio darbo migracijos
+> `00026` = pervadintas bcrypt. `00023`/`00024` = šio darbo migracijos
 > (`team_started_at`, `hint_reveals`) — pažymimos kaip pritaikytos tik jei jos
 > jau suvestos ranka produkcijoje (žr. PR deploy žingsnį).
 

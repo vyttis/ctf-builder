@@ -47,7 +47,7 @@ Atviras `http://app.localhost:3000` (mokytojas), `http://play.localhost:3000/<co
 - `lib/supabase/` — trijų klientų pattern: `server.ts`, `client.ts`, `admin.ts`
 - `lib/auth/roles.ts` — RBAC: `teacher` / `admin` / `super_admin`
 - `lib/game/` — answer hashing, session, achievements, scoring
-- `supabase/migrations/` — DB schema (`00001` … `00018`)
+- `supabase/migrations/` — DB schema (`00001` … `00025`, žr. `docs/migration-history.md`)
 - `components/` — domain'ų pakaitinamai sugrupuoti (`teacher/`, `player/`, `admin/`, `landing/`, `ui/`)
 
 ## Spalvų paletė (Tailwind)
