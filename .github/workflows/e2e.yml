@@ -1,0 +1,34 @@
+name: E2E smoke (production)
+
+# Read-only checks of the live teacher and student hosts. Runs after every
+# successful Vercel production deployment, daily, and on demand.
+on:
+  deployment_status:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    env:
+      TEACHER_URL: https://app.kusteam.app
+      PLAY_URL: https://play.kusteam.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
