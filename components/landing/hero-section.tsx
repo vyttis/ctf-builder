@@ -3,7 +3,7 @@
 import { SteamLogo } from "@/components/steam-logo"
 import { Button } from "@/components/ui/button"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
-import { ArrowUpRight, Check, LogIn, Mail, Sparkles } from "lucide-react"
+import { ArrowUpRight, Check, LogIn, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { useRef, useState } from "react"
@@ -76,15 +76,18 @@ export function HeroSection() {
           </Link>
 
           <div className="flex items-center gap-3 sm:gap-5">
-            <span className="hidden md:inline text-xs text-white/65 font-medium">
-              Partnerių mokyklų mokytojams
-            </span>
             <Link
-              href="/auth/login"
+              href="/prisijungti"
+              className="hidden sm:inline text-sm font-medium text-white/80 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-sm"
+            >
+              Prisijungti prie veiklos
+            </Link>
+            <Link
+              href="/vedejui"
               className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] backdrop-blur-sm pl-4 pr-3.5 py-2 text-sm text-white/85 hover:text-white hover:border-white/30 hover:bg-white/[0.08] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
               <LogIn className="h-3.5 w-3.5 text-primary/80 group-hover:text-primary transition-colors" />
-              <span className="font-medium">Prisijungti</span>
+              <span className="font-medium">Vesti veiklą</span>
               <ArrowUpRight className="h-3.5 w-3.5 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
             </Link>
           </div>
@@ -142,10 +145,10 @@ export function HeroSection() {
                 variants={reveal}
                 className="text-base md:text-lg text-white/75 mt-7 leading-relaxed max-w-[580px] text-pretty"
               >
-                Pamokų kūrimo įrankis mokytojams: komandinės užduotys, iššūkiai,
-                realiu laiku matomi mokinių atsakymai. Pritaikyta{" "}
-                <span className="text-white font-medium">Lietuvos bendrojo ugdymo programai</span>{" "}
-                — 24 dalykams nuo 1 iki 12 klasės.
+                Vedėjas sukuria komandinę veiklą su užduotimis, dalyviai prisijungia
+                su kodu, o jų atsakymai matomi realiu laiku. Pritaikyta{" "}
+                <span className="text-white font-medium">Lietuvos bendrojo ugdymo programai</span>,
+                24 dalykams nuo 1 iki 12 klasės.
               </motion.p>
 
               {/* CTAs */}
@@ -156,28 +159,26 @@ export function HeroSection() {
                 variants={reveal}
                 className="flex flex-col sm:flex-row gap-3 mt-9"
               >
-                <a href="mailto:steam@ku.lt">
+                {/* Role choice: the two ways into the platform */}
+                <Link href="/vedejui">
                   <Button
                     size="lg"
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 gap-2 h-12 text-sm px-7 font-semibold"
                   >
-                    <Mail className="h-4 w-4" />
-                    Susisiekti su STEAM centru
+                    <LogIn className="h-4 w-4" aria-hidden="true" />
+                    Vesti veiklą
                   </Button>
-                </a>
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  className="w-full sm:w-auto gap-2 h-12 text-sm px-6 text-white/85 hover:text-white hover:bg-white/10"
-                  onClick={() => {
-                    document
-                      .getElementById("how-it-works")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }}
-                >
-                  Kaip tai veikia
-                  <ArrowUpRight className="h-4 w-4 rotate-90" />
-                </Button>
+                </Link>
+                <Link href="/prisijungti">
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className="w-full sm:w-auto gap-2 h-12 text-sm px-6 text-white hover:text-white bg-white/10 hover:bg-white/15 border border-white/20"
+                  >
+                    Prisijungti prie veiklos
+                    <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </Link>
               </motion.div>
 
               {/* Numerical proof strip — typographic over icons */}

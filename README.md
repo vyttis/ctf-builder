@@ -1,14 +1,40 @@
-# KU STEAM CLASSROOM (repozitorija `ctf-builder`)
+# KU STEAM CLASSROOM
 
-STEAM LT Klaipėda mokytojų platforma: pamokų planai su DI pagalba ir komandinės veiklos klasei. Mokytojams `https://app.kusteam.app`, mokiniams `https://play.kusteam.app`. Platforma yra KU STEAM AI LAB ekosistemos dalis (`https://kusteam.app`).
+Interaktyvių pamokų platforma: vedėjas sukuria komandinę veiklą su užduotimis (galima su DI pagalba), paleidžia ją ir mato atsakymus realiu laiku, o dalyviai prisijungia su kodu ar QR kodu. Yra pamokų planai pagal bendrąsias programas, veiklų biblioteka, klasės ekranas ir ataskaitos.
+
+KU STEAM AI LAB ekosistemos dalis. Bendra architektūra, domenai ir atsakomybės: [`vyttis/kusteam-ai-lab` → `docs/ECOSYSTEM.md`](https://github.com/vyttis/kusteam-ai-lab/blob/main/docs/ECOSYSTEM.md).
+
+| | |
+| --- | --- |
+| Oficialus adresas | `https://pamokos.kusteam.app` |
+| Vedėjui | `/vedejui` (prisijungimas, veiklų valdymas) |
+| Dalyviui | `/prisijungti` (kodo įvedimas), `/play/<kodas>` (veikla) |
+| Seni adresai | `app.kusteam.app` ir `play.kusteam.app` nukreipiami į oficialų adresą, keliai ir parametrai išsaugomi |
+| Vercel projektas | `ctf-builder` (techninis pavadinimas) |
+| Atsako | Claude Code (koordinuoja Vytis Radvila) |
+
+## Naudojimas
+
+- **Vesti veiklą:** `pamokos.kusteam.app/vedejui` → prisijungimas su Google arba el. pašto kodu → „Mano veiklos“ → nauja veikla → užduotys → paleidimas → klasės ekranas su QR kodu.
+- **Prisijungti prie veiklos:** `pamokos.kusteam.app/prisijungti` → kodas arba QR → komandos pavadinimas → užduotys. Paskyros nereikia.
 
 ## Architektūra
 
-- **Next.js 16 App Router** (TypeScript strict, React 19, Turbopack)
-- **Supabase** (Postgres, Auth, Realtime, Storage)
-- **Tailwind + shadcn/ui** (New York, CSS variables)
-- **Anthropic Claude** AI generavimui (pamokų planai, užduotys)
-- **Dvi aplinkos**: teacher (`app.*`) ir player (`play.*`)
+- Next.js 16 App Router (TypeScript strict, React 19, Turbopack)
+- Supabase (Postgres, Auth, Realtime, Storage)
+- Tailwind + shadcn/ui
+- Anthropic Claude DI generavimui (pamokų planai, užduotys), Upstash Redis DI užklausų ribojimui
+- `proxy.ts` + `lib/hosts.ts`: vienas oficialus adresas vedėjui ir dalyviui, seni `app.`/`play.` adresai
+
+### Adresų perjungimas
+
+`CANONICAL_CLASSROOM_HOST=pamokos.kusteam.app` įjungia senų adresų nukreipimą (308). Kol kintamasis nenustatytas, `app.` ir `play.` veikia kaip anksčiau, todėl perjungimas ir atšaukimas yra vienas aplinkos kintamasis ir naujas diegimas. Vietoje paliekami tik:
+
+- `/api/*` (atidaryti puslapiai su senomis sesijomis),
+- `app.…/auth/callback` (PKCE slapukas galioja tik tame adrese, kur prasidėjo prisijungimas),
+- `play.…/play/<kodas>/play` ir `/leaderboard` (dalyvio sesija saugoma to adreso `localStorage`).
+
+Prisijungimo slapukai nesidalijami tarp subdomenų sąmoningai: kitos ekosistemos aplikacijos negauna CLASSROOM sesijų. Po perjungimo vedėjai vieną kartą prisijungia iš naujo.
 
 ## Lokalus paleidimas
 
@@ -17,60 +43,64 @@ npm install
 cp .env.local.example .env.local   # užpildyti reikšmes
 supabase start                      # lokali Postgres + auth
 supabase db reset                   # pritaikyti migracijas
-supabase gen types typescript --local > types/database.ts
 npm run dev
 ```
 
-Atviras `http://app.localhost:3000` (mokytojas), `http://play.localhost:3000/<code>` (žaidėjas).
+`http://pamokos.localhost:3000` (oficialus režimas), `http://app.localhost:3000` ir `http://play.localhost:3000` (seni adresai).
 
 ## Skriptai
 
-- `npm run dev` — dev server
-- `npm run build` / `npm start` — production
-- `npm run lint` — ESLint (flat config, `eslint.config.mjs`)
-- `npx tsc --noEmit` — type check
-- `npm test` — vienetų testai (Vitest)
-- `npm run test:e2e` — produkcijos smoke testai (Playwright, tik skaitymas). CI juos paleidžia po kiekvieno produkcijos diegimo ir kasdien.
+- `npm run dev`: dev serveris
+- `npm run build` / `npm start`: produkcija
+- `npm run lint`: ESLint
+- `npx tsc --noEmit`: tipų patikra
+- `npm test`: vienetų testai (Vitest)
+- `npm run test:e2e`: produkcijos smoke testai (Playwright, tik skaitymas). CI juos paleidžia po kiekvieno produkcijos diegimo ir kasdien.
+
+## Diegimas
+
+`main` šaka automatiškai diegiama į Vercel produkciją. Kiekvienas PR gauna peržiūros diegimą, apsaugotą Vercel prisijungimu. Produkcijos kintamieji (Vercel → Settings → Environment Variables):
+
+| Kintamasis | Paskirtis |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase klientas |
+| `SUPABASE_SERVICE_ROLE_KEY` | Tik serveryje (dalyvių API). Sensitive |
+| `ANTHROPIC_API_KEY` | DI generavimas. Sensitive |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis DI ribojimui |
+| `NEXT_PUBLIC_SITE_URL` | Oficialus adresas metaduomenims (`https://pamokos.kusteam.app`) |
+| `NEXT_PUBLIC_PLAY_URL` | Dalyvių nuorodų ir QR kodų adresas (`https://pamokos.kusteam.app`) |
+| `CANONICAL_CLASSROOM_HOST` | Įjungia senų adresų nukreipimą |
+
+Supabase Auth → URL Configuration: Site URL `https://pamokos.kusteam.app`, Redirect URLs turi apimti `https://pamokos.kusteam.app/**` ir senus adresus, kol jie naudojami.
 
 ## Svarbiausi principai
 
-1. Atsakymų tikrinimas server-side (`/api/submissions`) — niekada plain text kliente.
-2. Player aplinka be auth — sesija per `session_token` localStorage.
-3. Player rašymo operacijos eina per service_role API route'us; anon INSERT lockdown DB sluoksnyje.
-4. AI tik **siūlo** — mokytojas visada patvirtina teisingą atsakymą.
-5. `answer_hash` niekada negrąžinamas į frontend — `SAFE_CHALLENGE_COLUMNS` whitelist.
+1. Atsakymai tikrinami serveryje (`/api/submissions`), niekada kliente.
+2. Dalyviai be paskyrų: sesija per `session_token` naršyklės `localStorage`.
+3. Dalyvių rašymo operacijos eina per service_role API maršrutus; anon INSERT uždraustas DB sluoksnyje.
+4. DI tik siūlo: vedėjas visada patvirtina teisingą atsakymą.
+5. `answer_hash` niekada negrąžinamas į naršyklę (`SAFE_CHALLENGE_COLUMNS`).
+6. Sąsajoje vaidmenys vadinami „vedėjas“ ir „dalyvis“; pagrindiniai veiksmai „Vesti veiklą“ ir „Prisijungti prie veiklos“.
 
 ## Aplankų struktūra
 
-- `app/` — Next.js App Router puslapiai ir `/api/*` routes
-- `app/(teacher)/` — autentifikuota teacher aplinka
-- `app/play/[gameCode]/` — žaidėjo flow (be auth)
-- `lib/ai/` — Claude prompts, schemas, helper'iai
-- `proxy.ts` — subdomenų maršrutizavimas ir mokytojo sesijos atnaujinimas (Next 16 `proxy`, anksčiau `middleware`)
-- `lib/supabase/` — trijų klientų pattern: `server.ts`, `client.ts`, `admin.ts`
-- `lib/auth/roles.ts` — RBAC: `teacher` / `admin` / `super_admin`
-- `lib/game/` — answer hashing, session, achievements, scoring
-- `supabase/migrations/` — DB schema (`00001` … `00025`, žr. `docs/migration-history.md`)
-- `components/` — domain'ų pakaitinamai sugrupuoti (`teacher/`, `player/`, `admin/`, `landing/`, `ui/`)
-
-## Spalvų paletė (Tailwind)
-
-Naudoti **tik** šiuos tokens (`steam-*` arba theme: `primary`, `secondary`, `accent`, `highlight`, `muted`):
-
-- žalia `#00D296` (primary)
-- rožinė `#FA2864` (CTA / accent)
-- geltona `#FAC846` (highlight)
-- mėlyna `#008CB4` (secondary)
-- tamsi `#00323C` (dark)
+- `app/(teacher)/`: vedėjo aplinka (reikia sesijos)
+- `app/vedejui/`, `app/prisijungti/`: viešieji įėjimai
+- `app/play/[gameCode]/`: dalyvio eiga (be paskyros)
+- `lib/hosts.ts`: adresų vaidmenys ir senų adresų nukreipimai
+- `lib/ai/`: Claude užklausos ir schemos
+- `lib/supabase/`: `server.ts`, `client.ts`, `admin.ts`
+- `lib/auth/roles.ts`: RBAC `teacher` / `admin` / `super_admin`
+- `supabase/migrations/`: DB schema (`00001`…`00025`, žr. `docs/migration-history.md`)
 
 ## Saugumas
 
 - RLS visose lentelėse, anon INSERT izoliuotas (00018).
-- bcrypt 10 rounds answer hashing.
-- `SECURITY DEFINER` funkcijos EXECUTE apribotos `service_role` (00018).
-- Documents storage bucket'as su user-folder RLS.
+- bcrypt atsakymų maišos.
+- `SECURITY DEFINER` funkcijų `search_path` užfiksuotas (00025).
+- Žinoma likusi rizika: vieša anon užklausa gali išvardinti aktyvių veiklų kodus (žr. `kusteam-ai-lab/docs/STATUS.md`).
 
 ## Kalba
 
-- UI: VISA lietuvių kalba su teisingomis raidėmis (ąčęėįšųūž).
-- Kodas, komentarai, kintamųjų vardai, git žinutės: anglų.
+- Sąsaja: tik lietuvių kalba su teisingomis raidėmis.
+- Kodas, komentarai, git žinutės: anglų kalba.

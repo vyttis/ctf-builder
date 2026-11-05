@@ -562,7 +562,7 @@ export default function PlayPage() {
             Nepavyko įkelti žaidimo
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Patikrinkite interneto ryšį arba paklauskite mokytojo, ar žaidimas
+            Patikrinkite interneto ryšį arba paklauskite vedėjo, ar žaidimas
             vis dar vyksta.
           </p>
           <Button
@@ -612,8 +612,8 @@ export default function PlayPage() {
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
             {gameStatus === "draft"
-              ? "Palaukite, kol mokytojas paleis žaidimą, ir bandykite dar kartą."
-              : "Paklauskite mokytojo, ar žaidimas paruoštas, ir bandykite dar kartą."}
+              ? "Palaukite, kol vedėjas paleis žaidimą, ir bandykite dar kartą."
+              : "Paklauskite vedėjo, ar žaidimas paruoštas, ir bandykite dar kartą."}
           </p>
           <Button
             onClick={() => session && loadChallenges(session)}
@@ -642,7 +642,7 @@ export default function PlayPage() {
           </div>
           <h1 className="text-2xl font-bold mb-2">Žaidimas pristabdytas</h1>
           <p className="text-white/70 mb-6">
-            Palaukite, kol mokytojas tęs žaidimą. Jūsų taškai išsaugoti.
+            Palaukite, kol vedėjas tęs žaidimą. Jūsų taškai išsaugoti.
           </p>
           <div className="bg-white/5 rounded-2xl p-4 mb-2">
             <p className="text-2xl font-bold">{totalPoints} tšk.</p>
@@ -792,7 +792,7 @@ export default function PlayPage() {
           </h1>
           <p className="text-muted-foreground mb-4">
             {endedByTeacher && solvedIds.size < challenges.length
-              ? `Mokytojas užbaigė žaidimą. Išsprendėte ${solvedIds.size} iš ${challenges.length} užduočių.`
+              ? `Vedėjas užbaigė žaidimą. Išsprendėte ${solvedIds.size} iš ${challenges.length} užduočių.`
               : "Jūs išsprendėte visas užduotis!"}
           </p>
 

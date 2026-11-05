@@ -158,7 +158,7 @@ export function GameForm({ prefillData }: GameFormProps) {
               <Label htmlFor="description">Aprašymas</Label>
               <Textarea
                 id="description"
-                placeholder="Trumpas veiklos aprašymas mokiniams..."
+                placeholder="Trumpas veiklos aprašymas dalyviams..."
                 className="resize-none bg-white"
                 rows={3}
                 {...register("description")}
@@ -226,7 +226,7 @@ export function GameForm({ prefillData }: GameFormProps) {
                     Rodyti rezultatų lentelę
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Mokiniai matys kitų komandų rezultatus
+                    Dalyviai matys kitų komandų rezultatus
                   </p>
                 </div>
                 <Switch

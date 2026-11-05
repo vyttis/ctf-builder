@@ -95,7 +95,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
 
       const data = await res.json()
       toast({
-        title: "Veikla mokiniams sukurta!",
+        title: "Veikla sukurta!",
         description: `${data.challenges_created} užduočių sukurta. Kodas: ${data.game_code}`,
       })
       router.push(`/games/${data.game_id}`)
@@ -304,12 +304,12 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
             {converting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Kuriama veikla mokiniams...
+                Kuriama veikla...
               </>
             ) : (
               <>
                 <PlayCircle className="h-4 w-4" />
-                Sukurti veiklą mokiniams
+                Sukurti veiklą dalyviams
               </>
             )}
           </Button>
@@ -320,7 +320,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
               size="lg"
             >
               <PlayCircle className="h-4 w-4" />
-              Peržiūrėti veiklą mokiniams
+              Peržiūrėti veiklą
             </Button>
           </Link>
         ) : null}

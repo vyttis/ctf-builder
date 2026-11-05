@@ -166,7 +166,7 @@ export default function LeaderboardPage() {
           <p className="text-sm text-muted-foreground mb-6">
             {notFound
               ? `Kodas ${gameCode} neatitinka jokio žaidimo.`
-              : "Mokytojas išjungė rezultatų lentelę šiame žaidime."}
+              : "Vedėjas išjungė rezultatų lentelę šiame žaidime."}
           </p>
           <Link href={notFound ? "/play" : `/play/${gameCode}/play`}>
             <Button variant="outline" className="gap-2">

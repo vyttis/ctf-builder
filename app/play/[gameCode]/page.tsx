@@ -149,7 +149,7 @@ export default function JoinGamePage() {
           <p className="text-sm text-muted-foreground mb-6">
             Patikrinkite kodą ir bandykite dar kartą.
           </p>
-          <Link href="/play">
+          <Link href="/prisijungti">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Įvesti kitą kodą
@@ -163,8 +163,8 @@ export default function JoinGamePage() {
   // Game inactive (draft, paused, finished)
   if (gameState.status === "inactive") {
     const messages: Record<string, string> = {
-      draft: "Šis žaidimas dar neaktyvuotas. Palaukite, kol mokytojas jį paleis.",
-      paused: "Šis žaidimas pristabdytas. Palaukite, kol mokytojas jį tęs.",
+      draft: "Šis žaidimas dar neaktyvuotas. Palaukite, kol vedėjas jį paleis.",
+      paused: "Šis žaidimas pristabdytas. Palaukite, kol vedėjas jį tęs.",
       finished: "Šis žaidimas jau baigtas.",
     }
     return (
@@ -195,7 +195,7 @@ export default function JoinGamePage() {
                 Patikrinti dar kartą
               </Button>
             )}
-            <Link href="/play">
+            <Link href="/prisijungti">
               <Button variant="outline" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Įvesti kitą kodą

@@ -105,10 +105,10 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <h3 className="font-bold text-steam-dark text-base mb-1">
-                  Kurti veiklą mokiniams
+                  Kurti veiklą dalyviams
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Interaktyvi veikla su užduotimis, kurią mokiniai atlieka klasėje
+                  Interaktyvi veikla su užduotimis, kurią dalyviai atlieka klasėje
                 </p>
               </div>
               <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
@@ -121,7 +121,7 @@ export default async function DashboardPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-steam-dark">
-            Veiklos mokiniams
+            Mano veiklos
           </h1>
           <p className="text-muted-foreground mt-1">
             Interaktyvios veiklos ir žaidimai jūsų klasei
@@ -146,7 +146,7 @@ export default async function DashboardPage() {
           </div>
           <Gamepad2 className="h-10 w-10 text-muted-foreground/30 mb-4" />
           <h2 className="text-xl font-semibold text-steam-dark mb-2">
-            Dar nėra veiklų mokiniams
+            Dar nėra veiklų
           </h2>
           <p className="text-muted-foreground mb-6 max-w-sm">
             Sukurkite interaktyvią veiklą savo klasei arba pradėkite nuo pamokos plano

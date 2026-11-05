@@ -64,8 +64,13 @@ export function Footer() {
                 </button>
               </li>
               <li>
-                <Link href="/auth/login" className="text-sm text-steam-dark hover:text-primary transition-colors">
-                  Prisijungimas
+                <Link href="/vedejui" className="text-sm text-steam-dark hover:text-primary transition-colors">
+                  Vesti veiklą
+                </Link>
+              </li>
+              <li>
+                <Link href="/prisijungti" className="text-sm text-steam-dark hover:text-primary transition-colors">
+                  Prisijungti prie veiklos
                 </Link>
               </li>
             </ul>

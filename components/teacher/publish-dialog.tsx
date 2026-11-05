@@ -117,7 +117,7 @@ export function PublishDialog({
             Dalintis bibliotekoje
           </DialogTitle>
           <DialogDescription>
-            Jūsų veiklos šablonas bus prieinamas kitiems mokytojams po
+            Jūsų veiklos šablonas bus prieinamas kitiems vedėjams po
             administratoriaus patvirtinimo.
           </DialogDescription>
         </DialogHeader>

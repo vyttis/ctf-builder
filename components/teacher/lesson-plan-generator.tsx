@@ -319,7 +319,7 @@ export function LessonPlanGenerator() {
 
       const convertData = await convertRes.json()
       toast({
-        title: "Veikla mokiniams sukurta!",
+        title: "Veikla sukurta!",
         description: `${convertData.challenges_created} užduočių sukurta. Kodas: ${convertData.game_code}`,
       })
       router.push(`/games/${convertData.game_id}`)
@@ -841,12 +841,12 @@ export function LessonPlanGenerator() {
           {converting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Kuriama veikla mokiniams...
+              Kuriama veikla...
             </>
           ) : (
             <>
               <PlayCircle className="h-4 w-4" />
-              Sukurti veiklą mokiniams
+              Sukurti veiklą dalyviams
             </>
           )}
         </Button>

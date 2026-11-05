@@ -1,8 +1,11 @@
-# CTF Builder — STEAM LT Klaipėda
+# KU STEAM CLASSROOM (repozitorija `kusteam-classroom`)
 
 ## Projektas
-CTF Builder SaaS — platforma mokytojams kurti CTF žaidimus klasei.
-Dvi aplinkos: teacher (app.*) ir player (play.*).
+KU STEAM AI LAB interaktyvių pamokų platforma: vedėjai kuria ir veda komandines veiklas, dalyviai prisijungia su kodu.
+Oficialus adresas `pamokos.kusteam.app`: vedėjui `/vedejui`, dalyviui `/prisijungti` ir `/play/<kodas>`.
+Seni `app.*` ir `play.*` adresai turi toliau veikti (žr. `lib/hosts.ts`).
+Ekosistemos architektūra ir atsakomybės: `vyttis/kusteam-ai-lab` → `docs/ECOSYSTEM.md`.
+Sąsajoje vaidmenys: „vedėjas“ ir „dalyvis“ (ne „mokytojas/mokinys“); veiksmai „Vesti veiklą“, „Prisijungti prie veiklos“.
 
 ## Kalba
 - VISA user-facing UI turi būti LIETUVIŲ kalba su teisingais rašmenimis (ąčęėįšųūž)
@@ -18,7 +21,7 @@ Dvi aplinkos: teacher (app.*) ir player (play.*).
 - Background: balta (#FFFFFF), muted (#F8FAFB)
 
 ## Tech Stack
-- Next.js 14 App Router, TypeScript strict
+- Next.js 16 App Router (`proxy.ts`, ne `middleware.ts`), React 19, TypeScript strict
 - Tailwind CSS + shadcn/ui (New York, CSS variables)
 - Supabase (Postgres, Auth, Realtime)
 - npm kaip package manager

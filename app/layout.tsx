@@ -29,28 +29,32 @@ const instrumentSerif = Instrument_Serif({
   display: "swap",
 })
 
+// Canonical public address of the classroom; .vercel.app hosts are
+// infrastructure only and never appear in metadata or shared links.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pamokos.kusteam.app"
+const DESCRIPTION =
+  "KU STEAM AI LAB platforma, kurioje vedėjai kuria ir veda interaktyvias veiklas, o dalyviai prie jų prisijungia su kodu."
+
 export const metadata: Metadata = {
-  title: "KU STEAM platforma | Interaktyvios pamokos",
-  description:
-    "Klaipėdos universiteto STEAM metodinio centro platforma partnerių mokyklų mokytojams — interaktyvių pamokų, komandinių veiklų ir užduočių kūrimui.",
+  title: "KU STEAM CLASSROOM | Interaktyvios pamokos",
+  description: DESCRIPTION,
   icons: {
     icon: "/icon.svg",
   },
-  metadataBase: new URL("https://www.kusteam.app"),
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "Interaktyvi pamokų kūrimo platforma partnerių mokykloms",
-    description:
-      "Klaipėdos universiteto STEAM metodinio centro platforma mokytojams — interaktyvių pamokų, komandinių veiklų ir užduočių kūrimui.",
-    url: "https://www.kusteam.app",
-    siteName: "KU STEAM platforma",
+    title: "KU STEAM CLASSROOM",
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: "KU STEAM AI LAB",
     type: "website",
     locale: "lt_LT",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Interaktyvi pamokų kūrimo platforma partnerių mokykloms",
-    description:
-      "Klaipėdos universiteto STEAM metodinio centro platforma mokytojams — interaktyvių pamokų, komandinių veiklų ir užduočių kūrimui.",
+    title: "KU STEAM CLASSROOM",
+    description: DESCRIPTION,
   },
   robots: {
     index: false,
