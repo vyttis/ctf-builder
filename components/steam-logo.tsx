@@ -16,6 +16,8 @@ export function SteamLogo({ className = "", size = "default" }: { className?: st
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       style={{ overflow: "visible" }}
+      role="img"
+      aria-label="STEAM LT Klaipėda"
     >
       {/* X shape made of colored lines */}
       <g transform="translate(10, 10)">

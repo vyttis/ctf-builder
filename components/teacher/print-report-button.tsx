@@ -7,7 +7,7 @@ export function PrintReportButton() {
   return (
     <Button
       onClick={() => window.print()}
-      className="bg-primary hover:bg-primary/90 text-white gap-2 print:hidden"
+      className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 print:hidden"
     >
       <Printer className="h-4 w-4" />
       Spausdinti / Išsaugoti PDF

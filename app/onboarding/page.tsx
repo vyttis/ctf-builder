@@ -165,7 +165,7 @@ export default function OnboardingPage() {
               <Button
                 type="submit"
                 disabled={loading || !fullName || !school || !phone}
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 mt-2"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 mt-2"
               >
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />

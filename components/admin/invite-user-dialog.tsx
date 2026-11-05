@@ -114,7 +114,7 @@ export function InviteUserDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25">
+        <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25">
           <UserPlus className="h-4 w-4" />
           Pakviesti vartotoją
         </Button>
@@ -246,7 +246,7 @@ export function InviteUserDialog({
             <Button
               type="submit"
               disabled={loading || !email || !fullName || !school || !phone}
-              className="flex-1 bg-primary hover:bg-primary/90 text-white"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

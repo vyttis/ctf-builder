@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { SteamLogo } from "@/components/steam-logo"
 import { useToast } from "@/hooks/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
@@ -127,7 +127,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-white to-primary/5">
+    <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-white to-primary/5">
       {/* Background decorative elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
@@ -151,9 +151,9 @@ export function LoginForm() {
             <div className="mx-auto mb-4 w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
               <Image src="/illustrations/hero-hacker.svg" alt="" width={56} height={56} />
             </div>
-            <CardTitle className="text-2xl font-bold text-steam-dark">
+            <h1 className="text-2xl font-bold leading-none tracking-tight text-steam-dark">
               {step === "email" ? "Prisijungimas" : "Patvirtinkite kodą"}
-            </CardTitle>
+            </h1>
             <CardDescription className="text-muted-foreground">
               {step === "email"
                 ? "Prisijunkite su Google arba el. paštu"
@@ -224,7 +224,7 @@ export function LoginForm() {
                     <Button
                       type="submit"
                       disabled={loading || !email}
-                      className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+                      className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
                     >
                       {loading ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -270,7 +270,7 @@ export function LoginForm() {
                   <Button
                     type="submit"
                     disabled={loading || otp.length !== 6}
-                    className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
                   >
                     {loading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -311,6 +311,6 @@ export function LoginForm() {
           </p>
         </div>
       </motion.div>
-    </div>
+    </main>
   )
 }

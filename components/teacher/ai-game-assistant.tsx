@@ -238,7 +238,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
                                 type="button"
                                 size="sm"
                                 onClick={() => handleAccept(idea)}
-                                className="bg-primary hover:bg-primary/90 text-white gap-1.5 text-xs h-7"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 text-xs h-7"
                               >
                                 <Check className="h-3 w-3" />
                                 Naudoti

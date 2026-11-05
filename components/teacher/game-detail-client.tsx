@@ -56,7 +56,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
           onClick={() => setDuplicateDialogOpen(true)}
           variant="outline"
           size="sm"
-          className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+          className="gap-2 border-primary/30 text-primary-ink hover:bg-primary/5"
         >
           <Copy className="h-4 w-4" />
           Dubliuoti

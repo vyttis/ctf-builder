@@ -20,7 +20,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       label: "Viso žaidimų",
       value: stats.total_games,
       icon: Gamepad2,
-      color: "text-primary",
+      color: "text-primary-ink",
       bg: "bg-primary/10",
     },
     {
@@ -62,7 +62,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       label: "Teisingi atsakymai",
       value: stats.correct_submissions,
       icon: CheckCircle,
-      color: "text-primary",
+      color: "text-primary-ink",
       bg: "bg-primary/10",
     },
     {

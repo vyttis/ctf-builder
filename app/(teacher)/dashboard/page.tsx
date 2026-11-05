@@ -128,7 +128,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Link href="/games/new">
-          <Button className="bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20 gap-2">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 gap-2">
             <Plus className="h-4 w-4" />
             Nauja veikla
           </Button>
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
               </Button>
             </Link>
             <Link href="/games/new">
-              <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 gap-2">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 gap-2">
                 <Plus className="h-4 w-4" />
                 Kurti veiklą
               </Button>

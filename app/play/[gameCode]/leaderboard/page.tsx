@@ -236,11 +236,11 @@ export default function LeaderboardPage() {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className={`font-semibold truncate ${isMe ? "text-primary" : "text-steam-dark"}`}>
+                            <span className={`font-semibold truncate ${isMe ? "text-primary-ink" : "text-steam-dark"}`}>
                               {team.name}
                             </span>
                             {isMe && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary shrink-0">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary-ink shrink-0">
                                 Jūs
                               </Badge>
                             )}

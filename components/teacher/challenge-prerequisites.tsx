@@ -217,7 +217,7 @@ export function ChallengePrerequisites({
                       <div
                         className={`shrink-0 flex items-center justify-center w-4 h-4 rounded border transition-colors ${
                           isSelected
-                            ? "bg-steam-green border-steam-green text-white"
+                            ? "bg-steam-green border-steam-green text-primary-foreground"
                             : "border-gray-300"
                         }`}
                       >

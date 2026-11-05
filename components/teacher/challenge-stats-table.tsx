@@ -16,7 +16,7 @@ interface ChallengeStatsTableProps {
 }
 
 const difficultyLabels: Record<string, { label: string; className: string }> = {
-  easy: { label: "Lengva", className: "text-primary border-primary/30 bg-primary/5" },
+  easy: { label: "Lengva", className: "text-primary-ink border-primary/30 bg-primary/5" },
   medium: { label: "Vidutinė", className: "text-highlight border-highlight/30 bg-highlight/5" },
   hard: { label: "Sunki", className: "text-accent border-accent/30 bg-accent/5" },
 }
@@ -145,7 +145,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
                       className="border-b border-border/30 hover:bg-muted/30 transition-colors"
                     >
                       <td className="py-3 px-2">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary-ink">
                           {index + 1}
                         </div>
                       </td>
@@ -162,7 +162,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
                       <td className="py-3 px-2 text-center text-sm text-muted-foreground">
                         {stat.total_attempts}
                       </td>
-                      <td className="py-3 px-2 text-center text-sm font-medium text-primary">
+                      <td className="py-3 px-2 text-center text-sm font-medium text-primary-ink">
                         {stat.solves}
                       </td>
                       <td className="py-3 px-2 text-center">
@@ -218,7 +218,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
                       className="border-b border-border/30 hover:bg-muted/30 transition-colors"
                     >
                       <td className="py-3 px-2">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary-ink">
                           {index + 1}
                         </div>
                       </td>
@@ -235,7 +235,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
                       <td className="py-3 px-2 text-center text-sm text-muted-foreground">
                         {stat.attempts}
                       </td>
-                      <td className="py-3 px-2 text-center text-sm font-medium text-primary">
+                      <td className="py-3 px-2 text-center text-sm font-medium text-primary-ink">
                         {stat.solves}
                       </td>
                       <td className="py-3 px-2 text-center">

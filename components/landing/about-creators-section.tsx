@@ -88,25 +88,24 @@ export function AboutCreatorsSection() {
               { icon: Phone, label: "Telefonas", value: "+370 (46) 398 978", href: "tel:+37046398978" },
             ].map((item, i) => {
               const Icon = item.icon
-              const content = (
-                <div className="flex items-start gap-3">
-                  <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                  <div>
-                    <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70 font-semibold mb-0.5">
-                      {item.label}
-                    </dt>
-                    <dd className="text-sm md:text-base text-steam-dark font-medium">
-                      {item.value}
-                    </dd>
-                  </div>
+              // dt/dd must be direct children of a div inside the dl, so the
+              // link wraps the value only.
+              return (
+                <div key={i} className="relative pl-7">
+                  <Icon className="absolute left-0 top-0.5 h-4 w-4 text-primary" aria-hidden="true" />
+                  <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold mb-0.5">
+                    {item.label}
+                  </dt>
+                  <dd className="text-sm md:text-base text-steam-dark font-medium">
+                    {item.href ? (
+                      <a href={item.href} className="hover:opacity-70 transition-opacity">
+                        {item.value}
+                      </a>
+                    ) : (
+                      item.value
+                    )}
+                  </dd>
                 </div>
-              )
-              return item.href ? (
-                <a key={i} href={item.href} className="block hover:opacity-70 transition-opacity">
-                  {content}
-                </a>
-              ) : (
-                <div key={i}>{content}</div>
               )
             })}
           </dl>

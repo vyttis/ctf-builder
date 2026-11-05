@@ -8,13 +8,13 @@ export default function PlayerLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted to-white">
+    <main className="min-h-screen bg-gradient-to-b from-muted to-white">
       <ErrorBoundary
         fallbackTitle="Žaidimo klaida"
         fallbackMessage="Įvyko netikėta klaida. Pabandykite atnaujinti puslapį arba prisijungti iš naujo."
       >
         {children}
       </ErrorBoundary>
-    </div>
+    </main>
   )
 }

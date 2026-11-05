@@ -14,7 +14,10 @@
     --popover-foreground: 186 100% 12%;
 
     --primary: 163 100% 41%;
-    --primary-foreground: 0 0% 100%;
+    /* Navy on brand green: 6.9:1 (white was 2:1). */
+    --primary-foreground: 186 100% 12%;
+    /* Darker green for green text on light surfaces: 5.4:1 on white. */
+    --primary-ink: 163 100% 24%;
 
     --secondary: 193 100% 35%;
     --secondary-foreground: 0 0% 100%;
@@ -54,7 +57,10 @@
     --popover-foreground: 210 20% 98%;
 
     --primary: 163 100% 41%;
-    --primary-foreground: 0 0% 100%;
+    /* Navy on brand green: 6.9:1 (white was 2:1). */
+    --primary-foreground: 186 100% 12%;
+    /* Darker green for green text on light surfaces: 5.4:1 on white. */
+    --primary-ink: 163 100% 24%;
 
     --secondary: 193 100% 35%;
     --secondary-foreground: 0 0% 100%;

@@ -39,7 +39,7 @@ const statusLabels: Record<GameStatus, string> = {
 
 const statusColors: Record<GameStatus, string> = {
   draft: "bg-muted text-muted-foreground",
-  active: "bg-primary/10 text-primary border-primary/20",
+  active: "bg-primary/10 text-primary-ink border-primary/20",
   paused: "bg-highlight/10 text-highlight border-highlight/20",
   finished: "bg-secondary/10 text-secondary border-secondary/20",
 }

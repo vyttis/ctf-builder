@@ -207,7 +207,7 @@ export function BuilderSettings({
           <Button
             onClick={handleSave}
             disabled={loading || !formTitle.trim()}
-            className="w-full bg-primary hover:bg-primary/90 text-white gap-2"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

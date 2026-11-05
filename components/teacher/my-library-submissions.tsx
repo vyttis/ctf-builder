@@ -18,7 +18,7 @@ const STATUS_CONFIG: Record<
   },
   approved: {
     label: "Patvirtinta",
-    className: "border-primary/40 text-primary bg-primary/5",
+    className: "border-primary/40 text-primary-ink bg-primary/5",
     icon: CheckCircle2,
   },
   rejected: {

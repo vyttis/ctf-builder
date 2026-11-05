@@ -144,7 +144,7 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/5"
+                  className="h-7 gap-1.5 text-xs border-primary/30 text-primary-ink hover:bg-primary/5"
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()

@@ -597,7 +597,7 @@ export function LessonGenerator({
         <Button
           onClick={handleAddToGame}
           disabled={activities.length === 0 || phase === "creating"}
-          className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2"
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
           size="lg"
         >
           {phase === "creating" ? (

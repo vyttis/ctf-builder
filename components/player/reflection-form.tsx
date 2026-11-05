@@ -59,7 +59,7 @@ export function ReflectionForm({
           animate={{ opacity: 1, y: 0 }}
           className="mt-6"
         >
-          <div className="flex items-center justify-center gap-2 text-primary text-sm font-medium">
+          <div className="flex items-center justify-center gap-2 text-primary-ink text-sm font-medium">
             <CheckCircle2 className="h-4 w-4" />
             Refleksija išsaugota
           </div>
@@ -216,7 +216,7 @@ export function ReflectionForm({
               <Button
                 onClick={handleSubmit}
                 disabled={loading || !improvementText.trim()}
-                className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -124,7 +124,7 @@ export function UserTable({ users, currentUserRole, currentUserId, onUserAdded }
                   {user.avatar_url ? (
                     <Image src={user.avatar_url} alt="" width={32} height={32} className="rounded-full" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary-ink">
                       {(user.full_name || user.email)[0].toUpperCase()}
                     </div>
                   )}

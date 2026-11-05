@@ -51,7 +51,7 @@ export function TaskListPanel({
         <Button
           onClick={onAddNew}
           size="sm"
-          className="bg-primary hover:bg-primary/90 text-white gap-1.5 h-8"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 h-8"
         >
           <Plus className="h-3.5 w-3.5" />
           Nauja
@@ -91,7 +91,7 @@ export function TaskListPanel({
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
                     <Plus className="h-8 w-8 text-primary animate-pulse" />
                   </div>
-                  <h3 className="text-sm font-semibold text-primary mb-1">
+                  <h3 className="text-sm font-semibold text-primary-ink mb-1">
                     Paleiskite užduotį čia
                   </h3>
                   <p className="text-xs text-muted-foreground">
@@ -112,7 +112,7 @@ export function TaskListPanel({
                   <Button
                     onClick={onAddNew}
                     size="sm"
-                    className="bg-primary hover:bg-primary/90 text-white gap-1.5"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Pridėti rankiniu būdu
@@ -125,7 +125,7 @@ export function TaskListPanel({
 
         {isOverPanel && challenges.length > 0 && (
           <div className="mt-2 h-10 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center">
-            <p className="text-xs text-primary font-medium">
+            <p className="text-xs text-primary-ink font-medium">
               Paleiskite čia
             </p>
           </div>

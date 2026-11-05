@@ -219,7 +219,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             type="button"
             size="sm"
             onClick={handleUrlSubmit}
-            className="h-9 bg-primary text-white"
+            className="h-9 bg-primary text-primary-foreground"
           >
             Pridėti
           </Button>

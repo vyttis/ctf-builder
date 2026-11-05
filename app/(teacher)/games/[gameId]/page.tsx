@@ -40,7 +40,7 @@ const LIBRARY_STATUS_BADGES: Record<
   },
   approved: {
     label: "Biblioteka: patvirtinta",
-    className: "border-primary/40 text-primary",
+    className: "border-primary/40 text-primary-ink",
   },
   rejected: {
     label: "Biblioteka: atmesta",
@@ -164,7 +164,7 @@ export default async function GameDetailPage(
         <Link href={`/games/${game.id}/builder`}>
           <Button
             size="sm"
-            className="bg-primary hover:bg-primary/90 text-white gap-1"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
           >
             <Settings className="h-3.5 w-3.5" />
             Valdyti
@@ -181,7 +181,7 @@ export default async function GameDetailPage(
                   key={challenge.id}
                   className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/30"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary-ink shrink-0">
                     {index + 1}
                   </div>
                   {challenge.image_url && (
@@ -221,7 +221,7 @@ export default async function GameDetailPage(
             <Link href={`/games/${game.id}/builder`}>
               <Button
                 size="sm"
-                className="bg-primary hover:bg-primary/90 text-white gap-1"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 Kurti užduotis
@@ -312,7 +312,7 @@ export default async function GameDetailPage(
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                className="gap-2 border-primary/30 text-primary-ink hover:bg-primary/5"
               >
                 <BarChart3 className="h-4 w-4" />
                 Analitika

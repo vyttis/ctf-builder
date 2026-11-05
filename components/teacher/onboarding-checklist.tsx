@@ -60,7 +60,7 @@ export function OnboardingChecklist({
               ) : (
                 <Circle
                   className={`h-4 w-4 shrink-0 ${
-                    isNext ? "text-primary" : "text-muted-foreground/40"
+                    isNext ? "text-primary-ink" : "text-muted-foreground/40"
                   }`}
                 />
               )}

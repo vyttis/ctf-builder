@@ -55,7 +55,7 @@ export function FinalCtaSection() {
             <a href="mailto:steam@ku.lt">
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30 gap-2 h-12 text-sm px-7 font-semibold"
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 gap-2 h-12 text-sm px-7 font-semibold"
               >
                 <Mail className="h-4 w-4" />
                 steam@ku.lt

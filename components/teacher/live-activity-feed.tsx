@@ -248,7 +248,7 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
             {" "}išsprendė{" "}
             <span className="font-medium">{event.challenge_title}</span>
             {event.points ? (
-              <Badge variant="outline" className="ml-1.5 text-[10px] py-0 px-1.5 text-primary border-primary/30">
+              <Badge variant="outline" className="ml-1.5 text-[10px] py-0 px-1.5 text-primary-ink border-primary/30">
                 +{event.points} tšk.
               </Badge>
             ) : null}

@@ -159,7 +159,7 @@ export function HeroSection() {
                 <a href="mailto:steam@ku.lt">
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 gap-2 h-12 text-sm px-7 font-semibold"
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 gap-2 h-12 text-sm px-7 font-semibold"
                   >
                     <Mail className="h-4 w-4" />
                     Susisiekti su STEAM centru
@@ -237,7 +237,7 @@ export function HeroSection() {
                   {/* Card content — looks like a real challenge */}
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary font-semibold">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary-ink font-semibold">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                         Užduotis 3 iš 5
                       </span>
@@ -246,11 +246,11 @@ export function HeroSection() {
                       </span>
                     </div>
 
-                    <h3 className="text-display-xs text-steam-dark font-extrabold leading-tight mb-1">
+                    <p className="text-display-xs text-steam-dark font-extrabold leading-tight mb-1">
                       Kuri pora{" "}
                       <span className="font-display italic font-normal">geriausiai</span>{" "}
                       iliustruoja simbiozę?
-                    </h3>
+                    </p>
                     <p className="text-xs text-muted-foreground mb-5">
                       Simbiozė — abipusiškai naudingas dviejų skirtingų rūšių santykis.
                     </p>
@@ -277,7 +277,7 @@ export function HeroSection() {
                             <span
                               className={`shrink-0 w-6 h-6 rounded-md border flex items-center justify-center text-[11px] font-bold uppercase ${
                                 showResult && opt.correct
-                                  ? "border-primary bg-primary text-white"
+                                  ? "border-primary bg-primary text-primary-foreground"
                                   : showResult && !opt.correct
                                     ? "border-accent bg-accent text-white"
                                     : "border-border text-muted-foreground"

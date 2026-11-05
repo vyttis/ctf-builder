@@ -138,7 +138,7 @@ export function GameStatusActions({
       <Dialog open={showActivateDialog} onOpenChange={setShowActivateDialog}>
         <DialogTrigger asChild>
           <Button
-            className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 gap-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 gap-2"
             disabled={challengeCount === 0}
           >
             <Rocket className="h-4 w-4" />
@@ -192,7 +192,7 @@ export function GameStatusActions({
             <Button
               onClick={() => updateStatus("active")}
               disabled={loading || challengeCount === 0 || hasPendingAnswers}
-              className="bg-primary hover:bg-primary/90 text-white gap-2"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -234,7 +234,7 @@ export function GameStatusActions({
         <Button
           onClick={() => updateStatus("active")}
           disabled={loading}
-          className="bg-primary hover:bg-primary/90 text-white gap-2"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />

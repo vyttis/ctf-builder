@@ -119,7 +119,7 @@ export function AccessSection() {
 
               <a href="mailto:steam@ku.lt" className="inline-block">
                 <Button
-                  className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30 h-11 px-6"
+                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 h-11 px-6"
                 >
                   <Mail className="h-4 w-4" />
                   steam@ku.lt

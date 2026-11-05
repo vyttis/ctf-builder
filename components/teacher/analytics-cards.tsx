@@ -37,7 +37,7 @@ export function AnalyticsCards({ stats }: AnalyticsCardsProps) {
       label: "Teisingi atsakymai",
       value: `${stats.correct_submissions} (${successRate}%)`,
       icon: CheckCircle,
-      color: "text-primary",
+      color: "text-primary-ink",
       bg: "bg-primary/10",
     },
     {

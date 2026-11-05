@@ -258,7 +258,7 @@ export function SuggestionsPanel({
           </div>
           <Button
             size="sm"
-            className="bg-primary hover:bg-primary/90 text-white text-xs h-7 gap-1"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-7 gap-1"
             disabled={selectedIds.size === 0 || adding}
             onClick={onBulkAdd}
           >
