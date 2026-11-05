@@ -38,7 +38,7 @@ export function UseCasesSection() {
 
   return (
     <SectionWrapper background="white">
-      <div className="grid lg:grid-cols-12 gap-y-14 lg:gap-x-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-14 lg:gap-x-12 items-start">
         {/* Left — image with caption */}
         <motion.figure
           initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.97 }}

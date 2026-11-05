@@ -75,7 +75,7 @@ export function FinalCtaSection() {
           </div>
 
           {/* Editorial footer fragment — capability strip */}
-          <div className="grid sm:grid-cols-3 gap-y-6 sm:gap-x-8 mt-16 pt-10 border-t border-white/10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-6 sm:gap-x-8 mt-16 pt-10 border-t border-white/10">
             {[
               { num: "24", label: "BUP dalykai" },
               { num: "1–12", label: "Klasių spektras" },

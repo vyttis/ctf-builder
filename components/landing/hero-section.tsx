@@ -95,7 +95,7 @@ export function HeroSection() {
           style={{ y: parallaxY }}
           className="container mx-auto px-5 max-w-[1240px] pt-10 md:pt-16 pb-24 md:pb-32"
         >
-          <div className="grid lg:grid-cols-12 gap-y-12 lg:gap-x-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-12 lg:gap-x-10 items-start">
             {/* Left — text (7 cols) */}
             <div className="lg:col-span-7 lg:pt-6">
               {/* Eyebrow */}

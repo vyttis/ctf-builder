@@ -171,7 +171,7 @@ export function ClassroomExperienceSection() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
         {/* Teacher view */}
         <motion.div
           initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 30 }}

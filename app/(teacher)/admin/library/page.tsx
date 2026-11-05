@@ -124,7 +124,7 @@ export default function AdminLibraryPage() {
                       </p>
                     )}
                   </div>
-                  <Badge className="bg-highlight/10 text-highlight border-highlight/20 shrink-0">
+                  <Badge className="bg-highlight/10 text-highlight-ink border-highlight/20 shrink-0">
                     Laukia peržiūros
                   </Badge>
                 </div>

@@ -46,6 +46,7 @@ const config: Config = {
         highlight: {
           DEFAULT: "hsl(var(--highlight))",
           foreground: "hsl(var(--highlight-foreground))",
+          ink: "hsl(var(--highlight-ink))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",

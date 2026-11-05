@@ -264,7 +264,7 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
           {/* Leaderboard */}
           <LiveLeaderboardBoard
             teams={teams}

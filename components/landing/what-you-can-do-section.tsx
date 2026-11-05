@@ -75,7 +75,7 @@ export function WhatYouCanDoSection() {
       </div>
 
       {/* Cards grid — asymmetric, editorial */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60">
         {capabilities.map((item, index) => {
           const colors = ACCENT[item.accent]
           return (

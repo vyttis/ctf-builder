@@ -30,13 +30,13 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
   return (
     <>
       {/* Action buttons */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Single AI surface: the builder's DI tab (verified generation pipeline) */}
         <Link href={`/games/${game.id}/builder`}>
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 border-highlight/30 text-highlight hover:bg-highlight/5"
+            className="gap-2 border-highlight/40 text-highlight-ink hover:bg-highlight/10"
           >
             <Sparkles className="h-4 w-4" />
             DI Padėjėjas

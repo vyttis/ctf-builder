@@ -27,6 +27,8 @@
 
     --highlight: 43 95% 63%;
     --highlight-foreground: 186 100% 12%;
+    /* Darker amber for yellow-tinted text on light surfaces (5.7:1 on white). */
+    --highlight-ink: 36 90% 30%;
 
     --destructive: 343 95% 57%;
     --destructive-foreground: 0 0% 100%;
@@ -65,6 +67,8 @@
 
     --highlight: 43 95% 63%;
     --highlight-foreground: 186 100% 12%;
+    /* Darker amber for yellow-tinted text on light surfaces (5.7:1 on white). */
+    --highlight-ink: 36 90% 30%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 20% 98%;

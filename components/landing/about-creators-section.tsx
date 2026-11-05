@@ -49,7 +49,7 @@ export function AboutCreatorsSection() {
       </div>
 
       {/* Photo strip + contact, editorial composition */}
-      <div className="grid lg:grid-cols-12 gap-y-10 lg:gap-x-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-10 lg:gap-x-10">
         {/* Photo strip */}
         <motion.div
           initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}

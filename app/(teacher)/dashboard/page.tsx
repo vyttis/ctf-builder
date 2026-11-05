@@ -75,7 +75,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Two clear paths */}
-      <div className="grid sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {/* Path 1: Lesson plans */}
         <Link href="/lesson-plans/new">
           <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 to-secondary/10 hover:shadow-lg hover:shadow-secondary/10 transition-all duration-300 group cursor-pointer h-full">

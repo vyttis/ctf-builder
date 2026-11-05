@@ -38,7 +38,7 @@ export function AccessSection() {
 
   return (
     <SectionWrapper background="muted" id="access">
-      <div className="grid lg:grid-cols-12 gap-y-14 lg:gap-x-14 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-14 lg:gap-x-14 items-start">
         {/* Left — process */}
         <div className="lg:col-span-7">
           {/* Editorial header */}

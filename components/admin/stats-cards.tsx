@@ -96,7 +96,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
                   {card.label}
                 </p>
                 {card.extra && (
-                  <p className="text-xs text-highlight font-medium">
+                  <p className="text-xs text-highlight-ink font-medium">
                     {card.extra}
                   </p>
                 )}

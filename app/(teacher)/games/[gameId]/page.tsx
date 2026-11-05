@@ -36,7 +36,7 @@ const LIBRARY_STATUS_BADGES: Record<
 > = {
   pending_review: {
     label: "Biblioteka: laukia peržiūros",
-    className: "border-highlight/40 text-highlight",
+    className: "border-highlight/40 text-highlight-ink",
   },
   approved: {
     label: "Biblioteka: patvirtinta",
@@ -367,7 +367,7 @@ export default async function GameDetailPage(
               totalChallenges={challenges.length}
             />
           )}
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">{challengeList}</div>
             <div className="space-y-6">
               {statsCards}
@@ -377,7 +377,7 @@ export default async function GameDetailPage(
         </div>
       ) : isLive ? (
         /* ============ ACTIVE/PAUSED: live view first ============ */
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <LiveControlCenter
               gameId={game.id}
@@ -404,7 +404,7 @@ export default async function GameDetailPage(
         </div>
       ) : (
         /* ============ DRAFT: builder-centric ============ */
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <DraftReadinessChecklist
               challengeCount={challenges.length}

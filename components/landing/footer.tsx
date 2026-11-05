@@ -22,7 +22,7 @@ export function Footer() {
         </div>
 
         {/* Bottom grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-12 gap-y-10 lg:gap-x-8 pt-10 border-t border-border/50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-y-10 lg:gap-x-8 pt-10 border-t border-border/50">
           {/* Brand */}
           <div className="lg:col-span-4">
             <Link
