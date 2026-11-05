@@ -59,7 +59,7 @@ export function TeacherNav({
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
                   <Gamepad2 className="h-4 w-4" />
-                  Veiklos mokiniams
+                  Mano veiklos
                 </Button>
               </Link>
               <Link href="/library">
@@ -185,7 +185,7 @@ export function TeacherNav({
             <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
               <Button variant="ghost" className="w-full justify-start gap-3 h-11 text-steam-dark">
                 <Gamepad2 className="h-4 w-4" />
-                Veiklos mokiniams
+                Mano veiklos
               </Button>
             </Link>
             <Link href="/library" onClick={() => setMobileMenuOpen(false)}>

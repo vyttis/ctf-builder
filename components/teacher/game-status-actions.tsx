@@ -72,10 +72,10 @@ export function GameStatusActions({
             : "Žaidimas pristabdytas",
         description:
           newStatus === "active"
-            ? "Mokiniai gali prisijungti nuskaitę QR kodą."
+            ? "Dalyviai gali prisijungti nuskaitę QR kodą."
             : newStatus === "finished"
             ? "Rezultatai ir analitika paruošti peržiūrai."
-            : "Mokiniai matys pauzės pranešimą.",
+            : "Dalyviai matys pauzės pranešimą.",
       })
 
       setShowActivateDialog(false)
@@ -108,7 +108,7 @@ export function GameStatusActions({
         <DialogHeader>
           <DialogTitle>Baigti žaidimą?</DialogTitle>
           <DialogDescription>
-            Mokiniai nebegalės pateikti atsakymų, o jūs matysite rezultatų
+            Dalyviai nebegalės pateikti atsakymų, o jūs matysite rezultatų
             suvestinę. Šio veiksmo negalima atšaukti.
           </DialogDescription>
         </DialogHeader>
@@ -149,7 +149,7 @@ export function GameStatusActions({
           <DialogHeader>
             <DialogTitle>Pradėti žaidimą?</DialogTitle>
             <DialogDescription>
-              Mokiniai galės prisijungti nuskaitę QR kodą arba įvedę žaidimo
+              Dalyviai galės prisijungti nuskaitę QR kodą arba įvedę žaidimo
               kodą. Galėsite bet kada pristabdyti ar baigti žaidimą.
             </DialogDescription>
           </DialogHeader>

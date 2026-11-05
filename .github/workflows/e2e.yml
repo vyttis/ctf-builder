@@ -1,6 +1,6 @@
 name: E2E smoke (production)
 
-# Read-only checks of the live teacher and student hosts. Runs after every
+# Read-only checks of the live classroom host and the older split hosts. Runs after every
 # successful Vercel production deployment, daily, and on demand.
 on:
   deployment_status:
@@ -16,6 +16,7 @@ jobs:
        github.event.deployment.environment == 'Production')
     runs-on: ubuntu-latest
     env:
+      CLASSROOM_URL: https://pamokos.kusteam.app
       TEACHER_URL: https://app.kusteam.app
       PLAY_URL: https://play.kusteam.app
     steps:

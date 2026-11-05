@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { hostKind, legacyRedirect } from "@/lib/hosts"
 
 // In-memory onboarding-completed cache: user.id → { completed, expiresAt }.
 // 30s TTL is short enough to feel "live" but cuts ~30-50ms off every teacher
@@ -37,43 +38,41 @@ export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
   const url = request.nextUrl.clone()
 
-  // Determine subdomain
-  let subdomain = ""
-  if (hostname.includes("localhost")) {
-    // app.localhost:3000 -> "app", play.localhost:3000 -> "play"
-    const parts = hostname.split(".")
-    if (parts.length > 1 && parts[0] !== "localhost") {
-      subdomain = parts[0]
-    }
-  } else {
-    // Production: app.ctfbuilder.com -> "app"
-    const parts = hostname.split(".")
-    if (parts.length > 2) {
-      subdomain = parts[0]
-    }
+  const kind = hostKind(hostname)
+
+  // After the switch to pamokos.kusteam.app, the old split hosts move their
+  // visitors there (paths and query kept). Unset = old behaviour, so the
+  // switch and its rollback are one environment variable.
+  const canonical = legacyRedirect(
+    kind,
+    url.pathname,
+    url.search,
+    process.env.CANONICAL_CLASSROOM_HOST,
+  )
+  if (canonical) {
+    return NextResponse.redirect(canonical, 308)
   }
 
-  // Player routes: no auth, no Supabase calls — return immediately for fast page load
-  if (subdomain === "play") {
-    // Students who type play.kusteam.app by hand should land on the
-    // code entry screen, not the teacher-facing landing page.
-    if (url.pathname === "/") {
-      url.pathname = "/play"
+  // Participant routes on play.*: no auth, no Supabase calls, fast first paint.
+  if (kind === "play") {
+    // Participants who type play.kusteam.app by hand should land on the
+    // code entry screen, not the facilitator-facing landing page.
+    if (url.pathname === "/" || url.pathname === "/play") {
+      url.pathname = "/prisijungti"
       return NextResponse.redirect(url)
     }
     return NextResponse.next({ request })
   }
 
-  // Defensive redirect: students who land on app.* with a /play/<code> path
-  // (e.g. from an old QR code or a shared link) should bounce to play.* —
-  // otherwise the auth guard below would redirect them to /auth/login,
-  // a dead end for students who have no account.
-  if (subdomain === "app" && url.pathname.startsWith("/play/")) {
-    const playHost = hostname.replace(/^app\./, "play.")
+  // Participants who land on app.* (an old QR code, a shared link, or the
+  // participant entry) belong on play.*: the facilitator auth guard below
+  // would otherwise send them to a login page they cannot use.
+  if (
+    kind === "app" &&
+    (url.pathname.startsWith("/play/") || url.pathname === "/prisijungti")
+  ) {
     const playUrl = url.clone()
-    playUrl.host = playHost
-    // Keep the full /play/<code> path — Next.js route shape is the same
-    // on both subdomains.
+    playUrl.host = hostname.replace(/^app\./, "play.")
     return NextResponse.redirect(playUrl)
   }
 
@@ -124,8 +123,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Teacher routes: require auth
-  if (subdomain === "app") {
+  // Facilitator host app.*: everything except auth pages requires a session
+  if (kind === "app") {
     const isAuthCallback = url.pathname === "/auth/callback"
     const isAuthPage = url.pathname.startsWith("/auth")
     const isOnboarding = url.pathname === "/onboarding"
@@ -158,7 +157,8 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  // No subdomain: path-based routing
+  // pamokos.* and the bare domain: one host for facilitators and participants,
+  // only facilitator routes require a session.
   const isAuthCallback = url.pathname === "/auth/callback"
   const isAuthPage = url.pathname.startsWith("/auth")
   const isOnboarding = url.pathname === "/onboarding"
@@ -175,14 +175,22 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  // Teacher routes require auth
-  if (isTeacherRoute && !user) {
-    url.pathname = "/auth/login"
+  // The facilitator entry on pamokos.* is /vedejui; the older login address
+  // keeps working and lands there with its query (e.g. ?error=) intact.
+  if (kind === "pamokos" && url.pathname === "/auth/login" && !user) {
+    url.pathname = "/vedejui"
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users from landing & login to dashboard
-  if (user && (url.pathname === "/" || isAuthPage)) {
+  // Facilitator routes require a session
+  if (isTeacherRoute && !user) {
+    url.pathname = kind === "pamokos" ? "/vedejui" : "/auth/login"
+    return NextResponse.redirect(url)
+  }
+
+  // Signed-in facilitators skip the login page. On pamokos.* the root stays
+  // the role choice ("Vesti veiklą" / "Prisijungti prie veiklos").
+  if (user && (isAuthPage || (url.pathname === "/" && kind !== "pamokos"))) {
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
   }

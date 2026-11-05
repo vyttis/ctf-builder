@@ -316,7 +316,7 @@ export function ManualTaskEditor({
           id={`${fieldId}-description`}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Detalus užduoties aprašymas mokiniams..."
+          placeholder="Detalus užduoties aprašymas dalyviams..."
           className="bg-white resize-none"
           rows={3}
         />
@@ -513,7 +513,7 @@ export function ManualTaskEditor({
             <Textarea
               value={explanation}
               onChange={(e) => setExplanation(e.target.value)}
-              placeholder="Trumpas edukacinis paaiškinimas mokiniams..."
+              placeholder="Trumpas edukacinis paaiškinimas dalyviams..."
               className="bg-white resize-none"
               rows={2}
             />

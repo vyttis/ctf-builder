@@ -35,10 +35,10 @@ export default function NewGamePage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-steam-dark">
-            Nauja veikla mokiniams
+            Nauja veikla
           </h1>
           <p className="text-muted-foreground mt-1">
-            Sukurkite interaktyvią veiklą savo mokiniams. Vėliau galėsite pridėti užduotis.
+            Sukurkite interaktyvią veiklą dalyviams. Vėliau galėsite pridėti užduotis.
           </p>
         </div>
       </div>

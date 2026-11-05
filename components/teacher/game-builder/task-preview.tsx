@@ -46,7 +46,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
         <div className="flex items-center gap-2">
           <Eye className="h-4 w-4 text-secondary" />
           <h3 className="font-semibold text-sm text-steam-dark">
-            Mokinio vaizdas
+            Dalyvio vaizdas
           </h3>
         </div>
         <Button

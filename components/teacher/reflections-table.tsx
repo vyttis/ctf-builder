@@ -114,7 +114,7 @@ export function ReflectionsTable({ reflections, totalTeams }: ReflectionsTablePr
         <CardContent className="py-12 text-center">
           <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground text-sm">
-            Dar nėra refleksijų. Mokiniai gali užpildyti refleksiją baigę žaidimą.
+            Dar nėra refleksijų. Dalyviai gali užpildyti refleksiją baigę žaidimą.
           </p>
         </CardContent>
       </Card>

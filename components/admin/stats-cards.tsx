@@ -31,7 +31,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       bg: "bg-highlight/10",
     },
     {
-      label: "Mokytojai",
+      label: "Vedėjai",
       value: stats.total_teachers,
       icon: Users,
       color: "text-secondary",

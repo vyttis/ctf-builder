@@ -94,7 +94,7 @@ export default async function GameReportPage(
           )}
           <div className="flex flex-wrap gap-x-6 gap-y-1 mt-3 text-sm">
             <span>
-              <span className="text-muted-foreground">Mokytojas:</span>{" "}
+              <span className="text-muted-foreground">Vedėjas:</span>{" "}
               <span className="font-medium">{profile?.full_name || "—"}</span>
             </span>
             {profile?.school && (
@@ -213,7 +213,7 @@ export default async function GameReportPage(
         {reflections.length > 0 && (
           <section style={{ breakInside: "avoid" }}>
             <h2 className="text-base font-semibold text-steam-dark mb-2">
-              Mokinių refleksijos (ištrauka)
+              Dalyvių refleksijos (ištrauka)
             </h2>
             <div className="space-y-2">
               {reflections.map((r) => (

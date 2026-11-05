@@ -212,7 +212,7 @@ export function LoginForm() {
                         <Input
                           id="email"
                           type="email"
-                          placeholder="mokytojas@mokykla.lt"
+                          placeholder="vardas@mokykla.lt"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className="pl-10 h-12 bg-white border-border/50 focus:border-primary focus:ring-primary/20"

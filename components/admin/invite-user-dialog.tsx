@@ -140,7 +140,7 @@ export function InviteUserDialog({
               <Input
                 id="invite-email"
                 type="email"
-                placeholder="mokytojas@mokykla.lt"
+                placeholder="vardas@mokykla.lt"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10"

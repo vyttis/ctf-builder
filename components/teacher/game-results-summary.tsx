@@ -154,7 +154,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
               />
               <ChallengeListPanel
                 title="Lengviausiai pavyko"
-                hint="Mokiniai jau valdo šią medžiagą."
+                hint="Dalyviai jau valdo šią medžiagą."
                 icon={<CheckCircle2 className="h-4 w-4 text-primary" />}
                 tone="primary"
                 items={easiest}

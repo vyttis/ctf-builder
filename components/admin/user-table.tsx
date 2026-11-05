@@ -179,7 +179,7 @@ export function UserTable({ users, currentUserRole, currentUserId, onUserAdded }
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="teacher">Mokytojas</SelectItem>
+                        <SelectItem value="teacher">Vedėjas</SelectItem>
                         <SelectItem value="admin">Administratorius</SelectItem>
                         <SelectItem value="super_admin">
                           Super admin
