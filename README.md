@@ -28,7 +28,7 @@ KU STEAM AI LAB ekosistemos dalis. Bendra architektūra, domenai ir atsakomybės
 
 ### Adresų perjungimas
 
-`CANONICAL_CLASSROOM_HOST=pamokos.kusteam.app` įjungia senų adresų nukreipimą (308). Kol kintamasis nenustatytas, `app.` ir `play.` veikia kaip anksčiau, todėl perjungimas ir atšaukimas yra vienas aplinkos kintamasis ir naujas diegimas. Vietoje paliekami tik:
+`CANONICAL_CLASSROOM_HOST=pamokos.kusteam.app` įjungia senų adresų nukreipimą (307, laikinas: naršyklės jo neįsimena, todėl atšaukimas tikrai veikia; po stabilaus laikotarpio galima pakeisti į 308). Kol kintamasis nenustatytas, `app.` ir `play.` veikia kaip anksčiau, todėl perjungimas ir atšaukimas yra vienas aplinkos kintamasis ir naujas diegimas. Vietoje paliekami tik:
 
 - `/api/*` (atidaryti puslapiai su senomis sesijomis),
 - `app.…/auth/callback` (PKCE slapukas galioja tik tame adrese, kur prasidėjo prisijungimas),
