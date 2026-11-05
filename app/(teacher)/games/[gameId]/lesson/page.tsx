@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
-export default async function LessonGeneratorPage({
-  params,
-}: {
-  params: { gameId: string }
-}) {
+export default async function LessonGeneratorPage(
+  props: {
+    params: Promise<{ gameId: string }>
+  }
+) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },

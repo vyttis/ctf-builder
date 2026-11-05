@@ -18,11 +18,12 @@ interface ReflectionRow {
 // Print-friendly one-page game report for documentation (Ministry-facing).
 // Static markup only — no client fetching or animation; use the browser's
 // print-to-PDF ("Spausdinti / Išsaugoti PDF").
-export default async function GameReportPage({
-  params,
-}: {
-  params: { gameId: string }
-}) {
+export default async function GameReportPage(
+  props: {
+    params: Promise<{ gameId: string }>
+  }
+) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },

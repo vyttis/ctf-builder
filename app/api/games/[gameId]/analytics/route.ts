@@ -2,10 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 // GET /api/games/[gameId]/analytics — get game statistics
-export async function GET(
-  _request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   try {
     const supabase = await createClient()
     const {

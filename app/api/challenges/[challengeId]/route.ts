@@ -59,10 +59,8 @@ async function verifyChallengeOwnership(
   return !!game
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { challengeId: string } }
-) {
+export async function PATCH(request: Request, props: { params: Promise<{ challengeId: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },
@@ -134,10 +132,8 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { challengeId: string } }
-) {
+export async function DELETE(_request: Request, props: { params: Promise<{ challengeId: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },

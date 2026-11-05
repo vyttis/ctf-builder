@@ -3,11 +3,12 @@ import { notFound } from "next/navigation"
 import { GameStatus, GameSettings, Challenge } from "@/types/game"
 import { GameBuilder } from "@/components/teacher/game-builder/game-builder"
 
-export default async function BuilderPage({
-  params,
-}: {
-  params: { gameId: string }
-}) {
+export default async function BuilderPage(
+  props: {
+    params: Promise<{ gameId: string }>
+  }
+) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },

@@ -7,10 +7,8 @@ import { hashAnswer } from "@/lib/game/answer-hasher"
  * Convert a saved lesson plan into a student activity (game).
  * Creates a new game with challenges derived from the lesson plan stages.
  */
-export async function POST(
-  request: Request,
-  { params }: { params: { planId: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ planId: string }> }) {
+  const params = await props.params;
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

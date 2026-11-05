@@ -48,11 +48,12 @@ const LIBRARY_STATUS_BADGES: Record<
   },
 }
 
-export default async function GameDetailPage({
-  params,
-}: {
-  params: { gameId: string }
-}) {
+export default async function GameDetailPage(
+  props: {
+    params: Promise<{ gameId: string }>
+  }
+) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },

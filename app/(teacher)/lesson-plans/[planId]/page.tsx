@@ -2,11 +2,12 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { LessonPlanDetail } from "@/components/teacher/lesson-plan-detail"
 
-export default async function LessonPlanDetailPage({
-  params,
-}: {
-  params: { planId: string }
-}) {
+export default async function LessonPlanDetailPage(
+  props: {
+    params: Promise<{ planId: string }>
+  }
+) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

@@ -20,10 +20,8 @@ const updateGameSchema = z.object({
     .optional(),
 })
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },
@@ -50,10 +48,8 @@ export async function GET(
   return NextResponse.json(data)
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function PATCH(request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },
@@ -174,10 +170,8 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function DELETE(_request: Request, props: { params: Promise<{ gameId: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },
