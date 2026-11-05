@@ -55,7 +55,7 @@ export function BuilderHeader({
 
   return (
     <>
-      <div className="border-b border-border/50 bg-white -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3">
+      <div className="border-b border-border/50 bg-white -mx-4 px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
             <Link href={`/games/${game.id}`}>

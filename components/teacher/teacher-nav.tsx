@@ -49,7 +49,7 @@ export function TeacherNav({
               <SteamLogo size="small" />
             </Link>
 
-            <div className="hidden sm:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-1">
               <Link href="/lesson-plans">
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
                   <GraduationCap className="h-4 w-4" />
@@ -79,33 +79,38 @@ export function TeacherNav({
             </div>
           </div>
 
-          {/* Right side */}
-          <div className="flex items-center gap-3">
+          {/* Right side: min-w-0 lets the name and email truncate instead of
+              running under the logout button when the LIVE badge is shown. */}
+          <div className="flex min-w-0 items-center gap-3">
             {activeGame && (
-              <Link href={`/games/${activeGame.id}/live`} className="hidden sm:block">
+              <Link
+                href={`/games/${activeGame.id}/live`}
+                className="hidden sm:block min-w-0"
+                title={activeGame.title}
+              >
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2 border-accent/40 text-accent hover:bg-accent/5 font-semibold"
+                  className="max-w-full min-w-0 gap-2 border-accent/40 text-accent hover:bg-accent/5 font-semibold"
                 >
-                  <span className="relative flex h-2 w-2">
+                  <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
                   </span>
-                  LIVE — {activeGame.title.length > 24 ? `${activeGame.title.slice(0, 24)}…` : activeGame.title}
+                  <span className="truncate">LIVE — {activeGame.title}</span>
                 </Button>
               </Link>
             )}
-            <div className="hidden sm:flex items-center gap-3">
+            <div className="hidden xl:flex min-w-0 items-center gap-3">
               {avatarUrl ? (
-                <Image src={avatarUrl} alt="" width={32} height={32} className="rounded-full" />
+                <Image src={avatarUrl} alt="" width={32} height={32} className="shrink-0 rounded-full" />
               ) : null}
-              <div className="text-right">
-                <p className="text-sm font-medium text-steam-dark leading-none">
+              <div className="min-w-0 text-right">
+                <p className="truncate text-sm font-medium text-steam-dark leading-none">
                   {fullName || email}
                 </p>
                 {fullName && (
-                  <p className="text-xs text-muted-foreground">{email}</p>
+                  <p className="truncate text-xs text-muted-foreground">{email}</p>
                 )}
               </div>
             </div>
@@ -115,7 +120,7 @@ export function TeacherNav({
               size="sm"
               onClick={handleLogout}
               aria-label="Atsijungti"
-              className="hidden sm:flex text-muted-foreground hover:text-accent"
+              className="hidden lg:flex shrink-0 text-muted-foreground hover:text-accent"
             >
               <LogOut className="h-4 w-4" />
             </Button>
@@ -125,9 +130,10 @@ export function TeacherNav({
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(true)}
-              className="sm:hidden text-muted-foreground"
+              className="lg:hidden text-muted-foreground"
+              aria-label="Meniu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -135,7 +141,7 @@ export function TeacherNav({
 
       {/* Mobile menu dialog */}
       <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <DialogContent className="sm:hidden top-0 translate-y-0 data-[state=open]:slide-in-from-top-2 max-w-full h-auto rounded-none border-0 border-b p-0">
+        <DialogContent className="lg:hidden top-0 translate-y-0 data-[state=open]:slide-in-from-top-2 max-w-full h-auto rounded-none border-0 border-b p-0">
           <DialogTitle className="sr-only">Navigacijos meniu</DialogTitle>
           <div className="p-4 space-y-1">
             {/* User info */}

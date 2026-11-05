@@ -77,6 +77,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(playUrl)
   }
 
+  // Uptime checks call /api/health without a session. On app.* the auth
+  // guard below would answer with the login page (HTML, 200), so let the
+  // health route through before any Supabase call.
+  if (url.pathname === "/api/health") {
+    return NextResponse.next({ request })
+  }
+
   // Create Supabase client for auth refresh (teacher routes only)
   let response = NextResponse.next({ request })
 

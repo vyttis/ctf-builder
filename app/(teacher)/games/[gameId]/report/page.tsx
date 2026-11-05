@@ -72,7 +72,7 @@ export default async function GameReportPage(
   return (
     <div className="max-w-3xl mx-auto bg-white print:max-w-none">
       {/* Screen-only toolbar */}
-      <div className="flex items-center justify-between mb-6 print:hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-6 print:hidden">
         <Link href={`/games/${game.id}`}>
           <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
             <ArrowLeft className="h-4 w-4" />
@@ -82,7 +82,7 @@ export default async function GameReportPage(
         <PrintReportButton />
       </div>
 
-      <div className="p-8 border border-border/50 rounded-lg print:border-0 print:p-0 space-y-6">
+      <div className="p-4 sm:p-8 border border-border/50 rounded-lg print:border-0 print:p-0 space-y-6">
         {/* Report header */}
         <div className="border-b-2 border-steam-dark pb-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -135,32 +135,34 @@ export default async function GameReportPage(
             Komandų rezultatai
           </h2>
           {detailed.team_stats.length > 0 ? (
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b-2 border-border text-left">
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground">#</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground">Komanda</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Taškai</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Išspręsta</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Bandymai</th>
-                  <th className="py-1.5 font-medium text-muted-foreground text-right">Užuominos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {detailed.team_stats.map((t, i) => (
-                  <tr key={t.team_id} className="border-b border-border/40">
-                    <td className="py-1.5 pr-2">{i + 1}</td>
-                    <td className="py-1.5 pr-2 font-medium">{t.name}</td>
-                    <td className="py-1.5 pr-2 text-right font-semibold">{t.total_points}</td>
-                    <td className="py-1.5 pr-2 text-right">
-                      {t.solved} / {totalChallenges}
-                    </td>
-                    <td className="py-1.5 pr-2 text-right">{t.attempts}</td>
-                    <td className="py-1.5 text-right">{t.hints_used}</td>
+            <div className="overflow-x-auto print:overflow-visible">
+              <table className="w-full min-w-[28rem] text-sm border-collapse print:min-w-0">
+                <thead>
+                  <tr className="border-b-2 border-border text-left">
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground">#</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground">Komanda</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Taškai</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Išspręsta</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Bandymai</th>
+                    <th className="py-1.5 font-medium text-muted-foreground text-right">Užuominos</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {detailed.team_stats.map((t, i) => (
+                    <tr key={t.team_id} className="border-b border-border/40">
+                      <td className="py-1.5 pr-2">{i + 1}</td>
+                      <td className="py-1.5 pr-2 font-medium">{t.name}</td>
+                      <td className="py-1.5 pr-2 text-right font-semibold">{t.total_points}</td>
+                      <td className="py-1.5 pr-2 text-right">
+                        {t.solved} / {totalChallenges}
+                      </td>
+                      <td className="py-1.5 pr-2 text-right">{t.attempts}</td>
+                      <td className="py-1.5 text-right">{t.hints_used}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               Žaidime nedalyvavo nė viena komanda.
@@ -174,32 +176,34 @@ export default async function GameReportPage(
             Užduočių statistika
           </h2>
           {detailed.challenge_stats.length > 0 ? (
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b-2 border-border text-left">
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground">#</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground">Užduotis</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Taškai</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Bandymai</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Išsprendė</th>
-                  <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Tikslumas</th>
-                  <th className="py-1.5 font-medium text-muted-foreground text-right">Užbaigimas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {detailed.challenge_stats.map((c, i) => (
-                  <tr key={c.challenge_id} className="border-b border-border/40">
-                    <td className="py-1.5 pr-2">{i + 1}</td>
-                    <td className="py-1.5 pr-2 font-medium">{c.title}</td>
-                    <td className="py-1.5 pr-2 text-right">{c.points}</td>
-                    <td className="py-1.5 pr-2 text-right">{c.total_attempts}</td>
-                    <td className="py-1.5 pr-2 text-right">{c.solves}</td>
-                    <td className="py-1.5 pr-2 text-right">{c.accuracy}%</td>
-                    <td className="py-1.5 text-right">{c.completion_rate}%</td>
+            <div className="overflow-x-auto print:overflow-visible">
+              <table className="w-full min-w-[28rem] text-sm border-collapse print:min-w-0">
+                <thead>
+                  <tr className="border-b-2 border-border text-left">
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground">#</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground">Užduotis</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Taškai</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Bandymai</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Išsprendė</th>
+                    <th className="py-1.5 pr-2 font-medium text-muted-foreground text-right">Tikslumas</th>
+                    <th className="py-1.5 font-medium text-muted-foreground text-right">Užbaigimas</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {detailed.challenge_stats.map((c, i) => (
+                    <tr key={c.challenge_id} className="border-b border-border/40">
+                      <td className="py-1.5 pr-2">{i + 1}</td>
+                      <td className="py-1.5 pr-2 font-medium">{c.title}</td>
+                      <td className="py-1.5 pr-2 text-right">{c.points}</td>
+                      <td className="py-1.5 pr-2 text-right">{c.total_attempts}</td>
+                      <td className="py-1.5 pr-2 text-right">{c.solves}</td>
+                      <td className="py-1.5 pr-2 text-right">{c.accuracy}%</td>
+                      <td className="py-1.5 text-right">{c.completion_rate}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground">Užduočių nėra.</p>
           )}
