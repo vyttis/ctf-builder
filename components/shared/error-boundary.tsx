@@ -3,6 +3,7 @@
 import { Component, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, RefreshCw } from "lucide-react"
+import { isNextNavigationError } from "@/lib/navigation-errors"
 
 interface Props {
   children: ReactNode
@@ -26,6 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    if (isNextNavigationError(error)) return
     console.error("ErrorBoundary caught:", error, errorInfo)
   }
 
@@ -34,6 +36,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   render() {
+    if (this.state.hasError && isNextNavigationError(this.state.error)) {
+      // Hand navigation signals back to Next.js' own boundaries.
+      throw this.state.error
+    }
+
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[200px] p-6 text-center">

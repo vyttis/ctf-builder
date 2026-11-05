@@ -281,7 +281,7 @@ export default function JoinGamePage() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
-          STEAM LT Klaipėda &middot; CTF Builder
+          STEAM LT Klaipėda &middot; Klaipėdos universitetas
         </p>
       </motion.div>
     </div>

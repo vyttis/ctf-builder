@@ -117,7 +117,7 @@ export function PublishDialog({
             Dalintis bibliotekoje
           </DialogTitle>
           <DialogDescription>
-            Jūsų CTF šablonas bus prieinamas kitiems mokytojams po
+            Jūsų veiklos šablonas bus prieinamas kitiems mokytojams po
             administratoriaus patvirtinimo.
           </DialogDescription>
         </DialogHeader>
@@ -129,7 +129,7 @@ export function PublishDialog({
               id="pub-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="CTF šablono pavadinimas"
+              placeholder="Šablono pavadinimas"
             />
           </div>
 
@@ -139,7 +139,7 @@ export function PublishDialog({
               id="pub-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Trumpas aprašymas apie šį CTF žaidimą"
+              placeholder="Trumpas veiklos aprašymas"
               rows={3}
             />
           </div>

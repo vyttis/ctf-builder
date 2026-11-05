@@ -85,7 +85,7 @@ export default async function GameReportPage({
         {/* Report header */}
         <div className="border-b-2 border-steam-dark pb-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            CTF veiklos ataskaita
+            Veiklos ataskaita
           </p>
           <h1 className="text-2xl font-bold text-steam-dark mt-1">{game.title}</h1>
           {game.description && (

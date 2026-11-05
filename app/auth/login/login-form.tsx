@@ -307,7 +307,7 @@ export function LoginForm() {
             </Button>
           </Link>
           <p className="text-xs text-muted-foreground">
-            CTF Builder &middot; STEAM LT Klaipėda
+            STEAM LT Klaipėda &middot; Klaipėdos universitetas
           </p>
         </div>
       </motion.div>

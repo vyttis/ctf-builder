@@ -15,20 +15,32 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: games } = await supabase
+  // teams has column-level grants only (00022 hides session_token), so a
+  // `teams(count)` embed is rejected with "permission denied for table teams".
+  // Embed the granted `id` column instead and count rows here.
+  const { data: games, error: gamesError } = await supabase
     .from("games")
-    .select("*, challenges(count), teams(count)")
+    .select("*, challenges(count), teams(id)")
     .eq("teacher_id", user!.id)
     .order("created_at", { ascending: false })
 
+  if (gamesError) {
+    // Surface the failure instead of rendering a misleading empty state.
+    console.error("[dashboard] games query failed", {
+      code: gamesError.code,
+      message: gamesError.message,
+    })
+    throw new Error("Nepavyko įkelti veiklų")
+  }
+
   // First-success checklist state, derived from the teacher's actual data
-  type GameRow = GameWithChallengeCount & { teams?: { count: number }[] }
+  type GameRow = GameWithChallengeCount & { teams?: { id: string }[] }
   const gameRows = (games || []) as GameRow[]
   const hasGame = gameRows.length > 0
   const gameWithTasks = gameRows.find((g) => (g.challenges?.[0]?.count || 0) > 0)
   const startedGame = gameRows.find((g) => g.status !== "draft")
   const gameWithResults = gameRows.find(
-    (g) => (g.teams?.[0]?.count || 0) > 0 || g.status === "finished"
+    (g) => (g.teams?.length || 0) > 0 || g.status === "finished"
   )
   const latestGame = gameRows[0]
 

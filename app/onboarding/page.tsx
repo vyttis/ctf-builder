@@ -181,7 +181,7 @@ export default function OnboardingPage() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          CTF Builder &middot; STEAM LT Klaipėda
+          STEAM LT Klaipėda &middot; Klaipėdos universitetas
         </p>
       </motion.div>
     </div>

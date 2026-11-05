@@ -35,7 +35,7 @@ export default function PlayerLandingPage() {
         <Image src="/illustrations/adventure-start.svg" alt="" width={192} height={192} className="mx-auto mb-6" />
 
         <h1 className="text-2xl font-bold text-steam-dark mb-2">
-          CTF žaidimas
+          Prisijunk prie veiklos
         </h1>
         <p className="text-muted-foreground mb-6">
           Įveskite žaidimo kodą arba nuskaitykite QR kodą
@@ -81,7 +81,7 @@ export default function PlayerLandingPage() {
         </Card>
 
         <p className="text-xs text-muted-foreground mt-6">
-          STEAM LT Klaipėda &middot; CTF Builder
+          STEAM LT Klaipėda &middot; Klaipėdos universitetas
         </p>
       </motion.div>
     </div>
