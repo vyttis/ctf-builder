@@ -16,12 +16,13 @@ export async function GET() {
     const dbLatencyMs = Date.now() - startedAt
 
     if (error) {
+      // The route is public, so the database message stays in the logs.
+      console.error(JSON.stringify({ event: "health_db_error", code: error.code, message: error.message }))
       return NextResponse.json(
         {
           status: "degraded",
           timestamp: new Date().toISOString(),
           db_latency_ms: dbLatencyMs,
-          error: error.message,
         },
         { status: 503 },
       )
@@ -40,11 +41,13 @@ export async function GET() {
       },
     )
   } catch (err) {
+    console.error(
+      JSON.stringify({ event: "health_error", message: err instanceof Error ? err.message : String(err) })
+    )
     return NextResponse.json(
       {
         status: "error",
         timestamp: new Date().toISOString(),
-        error: err instanceof Error ? err.message : String(err),
       },
       { status: 500 },
     )
