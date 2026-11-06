@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { tasksVersion } from "@/lib/game/tasks-version"
-import { forParticipant, type HintReveal } from "@/lib/game/player-hints"
+import { forParticipant, type HintReveal, type TeamStart } from "@/lib/game/player-hints"
 
 // GET /api/play/state?game_code=ABC123 with x-session-token header
 // Single round-trip player state lookup — replaces 3 sequential anon queries.
@@ -30,14 +30,26 @@ export async function GET(request: Request) {
   // page does not need either.
   let tasks_version: string | null = null
   let reveals: HintReveal[] = []
+  let start: TeamStart | null = null
   if (sessionToken) {
-    const [stampsRes, revealsRes] = await Promise.all([
+    const [stampsRes, revealsRes, startRes] = await Promise.all([
       supabase.from("games").select("status, challenges(id, updated_at)").eq("game_code", gameCode).maybeSingle(),
       supabase
         .from("hint_reveals")
         .select("challenge_id, hint_index, teams!inner(session_token)")
         .eq("teams.session_token", sessionToken),
+      // When the team pressed "Pradėti": a timed activity sends its tasks
+      // only after that, and another device of the team resumes its clock.
+      supabase.from("teams").select("started_at, pause_offset_ms").eq("session_token", sessionToken).maybeSingle(),
     ])
+    if (startRes.data) {
+      start = {
+        startedAt: (startRes.data.started_at as string | null) ?? null,
+        pauseOffsetMs: Number(startRes.data.pause_offset_ms ?? 0) || 0,
+      }
+    } else if (startRes.error) {
+      console.error("team start read failed:", startRes.error.message)
+    }
     const stamps = stampsRes.data
     if (stamps && stamps.status !== "draft") tasks_version = tasksVersion(stamps.challenges)
     if (revealsRes.error) console.error("hint reveals read failed:", revealsRes.error.message)
@@ -51,7 +63,7 @@ export async function GET(request: Request) {
   })
 
   if (!error) {
-    return NextResponse.json(forParticipant(data, reveals, tasks_version), {
+    return NextResponse.json(forParticipant(data, reveals, tasks_version, start), {
       headers: { "Cache-Control": "private, max-age=0, must-revalidate" },
     })
   }
@@ -66,7 +78,7 @@ export async function GET(request: Request) {
   // Fallback: raw queries (parallel)
   console.warn("get_player_game_state RPC unavailable — falling back to raw queries. Apply migration 00018.")
   const fallback = await fetchPlayerStateRaw(supabase, gameCode, sessionToken)
-  return NextResponse.json(forParticipant(fallback, reveals, tasks_version), {
+  return NextResponse.json(forParticipant(fallback, reveals, tasks_version, start), {
     headers: { "Cache-Control": "private, max-age=0, must-revalidate" },
   })
 }

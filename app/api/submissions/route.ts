@@ -146,16 +146,30 @@ export async function POST(request: Request) {
     // Anchored on teams.started_at (stamped by /api/play/start), not a
     // client clock, so clearing localStorage / switching devices can't buy
     // extra time. Pauses that fell inside the team's run are added back
-    // (lib/game/clock.ts). Skipped when there's no limit or the team hasn't
-    // started.
-    if (team.started_at) {
+    // (lib/game/clock.ts). Skipped when there's no limit.
+    const clock = clockFromRow(game as Parameters<typeof clockFromRow>[0])
+    let startedAt = team.started_at ?? null
+    let offsetMs = Number(team.pause_offset_ms ?? 0)
+    if (clock.limitMinutes && !startedAt && "started_at" in team) {
+      // A timed activity whose team has no start (a missed stamp, or a limit
+      // set while the activity ran): the first answer starts its clock, so
+      // no team answers without one. Same conditional stamp as /api/play/start.
+      const { data: stamped } = await supabase
+        .from("teams")
+        .update({ started_at: new Date().toISOString() })
+        .eq("id", team.id)
+        .is("started_at", null)
+        .select("started_at, pause_offset_ms")
+        .maybeSingle()
+      const current =
+        stamped ??
+        (await supabase.from("teams").select("started_at, pause_offset_ms").eq("id", team.id).maybeSingle()).data
+      startedAt = (current?.started_at as string | null | undefined) ?? null
+      offsetMs = Number(current?.pause_offset_ms ?? 0)
+    }
+    if (startedAt) {
       const now = Date.now()
-      const deadline = deadlineMs(
-        clockFromRow(game as Parameters<typeof clockFromRow>[0]),
-        new Date(team.started_at).getTime(),
-        Number(team.pause_offset_ms ?? 0),
-        now
-      )
+      const deadline = deadlineMs(clock, new Date(startedAt).getTime(), offsetMs, now)
       if (deadline !== null && now > deadline) {
         return NextResponse.json(
           { error: "Laikas baigėsi. Rezultatai išsaugoti." },

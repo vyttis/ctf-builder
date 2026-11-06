@@ -42,19 +42,60 @@ export function orderForTeam<T extends { id: string }>(challenges: T[], teamId: 
     .map(({ c }) => c)
 }
 
+/** When the team pressed "Pradėti" (null: not yet), read on the server. */
+export interface TeamStart {
+  startedAt: string | null
+  pauseOffsetMs: number
+}
+
+/**
+ * A timed activity runs each team's clock from its "Pradėti": until then the
+ * team gets how many tasks there are, not the tasks, so nobody reads ahead
+ * before the clock starts.
+ */
+export function waitsForStart(
+  state: { team?: unknown; game?: { status?: unknown; settings?: unknown } | null },
+  start: TeamStart | null
+): boolean {
+  if (!state.team || !start || start.startedAt) return false
+  const settings = (state.game?.settings ?? null) as { time_limit_minutes?: unknown } | null
+  const limit = settings?.time_limit_minutes
+  const status = state.game?.status
+  return typeof limit === "number" && limit > 0 && (status === "active" || status === "paused")
+}
+
 // Tasks go only to a team of this activity, and of their hints only the ones
 // the team opened: a visitor with the code (or an open browser console)
-// cannot read the tasks before joining, nor hints without the penalty.
-export function forParticipant(state: unknown, reveals: HintReveal[], tasksVersion: string | null) {
+// cannot read the tasks before joining, nor hints without the penalty, nor
+// the tasks of a timed activity before the team starts its clock.
+export function forParticipant(
+  state: unknown,
+  reveals: HintReveal[],
+  tasksVersion: string | null,
+  start: TeamStart | null = null
+) {
   if (!state || typeof state !== "object") return state
-  const s = state as { team?: { id?: unknown } | null; challenges?: unknown; game?: { settings?: unknown } | null }
+  const s = state as {
+    team?: { id?: unknown } | null
+    challenges?: unknown
+    game?: { status?: unknown; settings?: unknown } | null
+  }
   const challenges = Array.isArray(s.challenges) ? (s.challenges as { id: string; hints?: unknown }[]) : []
   const teamId = s.team && typeof s.team.id === "string" ? s.team.id : null
   const settings = (s.game?.settings ?? null) as { shuffle_challenges?: unknown } | null
   const ordered = teamId && settings?.shuffle_challenges === true ? orderForTeam(challenges, teamId) : challenges
+  const waiting = waitsForStart(s, start)
   return {
     ...s,
-    challenges: s.team ? hideUnopenedHints(ordered, reveals) : [],
+    challenges: s.team && !waiting ? hideUnopenedHints(ordered, reveals) : [],
+    ...(s.team
+      ? {
+          challenge_count: challenges.length,
+          awaiting_start: waiting,
+          team_started_at: start?.startedAt ?? null,
+          team_pause_offset_ms: start?.pauseOffsetMs ?? 0,
+        }
+      : {}),
     tasks_version: tasksVersion,
   }
 }
