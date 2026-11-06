@@ -337,9 +337,11 @@ export function ManualTaskEditor({
             Reikia peržiūros
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {challenge?.verification_verdict === "fail"
+            {challenge?.needs_answer
               ? "DI patikra rado klaidą, todėl atsakymas neišsaugotas."
-              : "DI patikra abejoja šia užduotimi."}{" "}
+              : challenge?.verification_verdict === "fail"
+                ? "DI patikra rado galimą klaidą."
+                : "DI patikra abejoja šia užduotimi."}{" "}
             Peržiūrėkite ją ir išsaugokite: tada žyma dings.
           </p>
           {diIssues.length > 0 && (

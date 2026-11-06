@@ -45,5 +45,5 @@ export const lessonPlanContentSchema = z.object({
   competencies: z.array(z.enum(COMPETENCIES)).default([]),
   stages: z.array(lessonStageSchema).min(1, "Plane turi likti bent vienas etapas").max(30),
   reflection_prompt: z.string().max(2000).default(""),
-  teacher_methodical_note: z.string().max(5000).default(""),
+  teacher_methodical_note: z.string().max(10000).default(""),
 })

@@ -1,24 +1,18 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
-import { COMPETENCIES } from "@/lib/ai/schemas"
 import { z } from "zod"
 import { lessonPlanContentSchema } from "@/lib/lesson-plans/schema"
 
-const createSchema = z.object({
-  title: z.string().min(1),
+// The content fields share their limits with editing (PATCH), so a plan that
+// was saved can always be saved again.
+const createSchema = lessonPlanContentSchema.extend({
   subject: z.string().min(1),
   secondary_subject: z.string().min(1).nullable().optional().default(null),
   grade: z.number().min(1).max(12),
   topic: z.string().min(1),
   lesson_type: z.enum(["nauja_tema", "kartojimas", "vertinimas", "projektine_veikla"]),
   duration: z.number().min(25).max(90),
-  goal: z.string().default(""),
-  curriculum_link: z.string().default(""),
-  competencies: z.array(z.enum(COMPETENCIES)).default([]),
-  stages: lessonPlanContentSchema.shape.stages,
-  reflection_prompt: z.string().default(""),
-  teacher_methodical_note: z.string().default(""),
 })
 
 export async function POST(request: Request) {

@@ -118,10 +118,15 @@ describe("reviewTask", () => {
     expect(review.issues.join(" ")).not.toContain("143")
   })
 
-  it("drops an answer the check rejects", () => {
-    const review = reviewTask(usable, { verdict: "fail", issues: ["Turėtų būti 144"], confidence: 0.8 })
-    expect(review.keepAnswer).toBe(false)
-    expect(review.issues).toEqual(["Turėtų būti 144"])
+  it("keeps the answer when the check faults the task, and marks it for review", () => {
+    const review = reviewTask(usable, { verdict: "fail", issues: ["Užuomina atskleidžia atsakymą"], confidence: 0.8 })
+    expect(review).toMatchObject({ keepAnswer: true, verdict: "fail", issues: ["Užuomina atskleidžia atsakymą"] })
+  })
+
+  it("gives a faulted task a note even when the check gave none", () => {
+    expect(reviewTask(usable, { verdict: "fail", issues: [], confidence: 0.6 }).issues).toEqual([
+      "DI patikra rado galimą klaidą.",
+    ])
   })
 
   it("marks an unchecked task for review", () => {
@@ -142,6 +147,10 @@ describe("lesson plan schemas", () => {
     const parsed = lessonStageSchema.parse(stage({ points: -5, duration_minutes: 500 }))
     expect(parsed.points).toBe(1)
     expect(parsed.duration_minutes).toBe(90)
+  })
+
+  it("limits the title the same way for new and edited plans", () => {
+    expect(lessonPlanContentSchema.safeParse({ title: "x".repeat(201), stages: [stage()] }).success).toBe(false)
   })
 
   it("refuses a plan without stages", () => {

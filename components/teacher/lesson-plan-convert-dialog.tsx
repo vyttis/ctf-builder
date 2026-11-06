@@ -143,9 +143,9 @@ export function LessonPlanConvertDialog({ planId, stages, open, onOpenChange }: 
         </fieldset>
 
         <p className="text-xs text-muted-foreground">
-          DI dar kartą patikrins atsakymus. Abejotinos užduotys bus pažymėtos „Reikia peržiūros“, o užduotims su
-          klaidingu atsakymu atsakymą įrašysite patys. Veikla bus be laiko limito: jį galite nustatyti veiklos
-          nustatymuose.
+          DI dar kartą patikrins užduotis. Abejotinos bus pažymėtos „Reikia peržiūros“, o jei atsakymo negalima
+          naudoti (pvz., jo nėra tarp variantų), jį įrašysite patys. Veikla bus be laiko limito: jį galite nustatyti
+          veiklos nustatymuose.
         </p>
 
         {error && (

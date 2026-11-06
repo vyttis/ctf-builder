@@ -658,6 +658,7 @@ export function LessonPlanGenerator() {
               <Input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
+                maxLength={200}
                 className="text-lg font-bold border-dashed"
               />
             </div>

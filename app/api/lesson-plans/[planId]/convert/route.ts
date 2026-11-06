@@ -10,20 +10,18 @@ import { verifyWithModel } from "@/lib/ai/verify-suggestion"
 import type { VerificationResult } from "@/lib/ai/types"
 import { defaultTaskStageIndexes, reviewTask, stageToTask, type PlanStage } from "@/lib/lesson-plans/convert"
 
-const convertSchema = z
-  .object({
-    // Which plan stages become tasks; by default the "challenge" stages.
-    stage_indexes: z.array(z.number().int().min(0).max(99)).max(100).optional(),
-  })
-  .default({})
+const convertSchema = z.object({
+  // Which plan stages become tasks; by default the "challenge" stages.
+  stage_indexes: z.array(z.number().int().min(0).max(99)).max(100).optional(),
+})
 
 /**
  * POST: a draft activity from a saved lesson plan. Only the chosen stages
  * become scored tasks (by default the task stages, not the introduction,
  * discussion or reflection), the activity has no time limit, and every
- * answer the DI wrote is checked first: a doubtful one is marked for review,
- * a wrong or unusable one is left out for the facilitator to set, which
- * keeps the activity from starting until then.
+ * answer the DI wrote is checked first: a task the check doubts or faults is
+ * marked for review; an answer no participant could match is left out for
+ * the facilitator to set, which keeps the activity from starting until then.
  */
 export async function POST(request: Request, props: { params: Promise<{ planId: string }> }) {
   const { planId } = await props.params
@@ -37,8 +35,18 @@ export async function POST(request: Request, props: { params: Promise<{ planId: 
     return NextResponse.json({ error: "Per daug užklausų. Palaukite minutę." }, { status: 429 })
   }
 
-  const body = await request.json().catch(() => ({}))
-  const parsed = convertSchema.safeParse(body ?? {})
+  // An empty body means "the default stages"; anything else must be a valid
+  // selection, so a cut-off request never creates tasks nobody chose.
+  const raw = await request.text()
+  let body: unknown = {}
+  if (raw.trim()) {
+    try {
+      body = JSON.parse(raw)
+    } catch {
+      body = null
+    }
+  }
+  const parsed = convertSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: "Neteisingi duomenys" }, { status: 400 })
 
   const { data: plan } = await supabase

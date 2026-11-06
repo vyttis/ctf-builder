@@ -137,9 +137,11 @@ export interface TaskReview {
 }
 
 /**
- * Combines the structural check with the DI verdict. A failed check means
- * the answer is likely wrong, so it is not stored and the facilitator sets
- * it; an uncertain one keeps the answer and marks the task for review.
+ * Combines the structural check with the DI verdict. Only an answer no
+ * participant could match is left out (the facilitator must set it before
+ * the activity starts). A DI "fail" may be about the wording, the hints or
+ * the choices as much as the answer, so the answer stays and the task is
+ * marked for review together with an "uncertain" one.
  */
 export function reviewTask(task: StageTask, verification: VerificationResult | null): TaskReview {
   if (task.answer === null) {
@@ -148,22 +150,7 @@ export function reviewTask(task: StageTask, verification: VerificationResult | n
   if (!verification) {
     return { keepAnswer: true, verdict: "uncertain", issues: ["DI patikra neatlikta."], confidence: null }
   }
-  if (verification.verdict === "fail") {
-    // The answer is not stored, so the notes may name it: the activity
-    // cannot start before the facilitator sets an answer, and saving one
-    // clears the notes (PATCH /api/challenges/[id]).
-    const issues = safeIssues(verification.issues, null)
-    return {
-      keepAnswer: false,
-      verdict: "fail",
-      issues: issues.length > 0 ? issues : ["DI rado klaidą atsakyme."],
-      confidence: verification.confidence,
-    }
-  }
-  return {
-    keepAnswer: true,
-    verdict: verification.verdict,
-    issues: safeIssues(verification.issues, task.answer),
-    confidence: verification.confidence,
-  }
+  const issues = safeIssues(verification.issues, task.answer)
+  if (verification.verdict === "fail" && issues.length === 0) issues.push("DI patikra rado galimą klaidą.")
+  return { keepAnswer: true, verdict: verification.verdict, issues, confidence: verification.confidence }
 }
