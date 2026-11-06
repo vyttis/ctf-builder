@@ -37,7 +37,8 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet"
-import { Sparkles } from "lucide-react"
+import { AlertTriangle, Sparkles } from "lucide-react"
+import { isLiveStatus } from "@/lib/game/live-edit"
 
 interface GameBuilderProps {
   initialGame: {
@@ -59,6 +60,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   // page calls router.refresh(), the server component re-renders with fresh
   // data, and the header/settings must reflect it (title, status badge).
   const game = initialGame
+  const live = isLiveStatus(game.status)
   const pathMode: "linear" | "free" = game.settings?.challenge_path_mode ?? "linear"
   // Render the workspace in exactly one place: the desktop panel OR the mobile
   // sheet, never both. A CSS-hidden desktop panel stays mounted on mobile,
@@ -361,15 +363,22 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
       const res = await fetch(`/api/challenges/${challenge.id}`, {
         method: "DELETE",
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error ?? "")
+      }
       toast({ title: "Užduotis ištrinta" })
       if (editingChallenge?.id === challenge.id) {
         setEditingChallenge(null)
         setIsCreatingNew(false)
       }
       refreshChallenges()
-    } catch {
-      toast({ title: "Nepavyko ištrinti", variant: "destructive" })
+    } catch (e) {
+      toast({
+        title: "Nepavyko ištrinti",
+        description: e instanceof Error && e.message ? e.message : undefined,
+        variant: "destructive",
+      })
     } finally {
       setDeleteInProgress(false)
       setDeletingChallenge(null)
@@ -397,14 +406,21 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
           hint_penalty: challenge.hint_penalty,
         }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error ?? "")
+      }
       toast({
         title: "Užduotis nukopijuota",
         description: "Kopijai reikia nustatyti teisingą atsakymą.",
       })
       refreshChallenges()
-    } catch {
-      toast({ title: "Nepavyko kopijuoti", variant: "destructive" })
+    } catch (e) {
+      toast({
+        title: "Nepavyko kopijuoti",
+        description: e instanceof Error && e.message ? e.message : undefined,
+        variant: "destructive",
+      })
     }
   }
 
@@ -452,7 +468,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
       activeStr.startsWith("challenge-") &&
       (overStr.startsWith("challenge-") || overStr === "challenge-list-drop")
     ) {
-      if (overStr === "challenge-list-drop" || activeStr === overStr) return
+      if (live || overStr === "challenge-list-drop" || activeStr === overStr) return
       const oldIdx = challenges.findIndex((c) => `challenge-${c.id}` === activeStr)
       const newIdx = challenges.findIndex((c) => `challenge-${c.id}` === overStr)
       if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return
@@ -530,6 +546,21 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
+      {live && (
+        <div
+          role="status"
+          className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-lg border border-highlight/40 bg-highlight/10 px-4 py-3 text-sm text-steam-dark"
+        >
+          <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-highlight-ink" aria-hidden="true" />
+          <p>
+            <span className="font-semibold">Veikla vyksta.</span> Pakeistą atsakymą ir taškus sistema taiko
+            iš karto naujiems bandymams, o pakeistą ar naują užduotį dalyviai pamatys per kelias sekundes.
+            Užduočių ištrinti, kopijuoti, pertvarkyti ir keisti jų atrakinimo sąlygų negalima, kol veikla
+            nebaigta.
+          </p>
+        </div>
+      )}
+
       <BuilderSettings
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
@@ -537,6 +568,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
         title={game.title}
         description={game.description}
         settings={game.settings}
+        live={game.status === "active" || game.status === "paused"}
         onSaved={() => {
           router.refresh()
         }}
@@ -570,6 +602,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
                 onDelete={handleDeleteChallenge}
                 onDuplicate={handleDuplicateChallenge}
                 onAddNew={handleAddNew}
+                locked={live}
                 isOverPanel={
                   isOverChallengeList &&
                   activeId?.startsWith("suggestion-") === true

@@ -25,7 +25,7 @@ interface Reflection {
 export default function GameAnalyticsPage() {
   const params = useParams()
   const gameId = params.gameId as string
-  const [stats, setStats] = useState<GameStats | null>(null)
+  const [stats, setStats] = useState<(GameStats & { game_title?: string }) | null>(null)
   const [detailed, setDetailed] = useState<DetailedStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -36,8 +36,12 @@ export default function GameAnalyticsPage() {
   const [reflectionsLoading, setReflectionsLoading] = useState(false)
   const [reflectionsError, setReflectionsError] = useState("")
 
+  const [reloadKey, setReloadKey] = useState(0)
+  const [detailedFailed, setDetailedFailed] = useState(false)
+
   useEffect(() => {
     async function fetchStats() {
+      setError("")
       try {
         const [basicRes, detailedRes] = await Promise.all([
           fetch(`/api/games/${gameId}/analytics`),
@@ -47,9 +51,14 @@ export default function GameAnalyticsPage() {
           throw new Error("Nepavyko gauti statistikos")
         }
         setStats(await basicRes.json())
-        // Detailed stats are an enhancement — the page still renders without
+        // Detailed stats are an enhancement: the page renders without them,
+        // but never with details left over from an earlier load.
         if (detailedRes.ok) {
           setDetailed(await detailedRes.json())
+          setDetailedFailed(false)
+        } else {
+          setDetailed(null)
+          setDetailedFailed(true)
         }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Nežinoma klaida")
@@ -58,10 +67,10 @@ export default function GameAnalyticsPage() {
       }
     }
     fetchStats()
-  }, [gameId])
+  }, [gameId, reloadKey])
 
-  async function loadReflections() {
-    if (reflections !== null) return // Already loaded
+  async function loadReflections(force = false) {
+    if (!force && reflections !== null) return // Already loaded
     setReflectionsLoading(true)
     setReflectionsError("")
     try {
@@ -91,11 +100,23 @@ export default function GameAnalyticsPage() {
     return (
       <div className="text-center py-20">
         <p className="text-accent text-sm">{error}</p>
-        <Link href={`/games/${gameId}`}>
-          <Button variant="outline" size="sm" className="mt-4">
-            Grįžti
+        <div className="mt-4 flex justify-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => {
+              setLoading(true)
+              setReloadKey((k) => k + 1)
+            }}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            Bandyti dar kartą
           </Button>
-        </Link>
+          <Link href={`/games/${gameId}`}>
+            <Button variant="outline" size="sm">
+              Grįžti
+            </Button>
+          </Link>
+        </div>
       </div>
     )
   }
@@ -109,7 +130,7 @@ export default function GameAnalyticsPage() {
           className="gap-2 text-muted-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Žaidimo detalės
+          Veiklos puslapis
         </Button>
       </Link>
 
@@ -117,13 +138,29 @@ export default function GameAnalyticsPage() {
         <div>
           <h1 className="text-2xl font-bold text-steam-dark flex items-center gap-2">
             <BarChart3 className="h-6 w-6 text-primary" />
-            Žaidimo analitika
+            Veiklos analitika
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Detalūs žaidimo statistikos duomenys
+            Komandų rezultatai, užduočių statistika ir refleksijos
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setReloadKey((k) => k + 1)
+            if (reflections !== null) void loadReflections(true)
+          }}
+        >
+          Atnaujinti
+        </Button>
       </div>
+
+      {detailedFailed && (
+        <p role="status" className="mb-6 text-sm text-muted-foreground">
+          Išsamios statistikos įkelti nepavyko. Bandykite atnaujinti.
+        </p>
+      )}
 
       <Tabs defaultValue="stats" onValueChange={(v) => {
         if (v === "reflections") loadReflections()
@@ -151,6 +188,7 @@ export default function GameAnalyticsPage() {
                     stats.challenge_stats?.length ||
                     0
                   }
+                  fileLabel={stats.game_title}
                 />
               )}
               <ChallengeStatsTable
@@ -170,6 +208,9 @@ export default function GameAnalyticsPage() {
           {reflectionsError && (
             <div className="text-center py-12">
               <p className="text-accent text-sm">{reflectionsError}</p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => void loadReflections(true)}>
+                Bandyti dar kartą
+              </Button>
             </div>
           )}
           {reflections !== null && !reflectionsLoading && !reflectionsError && (

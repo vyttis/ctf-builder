@@ -243,10 +243,71 @@ SELECT public.t_rows('SELECT * FROM public.platform_settings', 1);
 RESET ROLE;
 
 
+-- DI reservations and budget alert claims (20261106145000).
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+SELECT set_config('request.jwt.claim.role', 'authenticated', false);
+SELECT public.t_denied($q$SELECT public.reserve_ai_action('00000000-0000-0000-0000-00000000000a', gen_random_uuid(), 'di/generate', 99, 900)$q$);
+RESET ROLE;
+
+SET ROLE service_role;
+SELECT set_config('request.jwt.claim.role', 'service_role', false);
+DO $$
+DECLARE
+  u constant uuid := '00000000-0000-0000-0000-00000000000b';
+  last_month_req constant uuid := gen_random_uuid();
+  r1 integer;
+  r2 integer;
+  r3 integer;
+BEGIN
+  -- A reservation that never got a model call and is past the window: free.
+  INSERT INTO public.ai_usage (user_id, request_id, endpoint, model, created_at)
+    VALUES (u, gen_random_uuid(), 'di/generate', 'reservation', now() - interval '20 minutes');
+  -- A finished action from just before this month began: not counted.
+  INSERT INTO public.ai_usage (user_id, request_id, endpoint, model, created_at)
+    VALUES (u, last_month_req, 'di/generate', 'reservation', date_trunc('month', now(), 'UTC') - interval '1 second'),
+           (u, last_month_req, 'di/generate', 'claude-test', date_trunc('month', now(), 'UTC') - interval '1 second');
+  r1 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, 900);
+  r2 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, 900);
+  r3 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, 900);
+  IF r1 <> 0 OR r2 <> 1 OR r3 <> -1 THEN
+    RAISE EXCEPTION 'reservations at limit 2 must give 0, 1, -1; got %, %, %', r1, r2, r3;
+  END IF;
+  IF (SELECT count(*) FROM public.ai_usage WHERE user_id = u AND model = 'reservation') <> 4 THEN
+    RAISE EXCEPTION 'a refused reservation must not leave a row';
+  END IF;
+
+  INSERT INTO public.admin_audit_log (action, target_type, target_id) VALUES ('ai_budget.alert', 'platform', '2026-11:alert');
+  BEGIN
+    INSERT INTO public.admin_audit_log (action, target_type, target_id) VALUES ('ai_budget.alert', 'platform', '2026-11:alert');
+    RAISE EXCEPTION 'a second claim for the same alert must fail';
+  EXCEPTION WHEN unique_violation THEN
+    NULL;
+  END;
+  -- Other actions may repeat a target.
+  INSERT INTO public.admin_audit_log (action, target_type, target_id) VALUES ('profile.block', 'profile', 'x');
+  INSERT INTO public.admin_audit_log (action, target_type, target_id) VALUES ('profile.block', 'profile', 'x');
+END $$;
+RESET ROLE;
+
 -- Pause clock, status rules and time extensions (20261106150000).
 INSERT INTO public.games (id, teacher_id, title, game_code, status, settings) VALUES
   ('10000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-00000000000a', 'Laikas', 'CLOCK1', 'draft', '{"time_limit_minutes": 30}'),
   ('10000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-00000000000a', 'Be laiko', 'CLOCK2', 'active', '{}');
+
+-- An activity without tasks does not start.
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+DO $$
+BEGIN
+  PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+  RAISE EXCEPTION 'an activity without tasks must not start';
+EXCEPTION WHEN SQLSTATE 'KS427' THEN
+  NULL;
+END $$;
+RESET ROLE;
+INSERT INTO public.challenges (id, game_id, title, answer_hash) VALUES
+  ('20000000-0000-0000-0000-0000000000c1', '10000000-0000-0000-0000-0000000000c1', 'Laiko užduotis', '$2a$10$real');
 
 SET ROLE anon;
 SELECT set_config('request.jwt.claim.sub', '', false);
@@ -335,6 +396,24 @@ BEGIN
   g := public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
   IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 THEN
     RAISE EXCEPTION 'two extensions of 5 must give 40, got %', g.settings ->> 'time_limit_minutes';
+  END IF;
+  -- A direct write of the whole settings (an older client, the REST API)
+  -- keeps the running limit, and cannot remove it either.
+  UPDATE public.games SET settings = '{"time_limit_minutes": 5, "show_leaderboard": false}'
+    WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 OR (g.settings ->> 'show_leaderboard')::boolean IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'a direct settings write must keep the running limit, got %', g.settings;
+  END IF;
+  UPDATE public.games SET settings = '{"show_leaderboard": true}' WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 THEN
+    RAISE EXCEPTION 'a direct settings write must not remove the running limit, got %', g.settings;
+  END IF;
+  -- An activity without a limit does not get one that way either.
+  UPDATE public.games SET settings = '{"time_limit_minutes": 5}' WHERE id = '10000000-0000-0000-0000-0000000000c2';
+  IF (SELECT settings ? 'time_limit_minutes' FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c2') THEN
+    RAISE EXCEPTION 'a running activity without a limit must not get one by a direct write';
   END IF;
 
   BEGIN
@@ -454,6 +533,45 @@ EXCEPTION WHEN SQLSTATE 'KS409' THEN
   NULL;
 END $$;
 RESET ROLE;
+
+-- A running activity keeps its tasks: neither deleted nor moved away.
+SET ROLE authenticated;
+DO $$
+BEGIN
+  BEGIN
+    DELETE FROM public.challenges WHERE id = '20000000-0000-0000-0000-0000000000c4';
+    RAISE EXCEPTION 'a task must not be deleted from a running activity';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  BEGIN
+    UPDATE public.challenges SET game_id = '10000000-0000-0000-0000-0000000000c5'
+      WHERE id = '20000000-0000-0000-0000-0000000000c4';
+    RAISE EXCEPTION 'a task must not be moved out of a running activity';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  -- A draft's tasks may still be deleted.
+  DELETE FROM public.challenges WHERE id = '20000000-0000-0000-0000-0000000000c5';
+  IF EXISTS (SELECT 1 FROM public.challenges WHERE id = '20000000-0000-0000-0000-0000000000c5') THEN
+    RAISE EXCEPTION 'a task of a draft must be deletable';
+  END IF;
+END $$;
+RESET ROLE;
+-- Deleting the running activity itself removes its tasks.
+INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
+  ('10000000-0000-0000-0000-0000000000c7', '00000000-0000-0000-0000-00000000000a', 'Trinama', 'DELET7', 'active');
+INSERT INTO public.challenges (game_id, title, answer_hash) VALUES
+  ('10000000-0000-0000-0000-0000000000c7', 'Trinamos veiklos užduotis', '$2a$10$real');
+SET ROLE authenticated;
+DELETE FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c7';
+RESET ROLE;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.challenges WHERE game_id = '10000000-0000-0000-0000-0000000000c7') THEN
+    RAISE EXCEPTION 'deleting a running activity must remove its tasks';
+  END IF;
+END $$;
 
 -- A blocked account cannot change its activity through the functions either.
 INSERT INTO public.games (id, teacher_id, title, game_code, status, settings) VALUES

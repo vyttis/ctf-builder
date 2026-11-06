@@ -13,10 +13,11 @@
 -- creates activities as drafts only; the activity only moves forward
 -- (draft -> active <-> paused -> finished), so a stale tab cannot reopen a
 -- finished activity; leaving a pause adds its length to paused_ms; the
--- first start sets starts_at; an activity with a task without an answer
--- does not start, and such a task cannot be added while it runs
--- (challenges_live_rules); values for paused_at, paused_ms or resumed_at
--- sent by a client are ignored.
+-- first start sets starts_at; an activity without tasks, or with a task
+-- without an answer, does not start; while it runs, such a task cannot be
+-- added and no task can be removed or moved away (challenges_live_rules),
+-- and its time limit changes only by extension; values for paused_at,
+-- paused_ms or resumed_at sent by a client are ignored.
 --
 -- set_game_status() changes the status under a row lock for the owner.
 -- extend_game_time() adds minutes in one statement, so two devices adding 5
@@ -121,6 +122,20 @@ BEGIN
   NEW.paused_at := OLD.paused_at;
   NEW.resumed_at := OLD.resumed_at;
 
+  -- While the activity runs, its time limit changes only through
+  -- extend_game_time() (which marks its own update): any other write of the
+  -- settings, from an older tab or straight through the API, keeps the
+  -- running limit, so an extension is never undone and its cap holds.
+  IF OLD.status IN ('active', 'paused')
+     AND coalesce(current_setting('kusteam.extend_time', true), '') <> 'on'
+     AND (NEW.settings -> 'time_limit_minutes') IS DISTINCT FROM (OLD.settings -> 'time_limit_minutes') THEN
+    IF OLD.settings ? 'time_limit_minutes' THEN
+      NEW.settings := jsonb_set(coalesce(NEW.settings, '{}'::jsonb), '{time_limit_minutes}', OLD.settings -> 'time_limit_minutes');
+    ELSE
+      NEW.settings := coalesce(NEW.settings, '{}'::jsonb) - 'time_limit_minutes';
+    END IF;
+  END IF;
+
   IF NEW.status IS DISTINCT FROM OLD.status THEN
     IF NOT (
       (OLD.status = 'draft' AND NEW.status = 'active')
@@ -130,9 +145,15 @@ BEGIN
       RAISE EXCEPTION 'status cannot change from % to %', OLD.status, NEW.status USING ERRCODE = 'KS409';
     END IF;
 
-    -- A task without an answer cannot be solved: such an activity does not
-    -- start. Together with challenges_live_rules (which locks this row) a
-    -- task added at the same moment either blocks the start or is refused.
+    -- An activity starts with at least one task, and a task without an
+    -- answer cannot be solved: such an activity does not start. Together with
+    -- challenges_live_rules (which locks this row) a task added or removed at
+    -- the same moment either blocks the start or is refused.
+    IF OLD.status = 'draft' AND NOT EXISTS (
+      SELECT 1 FROM public.challenges c WHERE c.game_id = NEW.id
+    ) THEN
+      RAISE EXCEPTION 'activity has no tasks' USING ERRCODE = 'KS427';
+    END IF;
     IF OLD.status = 'draft' AND EXISTS (
       SELECT 1 FROM public.challenges c WHERE c.game_id = NEW.id AND c.needs_answer
     ) THEN
@@ -162,10 +183,13 @@ CREATE TRIGGER games_status_rules BEFORE INSERT OR UPDATE ON public.games
   FOR EACH ROW EXECUTE FUNCTION public.games_status_rules();
 
 -- Participants see the tasks of a running or paused activity as they are,
--- so a task without an answer (a copy, a library task) is refused there.
--- The activity row is locked for share, so a start running at the same
--- moment either waits for this task (and then refuses to start, see above)
--- or finishes first (and this task is refused).
+-- so a task without an answer (a copy, a library task) is refused there,
+-- and a task is not removed from it (nor moved to another activity): its
+-- answers would go while the team points stay. The activity row is locked
+-- for share, so a start running at the same moment either waits for this
+-- change (and then sees it, see above) or finishes first (and the change is
+-- refused). When the activity itself is deleted its row is already gone, so
+-- the cascade removes its tasks.
 CREATE OR REPLACE FUNCTION public.challenges_live_rules()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -174,6 +198,21 @@ AS $$
 DECLARE
   v_status text;
 BEGIN
+  IF TG_OP = 'DELETE' THEN
+    SELECT g.status INTO v_status FROM public.games g WHERE g.id = OLD.game_id FOR SHARE;
+    IF v_status IN ('active', 'paused') THEN
+      RAISE EXCEPTION 'a running activity keeps its tasks' USING ERRCODE = 'KS409';
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  IF TG_OP = 'UPDATE' AND NEW.game_id IS DISTINCT FROM OLD.game_id THEN
+    SELECT g.status INTO v_status FROM public.games g WHERE g.id = OLD.game_id FOR SHARE;
+    IF v_status IN ('active', 'paused') THEN
+      RAISE EXCEPTION 'a running activity keeps its tasks' USING ERRCODE = 'KS409';
+    END IF;
+  END IF;
+
   IF NEW.needs_answer THEN
     SELECT g.status INTO v_status FROM public.games g WHERE g.id = NEW.game_id FOR SHARE;
     IF v_status IN ('active', 'paused') THEN
@@ -185,7 +224,7 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS challenges_live_rules ON public.challenges;
-CREATE TRIGGER challenges_live_rules BEFORE INSERT OR UPDATE OF needs_answer, game_id ON public.challenges
+CREATE TRIGGER challenges_live_rules BEFORE INSERT OR UPDATE OF needs_answer, game_id OR DELETE ON public.challenges
   FOR EACH ROW EXECUTE FUNCTION public.challenges_live_rules();
 
 CREATE OR REPLACE FUNCTION public.set_game_status(p_game_id uuid, p_status text)
@@ -325,14 +364,18 @@ BEGIN
     RAISE EXCEPTION 'time limit cannot exceed 24 hours' USING ERRCODE = 'KS423';
   END IF;
 
+  -- games_status_rules lets only this update change a running limit.
+  PERFORM set_config('kusteam.extend_time', 'on', true);
   UPDATE public.games
   SET settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{time_limit_minutes}', to_jsonb(v_limit + p_minutes))
   WHERE id = p_game_id
   RETURNING * INTO g;
+  -- Checked before the PERFORM below, which sets FOUND itself.
   IF NOT FOUND THEN
     -- Row security filtered the change out: never report it as a success.
     RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
   END IF;
+  PERFORM set_config('kusteam.extend_time', 'off', true);
 
   RETURN g;
 END;

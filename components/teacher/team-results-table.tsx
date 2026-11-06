@@ -3,22 +3,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { exportCsv } from "@/lib/csv"
+import { csvFileSlug, exportCsv } from "@/lib/csv"
 import type { TeamResultStat } from "@/lib/game/detailed-stats"
 import { Download, Trophy, Users } from "lucide-react"
 
 interface TeamResultsTableProps {
   teamStats: TeamResultStat[]
   totalChallenges: number
+  /** Activity title, added to the file name. */
+  fileLabel?: string
 }
 
 export function TeamResultsTable({
   teamStats,
   totalChallenges,
+  fileLabel,
 }: TeamResultsTableProps) {
   function handleExport() {
+    const label = fileLabel ? `${csvFileSlug(fileLabel)}_` : ""
     exportCsv(
-      `rezultatai_${new Date().toISOString().slice(0, 10)}.csv`,
+      `rezultatai_${label}${new Date().toISOString().slice(0, 10)}.csv`,
       [
         "Vieta",
         "Komanda",

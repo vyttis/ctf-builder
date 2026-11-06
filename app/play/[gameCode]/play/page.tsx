@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -27,6 +26,7 @@ import {
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
 import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
+import { AnswerInput } from "@/components/player/answer-input"
 import { type GameClock, secondsLeft } from "@/lib/game/clock"
 import { remapTaskIndex } from "@/lib/game/tasks-version"
 import { pluralizeLt } from "@/lib/utils"
@@ -428,7 +428,11 @@ export default function PlayPage() {
         before !== undefined &&
         after !== undefined &&
         (before.type !== after.type || JSON.stringify(before.options) !== JSON.stringify(after.options))
-      if (kept !== null) {
+      // The open task was solved elsewhere (the same team on another device)
+      // and nothing here is showing its result: move on like after a solve.
+      const keptSolvedElsewhere =
+        kept !== null && solved.has(next[kept].id) && !showExplanationRef.current && firstUnsolved >= 0
+      if (kept !== null && !keptSolvedElsewhere) {
         setCurrentIndex(kept)
         currentIndexRef.current = kept
         if (shapeChanged) {
@@ -526,6 +530,7 @@ export default function PlayPage() {
       if (inFlight) return
       inFlight = true
       const startedAt = statusVersionRef.current
+      const sentAt = Date.now()
       try {
         const res = await fetch(
           `/api/play/status?game_code=${encodeURIComponent(gameCode)}`,
@@ -546,7 +551,14 @@ export default function PlayPage() {
           tasks_version?: string | null
         }
         if (disposed || !data.status) return
-        if (data.now) skewMsRef.current = Date.parse(data.now) - Date.now()
+        // Clock correction: the server's time is compared with the middle of
+        // the round trip, and only from a quick one, so network delay or a
+        // suspended tab is not mistaken for this device's clock being off.
+        const receivedAt = Date.now()
+        const serverNow = data.now ? Date.parse(data.now) : NaN
+        if (Number.isFinite(serverNow) && receivedAt - sentAt < 2000) {
+          skewMsRef.current = serverNow - (sentAt + receivedAt) / 2
+        }
         if (statusVersionRef.current !== startedAt) return
         applyClock(data)
         setGameStatus(data.status)
@@ -675,10 +687,13 @@ export default function PlayPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Close the phone keyboard so the result below the button is visible.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
     if (!answer.trim() || !session || !challenges[currentIndex] || timeExpired) return
 
     setLoading(true)
     setFeedback(null)
+    const task = challenges[currentIndex]
 
     try {
       const res = await fetch("/api/submissions", {
@@ -686,9 +701,9 @@ export default function PlayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_token: session.session_token,
-          challenge_id: challenges[currentIndex].id,
+          challenge_id: task.id,
           answer:
-            challenges[currentIndex].type === "number"
+            task.type === "number"
               ? normalizeNumericAnswer(answer)
               : answer.trim(),
           hints_used: openedHintCount(challenges[currentIndex]),
@@ -726,6 +741,19 @@ export default function PlayPage() {
       const result: ExtendedSubmissionResult & {
         achievements?: { type: AchievementType; metadata?: Record<string, unknown> }[]
       } = await res.json()
+
+      // A reload may have replaced the open task while the answer was on its
+      // way: the points still count, but the result belongs to that task,
+      // not to the one now on screen.
+      if (challengesRef.current[currentIndexRef.current]?.id !== task.id) {
+        if (result.is_correct) {
+          setTotalPoints((points) => Math.max(points, result.total_points ?? points + result.points_awarded))
+          if (challengesRef.current.some((c) => c.id === task.id)) {
+            setSolvedIds((prev) => new Set(prev).add(task.id))
+          }
+        }
+        return
+      }
       setFeedback(result)
 
       // Show achievement toast if earned
@@ -738,7 +766,7 @@ export default function PlayPage() {
         setTotalPoints(result.total_points || totalPoints + result.points_awarded)
         setSolvedIds((prev) => {
           const next = new Set(Array.from(prev))
-          next.add(challenges[currentIndex].id)
+          next.add(task.id)
           return next
         })
         setAnswer("")
@@ -1289,15 +1317,7 @@ export default function PlayPage() {
                       ))}
                     </div>
                   ) : (
-                    <Input
-                      type="text"
-                      inputMode={currentChallenge.type === "number" ? "decimal" : "text"}
-                      placeholder="Jūsų atsakymas..."
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      className="h-12 text-base bg-white"
-                      autoFocus
-                    />
+                    <AnswerInput type={currentChallenge.type} value={answer} onChange={setAnswer} />
                   )}
 
                   <Button

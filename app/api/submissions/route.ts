@@ -1,15 +1,23 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import { verifyAnswer } from "@/lib/game/answer-hasher"
+import { MAX_ANSWER_LENGTH, verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { pluralizeLt } from "@/lib/utils"
 import { NextResponse } from "next/server"
 import { clockFromRow, deadlineMs } from "@/lib/game/clock"
 import { z } from "zod"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
+
+// Answer checks per minute, right or wrong, counted before any bcrypt work:
+// per team, above a fast streak of one-tap choices; per activity, above a
+// full class answering at once. The activity ceiling bounds the work however
+// many teams one caller creates.
+const VERIFY_PER_TEAM_PER_MINUTE = 60
+const VERIFY_PER_GAME_PER_MINUTE = 2000
 
 const submitAnswerSchema = z.object({
   session_token: z.string().min(1),
   challenge_id: z.string().uuid(),
-  answer: z.string().min(1, "Atsakymas privalomas"),
+  answer: z.string().min(1, "Atsakymas privalomas").max(MAX_ANSWER_LENGTH, "Atsakymas per ilgas"),
   hints_used: z.number().int().min(0).max(20).default(0),
 })
 
@@ -177,6 +185,20 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Užduotis nerasta" },
         { status: 404 }
+      )
+    }
+
+    // Every check costs one or more bcrypt comparisons (older number answers
+    // try several spellings). The wrong-answer count above only sees rows
+    // already written, so parallel requests could all pass it; this counter
+    // is taken before the work starts.
+    if (
+      !(await checkAiRateLimitAsync("answer-checks", team.id, VERIFY_PER_TEAM_PER_MINUTE, 60_000)) ||
+      !(await checkAiRateLimitAsync("answer-checks-game", team.game_id, VERIFY_PER_GAME_PER_MINUTE, 60_000))
+    ) {
+      return NextResponse.json(
+        { error: "Per daug bandymų. Palaukite minutę." },
+        { status: 429 }
       )
     }
 

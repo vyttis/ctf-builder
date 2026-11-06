@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
 import { COMPETENCIES, BLOOM_LEVELS } from "@/lib/ai/schemas"
 import { z } from "zod"
+import { MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
 
 const createSchema = z.object({
   title: z.string().min(1),
@@ -20,7 +21,7 @@ const createSchema = z.object({
     title: z.string().min(1),
     description: z.string().min(1),
     type: z.enum(["text", "number", "multiple_choice"]),
-    correct_answer: z.string().min(1),
+    correct_answer: z.string().min(1).max(MAX_ANSWER_LENGTH, `Atsakymas gali būti iki ${MAX_ANSWER_LENGTH} ženklų`),
     options: z.array(z.string()).nullable().default(null),
     hints: z.array(z.string()).default([]),
     explanation: z.string().default(""),

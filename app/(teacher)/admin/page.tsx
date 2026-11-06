@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Clock,
   UserCheck,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -99,6 +100,21 @@ export default async function AdminDashboardPage() {
                   ? `Laukia sprendimo: ${pendingRequests}`
                   : "Naujų prašymų nėra. Čia kuriate ir prašymo nuorodas."}
               </p>
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        </Link>
+      )}
+      {isSuperAdmin && (
+        <Link
+          href="/admin/di"
+          className="-mt-4 mb-8 flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white px-5 py-4 transition-colors hover:bg-muted/40"
+        >
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-5 w-5 text-highlight-ink" aria-hidden="true" />
+            <div>
+              <p className="font-semibold text-steam-dark">DI naudojimas</p>
+              <p className="text-sm text-muted-foreground">Mėnesio išlaidos, biudžetas ir vedėjų limitai.</p>
             </div>
           </div>
           <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
