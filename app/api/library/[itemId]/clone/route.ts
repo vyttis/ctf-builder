@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { sourceAnswers } from "@/lib/library/source-answers"
 import { generateGameCode } from "@/lib/game/code-generator"
 import { hashAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
@@ -60,26 +62,41 @@ export async function POST(_request: Request, props: { params: Promise<{ itemId:
     }
 
     // Create challenges from snapshot
-    const challengeData = item.challenge_data as ChallengeSnapshot[]
-    if (challengeData && challengeData.length > 0) {
-      // Snapshots never carry answers. Each clone gets a random unguessable
-      // hash + needs_answer flag; activation is blocked until answers are set.
+    const challengeData = (item.challenge_data as ChallengeSnapshot[] | null) ?? []
+    let needsAnswers = 0
+    if (challengeData.length > 0) {
+      // Snapshots never carry answers. The answer hash (and explanation) is
+      // copied on the server from the activity the item was published from;
+      // a task that cannot be matched there gets a random unguessable hash
+      // and needs_answer, which blocks activation until an answer is set.
+      const sources = await sourceAnswers(createAdminClient(), item.source_game_id, challengeData)
+      needsAnswers = sources.filter((s) => !s).length
       const buildChallenges = async (withNeedsAnswer: boolean) =>
         Promise.all(
-          challengeData.map(async (c: ChallengeSnapshot) => ({
-            game_id: game.id,
-            title: c.title,
-            description: c.description || "",
-            type: c.type || "text",
-            points: c.points || 100,
-            answer_hash: await hashAnswer(crypto.randomUUID(), c.type || "text"),
-            hints: c.hints || [],
-            options: c.options || null,
-            order_index: c.order_index || 0,
-            image_url: c.image_url || null,
-            maps_url: c.maps_url || null,
-            ...(withNeedsAnswer ? { needs_answer: true } : {}),
-          }))
+          challengeData.map(async (c: ChallengeSnapshot, i: number) => {
+            const source = sources[i]
+            return {
+              game_id: game.id,
+              title: c.title,
+              description: c.description || "",
+              type: c.type || "text",
+              points: c.points || 100,
+              answer_hash: source ? source.answer_hash : await hashAnswer(crypto.randomUUID(), c.type || "text"),
+              hints: c.hints || [],
+              options: c.options || null,
+              order_index: c.order_index || 0,
+              image_url: c.image_url || null,
+              maps_url: c.maps_url || null,
+              ...(source
+                ? {
+                    explanation: source.explanation,
+                    difficulty: source.difficulty,
+                    ...(source.hint_penalty != null ? { hint_penalty: source.hint_penalty } : {}),
+                  }
+                : {}),
+              ...(withNeedsAnswer ? { needs_answer: !source } : {}),
+            }
+          })
         )
 
       let { error: challengeError } = await supabase
@@ -109,7 +126,7 @@ export async function POST(_request: Request, props: { params: Promise<{ itemId:
       .eq("id", params.itemId)
 
     return NextResponse.json(
-      { game_id: game.id, game_code: game.game_code },
+      { game_id: game.id, game_code: game.game_code, needs_answers: needsAnswers },
       { status: 201 }
     )
   } catch (error: unknown) {

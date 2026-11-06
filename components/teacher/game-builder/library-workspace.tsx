@@ -59,39 +59,24 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
       )
   )
 
-  async function addChallengeFromLibrary(
-    item: LibraryItem,
-    snap: { title: string; description: string; type: string; points: number; hints: string[]; options: string[] | null }
-  ) {
-    const key = `${item.id}-${snap.title}`
+  async function addChallengeFromLibrary(item: LibraryItem, snap: { title: string }, index: number) {
+    const key = `${item.id}-${index}`
     setAddingIds((prev) => new Set(prev).add(key))
     try {
-      const res = await fetch("/api/challenges", {
+      // The server copies the task with its picture and, when it can find
+      // the task in the published activity, its answer and explanation.
+      const res = await fetch(`/api/library/${item.id}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          game_id: gameId,
-          title: snap.title,
-          description: snap.description || "",
-          type: snap.type,
-          points: snap.points,
-          // Library snapshots never carry answers; the copy is flagged until
-          // the teacher sets a real answer (blocks activation)
-          needs_answer: true,
-          hints: snap.hints || [],
-          options: snap.options,
-        }),
+        body: JSON.stringify({ game_id: gameId, index }),
       })
-      if (res.ok) {
-        toast({
-          title: `Užduotis „${snap.title}“ pridėta`,
-          description: "Nepamirškite nustatyti teisingo atsakymo.",
-        })
-        onTaskAdded()
-      } else {
-        const body = (await res.json().catch(() => ({}))) as { error?: string }
-        throw new Error(body.error ?? "")
-      }
+      const body = (await res.json().catch(() => ({}))) as { error?: string; has_answer?: boolean }
+      if (!res.ok) throw new Error(body.error ?? "")
+      toast({
+        title: `Užduotis „${snap.title}“ pridėta`,
+        description: body.has_answer ? undefined : "Nepamirškite nustatyti teisingo atsakymo.",
+      })
+      onTaskAdded()
     } catch (e) {
       toast({
         title: "Nepavyko pridėti užduoties",
@@ -202,7 +187,7 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
               {expandedId === item.id && item.challenge_data && (
                 <div className="mt-3 space-y-2 border-t border-border/30 pt-3">
                   {item.challenge_data.map((snap, i) => {
-                    const key = `${item.id}-${snap.title}`
+                    const key = `${item.id}-${i}`
                     return (
                       <div
                         key={i}
@@ -236,7 +221,7 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
                           variant="outline"
                           className="h-7 text-xs gap-1 shrink-0"
                           disabled={addingIds.has(key)}
-                          onClick={() => addChallengeFromLibrary(item, snap)}
+                          onClick={() => addChallengeFromLibrary(item, snap, i)}
                         >
                           {addingIds.has(key) ? (
                             <Loader2 className="h-3 w-3 animate-spin" />

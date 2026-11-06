@@ -8,6 +8,7 @@ import { Copy, Puzzle, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
+import { pluralizeLt } from "@/lib/utils"
 
 interface LibraryCardProps {
   item: LibraryItem
@@ -30,11 +31,13 @@ export function LibraryCard({ item }: LibraryCardProps) {
         throw new Error(data.error || "Nepavyko klonuoti")
       }
 
-      const { game_id } = await res.json()
+      const { game_id, needs_answers } = (await res.json()) as { game_id: string; needs_answers?: number }
 
       toast({
-        title: "Sėkmingai klonuota!",
-        description: "Veikla sukurta kaip juodraštis. Pridėkite atsakymus.",
+        title: "Veikla nukopijuota",
+        description: needs_answers
+          ? `Sukurta kaip juodraštis. Be atsakymo liko ${needs_answers} ${pluralizeLt(needs_answers, "užduotis", "užduotys", "užduočių")}: įrašykite juos prieš pradėdami.`
+          : "Sukurta kaip juodraštis su atsakymais. Peržiūrėkite ir pradėkite, kai būsite pasiruošę.",
       })
 
       router.push(`/games/${game_id}`)
