@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { startTeamClock } from "@/lib/game/team-start"
 import { MAX_ANSWER_LENGTH, verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { pluralizeLt } from "@/lib/utils"
@@ -146,16 +147,21 @@ export async function POST(request: Request) {
     // Anchored on teams.started_at (stamped by /api/play/start), not a
     // client clock, so clearing localStorage / switching devices can't buy
     // extra time. Pauses that fell inside the team's run are added back
-    // (lib/game/clock.ts). Skipped when there's no limit or the team hasn't
-    // started.
-    if (team.started_at) {
+    // (lib/game/clock.ts). Skipped when there's no limit.
+    const clock = clockFromRow(game as Parameters<typeof clockFromRow>[0])
+    let startedAt = team.started_at ?? null
+    let offsetMs = Number(team.pause_offset_ms ?? 0)
+    if (clock.limitMinutes && !startedAt && "started_at" in team) {
+      // A timed activity whose team has no start (a missed stamp, or a limit
+      // set while the activity ran): the first answer starts its clock, so
+      // no team answers without one.
+      const started = await startTeamClock(supabase, team.id)
+      startedAt = started.startedAt
+      offsetMs = started.pauseOffsetMs
+    }
+    if (startedAt) {
       const now = Date.now()
-      const deadline = deadlineMs(
-        clockFromRow(game as Parameters<typeof clockFromRow>[0]),
-        new Date(team.started_at).getTime(),
-        Number(team.pause_offset_ms ?? 0),
-        now
-      )
+      const deadline = deadlineMs(clock, new Date(startedAt).getTime(), offsetMs, now)
       if (deadline !== null && now > deadline) {
         return NextResponse.json(
           { error: "Laikas baigėsi. Rezultatai išsaugoti." },

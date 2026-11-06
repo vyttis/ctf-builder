@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { startTeamClock } from "@/lib/game/team-start"
 
 // POST /api/play/hint — record that a team revealed a hint and return its
 // text. The play state sends only hints the team already opened, so this is
@@ -32,11 +33,11 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient()
 
-    const { data: team } = await supabase
+    const { data: team } = (await supabase
       .from("teams")
-      .select("id, game_id")
+      .select("*")
       .eq("session_token", parsed.data.session_token)
-      .maybeSingle()
+      .maybeSingle()) as { data: { id: string; game_id: string; started_at?: string | null } | null }
 
     if (!team) {
       return NextResponse.json(
@@ -55,6 +56,17 @@ export async function POST(request: Request) {
 
     if (!challenge || challenge.game_id !== team.game_id) {
       return NextResponse.json({ error: "Užduotis nerasta" }, { status: 404 })
+    }
+
+    // In a timed activity a hint, like an answer, counts as working on the
+    // tasks: a team without a start (it never pressed "Pradėti") gets its
+    // clock started now, so hints cannot be read before the time runs.
+    if ("started_at" in team && !team.started_at) {
+      const { data: game } = await supabase.from("games").select("status, settings").eq("id", team.game_id).maybeSingle()
+      const limit = (game?.settings as { time_limit_minutes?: unknown } | null)?.time_limit_minutes
+      if (typeof limit === "number" && limit > 0 && (game?.status === "active" || game?.status === "paused")) {
+        await startTeamClock(supabase, team.id)
+      }
     }
 
     const hints: unknown[] = Array.isArray(challenge.hints) ? challenge.hints : []

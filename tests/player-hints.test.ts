@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { forParticipant, hideUnopenedHints, orderForTeam } from "@/lib/game/player-hints"
+import { forParticipant, hideUnopenedHints, orderForTeam, waitsForStart } from "@/lib/game/player-hints"
 
 const task = (id: string, hints: unknown) => ({ id, title: id, hints })
 
@@ -52,6 +52,52 @@ describe("forParticipant", () => {
 
   it("passes other answers through", () => {
     expect(forParticipant(null, [], null)).toBeNull()
+  })
+})
+
+describe("tasks of a timed activity wait for the team's start", () => {
+  const timed = (status = "active", limit: unknown = 20) => ({
+    game: { id: "g", status, settings: { time_limit_minutes: limit } },
+    challenges: [task("a", ["hint"]), task("b", null)],
+    team: { id: "t" },
+    solved: [],
+  })
+  const notStarted = { startedAt: null, pauseOffsetMs: 0 }
+  const started = { startedAt: "2026-11-06T18:00:00.000Z", pauseOffsetMs: 1500 }
+
+  it("holds the tasks back and tells how many there are", () => {
+    const out = forParticipant(timed(), [], "2:x", notStarted) as {
+      challenges: unknown[]
+      challenge_count: number
+      awaiting_start: boolean
+      team_started_at: string | null
+    }
+    expect(out.challenges).toEqual([])
+    expect(out.challenge_count).toBe(2)
+    expect(out.awaiting_start).toBe(true)
+    expect(out.team_started_at).toBeNull()
+  })
+
+  it("sends the tasks and the start once the team started", () => {
+    const out = forParticipant(timed(), [], "2:x", started) as {
+      challenges: unknown[]
+      awaiting_start: boolean
+      team_started_at: string
+      team_pause_offset_ms: number
+    }
+    expect(out.challenges).toHaveLength(2)
+    expect(out.awaiting_start).toBe(false)
+    expect(out.team_started_at).toBe(started.startedAt)
+    expect(out.team_pause_offset_ms).toBe(1500)
+  })
+
+  it("does not hold back without a limit, after the end, or without the start read", () => {
+    expect(waitsForStart(timed("active", null), notStarted)).toBe(false)
+    expect(waitsForStart(timed("active", 0), notStarted)).toBe(false)
+    expect(waitsForStart(timed("finished"), notStarted)).toBe(false)
+    expect(waitsForStart(timed("paused"), notStarted)).toBe(true)
+    expect(waitsForStart(timed(), null)).toBe(false)
+    expect(waitsForStart({ ...timed(), team: null }, notStarted)).toBe(false)
   })
 })
 
