@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import bcrypt from "bcryptjs"
-import { canonicalNumber } from "@/lib/game/number-answer"
+import { canonicalNumber, legacyNumberSpellings } from "@/lib/game/number-answer"
 import {
   normalizeAnswer,
   normalizeAnswerLegacy,
@@ -133,34 +133,96 @@ describe("number answers by value", () => {
     expect(canonicalNumber("+5")).toBe("5")
     expect(canonicalNumber("07")).toBe("7")
     expect(canonicalNumber("1 000")).toBe("1000")
-    expect(canonicalNumber("1 000,25")).toBe("1000.25")
+    expect(canonicalNumber("1\u00a0000")).toBe("1000")
+    expect(canonicalNumber("12 345 678")).toBe("12345678")
+    expect(canonicalNumber("1 000,25")).toBe("1000.25")
     expect(canonicalNumber("−3")).toBe("-3")
     expect(canonicalNumber(",5")).toBe("0.5")
     expect(canonicalNumber("-0")).toBe("0")
+    expect(canonicalNumber("-0,00")).toBe("0")
+    expect(canonicalNumber("100")).toBe("100")
     expect(canonicalNumber("3 m")).toBeNull()
     expect(canonicalNumber("1.2.3")).toBeNull()
     expect(canonicalNumber("")).toBeNull()
+    expect(canonicalNumber("-")).toBeNull()
+  })
+
+  it("accepts spaces only between groups of three digits", () => {
+    expect(canonicalNumber("1 2")).toBeNull()
+    expect(canonicalNumber("10 00")).toBeNull()
+    expect(canonicalNumber("1000 000")).toBeNull()
+    expect(canonicalNumber("1  000")).toBeNull()
+    expect(canonicalNumber("1 000 00")).toBeNull()
+    expect(canonicalNumber("0,123 4")).toBeNull()
+  })
+
+  it("keeps every digit of long and tiny numbers", () => {
+    expect(canonicalNumber("9007199254740993")).toBe("9007199254740993")
+    expect(canonicalNumber("9007199254740992")).toBe("9007199254740992")
+    expect(canonicalNumber("1000000000000000000000")).toBe("1000000000000000000000")
+    expect(canonicalNumber("0,000000000000000000000001")).toBe("0.000000000000000000000001")
+    expect(canonicalNumber("0,1000")).toBe("0.1")
   })
 
   it("matches any form of the same number for new answers", async () => {
     const hash = await hashAnswer("2,50", "number")
+    expect(hash.startsWith("num:$2")).toBe(true)
     for (const typed of ["2.5", "2,5", "2.50", "+2.5", " 2.5 "]) {
       expect(await verifyAnswer(typed, hash, NUMBER)).toBe(true)
     }
     expect(await verifyAnswer("25", hash, NUMBER)).toBe(false)
     expect(await verifyAnswer("-2.5", hash, NUMBER)).toBe(false)
+    expect(await verifyAnswer("2.5 m", hash, NUMBER)).toBe(false)
+  })
+
+  it("does not credit badly grouped digits", async () => {
+    const twelve = await hashAnswer("12", "number")
+    expect(await verifyAnswer("1 2", twelve, NUMBER)).toBe(false)
+    const thousand = await hashAnswer("1000", "number")
+    expect(await verifyAnswer("10 00", thousand, NUMBER)).toBe(false)
+    expect(await verifyAnswer("1 000", thousand, NUMBER)).toBe(true)
+  })
+
+  it("does not credit a neighbouring large integer", async () => {
+    const hash = await hashAnswer("9007199254740992", "number")
+    expect(await verifyAnswer("9007199254740993", hash, NUMBER)).toBe(false)
+  })
+
+  it("lists the spellings a facilitator may have typed before", () => {
+    expect(legacyNumberSpellings("2.5")).toEqual(["2.50", "2,50"])
+    expect(legacyNumberSpellings("3")).toEqual(["3.0", "3,0", "3.00", "3,00"])
+    expect(legacyNumberSpellings("-1000")).toEqual([
+      "-1 000",
+      "-1000.0",
+      "-1000,0",
+      "-1000.00",
+      "-1000,00",
+    ])
+    expect(legacyNumberSpellings("12345.25")).toEqual(["12 345.25", "12 345,25"])
   })
 
   it("still matches older hashes made from the typed text", async () => {
-    const oldComma = await bcrypt.hash("2,5", 4)
-    expect(await verifyAnswer("2.5", oldComma, NUMBER)).toBe(true)
-    const oldDot = await bcrypt.hash("1000", 4)
-    expect(await verifyAnswer("1 000", oldDot, NUMBER)).toBe(true)
+    const old = (text: string) => bcrypt.hash(text, 4)
+    expect(await verifyAnswer("2.5", await old("2,5"), NUMBER)).toBe(true)
+    expect(await verifyAnswer("1 000", await old("1000"), NUMBER)).toBe(true)
+    expect(await verifyAnswer("2.5", await old("2.50"), NUMBER)).toBe(true)
+    expect(await verifyAnswer("2,5", await old("2,50"), NUMBER)).toBe(true)
+    expect(await verifyAnswer("3", await old("3.0"), NUMBER)).toBe(true)
+    expect(await verifyAnswer("3", await old("3,00"), NUMBER)).toBe(true)
+    expect(await verifyAnswer("1000", await old("1 000"), NUMBER)).toBe(true)
+    expect(await verifyAnswer("2,6", await old("2,50"), NUMBER)).toBe(false)
   })
 
   it("keeps answers that are not numbers as typed", async () => {
     const hash = await hashAnswer("3 m", "number")
+    expect(hash.startsWith("$2")).toBe(true)
     expect(await verifyAnswer("3 m", hash, NUMBER)).toBe(true)
+  })
+
+  it("reads a value hash the same way after the task changes type", async () => {
+    const hash = await hashAnswer("5", "number")
+    expect(await verifyAnswer("5", hash, TEXT)).toBe(true)
+    expect(await verifyAnswer("penki", hash, TEXT)).toBe(false)
   })
 })
 

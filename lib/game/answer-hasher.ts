@@ -1,8 +1,18 @@
 import bcrypt from "bcryptjs"
 import { timingSafeEqual } from "crypto"
-import { canonicalNumber } from "@/lib/game/number-answer"
+import { canonicalNumber, legacyNumberSpellings } from "@/lib/game/number-answer"
 
 const BCRYPT_ROUNDS = 10
+
+/**
+ * A number answer stored by value has this prefix in front of its bcrypt
+ * hash. It tells verification that one comparison of the canonical value is
+ * enough; hashes without it come from before, when the typed text was stored,
+ * and are tried with the usual older spellings. A duplicated activity copies
+ * the hash with its prefix. (The SQL check_answer() is unused and does not
+ * read the prefix.)
+ */
+const NUMBER_VALUE_PREFIX = "num:"
 
 /** The challenge facts that decide how an answer is compared. */
 export interface AnswerRules {
@@ -64,8 +74,9 @@ function withoutTrailingPunctuation(form: string): string {
  * - multiple choice: exact; folded only when no two options fold to the same
  *   string, which covers a task switched from text to choice without a new
  *   answer and can never credit a different option;
- * - number: the canonical value ("2.5"), the same with a decimal comma
- *   (older hashes of "2,5"), then exact;
+ * - number (hashes made before values were stored): the canonical value,
+ *   the exact text, the value with a decimal comma, then other spellings a
+ *   facilitator may have typed ("1 000", "2.50", "3.0");
  * - anything else: exact.
  */
 function candidateForms(submitted: string, rules: AnswerRules): string[] {
@@ -78,7 +89,10 @@ function candidateForms(submitted: string, rules: AnswerRules): string[] {
     forms = [exact, folded]
   } else if (rules.type === "number") {
     const canonical = canonicalNumber(submitted)
-    forms = canonical === null ? [exact] : [canonical, canonical.replace(".", ","), exact]
+    forms =
+      canonical === null
+        ? [exact]
+        : [canonical, exact, canonical.replace(".", ","), ...legacyNumberSpellings(canonical)]
   } else {
     forms = [exact]
   }
@@ -97,7 +111,9 @@ export function storedForm(answer: string, type: string | null | undefined): str
 }
 
 export async function hashAnswer(answer: string, type: string | null | undefined): Promise<string> {
-  return bcrypt.hash(storedForm(answer, type), BCRYPT_ROUNDS)
+  const hash = await bcrypt.hash(storedForm(answer, type), BCRYPT_ROUNDS)
+  const byValue = type === "number" && canonicalNumber(answer) !== null
+  return byValue ? NUMBER_VALUE_PREFIX + hash : hash
 }
 
 function plaintextEquals(candidate: string, stored: string): boolean {
@@ -112,6 +128,12 @@ export async function verifyAnswer(
   storedHash: string,
   rules: AnswerRules
 ): Promise<boolean> {
+  if (storedHash.startsWith(NUMBER_VALUE_PREFIX)) {
+    const canonical = canonicalNumber(submitted)
+    if (canonical === null) return false
+    return bcrypt.compare(canonical, storedHash.slice(NUMBER_VALUE_PREFIX.length))
+  }
+
   const forms = candidateForms(submitted, rules)
 
   // Support legacy plaintext hashes (migration path)

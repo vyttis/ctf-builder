@@ -122,6 +122,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Nepavyko sukurti komandos" }, { status: 500 })
     }
 
+    // The count above is read before the insert, so teams joining at the
+    // same moment can pass it together. Keep the first maxTeams teams in
+    // joining order and take back a place this request was not entitled to.
+    const { data: firstTeams, error: rankError } = await supabase
+      .from("teams")
+      .select("id")
+      .eq("game_id", game.id)
+      .order("joined_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(maxTeams)
+    if (!rankError && firstTeams && !firstTeams.some((t) => t.id === team.id)) {
+      await supabase.from("teams").delete().eq("id", team.id)
+      return NextResponse.json(
+        { error: "Veikloje jau visos vietos užimtos: pasiektas didžiausias komandų skaičius." },
+        { status: 400 }
+      )
+    }
+
     return NextResponse.json(
       {
         team_id: team.id,
