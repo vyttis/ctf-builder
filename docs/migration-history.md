@@ -319,6 +319,11 @@ Tikimasi: `anon_hints` `false`, `anon_notes` `false`, `anon_title` `true`,
 `auth_hints` `true`, `anon_state` `false`, `auth_state` `false`,
 `service_state` `true`.
 
+Produkcijoje prieš taikymą (2026-11-06, tik skaitymo užklausa): `anon_hints`
+`true`, `anon_notes` jau `false`, `anon_title` `true`, `auth_hints` `true`,
+`anon_state` `true`, `auth_state` `true`, 0 vykstančių veiklų. Todėl
+grąžinimas atkuria tik `hints` ir funkcijos teises.
+
 Dar nepritaikyta produkcijoje.
 
 ## Konvencija toliau
