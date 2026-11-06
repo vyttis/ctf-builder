@@ -197,10 +197,13 @@ BEGIN
   IF f IS NULL OR f > now() + interval '1 minute' THEN
     RAISE EXCEPTION 'finished_at must be set by the trigger, got %', f;
   END IF;
-  UPDATE public.games SET status = 'active' WHERE id = '10000000-0000-0000-0000-00000000000a';
-  IF (SELECT finished_at FROM public.games WHERE id = '10000000-0000-0000-0000-00000000000a') IS NOT NULL THEN
-    RAISE EXCEPTION 'reopening must clear finished_at';
-  END IF;
+  -- A finished activity stays finished (20261106150000), for every writer.
+  BEGIN
+    UPDATE public.games SET status = 'active' WHERE id = '10000000-0000-0000-0000-00000000000a';
+    RAISE EXCEPTION 'a finished activity must not be reopened';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
 END $$;
 
 -- A request link stops at its limit.
@@ -282,8 +285,10 @@ BEGIN
 END $$;
 RESET ROLE;
 
--- Two minutes of pause pass.
+-- Two minutes of pause pass (the trigger keeps the clock, so step around it).
+ALTER TABLE public.games DISABLE TRIGGER games_status_rules;
 UPDATE public.games SET paused_at = now() - interval '2 minutes' WHERE id = '10000000-0000-0000-0000-0000000000c1';
+ALTER TABLE public.games ENABLE TRIGGER games_status_rules;
 
 SET ROLE authenticated;
 DO $$
@@ -292,6 +297,19 @@ BEGIN
   g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
   IF g.paused_at IS NOT NULL OR g.paused_ms NOT BETWEEN 119000 AND 125000 THEN
     RAISE EXCEPTION 'resuming must add the pause to paused_ms, got % %', g.paused_at, g.paused_ms;
+  END IF;
+
+  -- A client cannot set the clock fields directly.
+  UPDATE public.games SET paused_ms = 0, paused_at = now() WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  IF (SELECT paused_ms FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1') < 119000
+     OR (SELECT paused_at FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1') IS NOT NULL THEN
+    RAISE EXCEPTION 'paused_ms and paused_at must ignore direct writes';
+  END IF;
+
+  -- A settings save while running keeps the limit and merges the rest.
+  g := public.update_game_settings('10000000-0000-0000-0000-0000000000c1', '{"time_limit_minutes": 1, "show_leaderboard": false}');
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 30 OR (g.settings ->> 'show_leaderboard')::boolean IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'a running settings save must keep the limit and merge the rest, got %', g.settings;
   END IF;
 
   g := public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
@@ -314,6 +332,12 @@ BEGIN
   BEGIN
     PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
     RAISE EXCEPTION 'a finished activity must not be reopened';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  BEGIN
+    UPDATE public.games SET status = 'paused' WHERE id = '10000000-0000-0000-0000-0000000000c1';
+    RAISE EXCEPTION 'a direct update must not reopen a finished activity either';
   EXCEPTION WHEN SQLSTATE 'KS409' THEN
     NULL;
   END;

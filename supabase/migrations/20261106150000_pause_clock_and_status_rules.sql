@@ -7,17 +7,23 @@
 -- own run. The server deadline, the participant countdown and the class
 -- screen all use the same rule (lib/game/clock.ts).
 --
--- Status changes go through set_game_status(): the activity only moves
--- forward (draft -> active <-> paused -> finished), so a stale tab cannot
--- reopen a finished activity, and the pause bookkeeping happens under the
--- same row lock. extend_game_time() adds minutes in one statement, so two
--- devices adding 5 minutes give 10, and it refuses activities without a
--- time limit (adding minutes there used to create a 5-minute limit counted
--- from the original start).
+-- A BEFORE UPDATE trigger on games owns the status rules and the pause
+-- bookkeeping for every writer (the API, PostgREST, SQL): the activity only
+-- moves forward (draft -> active <-> paused -> finished), so a stale tab
+-- cannot reopen a finished activity; leaving a pause adds its length to
+-- paused_ms; the first start sets starts_at; values for paused_at or
+-- paused_ms sent by a client are ignored.
 --
--- No existing rows are changed. Both functions run as the caller, so the
--- existing RLS rules (owner, active account) still decide who may change
--- an activity.
+-- set_game_status() changes the status under a row lock for the owner.
+-- extend_game_time() adds minutes in one statement, so two devices adding 5
+-- minutes give 10, and it refuses activities without a time limit.
+-- update_game_settings() merges a settings patch in one statement, so a
+-- builder save cannot undo an extension made meanwhile; while the activity
+-- runs, the time limit changes only through extend_game_time().
+--
+-- No existing rows are changed. The functions run as the caller, so the
+-- existing RLS rules (owner, active account) still decide who may change an
+-- activity.
 --
 -- Rollback: supabase/rollback/20261106150000_pause_clock_and_status_rules.sql
 
@@ -35,6 +41,44 @@ ALTER TABLE public.teams
 
 ALTER TABLE public.teams
   ADD CONSTRAINT teams_pause_offset_ms_check CHECK (pause_offset_ms >= 0);
+
+CREATE OR REPLACE FUNCTION public.games_status_rules()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  -- The pause clock is kept here only.
+  NEW.paused_ms := OLD.paused_ms;
+  NEW.paused_at := OLD.paused_at;
+
+  IF NEW.status IS DISTINCT FROM OLD.status THEN
+    IF NOT (
+      (OLD.status = 'draft' AND NEW.status = 'active')
+      OR (OLD.status = 'active' AND NEW.status IN ('paused', 'finished'))
+      OR (OLD.status = 'paused' AND NEW.status IN ('active', 'finished'))
+    ) THEN
+      RAISE EXCEPTION 'status cannot change from % to %', OLD.status, NEW.status USING ERRCODE = 'KS409';
+    END IF;
+
+    IF OLD.paused_at IS NOT NULL THEN
+      NEW.paused_ms := OLD.paused_ms
+        + greatest(0, floor(extract(epoch FROM (now() - OLD.paused_at)) * 1000))::bigint;
+    END IF;
+    NEW.paused_at := CASE WHEN NEW.status = 'paused' THEN now() ELSE NULL END;
+
+    IF NEW.status = 'active' AND NEW.starts_at IS NULL THEN
+      NEW.starts_at := now();
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS games_status_rules ON public.games;
+CREATE TRIGGER games_status_rules BEFORE UPDATE ON public.games
+  FOR EACH ROW EXECUTE FUNCTION public.games_status_rules();
 
 CREATE OR REPLACE FUNCTION public.set_game_status(p_game_id uuid, p_status text)
 RETURNS public.games
@@ -61,23 +105,42 @@ BEGIN
     RETURN g;
   END IF;
 
-  IF NOT (
-    (g.status = 'draft' AND p_status = 'active')
-    OR (g.status = 'active' AND p_status IN ('paused', 'finished'))
-    OR (g.status = 'paused' AND p_status IN ('active', 'finished'))
-  ) THEN
-    RAISE EXCEPTION 'status cannot change from % to %', g.status, p_status USING ERRCODE = 'KS409';
+  -- games_status_rules checks the move and keeps the pause time.
+  UPDATE public.games SET status = p_status
+  WHERE id = p_game_id
+  RETURNING * INTO g;
+
+  RETURN g;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.update_game_settings(p_game_id uuid, p_patch jsonb)
+RETURNS public.games
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  g public.games;
+  v_patch jsonb := coalesce(p_patch, '{}'::jsonb);
+BEGIN
+  IF jsonb_typeof(v_patch) <> 'object' THEN
+    RAISE EXCEPTION 'settings patch must be an object' USING ERRCODE = '22023';
   END IF;
 
-  UPDATE public.games SET
-    status = p_status,
-    paused_ms = g.paused_ms + CASE
-      WHEN g.paused_at IS NOT NULL
-        THEN greatest(0, floor(extract(epoch FROM (now() - g.paused_at)) * 1000))::bigint
-      ELSE 0
-    END,
-    paused_at = CASE WHEN p_status = 'paused' THEN now() ELSE NULL END,
-    starts_at = CASE WHEN p_status = 'active' AND g.starts_at IS NULL THEN now() ELSE g.starts_at END
+  SELECT * INTO g FROM public.games
+  WHERE id = p_game_id AND teacher_id = auth.uid()
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'activity not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  IF g.status IN ('active', 'paused') THEN
+    v_patch := v_patch - 'time_limit_minutes';
+  END IF;
+
+  UPDATE public.games
+  SET settings = coalesce(settings, '{}'::jsonb) || v_patch
   WHERE id = p_game_id
   RETURNING * INTO g;
 
@@ -130,9 +193,12 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.games_status_rules() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.set_game_status(uuid, text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.extend_game_time(uuid, integer) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.update_game_settings(uuid, jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.set_game_status(uuid, text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.extend_game_time(uuid, integer) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.update_game_settings(uuid, jsonb) TO authenticated, service_role;
 
 COMMIT;

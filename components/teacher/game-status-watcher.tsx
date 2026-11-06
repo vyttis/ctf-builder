@@ -6,10 +6,18 @@ import type { GameStatus } from "@/types/game"
 
 /**
  * Keeps the activity page in step with other devices: when the class screen
- * (or another tab) starts, pauses, resumes or finishes the activity, this
- * page reloads its data instead of offering buttons for the old state.
+ * (or another tab) starts, pauses, resumes, extends or finishes the
+ * activity, this page reloads its data instead of showing the old state.
  */
-export function GameStatusWatcher({ gameCode, status }: { gameCode: string; status: GameStatus }) {
+export function GameStatusWatcher({
+  gameCode,
+  status,
+  timeLimit,
+}: {
+  gameCode: string
+  status: GameStatus
+  timeLimit: number | null
+}) {
   const router = useRouter()
 
   useEffect(() => {
@@ -19,8 +27,10 @@ export function GameStatusWatcher({ gameCode, status }: { gameCode: string; stat
       try {
         const res = await fetch(`/api/play/status?game_code=${encodeURIComponent(gameCode)}`, { cache: "no-store" })
         if (!res.ok) return
-        const data = (await res.json()) as { status: GameStatus | null }
-        if (!disposed && data.status && data.status !== status) router.refresh()
+        const data = (await res.json()) as { status: GameStatus | null; time_limit_minutes?: number | null }
+        if (disposed || !data.status) return
+        const limitChanged = data.time_limit_minutes !== undefined && (data.time_limit_minutes ?? null) !== timeLimit
+        if (data.status !== status || limitChanged) router.refresh()
       } catch {
         // The next round retries.
       }
@@ -35,7 +45,7 @@ export function GameStatusWatcher({ gameCode, status }: { gameCode: string; stat
       clearInterval(interval)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [gameCode, status, router])
+  }, [gameCode, status, timeLimit, router])
 
   return null
 }

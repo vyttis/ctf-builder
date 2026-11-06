@@ -48,13 +48,19 @@ export async function POST(request: Request) {
 
     // The team gets back only pauses that happen after it starts: remember
     // how much pause time had passed by now.
-    const { data: game } = await supabase
+    const { data: game, error: gameError } = await supabase
       .from("games")
       .select("paused_ms, paused_at")
       .eq("id", team.game_id)
       .maybeSingle()
+    // Without the game's pause time the offset would be wrong for good:
+    // stamp nothing, the client retries on its next load.
+    if (gameError || !game) {
+      console.error("play/start game lookup failed:", gameError?.message ?? "no game")
+      return NextResponse.json({ error: "Serverio klaida" }, { status: 503 })
+    }
     const now = Date.now()
-    const offset = game ? pauseOffsetAtStart(clockFromRow(game), now) : 0
+    const offset = pauseOffsetAtStart(clockFromRow(game), now)
 
     // Only stamp while NULL: a second device or a reload never resets the clock.
     const { data: updated, error } = await supabase

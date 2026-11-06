@@ -184,10 +184,13 @@ Tikimasi: `role_checks_status` `true`, `profile_policy` 1, `admin_policies` 4.
 
 Failas `supabase/migrations/20261106150000_pause_clock_and_status_rules.sql`,
 grąžinimas `supabase/rollback/20261106150000_pause_clock_and_status_rules.sql`.
-Prideda `games.paused_at`, `games.paused_ms`, `teams.pause_offset_ms` ir dvi
-funkcijas: `set_game_status()` (būsena keičiasi tik pirmyn, pauzės laikas
-skaičiuojamas toje pačioje eilutės užraktoje) ir `extend_game_time()`
-(minutės pridedamos vienu sakiniu; veiklai be laiko limito atsisakoma).
+Prideda `games.paused_at`, `games.paused_ms`, `teams.pause_offset_ms`,
+trigerį `games_status_rules` (būsena keičiasi tik pirmyn bet kuriam rašytojui,
+pauzės laiką skaičiuoja tik jis) ir funkcijas `set_game_status()`,
+`extend_game_time()` (minutės pridedamos vienu sakiniu; veiklai be laiko
+limito atsisakoma) ir `update_game_settings()` (nustatymai sujungiami vienu
+sakiniu; vykstančios veiklos limitas keičiamas tik pratęsiant).
+Baigtos veiklos atnaujinti nebegalima ir tiesiai SQL.
 Esami duomenys nekeičiami. Abi funkcijos vykdomos kviečiančiojo teisėmis,
 todėl RLS taisyklės (savininkas, aktyvi paskyra) galioja kaip anksčiau.
 
@@ -204,10 +207,12 @@ select
      and table_name = 'teams' and column_name = 'pause_offset_ms') as team_cols,
   has_function_privilege('authenticated', 'public.set_game_status(uuid,text)', 'EXECUTE') as auth_status_fn,
   has_function_privilege('anon', 'public.set_game_status(uuid,text)', 'EXECUTE') as anon_status_fn,
-  has_function_privilege('anon', 'public.extend_game_time(uuid,integer)', 'EXECUTE') as anon_extend_fn;
+  has_function_privilege('anon', 'public.extend_game_time(uuid,integer)', 'EXECUTE') as anon_extend_fn,
+  has_function_privilege('authenticated', 'public.update_game_settings(uuid,jsonb)', 'EXECUTE') as auth_settings_fn,
+  (select count(*) from pg_trigger where tgname = 'games_status_rules') as status_trigger;
 ```
 
-Tikimasi: `game_cols` 2, `team_cols` 1, `auth_status_fn` `true`, `anon_status_fn` `false`, `anon_extend_fn` `false`.
+Tikimasi: `game_cols` 2, `team_cols` 1, `auth_status_fn` `true`, `anon_status_fn` `false`, `anon_extend_fn` `false`, `auth_settings_fn` `true`, `status_trigger` 1.
 
 ## Konvencija toliau
 

@@ -79,15 +79,13 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
 
   const { data: current } = await supabase
     .from("games")
-    .select("status, settings")
+    .select("status")
     .eq("id", params.gameId)
     .eq("teacher_id", user.id)
     .maybeSingle()
   if (!current) {
     return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
   }
-  const running = current.status === "active" || current.status === "paused"
-
   // Readiness is checked when the activity starts, not when it resumes: a
   // task added during a pause must not leave the activity stuck paused.
   if (parsed.data.status === "active" && current.status === "draft") {
@@ -128,18 +126,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
   if (parsed.data.title !== undefined) updateData.title = parsed.data.title
   if (parsed.data.description !== undefined) updateData.description = parsed.data.description
 
-  // Deep merge settings to avoid destroying unmentioned fields. While the
-  // activity runs, the time limit changes only through "Pratęsti"
-  // (/extend): a builder tab saved with an older value must not undo an
-  // extension made meanwhile.
-  if (parsed.data.settings) {
-    const currentSettings = (current.settings as Record<string, unknown>) || {}
-    const incoming: Record<string, unknown> = { ...parsed.data.settings }
-    if (running) delete incoming.time_limit_minutes
-    updateData.settings = { ...currentSettings, ...incoming }
-  }
-
-  if (Object.keys(updateData).length === 0 && parsed.data.status === undefined) {
+  if (Object.keys(updateData).length === 0 && !parsed.data.settings && parsed.data.status === undefined) {
     return NextResponse.json({ error: "Nėra ką atnaujinti" }, { status: 400 })
   }
 
@@ -154,6 +141,21 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
       .single()
     if (error) {
       return NextResponse.json({ error: "Nepavyko išsaugoti veiklos." }, { status: 500 })
+    }
+    data = updated
+  }
+
+  // Settings merge in the database in one statement, so a save from an
+  // older tab cannot undo an extension made meanwhile; while the activity
+  // runs, the time limit changes only through "Pratęsti" (/extend).
+  if (parsed.data.settings) {
+    const { data: updated, error } = await supabase.rpc("update_game_settings", {
+      p_game_id: params.gameId,
+      p_patch: parsed.data.settings,
+    })
+    if (error) {
+      if (error.code === "P0002") return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
+      return NextResponse.json({ error: "Nepavyko išsaugoti nustatymų." }, { status: 500 })
     }
     data = updated
   }
