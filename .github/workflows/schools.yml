@@ -19,7 +19,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install duckdb==1.1.3
-      - run: python scripts/update-schools.py https://pub-b9a214779ee84455a693b9741bebb3b4.r2.dev/duckdb/mcp_warehouse.db schools.json
+      - name: Download the warehouse
+        run: curl -fsSL -A "kusteam-classroom-schools/1.0 (+https://pamokos.kusteam.app)" -o warehouse.db https://pub-b9a214779ee84455a693b9741bebb3b4.r2.dev/duckdb/mcp_warehouse.db
+      - run: python scripts/update-schools.py warehouse.db schools.json
       - uses: actions/upload-artifact@v4
         with:
           name: schools-json

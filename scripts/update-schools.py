@@ -4,18 +4,17 @@ Source: the DuckDB warehouse behind mcp.svietimas.lt (ŠVIS / data.gov.lt
 dataset 2687, "Mokiniai einamiesiems mokslo metams"). Only operating
 general-education schools, without branches.
 
-Usage: python scripts/update-schools.py <warehouse-url> <output.json>
+Usage: python scripts/update-schools.py <warehouse.db> <output.json>
+(the workflow downloads the file with curl first)
 """
 import datetime
 import json
 import sys
-import urllib.request
 
 import duckdb
 
-url, out = sys.argv[1], sys.argv[2]
-urllib.request.urlretrieve(url, "warehouse.db")
-con = duckdb.connect("warehouse.db", read_only=True)
+db, out = sys.argv[1], sys.argv[2]
+con = duckdb.connect(db, read_only=True)
 rows = con.sql(
     """
     select mokyklos_kodas, mokykla, savivaldybe, savivaldybes_kodas,
