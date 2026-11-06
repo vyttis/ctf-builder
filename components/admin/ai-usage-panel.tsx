@@ -237,7 +237,7 @@ export function AiUsagePanel() {
             Aktyvių vedėjų dar nėra.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-border/60 bg-white">
+          <div className="overflow-x-auto rounded-xl border border-border/60 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={0} role="region" aria-labelledby="users-title">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border/60 text-left text-xs text-muted-foreground">

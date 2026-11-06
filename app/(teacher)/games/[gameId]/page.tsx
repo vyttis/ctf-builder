@@ -12,7 +12,6 @@ import { TeamResultsTable } from "@/components/teacher/team-results-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { PublishDialog } from "@/components/teacher/publish-dialog"
 import { LiveActivityFeed } from "@/components/teacher/live-activity-feed"
 import { LiveControlCenter } from "@/components/teacher/live-control-center"
 import { GameResultsSummary } from "@/components/teacher/game-results-summary"
@@ -308,50 +307,46 @@ export default async function GameDetailPage(
             tasksNeedingAnswer={tasksNeedingAnswer}
           />
           {isLive && (
-            <Link href={`/games/${game.id}/live`} target="_blank">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
-              >
-                <MonitorPlay className="h-4 w-4" />
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
+            >
+              <Link href={`/games/${game.id}/live`} target="_blank">
+                <MonitorPlay className="h-4 w-4" aria-hidden="true" />
                 Klasės ekranas
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
           {!isDraft && (
-            <Link href={`/games/${game.id}/analytics`}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-primary/30 text-primary-ink hover:bg-primary/5"
-              >
-                <BarChart3 className="h-4 w-4" />
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="gap-2 border-primary/30 text-primary-ink hover:bg-primary/5"
+            >
+              <Link href={`/games/${game.id}/analytics`}>
+                <BarChart3 className="h-4 w-4" aria-hidden="true" />
                 Analitika
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
           {isFinished && (
-            <Link href={`/games/${game.id}/report`}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
-              >
-                <Printer className="h-4 w-4" />
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
+            >
+              <Link href={`/games/${game.id}/report`}>
+                <Printer className="h-4 w-4" aria-hidden="true" />
                 Spausdinti ataskaitą
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
-          {(status === "active" || status === "finished") &&
-            challenges.length > 0 && (
-              <PublishDialog
-                gameId={game.id}
-                gameTitle={game.title}
-                gameDescription={game.description}
-              />
-            )}
           <GameDetailClient
+            canPublish={(status === "active" || status === "finished") && challenges.length > 0}
             game={{
               id: game.id,
               title: game.title,

@@ -161,7 +161,7 @@ export default async function GameReportPage(
             Komandų rezultatai
           </h2>
           {detailed.team_stats.length > 0 ? (
-            <div className="overflow-x-auto print:overflow-visible">
+            <div className="overflow-x-auto print:overflow-visible focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={0} role="region" aria-label="Komandų rezultatai">
               <table className="w-full min-w-[28rem] text-sm border-collapse print:min-w-0">
                 <thead>
                   <tr className="border-b-2 border-border text-left">
@@ -202,7 +202,7 @@ export default async function GameReportPage(
             Užduočių statistika
           </h2>
           {detailed.challenge_stats.length > 0 ? (
-            <div className="overflow-x-auto print:overflow-visible">
+            <div className="overflow-x-auto print:overflow-visible focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={0} role="region" aria-label="Užduočių statistika">
               <table className="w-full min-w-[28rem] text-sm border-collapse print:min-w-0">
                 <thead>
                   <tr className="border-b-2 border-border text-left">

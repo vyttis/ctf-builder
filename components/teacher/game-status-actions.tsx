@@ -252,8 +252,8 @@ export function GameStatusActions({
 
   // finished
   return (
-    <Badge variant="secondary" className="text-sm gap-1 py-1.5 px-3">
-      <Square className="h-3 w-3" />
+    <Badge variant="outline" className="text-sm gap-1 py-1.5 px-3 bg-secondary/10 text-secondary-ink border-secondary/20">
+      <Square className="h-3 w-3" aria-hidden="true" />
       Veikla baigta
     </Badge>
   )

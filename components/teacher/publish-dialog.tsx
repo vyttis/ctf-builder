@@ -30,6 +30,9 @@ interface PublishDialogProps {
   gameId: string
   gameTitle: string
   gameDescription?: string | null
+  /** Opened from elsewhere (the "Daugiau" menu): no trigger button of its own. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const subjectOptions: { value: string; label: string }[] = [
@@ -43,8 +46,16 @@ export function PublishDialog({
   gameId,
   gameTitle,
   gameDescription,
+  open: controlledOpen,
+  onOpenChange,
 }: PublishDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const controlled = controlledOpen !== undefined
+  const open = controlled ? controlledOpen : uncontrolledOpen
+  const setOpen = (next: boolean) => {
+    if (!controlled) setUncontrolledOpen(next)
+    onOpenChange?.(next)
+  }
   const [title, setTitle] = useState(gameTitle)
   const [description, setDescription] = useState(gameDescription || "")
   const [subject, setSubject] = useState("")
@@ -101,16 +112,18 @@ export function PublishDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
-        >
-          <Share2 className="h-4 w-4" />
-          Dalintis bibliotekoje
-        </Button>
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
+          >
+            <Share2 className="h-4 w-4" aria-hidden="true" />
+            Dalintis bibliotekoje
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-steam-dark">

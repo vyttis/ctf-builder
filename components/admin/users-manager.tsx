@@ -241,7 +241,7 @@ export function UsersManager({ users, currentUserId, currentUserRole, defaultAiL
             {rows.length === 0 ? "Paskyrų dar nėra." : "Pagal šiuos filtrus paskyrų nerasta."}
           </p>
         ) : (
-          <div className="relative overflow-x-auto rounded-xl border border-border/60 bg-white">
+          <div className="relative overflow-x-auto rounded-xl border border-border/60 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={0} role="region" aria-label="Naudotojų sąrašas">
             <table className="w-full min-w-[860px] text-sm">
               <thead>
                 <tr className="border-b border-border/60 text-left text-xs text-muted-foreground">

@@ -2,13 +2,15 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { GameStatus, GameSettings } from "@/types/game"
 import { GameEditDialog } from "./game-edit-dialog"
 import { GameDeleteDialog } from "./game-delete-dialog"
 import { GameDuplicateDialog } from "./game-duplicate-dialog"
+import { PublishDialog } from "./publish-dialog"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { Sparkles, Edit3, Trash2, Copy, BookOpen } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Sparkles, Edit3, Trash2, Copy, BookOpen, Share2, MoreHorizontal } from "lucide-react"
 
 interface GameDetailClientProps {
   game: {
@@ -19,74 +21,130 @@ interface GameDetailClientProps {
     settings: GameSettings
     game_code: string
   }
+  /** The activity can go to the library (it has tasks and has been run). */
+  canPublish?: boolean
 }
 
-export function GameDetailClient({ game }: GameDetailClientProps) {
+const menuItem =
+  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-steam-dark hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+
+/**
+ * The activity page's secondary actions (FAC-13). Only what the current
+ * stage needs stays on the header; the rest sits under "Daugiau", so a
+ * running activity shows pause/finish, class screen and analytics, not
+ * eight buttons in a row.
+ */
+export function GameDetailClient({ game, canPublish = false }: GameDetailClientProps) {
   const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false)
+
+  const isDraft = game.status === "draft"
+  const isFinished = game.status === "finished"
+  // After the activity, sharing it is the next step, so it stays visible.
+  const publishOnHeader = canPublish && isFinished
+
+  /** Close the menu first, then open the dialog (it lives outside the menu). */
+  const openFromMenu = (open: (value: boolean) => void) => () => {
+    setMenuOpen(false)
+    open(true)
+  }
 
   return (
     <>
-      {/* Action buttons */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Single AI surface: the builder's DI tab (verified generation pipeline) */}
-        <Link href={`/games/${game.id}/builder`}>
+        {isDraft && (
           <Button
+            asChild
             variant="outline"
             size="sm"
             className="gap-2 border-highlight/40 text-highlight-ink hover:bg-highlight/10"
           >
-            <Sparkles className="h-4 w-4" />
-            DI Padėjėjas
+            <Link href={`/games/${game.id}/builder`}>
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              DI Padėjėjas
+            </Link>
           </Button>
-        </Link>
-        <Link href={`/games/${game.id}/lesson`}>
+        )}
+        {publishOnHeader && (
           <Button
             variant="outline"
             size="sm"
             className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
+            onClick={() => setPublishDialogOpen(true)}
           >
-            <BookOpen className="h-4 w-4" />
-            Sukurti pamoką
+            <Share2 className="h-4 w-4" aria-hidden="true" />
+            Dalintis bibliotekoje
           </Button>
-        </Link>
-        <Button
-          onClick={() => setDuplicateDialogOpen(true)}
-          variant="outline"
-          size="sm"
-          className="gap-2 border-primary/30 text-primary-ink hover:bg-primary/5"
-        >
-          <Copy className="h-4 w-4" />
-          Dubliuoti
-        </Button>
-        {game.status === "draft" && (
-          <>
-            <Button
-              onClick={() => setEditDialogOpen(true)}
-              variant="outline"
-              size="sm"
-              className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
-            >
-              <Edit3 className="h-4 w-4" />
-              Redaguoti
-            </Button>
-            <Button
-              onClick={() => setDeleteDialogOpen(true)}
-              variant="outline"
-              size="sm"
-              className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
-            >
-              <Trash2 className="h-4 w-4" />
-              Ištrinti
-            </Button>
-          </>
         )}
+
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2" aria-label="Daugiau veiksmų">
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+              Daugiau
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-60 p-1" aria-label="Daugiau veiksmų">
+            <ul className="space-y-0.5">
+              {!isDraft && (
+                <li>
+                  <Link href={`/games/${game.id}/builder`} className={menuItem} onClick={() => setMenuOpen(false)}>
+                    <Sparkles className="h-4 w-4 text-highlight-ink" aria-hidden="true" />
+                    DI Padėjėjas
+                  </Link>
+                </li>
+              )}
+              <li>
+                <Link href={`/games/${game.id}/lesson`} className={menuItem} onClick={() => setMenuOpen(false)}>
+                  <BookOpen className="h-4 w-4 text-secondary-ink" aria-hidden="true" />
+                  Sukurti pamoką
+                </Link>
+              </li>
+              <li>
+                <button type="button" className={menuItem} onClick={openFromMenu(setDuplicateDialogOpen)}>
+                  <Copy className="h-4 w-4 text-primary-ink" aria-hidden="true" />
+                  Dubliuoti
+                </button>
+              </li>
+              {canPublish && !publishOnHeader && (
+                <li>
+                  <button type="button" className={menuItem} onClick={openFromMenu(setPublishDialogOpen)}>
+                    <Share2 className="h-4 w-4 text-secondary-ink" aria-hidden="true" />
+                    Dalintis bibliotekoje
+                  </button>
+                </li>
+              )}
+              {isDraft && (
+                <>
+                  <li>
+                    <button type="button" className={menuItem} onClick={openFromMenu(setEditDialogOpen)}>
+                      <Edit3 className="h-4 w-4 text-secondary-ink" aria-hidden="true" />
+                      Redaguoti nustatymus
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      className={`${menuItem} text-accent-ink`}
+                      onClick={openFromMenu(setDeleteDialogOpen)}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Ištrinti
+                    </button>
+                  </li>
+                </>
+              )}
+            </ul>
+          </PopoverContent>
+        </Popover>
       </div>
 
-      {/* Edit Dialog */}
-      {game.status === "draft" && (
+      {isDraft && (
         <GameEditDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
@@ -98,8 +156,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
         />
       )}
 
-      {/* Delete Dialog */}
-      {game.status === "draft" && (
+      {isDraft && (
         <GameDeleteDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
@@ -107,13 +164,23 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
           gameTitle={game.title}
         />
       )}
-      {/* Duplicate Dialog */}
+
       <GameDuplicateDialog
         open={duplicateDialogOpen}
         onOpenChange={setDuplicateDialogOpen}
         gameId={game.id}
         gameTitle={game.title}
       />
+
+      {canPublish && (
+        <PublishDialog
+          gameId={game.id}
+          gameTitle={game.title}
+          gameDescription={game.description}
+          open={publishDialogOpen}
+          onOpenChange={setPublishDialogOpen}
+        />
+      )}
     </>
   )
 }
