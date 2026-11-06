@@ -28,12 +28,14 @@ export async function GET(request: Request) {
       )
     }
 
-    const settings = (game.settings as { time_limit_minutes?: number | null }) || {}
+    const settings =
+      (game.settings as { time_limit_minutes?: number | null; allow_access_requests?: boolean }) || {}
 
     return NextResponse.json(
       {
         status: game.status,
         time_limit_minutes: settings.time_limit_minutes ?? null,
+        allow_access_requests: settings.allow_access_requests === true,
       },
       { headers: { "Cache-Control": "no-store" } }
     )

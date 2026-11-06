@@ -25,6 +25,12 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
+const OTP_MIN = 6
+const OTP_MAX = 10
+
+const NO_ACCOUNT =
+  "Šiuo el. paštu vedėjo paskyros nėra. Paskyros prašymą galite pateikti veiklos pabaigoje arba per nuorodą, kurią gausite iš KU STEAM centro (steam@ku.lt)."
+
 export function LoginForm() {
   const [email, setEmail] = useState("")
   const [otp, setOtp] = useState("")
@@ -40,12 +46,17 @@ export function LoginForm() {
       const friendlyMessages: Record<string, string> = {
         auth_failed: "Bandykite dar kartą arba naudokite kitą prisijungimo būdą.",
         pkce_mismatch:
-          "Prisijungimas nutrūko tarp skirtingų adresų. Bandykite dar kartą šiame puslapyje — jei klaida kartojasi, praneškite administratoriui.",
+          "Prisijungimas nutrūko tarp skirtingų adresų. Bandykite dar kartą šiame puslapyje. Jei klaida kartojasi, praneškite administratoriui.",
         access_denied: "Prisijungimas atšauktas. Bandykite dar kartą.",
       }
+      // Sign-up is closed: an unknown Google account comes back with a
+      // "Signups not allowed" error from Supabase.
+      const description = /signups? not allowed|not allowed for/i.test(error)
+        ? NO_ACCOUNT
+        : friendlyMessages[error] ?? error
       toast({
         title: "Prisijungimas nepavyko",
-        description: friendlyMessages[error] ?? error,
+        description,
         variant: "destructive",
       })
     }
@@ -79,15 +90,18 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: true,
+        // Accounts are created only by the super admin's approval.
+        shouldCreateUser: false,
       },
     })
     setLoading(false)
 
     if (error) {
+      const noAccount =
+        error.code === "otp_disabled" || /signups? not allowed|user not found/i.test(error.message)
       toast({
-        title: "Klaida",
-        description: "Nepavyko išsiųsti kodo. Bandykite dar kartą.",
+        title: noAccount ? "Paskyros nėra" : "Klaida",
+        description: noAccount ? NO_ACCOUNT : "Nepavyko išsiųsti kodo. Bandykite dar kartą.",
         variant: "destructive",
       })
       return
@@ -256,11 +270,13 @@ export function LoginForm() {
                         id="otp"
                         type="text"
                         inputMode="numeric"
-                        placeholder="123456"
+                        autoComplete="one-time-code"
+                        placeholder="12345678"
                         value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className="pl-10 h-12 text-center text-2xl tracking-[0.5em] font-mono bg-white border-border/50 focus:border-primary focus:ring-primary/20"
-                        maxLength={6}
+                        // Supabase sends 6 to 10 digits (the project uses 8).
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, OTP_MAX))}
+                        className="pl-10 h-12 text-center text-2xl tracking-[0.35em] font-mono bg-white border-border/50 focus:border-primary focus:ring-primary/20"
+                        maxLength={OTP_MAX}
                         required
                         autoFocus
                       />
@@ -269,7 +285,7 @@ export function LoginForm() {
 
                   <Button
                     type="submit"
-                    disabled={loading || otp.length !== 6}
+                    disabled={loading || otp.length < OTP_MIN}
                     className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
                   >
                     {loading ? (

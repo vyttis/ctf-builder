@@ -1,16 +1,18 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { StatsCards } from "@/components/admin/stats-cards"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PlatformStats, Profile } from "@/types/game"
-import { getRoleLabel, getRoleBadgeColor } from "@/lib/auth/roles"
+import { getRoleLabel, getRoleBadgeColor, getUserRole } from "@/lib/auth/roles"
 import {
   BarChart3,
   Users,
   BookOpen,
   ArrowRight,
   Clock,
+  UserCheck,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -45,6 +47,16 @@ export default async function AdminDashboardPage() {
       .limit(5),
   ])
 
+  const isSuperAdmin = (await getUserRole(supabase)) === "super_admin"
+  let pendingRequests = 0
+  if (isSuperAdmin) {
+    const { count } = await createAdminClient()
+      .from("access_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+    pendingRequests = count ?? 0
+  }
+
   const stats = (statsRes.data as PlatformStats) || {
     total_games: 0,
     active_games: 0,
@@ -72,6 +84,26 @@ export default async function AdminDashboardPage() {
           </p>
         </div>
       </div>
+
+      {isSuperAdmin && (
+        <Link
+          href="/admin/prasymai"
+          className="mb-8 flex items-center justify-between gap-4 rounded-xl border border-secondary/30 bg-secondary/5 px-5 py-4 transition-colors hover:bg-secondary/10"
+        >
+          <div className="flex items-center gap-3">
+            <UserCheck className="h-5 w-5 text-secondary" aria-hidden="true" />
+            <div>
+              <p className="font-semibold text-steam-dark">Paskyrų prašymai</p>
+              <p className="text-sm text-muted-foreground">
+                {pendingRequests > 0
+                  ? `Laukia sprendimo: ${pendingRequests}`
+                  : "Naujų prašymų nėra. Čia kuriate ir prašymo nuorodas."}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        </Link>
+      )}
 
       {/* Stats */}
       <div className="mb-8">

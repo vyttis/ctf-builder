@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
 import { LiveView } from "@/components/teacher/live-view"
 import type { GameSettings, GameStatus } from "@/types/game"
+import { activityRequestToken } from "@/lib/access/tokens"
 
 export default async function LiveViewPage(
   props: {
@@ -34,8 +35,15 @@ export default async function LiveViewPage(
   const settings = (game.settings as GameSettings | null) || null
   const challengeCount = ((game.challenges as { id: string }[] | null) ?? []).length
 
+  // Request QR for activities run for teachers; the signed token is what
+  // makes the request page exist (see app/prasymas/veikla).
+  const accessRequestPath = settings?.allow_access_requests
+    ? `/prasymas/veikla/${game.game_code}?t=${activityRequestToken(game.id)}`
+    : null
+
   return (
     <LiveView
+      accessRequestPath={accessRequestPath}
       game={{
         id: game.id,
         title: game.title,

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Save, GitBranch } from "lucide-react"
+import { Loader2, Save, GitBranch, GraduationCap } from "lucide-react"
 
 interface BuilderSettingsProps {
   open: boolean
@@ -53,6 +53,9 @@ export function BuilderSettings({
   const [challengePathMode, setChallengePathMode] = useState<"linear" | "free">(
     settings.challenge_path_mode || "linear"
   )
+  const [allowAccessRequests, setAllowAccessRequests] = useState(
+    settings.allow_access_requests === true
+  )
 
   async function handleSave() {
     setLoading(true)
@@ -69,6 +72,7 @@ export function BuilderSettings({
             show_leaderboard: showLeaderboard,
             shuffle_challenges: shuffleChallenges,
             challenge_path_mode: challengePathMode,
+            allow_access_requests: allowAccessRequests,
           },
         }),
       })
@@ -200,6 +204,23 @@ export function BuilderSettings({
                 onCheckedChange={(checked) =>
                   setChallengePathMode(checked ? "free" : "linear")
                 }
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Label htmlFor="allow-access-requests" className="text-sm font-medium flex items-center gap-1.5">
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  Priimti vedėjo paskyros prašymus
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Kai veiklą vedate mokytojams: pabaigoje jie galės paprašyti paskyros, o ekrane bus prašymo QR.
+                  Prašymus tvirtina KU STEAM centras.
+                </p>
+              </div>
+              <Switch
+                id="allow-access-requests"
+                checked={allowAccessRequests}
+                onCheckedChange={setAllowAccessRequests}
               />
             </div>
           </div>

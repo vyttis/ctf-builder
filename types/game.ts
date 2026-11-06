@@ -8,6 +8,8 @@ export interface GameSettings {
   show_leaderboard: boolean
   shuffle_challenges: boolean
   challenge_path_mode?: "linear" | "free"
+  /** Participants may ask for a facilitator account (activities for teachers). */
+  allow_access_requests?: boolean
 }
 
 export interface GameWithChallengeCount {
@@ -100,7 +102,20 @@ export interface Profile {
   onboarding_completed: boolean
   created_at: string
   updated_at: string
+  /** Closed sign-up: only active accounts may facilitate. */
+  status?: AccountStatus
+  first_name?: string | null
+  last_name?: string | null
+  school_code?: string | null
+  municipality?: string | null
+  school_type?: string | null
+  subjects?: string[]
+  grades?: string[]
+  approved_at?: string | null
+  ai_monthly_limit?: number | null
 }
+
+export type AccountStatus = "pending" | "active" | "blocked"
 
 export type LibraryItemStatus = "pending_review" | "approved" | "rejected"
 

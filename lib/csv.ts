@@ -11,7 +11,7 @@ export function exportCsv(
     BOM +
     [headers, ...rows]
       .map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+        row.map((cell) => `"${neutralizeFormula(String(cell)).replace(/"/g, '""')}"`).join(",")
       )
       .join("\n")
 
@@ -22,4 +22,14 @@ export function exportCsv(
   link.download = filename
   link.click()
   URL.revokeObjectURL(url)
+}
+
+/**
+ * A cell that starts with = + - @ (or a tab/carriage return) is run as a
+ * formula by Excel. Names and school titles come from forms, so they are
+ * prefixed with an apostrophe. Plain negative numbers stay numbers.
+ */
+export function neutralizeFormula(value: string): string {
+  if (/^-?\d+([.,]\d+)?$/.test(value)) return value
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
 }

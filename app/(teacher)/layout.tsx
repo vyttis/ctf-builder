@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import { TeacherNav } from "@/components/teacher/teacher-nav"
 import { TeacherErrorBoundary } from "@/components/teacher/teacher-error-boundary"
@@ -35,12 +36,24 @@ export default async function TeacherLayout({
 
   const liveGame = liveGames?.[0] ?? null
 
+  // Account requests are server-only data; the count is read with the
+  // service role, and only for the super admin who decides on them.
+  let pendingRequests = 0
+  if (profile?.role === "super_admin") {
+    const { count } = await createAdminClient()
+      .from("access_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+    pendingRequests = count ?? 0
+  }
+
   return (
     <div className="min-h-screen bg-muted">
       <TeacherNav
         email={user.email || ""}
         fullName={profile?.full_name || ""}
         role={profile?.role || "teacher"}
+        pendingRequests={pendingRequests}
         avatarUrl={profile?.avatar_url}
         activeGame={
           liveGame

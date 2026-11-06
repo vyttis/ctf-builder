@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireRole } from "@/lib/auth/roles"
+import { logAdminAction } from "@/lib/access/approve"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -62,6 +63,10 @@ export async function PATCH(request: Request) {
 
     // Use admin client to bypass RLS for role update
     const adminClient = createAdminClient()
+    const { data: before } = await adminClient.from("profiles").select("role, email").eq("id", userId).maybeSingle()
+    if (!before) {
+      return NextResponse.json({ error: "Vartotojas nerastas" }, { status: 404 })
+    }
     const { error } = await adminClient
       .from("profiles")
       .update({ role })
@@ -70,6 +75,13 @@ export async function PATCH(request: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Role changes are security-sensitive: keep who did what.
+    await logAdminAction(adminClient, user!.id, "profile.role_change", "profile", userId, {
+      email: before.email,
+      from: before.role,
+      to: role,
+    })
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {

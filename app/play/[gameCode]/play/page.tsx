@@ -31,6 +31,7 @@ import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
 import { pluralizeLt } from "@/lib/utils"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ReflectionForm } from "@/components/player/reflection-form"
+import { FinishRequestCard } from "@/components/access/finish-request-card"
 import { AnnouncementBanner } from "@/components/player/announcement-banner"
 import { AchievementToast } from "@/components/player/achievement-toast"
 import { ChallengeGrid } from "@/components/player/challenge-grid"
@@ -161,6 +162,7 @@ export default function PlayPage() {
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null)
   const [gameStarted, setGameStarted] = useState(false)
   const [timeExpired, setTimeExpired] = useState(false)
+  const [allowAccessRequests, setAllowAccessRequests] = useState(false)
   const [remainingSeconds, setRemainingSeconds] = useState(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number | null>(null)
@@ -276,6 +278,7 @@ export default function PlayPage() {
     setTimeLimitMinutes(timeLimit)
     setPathMode(settings?.challenge_path_mode || "linear")
     setShowLeaderboard(settings?.show_leaderboard !== false)
+    setAllowAccessRequests(settings?.allow_access_requests === true)
 
     const storageKey = `ctf_start_${gameCode}`
     const existingStart = localStorage.getItem(storageKey)
@@ -374,10 +377,11 @@ export default function PlayPage() {
           }
         )
         if (!res.ok) return
-        const data = (await res.json()) as { status: string | null }
+        const data = (await res.json()) as { status: string | null; allow_access_requests?: boolean }
         if (disposed || !data.status) return
         if (statusVersionRef.current !== startedAt) return
         setGameStatus(data.status)
+        if (typeof data.allow_access_requests === "boolean") setAllowAccessRequests(data.allow_access_requests)
         if (data.status === "finished") {
           setEndedByTeacher(true)
           setGameFinished(true)
@@ -741,6 +745,10 @@ export default function PlayPage() {
               onDone={() => setReflectionDone(true)}
             />
           )}
+
+          {allowAccessRequests && (
+            <FinishRequestCard gameCode={gameCode} sessionToken={session.session_token} />
+          )}
         </motion.div>
       </div>
     )
@@ -854,6 +862,10 @@ export default function PlayPage() {
               gameCode={gameCode}
               onDone={() => setReflectionDone(true)}
             />
+          )}
+
+          {allowAccessRequests && (
+            <FinishRequestCard gameCode={gameCode} sessionToken={session.session_token} />
           )}
         </motion.div>
       </div>
