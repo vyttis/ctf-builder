@@ -189,6 +189,7 @@ export function ChallengeDetailModal({
             key={challenge.id}
             hints={challenge.hints ?? []}
             penalty={challenge.hint_penalty}
+            points={challenge.points}
             onReveal={onRevealHint}
           />
         )}

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { calculatePoints } from "@/lib/game/scoring"
 import { startTeamClock } from "@/lib/game/team-start"
 import { MAX_ANSWER_LENGTH, verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
@@ -225,8 +226,8 @@ export async function POST(request: Request) {
       serverHintCount ?? parsed.data.hints_used,
       availableHints
     )
-    const hintPenalty = hintsUsed * (challenge.hint_penalty || 0)
-    const pointsAwarded = isCorrect ? Math.max(0, challenge.points - hintPenalty) : 0
+    // At most half of the task's points go for hints (lib/game/scoring.ts).
+    const pointsAwarded = isCorrect ? calculatePoints(challenge.points, hintsUsed, challenge.hint_penalty || 0) : 0
 
     // Record submission with hints_used. The insert result MUST be checked:
     // two concurrent submits can both pass the existingSolve guard above, and
