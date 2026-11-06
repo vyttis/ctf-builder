@@ -66,6 +66,8 @@ SELECT public.t_rows($q$SELECT explanation FROM public.challenges WHERE game_id 
 SELECT public.t_ok('SELECT count(*) FROM public.challenges');
 SELECT public.t_ok('SELECT id, team_id, challenge_id, is_correct, points_awarded, attempted_at FROM public.submissions');
 SELECT public.t_ok('SELECT g.id, (SELECT count(*) FROM public.challenges c WHERE c.game_id = g.id) FROM public.games g');
+-- The participant state function is for the server only (20261106170000).
+SELECT public.t_denied($q$SELECT public.get_player_game_state('AAAAAA', 'x')$q$);
 
 -- Own profile: contact details yes, role no.
 SELECT public.t_ok($q$UPDATE public.profiles SET full_name = 'Vardenis', school = 'Mokykla', phone = NULL, onboarding_completed = true WHERE id = auth.uid()$q$);
@@ -115,7 +117,12 @@ SELECT set_config('request.jwt.claim.sub', '', false);
 SELECT set_config('request.jwt.claim.role', 'anon', false);
 SELECT public.t_denied('SELECT answer_hash FROM public.challenges');
 SELECT public.t_denied('SELECT answer FROM public.submissions');
-SELECT public.t_ok('SELECT id, title, hints FROM public.challenges');
+SELECT public.t_ok('SELECT id, title, options FROM public.challenges');
+-- Hints and DI notes reach participants only through the server (20261106170000).
+SELECT public.t_denied('SELECT hints FROM public.challenges');
+SELECT public.t_denied('SELECT verification_issues FROM public.challenges');
+SELECT public.t_denied('SELECT verification_verdict FROM public.challenges');
+SELECT public.t_denied($q$SELECT public.get_player_game_state('AAAAAA', 'x')$q$);
 SELECT public.t_denied('SELECT explanation FROM public.challenges');
 SELECT public.t_rows('SELECT id FROM public.challenges', 2);
 SELECT public.t_denied($q$SELECT public.get_game_stats('10000000-0000-0000-0000-00000000000b')$q$);

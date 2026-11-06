@@ -69,7 +69,7 @@ for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
          00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
          00021 00022 00023 00024 00025 00026 \
          20261106120000 20261106130000 20261106140000 20261106145000 \
-         20261106150000; do
+         20261106150000 20261106160000 20261106170000; do
   supabase migration repair --status applied "$v"
 done
 ```
@@ -287,6 +287,46 @@ select
 Tikimasi: `auth_fn` `true`, `anon_fn` `false`, `definer` `true`.
 
 Pritaikyta produkcijoje 2026-11-06 16:35 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai funkcijos nebuvo, 0 vykstančių veiklų). Patikra po taikymo: `auth_fn` `true`, `anon_fn` `false`, `definer` `true`, `search_path=public, pg_temp`. Kodas (PR #54) sujungtas po to.
+
+### 20261106170000_close_participant_hint_reads
+
+Failas `supabase/migrations/20261106170000_close_participant_hint_reads.sql`,
+grąžinimas `supabase/rollback/20261106170000_close_participant_hint_reads.sql`.
+Su viešu anon raktu buvo galima tiesiogiai skaityti visų vykstančių,
+pristabdytų ir baigtų veiklų užuominas (taip apeinama užuominų bauda) ir DI
+patikros pastabas (jose gali būti atsakymas), o `get_player_game_state()`
+galėjo kviesti anon ir prisijungę vartotojai. Migracija atima anon teisę
+skaityti `hints` ir `verification_*` stulpelius ir funkciją palieka tik
+serveriui (service role). Programa šiuos duomenis skaito tik serveriu,
+vedėjai savo užduotis mato kaip anksčiau. Duomenys nekeičiami.
+
+Taikymo tvarka: bet kada, kodo keisti nereikia.
+
+Patikra po taikymo:
+
+```sql
+select
+  has_column_privilege('anon', 'public.challenges', 'hints', 'SELECT') as anon_hints,
+  has_column_privilege('anon', 'public.challenges', 'verification_issues', 'SELECT') as anon_notes,
+  has_column_privilege('anon', 'public.challenges', 'title', 'SELECT') as anon_title,
+  has_column_privilege('authenticated', 'public.challenges', 'hints', 'SELECT') as auth_hints,
+  has_function_privilege('anon', 'public.get_player_game_state(text,text)', 'EXECUTE') as anon_state,
+  has_function_privilege('authenticated', 'public.get_player_game_state(text,text)', 'EXECUTE') as auth_state,
+  has_function_privilege('service_role', 'public.get_player_game_state(text,text)', 'EXECUTE') as service_state;
+```
+
+Tikimasi: `anon_hints` `false`, `anon_notes` `false`, `anon_title` `true`,
+`auth_hints` `true`, `anon_state` `false`, `auth_state` `false`,
+`service_state` `true`.
+
+Produkcijoje prieš taikymą (2026-11-06, tik skaitymo užklausa): `anon_hints`
+`true`, `anon_notes` jau `false`, `anon_title` `true`, `auth_hints` `true`,
+`anon_state` `true`, `auth_state` `true`, 0 vykstančių veiklų; funkcijos
+teisės `{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}`
+(vykdyti galėjo ir PUBLIC). Grąžinimas atkuria būtent tai: `hints` ir
+funkcijos teises, įskaitant PUBLIC.
+
+Pritaikyta produkcijoje 2026-11-06 18:13 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai 0 vykstančių veiklų). Patikra po taikymo: `anon_hints` `false`, `anon_notes` `false`, `anon_title` `true`, `auth_hints` `true`, `anon_state` `false`, `auth_state` `false`, `service_state` `true`; funkcijos teisės `{postgres=X/postgres,service_role=X/postgres}`.
 
 ## Konvencija toliau
 
