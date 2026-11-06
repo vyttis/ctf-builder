@@ -456,16 +456,23 @@ END $$;
 RESET ROLE;
 
 -- A blocked account cannot change its activity through the functions either.
+INSERT INTO public.games (id, teacher_id, title, game_code, status, settings) VALUES
+  ('10000000-0000-0000-0000-0000000000c6', '00000000-0000-0000-0000-00000000000a', 'Užblokuota', 'BLOCK6', 'active', '{"time_limit_minutes": 30}');
 UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-00000000000a';
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
 SET ROLE authenticated;
-DO $$
-BEGIN
-  PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c2', 'paused');
-  IF (SELECT status FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c2') = 'paused' THEN
-    RAISE EXCEPTION 'a blocked account must not pause its activity';
-  END IF;
-EXCEPTION WHEN SQLSTATE 'P0002' OR insufficient_privilege THEN
-  NULL;
-END $$;
+-- Each function must fail, not return an unchanged row as a success.
+SELECT public.t_denied($q$SELECT public.set_game_status('10000000-0000-0000-0000-0000000000c6', 'paused')$q$);
+SELECT public.t_denied($q$SELECT public.update_game_settings('10000000-0000-0000-0000-0000000000c6', '{"show_leaderboard": false}'::jsonb, '{"title": "Pakeista"}'::jsonb)$q$);
+SELECT public.t_denied($q$SELECT public.extend_game_time('10000000-0000-0000-0000-0000000000c6', 5)$q$);
 RESET ROLE;
+DO $$
+DECLARE
+  g public.games;
+BEGIN
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c6';
+  IF g.status <> 'active' OR g.title <> 'Užblokuota' OR g.settings <> '{"time_limit_minutes": 30}'::jsonb THEN
+    RAISE EXCEPTION 'a blocked account must not change its activity';
+  END IF;
+END $$;
 UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a';

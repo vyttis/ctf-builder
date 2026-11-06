@@ -201,6 +201,12 @@ BEGIN
     RAISE EXCEPTION 'unknown status %', p_status USING ERRCODE = '22023';
   END IF;
 
+  -- A pending or blocked account keeps its session but may not write; say so
+  -- instead of reporting the activity as missing.
+  IF NOT public.is_active_account() THEN
+    RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
+  END IF;
+
   SELECT * INTO g FROM public.games
   WHERE id = p_game_id AND teacher_id = auth.uid()
   FOR UPDATE;
@@ -217,6 +223,10 @@ BEGIN
   UPDATE public.games SET status = p_status
   WHERE id = p_game_id
   RETURNING * INTO g;
+  IF NOT FOUND THEN
+    -- Row security filtered the change out: never report it as a success.
+    RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
+  END IF;
 
   RETURN g;
 END;
@@ -241,6 +251,12 @@ BEGIN
     RAISE EXCEPTION 'settings patch and details must be objects' USING ERRCODE = '22023';
   END IF;
 
+  -- A pending or blocked account keeps its session but may not write; say so
+  -- instead of reporting the activity as missing.
+  IF NOT public.is_active_account() THEN
+    RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
+  END IF;
+
   SELECT * INTO g FROM public.games
   WHERE id = p_game_id AND teacher_id = auth.uid()
   FOR UPDATE;
@@ -258,6 +274,10 @@ BEGIN
       description = CASE WHEN v_details ? 'description' THEN v_details ->> 'description' ELSE description END
   WHERE id = p_game_id
   RETURNING * INTO g;
+  IF NOT FOUND THEN
+    -- Row security filtered the change out: never report it as a success.
+    RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
+  END IF;
 
   RETURN g;
 END;
@@ -275,6 +295,12 @@ DECLARE
 BEGIN
   IF p_minutes IS NULL OR p_minutes < 1 OR p_minutes > 180 THEN
     RAISE EXCEPTION 'minutes must be between 1 and 180' USING ERRCODE = '22023';
+  END IF;
+
+  -- A pending or blocked account keeps its session but may not write; say so
+  -- instead of reporting the activity as missing.
+  IF NOT public.is_active_account() THEN
+    RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
   END IF;
 
   SELECT * INTO g FROM public.games
@@ -303,6 +329,10 @@ BEGIN
   SET settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{time_limit_minutes}', to_jsonb(v_limit + p_minutes))
   WHERE id = p_game_id
   RETURNING * INTO g;
+  IF NOT FOUND THEN
+    -- Row security filtered the change out: never report it as a success.
+    RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
+  END IF;
 
   RETURN g;
 END;

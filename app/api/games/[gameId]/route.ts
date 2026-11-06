@@ -6,6 +6,9 @@ import { z } from "zod"
 // Safe columns to return for challenges (never include answer_hash)
 const SAFE_CHALLENGE_SELECT = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
 
+// The database refuses writes from an account that is pending or blocked.
+const INACTIVE_ACCOUNT = "Paskyra neaktyvi, todėl veiklos keisti negalima."
+
 const updateGameSchema = z.object({
   title: z.string().min(3).optional(),
   description: z.string().nullable().optional(),
@@ -152,6 +155,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
     })
     if (error) {
       if (error.code === "P0002") return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
+      if (error.code === "42501") return NextResponse.json({ error: INACTIVE_ACCOUNT }, { status: 403 })
       return NextResponse.json({ error: "Nepavyko išsaugoti nustatymų." }, { status: 500 })
     }
     data = rpcRow(updated)
@@ -164,6 +168,9 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
       .select()
       .single()
     if (error) {
+      // No row came back although the owner check passed: row security
+      // refused the change for an account that is no longer active.
+      if (error.code === "PGRST116") return NextResponse.json({ error: INACTIVE_ACCOUNT }, { status: 403 })
       return NextResponse.json({ error: "Nepavyko išsaugoti veiklos." }, { status: 500 })
     }
     data = updated
@@ -192,6 +199,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
       if (error.code === "P0002") {
         return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
       }
+      if (error.code === "42501") return NextResponse.json({ error: INACTIVE_ACCOUNT }, { status: 403 })
       // A task without an answer was added while the start was checked.
       if (error.code === "KS428") {
         return NextResponse.json(

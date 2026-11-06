@@ -197,8 +197,10 @@ Baigtos veiklos atnaujinti nebegalima ir tiesiai SQL. Trigeris
 `teams_pause_offset` komandos pauzės poslinkį įrašo pats, kai komanda
 pradeda (ir tada, kai dar veikia senas kodas). Taikymo metu pristabdytoms
 veikloms nustatomas `paused_at = now()`: jų pauzė skaičiuojama nuo taikymo.
-Esami duomenys nekeičiami. Abi funkcijos vykdomos kviečiančiojo teisėmis,
+Esami duomenys nekeičiami. Visos trys funkcijos vykdomos kviečiančiojo teisėmis,
 todėl RLS taisyklės (savininkas, aktyvi paskyra) galioja kaip anksčiau.
+Neaktyvi paskyra gauna klaidą `42501` (sąsajoje 403), o ne nepakeistą eilutę
+kaip sėkmę.
 
 Taikymo tvarka: pirma migracija, tada kodas. Senas kodas su nauja schema
 veikia (nauji stulpeliai turi numatytąsias reikšmes, funkcijų jis nekviečia).

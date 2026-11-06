@@ -39,6 +39,9 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
       return NextResponse.json({ error: "Pratęsti galima tik vykstančią veiklą." }, { status: 409 })
     }
     if (error.code === "P0002") return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
+    if (error.code === "42501") {
+      return NextResponse.json({ error: "Paskyra neaktyvi, todėl veiklos keisti negalima." }, { status: 403 })
+    }
     return NextResponse.json({ error: "Nepavyko pratęsti laiko." }, { status: 500 })
   }
 
