@@ -49,7 +49,18 @@ export async function GET(request: Request) {
         // reloads the tasks. Hidden before the start, like the tasks.
         tasks_version: game.status === "draft" ? null : tasksVersion(game.challenges),
       },
-      { headers: { "Cache-Control": "no-store" } }
+      {
+        // Every phone of a class asks every 5 s (30 phones: 6 requests a
+        // second). The answer is the same for all of them, so the CDN keeps
+        // it for one second: the database is asked at most once a second per
+        // activity, and "now" is at most a second old (PERF-02). Browsers do
+        // not keep it.
+        headers: {
+          "Cache-Control": "private, no-store",
+          "CDN-Cache-Control": "public, s-maxage=1",
+          "Vercel-CDN-Cache-Control": "public, s-maxage=1",
+        },
+      }
     )
   } catch {
     return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
