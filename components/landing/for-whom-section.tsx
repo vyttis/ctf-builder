@@ -1,9 +1,5 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
 import Image from "next/image"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const audiences = [
   {
@@ -24,8 +20,6 @@ const audiences = [
 ]
 
 export function ForWhomSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="white">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-14 lg:gap-x-14 items-start">
@@ -38,40 +32,29 @@ export function ForWhomSection() {
                 §2 · Kam
               </span>
             </div>
-            <motion.h2
-              initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+            <h2
               className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight"
             >
               Mokytojui,{" "}
               <span className="font-display italic text-steam-dark/70">kuris ieško</span>
               <br />
               daugiau nei klausimynų.
-            </motion.h2>
-            <motion.p
-              initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
+            </h2>
+            <p
               className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl leading-relaxed text-pretty"
             >
               Įrankis skirtas Klaipėdos universiteto STEAM metodinio centro partnerių
               tinklo mokytojams: pradinio, pagrindinio ir vidurinio ugdymo. Atitinka
               Lietuvos bendrąją ugdymo programą (BUP): 24 dalykai, 1–12 klasės,
               6 bendrosios kompetencijos.
-            </motion.p>
+            </p>
           </div>
 
           {/* Audience list — editorial cards */}
           <div className="space-y-2">
             {audiences.map((item, index) => (
-              <motion.article
+              <article
                 key={index}
-                initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08, duration: 0.5 }}
                 className="group relative grid grid-cols-[auto_1fr] gap-5 py-6 border-t border-border/60 last:border-b last:border-b-border/60"
               >
                 <div className="numeral-display text-2xl font-medium text-steam-dark/30 pt-1.5 tabular-nums">
@@ -90,17 +73,13 @@ export function ForWhomSection() {
                     {item.body}
                   </p>
                 </div>
-              </motion.article>
+              </article>
             ))}
           </div>
         </div>
 
         {/* Right — single image with editorial caption */}
-        <motion.div
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.97 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <div
           className="lg:col-span-5 lg:sticky lg:top-24"
         >
           <figure>
@@ -122,7 +101,7 @@ export function ForWhomSection() {
               </span>
             </figcaption>
           </figure>
-        </motion.div>
+        </div>
       </div>
     </SectionWrapper>
   )

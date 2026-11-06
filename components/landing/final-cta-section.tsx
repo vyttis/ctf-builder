@@ -1,32 +1,18 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Mail, Handshake, ArrowUpRight } from "lucide-react"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 export function FinalCtaSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
-    <motion.section
-      initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      className="relative py-20 md:py-32 bg-steam-dark overflow-hidden"
+    <section
+      className="reveal relative py-20 md:py-32 bg-steam-dark overflow-hidden"
     >
       {/* Background — construction lines + glow */}
       <div className="absolute inset-0 construction-lines opacity-50 mix-blend-overlay" />
-      <motion.div
-        animate={prefersReduced ? {} : { scale: [1, 1.12, 1], opacity: [0.12, 0.2, 0.12] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      <div
         className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary rounded-full blur-[140px] -translate-y-1/3 translate-x-1/4"
         style={{ opacity: 0.14 }}
       />
-      <motion.div
-        animate={prefersReduced ? {} : { scale: [1, 1.08, 1], opacity: [0.06, 0.12, 0.06] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+      <div
         className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4"
         style={{ opacity: 0.08 }}
       />
@@ -93,6 +79,6 @@ export function FinalCtaSection() {
           </div>
         </div>
       </div>
-    </motion.section>
+    </section>
   )
 }

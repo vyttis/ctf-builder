@@ -1,9 +1,5 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
 import { Mail, Phone, MapPin, ArrowUpRight } from "lucide-react"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import Image from "next/image"
 
 const PHOTOS = [
@@ -13,8 +9,6 @@ const PHOTOS = [
 ] as const
 
 export function AboutCreatorsSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="white">
       {/* Editorial header */}
@@ -25,36 +19,26 @@ export function AboutCreatorsSection() {
             §9 · Apie kūrėjus
           </span>
         </div>
-        <motion.h2
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+        <h2
           className="text-display-sm md:text-display-md text-steam-dark leading-[0.98] tracking-tight"
         >
           Kūryba iš{" "}
           <span className="font-display italic text-steam-dark/70">Klaipėdos</span>{" "}
           universiteto.
-        </motion.h2>
-        <motion.p
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1 }}
+        </h2>
+        <p
           className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty"
         >
           Klaipėdos universiteto STEAM metodinis centras dirba su mokytojais ir
           švietimo bendruomene. Įrankis sukurtas siekiant praktinių mokyklų poreikių,
           remiantis realiu mokytojų darbu klasėse.
-        </motion.p>
+        </p>
       </div>
 
       {/* Photo strip + contact, editorial composition */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-10 lg:gap-x-10">
         {/* Photo strip */}
-        <motion.div
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+        <div
           className="lg:col-span-7 grid grid-cols-3 gap-3"
         >
           {PHOTOS.map((photo, i) => (
@@ -71,14 +55,10 @@ export function AboutCreatorsSection() {
               </figcaption>
             </figure>
           ))}
-        </motion.div>
+        </div>
 
         {/* Contact panel */}
-        <motion.div
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.15 }}
+        <div
           className="lg:col-span-5"
         >
           <dl className="space-y-6 border-l-2 border-steam-dark/15 pl-6">
@@ -119,7 +99,7 @@ export function AboutCreatorsSection() {
             Sužinoti daugiau apie centrą
             <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </a>
-        </motion.div>
+        </div>
       </div>
     </SectionWrapper>
   )

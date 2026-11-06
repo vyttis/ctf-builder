@@ -1,10 +1,6 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
 import { Button } from "@/components/ui/button"
 import { Mail, ArrowUpRight } from "lucide-react"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const steps = [
   {
@@ -34,8 +30,6 @@ const ACCENT_CLASS: Record<string, string> = {
 }
 
 export function AccessSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="muted" id="access">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-14 lg:gap-x-14 items-start">
@@ -63,12 +57,8 @@ export function AccessSection() {
 
           <ol className="space-y-px bg-border/60 border-y border-border/60">
             {steps.map((step) => (
-              <motion.li
+              <li
                 key={step.number}
-                initial={prefersReduced ? { opacity: 1 } : { opacity: 0, x: -16 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
                 className="grid grid-cols-[auto_1fr] gap-6 bg-muted/30 px-2 py-6 sm:px-6"
               >
                 <div className={`numeral-display font-medium text-3xl tabular-nums shrink-0 ${ACCENT_CLASS[step.accent]}`}>
@@ -82,17 +72,13 @@ export function AccessSection() {
                     {step.body}
                   </p>
                 </div>
-              </motion.li>
+              </li>
             ))}
           </ol>
         </div>
 
         {/* Right — contact card, editorial */}
-        <motion.div
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2, duration: 0.6 }}
+        <div
           className="lg:col-span-5 lg:sticky lg:top-24"
         >
           <div className="relative p-8 md:p-10 rounded-2xl bg-steam-dark text-white overflow-hidden">
@@ -128,7 +114,7 @@ export function AccessSection() {
               </a>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </SectionWrapper>
   )
