@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { allRowsById } from "@/lib/supabase/all-pages"
+import { useSubmissionFilter } from "@/hooks/use-submission-filter"
 
 export interface LiveTeam {
   id: string
@@ -123,7 +124,12 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
     setHistoryGameId(gameId)
   }, [gameId])
 
+  // Only this activity's answers come over realtime (FAC-10). Wait for the
+  // task list before subscribing; a new task subscribes again.
+  const { filter: submissionFilter } = useSubmissionFilter(gameId)
+
   useEffect(() => {
+    if (submissionFilter === undefined) return
     const supabase = createClient()
     let pollInterval: NodeJS.Timeout | null = null
     let cancelled = false
@@ -219,7 +225,12 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
       .channel(`live_game_subs_${gameId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "submissions" },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "submissions",
+          ...(submissionFilter ? { filter: submissionFilter } : {}),
+        },
         async (payload) => {
           const sub = payload.new as {
             team_id: string
@@ -228,7 +239,8 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
             attempted_at: string
           }
 
-          // The submissions table has no game_id — verify membership.
+          // The submissions table has no game_id: verify membership (the
+          // filter may be off, see useSubmissionFilter).
           // Check the already-loaded teams first; only unknown team ids
           // (e.g. a team that joined after initial load) cost a query.
           if (!teamIdsRef.current.has(sub.team_id)) {
@@ -278,7 +290,7 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
       supabase.removeChannel(submissionChannel)
       stopPolling()
     }
-  }, [gameId, fetchInitialData, retryNonce])
+  }, [gameId, fetchInitialData, retryNonce, submissionFilter])
 
   const solvedCounts = new Map<string, number>()
   solvedSets.forEach((set, teamId) => solvedCounts.set(teamId, set.size))
