@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { allPages } from "@/lib/supabase/all-pages"
+import { allRowsById } from "@/lib/supabase/all-pages"
 
 export interface LiveTeam {
   id: string
@@ -57,8 +57,10 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
     const teamIds = teamsData.map((t) => t.id)
     if (teamIds.length === 0) return
 
-    // All answers, past the 1000-row page limit (allPages).
-    const { data: subs } = await allPages<{
+    // All answers, past the 1000-row page limit, read in id order so new
+    // answers arriving meanwhile cannot shift a page. A failed read throws,
+    // so the caller keeps the last good state and retries.
+    const { data: subs, error: subsError } = await allRowsById<{
       id: string
       team_id: string
       challenge_id: string
@@ -69,25 +71,23 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
         .from("submissions")
         .select("id, team_id, challenge_id, is_correct, attempted_at")
         .in("team_id", teamIds)
-        .order("attempted_at", { ascending: false })
-        .order("id", { ascending: true })
     )
+    if (!subs) throw subsError
 
-    if (subs) {
-      const latestMap = new Map<string, string>()
-      const solvedMap = new Map<string, Set<string>>()
-      for (const sub of subs) {
-        if (!latestMap.has(sub.team_id)) {
-          latestMap.set(sub.team_id, sub.attempted_at)
-        }
-        if (sub.is_correct) {
-          if (!solvedMap.has(sub.team_id)) solvedMap.set(sub.team_id, new Set())
-          solvedMap.get(sub.team_id)!.add(sub.challenge_id)
-        }
+    const latestMap = new Map<string, string>()
+    const solvedMap = new Map<string, Set<string>>()
+    for (const sub of subs) {
+      const latest = latestMap.get(sub.team_id)
+      if (!latest || Date.parse(sub.attempted_at) > Date.parse(latest)) {
+        latestMap.set(sub.team_id, sub.attempted_at)
       }
-      setLastSubmissions(latestMap)
-      setSolvedSets(solvedMap)
+      if (sub.is_correct) {
+        if (!solvedMap.has(sub.team_id)) solvedMap.set(sub.team_id, new Set())
+        solvedMap.get(sub.team_id)!.add(sub.challenge_id)
+      }
     }
+    setLastSubmissions(latestMap)
+    setSolvedSets(solvedMap)
   }, [gameId])
 
   useEffect(() => {

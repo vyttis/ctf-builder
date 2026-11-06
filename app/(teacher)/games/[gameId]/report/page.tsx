@@ -67,7 +67,16 @@ export default async function GameReportPage(
   const startedAt = game.starts_at ? new Date(game.starts_at) : null
   const finishedAt = game.finished_at ? new Date(game.finished_at) : null
   const dateFmt = new Intl.DateTimeFormat("lt-LT", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Vilnius" })
-  const ranText = startedAt ? dateFmt.format(startedAt) : `nepradėta (sukurta ${new Date(game.created_at).toLocaleDateString("lt-LT")})`
+  // Older activities may have run without a recorded start: say only what
+  // is known instead of calling them unstarted.
+  const createdText = `sukurta ${new Date(game.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}`
+  const ranText = startedAt
+    ? dateFmt.format(startedAt)
+    : game.status === "draft"
+      ? `nepradėta (${createdText})`
+      : finishedAt
+        ? `baigta ${dateFmt.format(finishedAt)}`
+        : createdText
   const durationMin = startedAt && finishedAt ? Math.max(0, Math.round((finishedAt.getTime() - startedAt.getTime()) / 60000)) : null
   const durationText =
     durationMin === null ? null : durationMin >= 60 ? `${Math.floor(durationMin / 60)} val. ${durationMin % 60} min.` : `${durationMin} min.`
@@ -86,7 +95,7 @@ export default async function GameReportPage(
         <Link href={`/games/${game.id}`}>
           <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
             <ArrowLeft className="h-4 w-4" />
-            Žaidimo detalės
+            Veiklos puslapis
           </Button>
         </Link>
         <PrintReportButton />

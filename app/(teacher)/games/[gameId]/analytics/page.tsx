@@ -37,6 +37,7 @@ export default function GameAnalyticsPage() {
   const [reflectionsError, setReflectionsError] = useState("")
 
   const [reloadKey, setReloadKey] = useState(0)
+  const [detailedFailed, setDetailedFailed] = useState(false)
 
   useEffect(() => {
     async function fetchStats() {
@@ -50,9 +51,14 @@ export default function GameAnalyticsPage() {
           throw new Error("Nepavyko gauti statistikos")
         }
         setStats(await basicRes.json())
-        // Detailed stats are an enhancement — the page still renders without
+        // Detailed stats are an enhancement: the page renders without them,
+        // but never with details left over from an earlier load.
         if (detailedRes.ok) {
           setDetailed(await detailedRes.json())
+          setDetailedFailed(false)
+        } else {
+          setDetailed(null)
+          setDetailedFailed(true)
         }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Nežinoma klaida")
@@ -63,8 +69,8 @@ export default function GameAnalyticsPage() {
     fetchStats()
   }, [gameId, reloadKey])
 
-  async function loadReflections() {
-    if (reflections !== null) return // Already loaded
+  async function loadReflections(force = false) {
+    if (!force && reflections !== null) return // Already loaded
     setReflectionsLoading(true)
     setReflectionsError("")
     try {
@@ -138,10 +144,23 @@ export default function GameAnalyticsPage() {
             Komandų rezultatai, užduočių statistika ir refleksijos
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setReloadKey((k) => k + 1)
+            if (reflections !== null) void loadReflections(true)
+          }}
+        >
           Atnaujinti
         </Button>
       </div>
+
+      {detailedFailed && (
+        <p role="status" className="mb-6 text-sm text-muted-foreground">
+          Išsamios statistikos įkelti nepavyko. Bandykite atnaujinti.
+        </p>
+      )}
 
       <Tabs defaultValue="stats" onValueChange={(v) => {
         if (v === "reflections") loadReflections()
