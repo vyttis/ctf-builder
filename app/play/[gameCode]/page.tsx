@@ -79,7 +79,8 @@ export default function JoinGamePage() {
   }
 
   // While the activity has not started (or is paused), check every 5 s and
-  // open the join form as soon as it runs.
+  // show the new state as soon as it changes: the join form when it runs,
+  // the finished screen when it ends without resuming.
   const waitingFor = gameState.status === "inactive" ? gameState.gameStatus : null
   useEffect(() => {
     if (waitingFor !== "draft" && waitingFor !== "paused") return
@@ -89,7 +90,7 @@ export default function JoinGamePage() {
         const res = await fetch(`/api/play/status?game_code=${encodeURIComponent(gameCode)}`, { cache: "no-store" })
         if (!res.ok) return
         const data = (await res.json()) as { status: string | null }
-        if (!disposed && data.status === "active") void validateGame()
+        if (!disposed && data.status && data.status !== waitingFor) void validateGame()
       } catch {
         // The next round retries.
       }

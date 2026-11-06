@@ -166,7 +166,8 @@ describe("number answers by value", () => {
 
   it("matches any form of the same number for new answers", async () => {
     const hash = await hashAnswer("2,50", "number")
-    expect(hash.startsWith("num:$2")).toBe(true)
+    expect(hash.startsWith("$2")).toBe(true)
+    expect(hash.endsWith(":num")).toBe(true)
     for (const typed of ["2.5", "2,5", "2.50", "+2.5", " 2.5 "]) {
       expect(await verifyAnswer(typed, hash, NUMBER)).toBe(true)
     }
@@ -215,7 +216,7 @@ describe("number answers by value", () => {
 
   it("keeps answers that are not numbers as typed", async () => {
     const hash = await hashAnswer("3 m", "number")
-    expect(hash.startsWith("$2")).toBe(true)
+    expect(hash.endsWith(":num")).toBe(false)
     expect(await verifyAnswer("3 m", hash, NUMBER)).toBe(true)
   })
 
@@ -227,6 +228,13 @@ describe("number answers by value", () => {
 })
 
 describe("text answers with a stray full stop", () => {
+  it("also forgives it against hashes made before diacritic folding", async () => {
+    const old = await bcrypt.hash("šaltinis", 4)
+    expect(await verifyAnswer("Šaltinis.", old, TEXT)).toBe(true)
+    expect(await verifyAnswer("Šaltinis", old, TEXT)).toBe(true)
+  })
+
+
   it("ignores punctuation added at the end", async () => {
     const hash = await hashAnswer("Šaltinis", "text")
     expect(await verifyAnswer("saltinis.", hash, { type: "text" })).toBe(true)

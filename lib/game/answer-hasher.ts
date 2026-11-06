@@ -5,14 +5,16 @@ import { canonicalNumber, legacyNumberSpellings } from "@/lib/game/number-answer
 const BCRYPT_ROUNDS = 10
 
 /**
- * A number answer stored by value has this prefix in front of its bcrypt
- * hash. It tells verification that one comparison of the canonical value is
- * enough; hashes without it come from before, when the typed text was stored,
- * and are tried with the usual older spellings. A duplicated activity copies
- * the hash with its prefix. (The SQL check_answer() is unused and does not
- * read the prefix.)
+ * A number answer stored by value has this suffix after its bcrypt hash
+ * (":" is not in the bcrypt alphabet). It tells verification that one
+ * comparison of the canonical value is enough; hashes without it come from
+ * before, when the typed text was stored, and are tried with the usual older
+ * spellings. The hash still starts with "$2", so tools that treat any other
+ * value as unhashed plaintext (migration 00018) leave it alone, and a
+ * duplicated activity copies it as it is. (The SQL check_answer() is unused
+ * and does not read the suffix.)
  */
-const NUMBER_VALUE_PREFIX = "num:"
+const NUMBER_VALUE_SUFFIX = ":num"
 
 /** The challenge facts that decide how an answer is compared. */
 export interface AnswerRules {
@@ -70,7 +72,7 @@ function withoutTrailingPunctuation(form: string): string {
 /**
  * Forms tried against the stored hash, in order.
  * - text: folded (current hashes), folded without trailing punctuation,
- *   then exact (hashes made before folding);
+ *   then exact with and without it (hashes made before folding);
  * - multiple choice: exact; folded only when no two options fold to the same
  *   string, which covers a task switched from text to choice without a new
  *   answer and can never credit a different option;
@@ -84,7 +86,7 @@ function candidateForms(submitted: string, rules: AnswerRules): string[] {
   const folded = normalizeAnswer(submitted)
   let forms: string[]
   if (foldsDiacritics(rules.type)) {
-    forms = [folded, withoutTrailingPunctuation(folded), exact]
+    forms = [folded, withoutTrailingPunctuation(folded), exact, withoutTrailingPunctuation(exact)]
   } else if (rules.type === "multiple_choice" && foldedOptionsAreDistinct(rules.options)) {
     forms = [exact, folded]
   } else if (rules.type === "number") {
@@ -113,7 +115,7 @@ export function storedForm(answer: string, type: string | null | undefined): str
 export async function hashAnswer(answer: string, type: string | null | undefined): Promise<string> {
   const hash = await bcrypt.hash(storedForm(answer, type), BCRYPT_ROUNDS)
   const byValue = type === "number" && canonicalNumber(answer) !== null
-  return byValue ? NUMBER_VALUE_PREFIX + hash : hash
+  return byValue ? hash + NUMBER_VALUE_SUFFIX : hash
 }
 
 function plaintextEquals(candidate: string, stored: string): boolean {
@@ -128,10 +130,10 @@ export async function verifyAnswer(
   storedHash: string,
   rules: AnswerRules
 ): Promise<boolean> {
-  if (storedHash.startsWith(NUMBER_VALUE_PREFIX)) {
+  if (storedHash.endsWith(NUMBER_VALUE_SUFFIX)) {
     const canonical = canonicalNumber(submitted)
     if (canonical === null) return false
-    return bcrypt.compare(canonical, storedHash.slice(NUMBER_VALUE_PREFIX.length))
+    return bcrypt.compare(canonical, storedHash.slice(0, -NUMBER_VALUE_SUFFIX.length))
   }
 
   const forms = candidateForms(submitted, rules)

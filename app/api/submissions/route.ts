@@ -4,11 +4,16 @@ import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { pluralizeLt } from "@/lib/utils"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
+
+// Answer checks per team per minute, right or wrong: more than any team
+// types by hand, few enough to bound the bcrypt work one team can cause.
+const VERIFY_PER_MINUTE = 20
 
 const submitAnswerSchema = z.object({
   session_token: z.string().min(1),
   challenge_id: z.string().uuid(),
-  answer: z.string().min(1, "Atsakymas privalomas"),
+  answer: z.string().min(1, "Atsakymas privalomas").max(500, "Atsakymas per ilgas"),
   hints_used: z.number().int().min(0).max(20).default(0),
 })
 
@@ -183,6 +188,17 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Užduotis nerasta" },
         { status: 404 }
+      )
+    }
+
+    // Every check costs one or more bcrypt comparisons (older number answers
+    // try several spellings). The wrong-answer count above only sees rows
+    // already written, so parallel requests could all pass it; this counter
+    // is taken before the work starts.
+    if (!(await checkAiRateLimitAsync("answer-checks", team.id, VERIFY_PER_MINUTE, 60_000))) {
+      return NextResponse.json(
+        { error: "Per daug bandymų. Palaukite minutę." },
+        { status: 429 }
       )
     }
 

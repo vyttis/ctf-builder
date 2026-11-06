@@ -21,6 +21,15 @@ export async function POST(request: Request) {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
 
+    // The wide per-IP ceiling counts every request, also malformed ones,
+    // so it runs before the body is read.
+    if (!(await checkAiRateLimitAsync("teams-ip", ip, RATE_PER_IP, RATE_WINDOW))) {
+      return NextResponse.json(
+        { error: "Per daug bandymų prisijungti. Palaukite minutę." },
+        { status: 429 }
+      )
+    }
+
     let body
     try {
       body = await request.json()
@@ -39,10 +48,7 @@ export async function POST(request: Request) {
     }
 
     const gameKey = `${ip}:${parsed.data.game_code.toUpperCase()}`
-    if (
-      !(await checkAiRateLimitAsync("teams-ip", ip, RATE_PER_IP, RATE_WINDOW)) ||
-      !(await checkAiRateLimitAsync("teams", gameKey, RATE_PER_GAME, RATE_WINDOW))
-    ) {
+    if (!(await checkAiRateLimitAsync("teams", gameKey, RATE_PER_GAME, RATE_WINDOW))) {
       return NextResponse.json(
         { error: "Per daug bandymų prisijungti. Palaukite minutę." },
         { status: 429 }
