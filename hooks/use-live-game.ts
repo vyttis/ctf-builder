@@ -20,6 +20,8 @@ interface UseLiveGameResult {
   // linear path mode, so free-mode counts must come from submissions)
   solvedCounts: Map<string, number>
   lastSubmissions: Map<string, string>
+  /** The answer history of the current activity has been read. */
+  historyLoaded: boolean
   connectionState: LiveConnectionState
   retry: () => void
 }
@@ -36,6 +38,9 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
   const [solvedSets, setSolvedSets] = useState<Map<string, Set<string>>>(new Map())
   const [lastSubmissions, setLastSubmissions] = useState<Map<string, string>>(new Map())
   const [connectionState, setConnectionState] = useState<LiveConnectionState>("connecting")
+  // The activity whose answer history has been read: until then nobody can
+  // be told apart from a team that never answered.
+  const [historyGameId, setHistoryGameId] = useState<string | null>(null)
   const [retryNonce, setRetryNonce] = useState(0)
   // The activity whose answers the state above holds.
   const stateGameRef = useRef<string | null>(null)
@@ -57,7 +62,10 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
     setTeams(teamsData)
 
     const teamIds = teamsData.map((t) => t.id)
-    if (teamIds.length === 0) return
+    if (teamIds.length === 0) {
+      setHistoryGameId(gameId)
+      return
+    }
 
     // All answers, past the 1000-row page limit, read in id order so new
     // answers arriving meanwhile cannot shift a page. A failed read throws,
@@ -112,6 +120,7 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
       }
       return next
     })
+    setHistoryGameId(gameId)
   }, [gameId])
 
   useEffect(() => {
@@ -190,10 +199,18 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
                 .map((t) => (t.id === updated.id ? updated : t))
                 .sort((a, b) => b.total_points - a.total_points)
             )
-          } else if (payload.eventType === "DELETE") {
-            const old = payload.old as { id: string }
-            setTeams((prev) => prev.filter((t) => t.id !== old.id))
           }
+        }
+      )
+      // DELETE events cannot be filtered by game (they carry only the id), so
+      // a filtered subscription never sees them. Listen to all and drop the
+      // team if it is one of ours; every screen using this hook follows.
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "teams" },
+        (payload) => {
+          const removedId = (payload.old as { id?: string }).id
+          if (removedId) setTeams((prev) => prev.filter((t) => t.id !== removedId))
         }
       )
       .subscribe(handleChannelStatus("teams"))
@@ -253,5 +270,5 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
   const solvedCounts = new Map<string, number>()
   solvedSets.forEach((set, teamId) => solvedCounts.set(teamId, set.size))
 
-  return { teams, solvedCounts, lastSubmissions, connectionState, retry }
+  return { teams, solvedCounts, lastSubmissions, historyLoaded: historyGameId === gameId, connectionState, retry }
 }

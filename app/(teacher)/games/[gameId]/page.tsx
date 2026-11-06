@@ -292,7 +292,12 @@ export default async function GameDetailPage(
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <GameStatusWatcher gameCode={game.game_code} status={status} timeLimit={settings?.time_limit_minutes ?? null} />
+          <GameStatusWatcher
+            gameCode={game.game_code}
+            status={status}
+            timeLimit={settings?.time_limit_minutes ?? null}
+            resumedAt={(game as { resumed_at?: string | null }).resumed_at ?? null}
+          />
           <GameStatusActions
             gameId={game.id}
             status={status}
@@ -387,9 +392,12 @@ export default async function GameDetailPage(
             <LiveControlCenter
               gameId={game.id}
               gameStatus={game.status}
+              resumedAt={(game as { resumed_at?: string | null }).resumed_at ?? null}
+              challengeCount={challenges.length}
               settings={{
                 time_limit_minutes: settings?.time_limit_minutes ?? null,
                 max_teams: settings?.max_teams ?? 50,
+                joining_closed: settings?.joining_closed === true,
               }}
             />
             <LiveActivityFeed gameId={game.id} />

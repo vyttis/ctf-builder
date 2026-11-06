@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const supabase = createAdminClient()
     const { data: game } = await supabase
       .from("games")
-      .select("status, settings, paused_ms, paused_at, challenges(id, updated_at)")
+      .select("status, settings, paused_ms, paused_at, resumed_at, challenges(id, updated_at)")
       .eq("game_code", gameCode)
       .maybeSingle()
 
@@ -41,6 +41,9 @@ export async function GET(request: Request) {
         // the phone correct for its own clock being off.
         paused_ms: Number(game.paused_ms ?? 0),
         paused_at: game.paused_at ?? null,
+        // When the last pause ended: the facilitator's page counts the
+        // "stuck" time from it.
+        resumed_at: game.resumed_at ?? null,
         now: new Date().toISOString(),
         // Changes when a task is added, removed or saved: the phone then
         // reloads the tasks. Hidden before the start, like the tasks.

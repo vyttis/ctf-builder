@@ -25,7 +25,7 @@ import {
   ChevronRight,
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
-import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
+import { getPlayerSession, clearPlayerSession, savePlayerSession } from "@/lib/game/session"
 import { AnswerInput } from "@/components/player/answer-input"
 import { type GameClock, secondsLeft } from "@/lib/game/clock"
 import { remapTaskIndex } from "@/lib/game/tasks-version"
@@ -289,6 +289,17 @@ export default function PlayPage() {
       clearPlayerSession(gameCode)
       router.replace(`/play/${gameCode}`)
       return
+    }
+
+    // The facilitator may have renamed the team: show the current name.
+    if (state.team && state.team.name && state.team.name !== s.team_name) {
+      const renamed = { ...s, team_name: state.team.name }
+      setSession(renamed)
+      try {
+        savePlayerSession(gameCode, renamed)
+      } catch {
+        // Storage blocked: the name still shows for this visit.
+      }
     }
 
     setGameId(state.game.id)
@@ -881,12 +892,14 @@ export default function PlayPage() {
           role="status"
           aria-live="polite"
         >
+          {/* An announcement sent during the pause reaches the team here too. */}
+          {gameId && <AnnouncementBanner gameId={gameId} />}
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
             <Clock className="h-10 w-10 text-highlight" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Žaidimas pristabdytas</h1>
+          <h1 className="text-2xl font-bold mb-2">Veikla pristabdyta</h1>
           <p className="text-white/70 mb-6">
-            Palaukite, kol vedėjas tęs žaidimą. Jūsų taškai išsaugoti.
+            Palaukite, kol vedėjas tęs veiklą. Jūsų taškai išsaugoti.
           </p>
           <div className="bg-white/5 rounded-2xl p-4 mb-2">
             <p className="text-2xl font-bold">{totalPoints} tšk.</p>

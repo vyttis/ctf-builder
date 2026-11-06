@@ -1,12 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { useLiveGame } from "@/hooks/use-live-game"
 import { LiveLeaderboardBoard } from "./live-leaderboard-board"
 import { LiveActivityFeed } from "./live-activity-feed"
+import { AnnouncementBanner } from "@/components/player/announcement-banner"
 import { LiveConnectionBanner } from "./live-connection-banner"
 import { GameStatusActions } from "./game-status-actions"
 import { TimeControls } from "./time-controls"
@@ -49,6 +50,8 @@ interface LiveViewProps {
     time_limit_minutes: number | null
     paused_ms: number
     paused_at: string | null
+    /** The activity's leaderboard setting: off hides places and points here too. */
+    show_leaderboard: boolean
   }
   challengeCount: number
   /** Path of the teacher access request page, when the activity accepts requests. */
@@ -315,13 +318,16 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
       <div className="flex-1 px-6 py-6">
         {connectionState === "degraded" && (
           <div className="mb-4">
-            <LiveConnectionBanner onRetry={retry} />
+            <LiveConnectionBanner onRetry={retry} tone="dark" />
           </div>
         )}
 
+        {/* The facilitator's announcements, for the whole class */}
+        <AnnouncementBanner gameId={game.id} variant="projector" />
+
         {status === "finished" && (
           <div className="mb-6 rounded-2xl border border-accent/40 bg-accent/10 px-6 py-4 text-center">
-            <p className="text-2xl font-bold">Žaidimas baigtas!</p>
+            <p className="text-2xl font-bold">Veikla baigta!</p>
             <p className="text-white/60 mt-1">Galutiniai rezultatai žemiau 🏆</p>
           </div>
         )}
@@ -332,6 +338,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
             teams={teams}
             solvedCounts={solvedCounts}
             totalChallenges={challengeCount}
+            ranked={game.show_leaderboard}
           />
 
           {/* Side panel: QR + activity */}
@@ -349,7 +356,23 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
                 <p className="mt-3 font-mono text-3xl font-bold tracking-[0.25em] text-steam-dark">
                   {game.game_code}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1 break-all">{playUrl}</p>
+                {/* Read from the back of the room: large, without the scheme,
+                    breaking only after a slash. */}
+                <p className="mt-2 text-lg font-semibold leading-snug text-steam-dark">
+                  {playUrl
+                    .replace(/^https?:\/\//, "")
+                    .split("/")
+                    .map((part, i, parts) => (
+                      <Fragment key={i}>
+                        {part}
+                        {i < parts.length - 1 && (
+                          <>
+                            /<wbr />
+                          </>
+                        )}
+                      </Fragment>
+                    ))}
+                </p>
               </div>
             )}
             {sideQr?.kind === "request" && (
@@ -371,7 +394,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
                 </p>
               </div>
             )}
-            <LiveActivityFeed gameId={game.id} variant="projector" />
+            <LiveActivityFeed gameId={game.id} variant="projector" hidePoints={!game.show_leaderboard} />
           </div>
         </div>
       </div>

@@ -1,55 +1,49 @@
-import { createClient } from "@/lib/supabase/server"
-import { getUserProfile } from "@/lib/auth/roles"
-import { UserTable } from "@/components/admin/user-table"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Profile } from "@/types/game"
-import { ArrowLeft, Users } from "lucide-react"
 import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { getUserProfile, requireRole } from "@/lib/auth/roles"
+import { loadAdminUsers } from "@/lib/admin/users"
+import { loadAiSettings } from "@/lib/ai/usage"
+import { UsersManager } from "@/components/admin/users-manager"
+import { Button } from "@/components/ui/button"
+import { redirect } from "next/navigation"
+
+export const dynamic = "force-dynamic"
 
 export default async function AdminUsersPage() {
   const supabase = await createClient()
+  try {
+    await requireRole(supabase, "admin", "super_admin")
+  } catch {
+    redirect("/dashboard")
+  }
   const profile = await getUserProfile(supabase)
 
-  const { data: users } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false })
+  // Read with the service role after the role check above: last sign-in
+  // comes from Auth, activity counts from every facilitator's games.
+  // DI use and limits are for super administrators only (as on /admin/di).
+  const admin = createAdminClient()
+  const withAi = profile?.role === "super_admin"
+  const [users, settings] = await Promise.all([
+    loadAdminUsers(admin, { withAi }),
+    withAi ? loadAiSettings(admin) : Promise.resolve(null),
+  ])
 
   return (
     <div>
-      <Link href="/admin" className="inline-block mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 text-muted-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
+      <Link href="/admin" className="mb-6 inline-block">
+        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Administravimas
         </Button>
       </Link>
-
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-steam-dark flex items-center gap-2">
-            <Users className="h-6 w-6 text-secondary" />
-            Vartotojai
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {(users || []).length} vartotojai platformoje
-          </p>
-        </div>
-      </div>
-
-      <Card className="border-border/50 bg-white">
-        <CardContent className="p-0">
-          <UserTable
-            users={(users as Profile[]) || []}
-            currentUserRole={profile?.role || "teacher"}
-            currentUserId={profile?.id || ""}
-          />
-        </CardContent>
-      </Card>
+      <UsersManager
+        users={users}
+        currentUserId={profile?.id ?? ""}
+        currentUserRole={profile?.role ?? "teacher"}
+        defaultAiLimit={settings?.ai_user_monthly_limit ?? 0}
+      />
     </div>
   )
 }
