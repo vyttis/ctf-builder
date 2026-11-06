@@ -344,11 +344,14 @@ export default function PlayPage() {
   }, [gameId, gameCode, timeExpired])
 
   // Status polling safety net: paused games may be invisible to anon realtime
-  // (RLS), so realtime alone cannot be trusted to deliver pause events
+  // (RLS), so realtime alone cannot be trusted to deliver pause events.
+  // 5 s keeps a teacher's pause visible to participants almost at once;
+  // the request is a tiny status read, and it also re-runs when the tab
+  // becomes visible again (phones suspend timers in the background).
   useEffect(() => {
     if (gameFinished) return
 
-    const interval = setInterval(async () => {
+    const checkStatus = async () => {
       try {
         const res = await fetch(
           `/api/play/status?game_code=${encodeURIComponent(gameCode)}`,
@@ -365,9 +368,18 @@ export default function PlayPage() {
       } catch {
         // Network hiccup — next poll retries
       }
-    }, 20000)
+    }
 
-    return () => clearInterval(interval)
+    const interval = setInterval(checkStatus, 5000)
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void checkStatus()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
   }, [gameCode, gameFinished])
 
   function handleStart() {
