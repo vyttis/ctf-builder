@@ -112,7 +112,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
             </p>
           </div>
         ) : hasDetailed ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={0} role="region" aria-label="Užduočių statistika">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border/50">
@@ -193,7 +193,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
             </table>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={0} role="region" aria-label="Užduočių statistika">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border/50">

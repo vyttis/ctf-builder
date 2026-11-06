@@ -175,7 +175,7 @@ export function ReflectionsTable({ reflections, totalTeams }: ReflectionsTablePr
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-lg border border-border/50">
+        <div className="overflow-x-auto rounded-lg border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={0} role="region" aria-label="Refleksijos">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
