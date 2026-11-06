@@ -439,6 +439,21 @@ BEGIN
     VALUES ('10000000-0000-0000-0000-0000000000c4', 'Nauja užduotis', '$2a$10$real', false);
 END $$;
 RESET ROLE;
+-- Nor can a task without an answer be moved into it from a draft.
+INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
+  ('10000000-0000-0000-0000-0000000000c5', '00000000-0000-0000-0000-00000000000a', 'Juodraštis', 'DRAFT5', 'draft');
+INSERT INTO public.challenges (id, game_id, title, answer_hash, needs_answer) VALUES
+  ('20000000-0000-0000-0000-0000000000c5', '10000000-0000-0000-0000-0000000000c5', 'Kopija 2', '$2a$10$random', true);
+SET ROLE authenticated;
+DO $$
+BEGIN
+  UPDATE public.challenges SET game_id = '10000000-0000-0000-0000-0000000000c4'
+    WHERE id = '20000000-0000-0000-0000-0000000000c5';
+  RAISE EXCEPTION 'a task without an answer must not move into a running activity';
+EXCEPTION WHEN SQLSTATE 'KS409' THEN
+  NULL;
+END $$;
+RESET ROLE;
 
 -- A blocked account cannot change its activity through the functions either.
 UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-00000000000a';

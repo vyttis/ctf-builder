@@ -185,7 +185,7 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS challenges_live_rules ON public.challenges;
-CREATE TRIGGER challenges_live_rules BEFORE INSERT OR UPDATE OF needs_answer ON public.challenges
+CREATE TRIGGER challenges_live_rules BEFORE INSERT OR UPDATE OF needs_answer, game_id ON public.challenges
   FOR EACH ROW EXECUTE FUNCTION public.challenges_live_rules();
 
 CREATE OR REPLACE FUNCTION public.set_game_status(p_game_id uuid, p_status text)
