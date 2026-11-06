@@ -390,6 +390,7 @@ export default async function GameDetailPage(
               settings={{
                 time_limit_minutes: settings?.time_limit_minutes ?? null,
                 max_teams: settings?.max_teams ?? 50,
+                joining_closed: settings?.joining_closed === true,
               }}
             />
             <LiveActivityFeed gameId={game.id} />

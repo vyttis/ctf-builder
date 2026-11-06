@@ -80,6 +80,16 @@ export async function POST(request: Request) {
       .eq("game_id", game.id)
 
     const settings = game.settings as Record<string, unknown> | null
+    // The facilitator closed joining once the class was in.
+    if (settings?.joining_closed === true) {
+      return NextResponse.json(
+        {
+          error: "Vedėjas uždarė prisijungimą prie šios veiklos. Jei jūsų komanda dar neprisijungė, kreipkitės į vedėją.",
+          code: "joining_closed",
+        },
+        { status: 403 }
+      )
+    }
     const maxTeams = (settings?.max_teams as number) || 50
     if (teamCount && teamCount >= maxTeams) {
       return NextResponse.json(
