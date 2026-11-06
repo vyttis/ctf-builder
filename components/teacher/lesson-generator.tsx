@@ -436,7 +436,7 @@ export function LessonGenerator({
             <Button
               onClick={handleGenerate}
               disabled={!canGenerate}
-              className="w-full bg-secondary hover:bg-secondary/90 text-white gap-2"
+              className="w-full bg-secondary-ink hover:bg-secondary-ink/90 text-white gap-2"
               size="lg"
             >
               {loading ? (

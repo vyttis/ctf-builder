@@ -288,7 +288,7 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
                 <Button
                   onClick={() => void moderate()}
                   disabled={busy || (editing.mode === "rename" && (!nameDraft.trim() || nameDraft.trim() === editing.name))}
-                  className={editing.mode === "remove" ? "bg-accent text-white hover:bg-accent/90" : "bg-primary text-primary-foreground hover:bg-primary/90"}
+                  className={editing.mode === "remove" ? "bg-accent-ink text-white hover:bg-accent-ink/90" : "bg-primary text-primary-foreground hover:bg-primary/90"}
                 >
                   {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
                   {editing.mode === "rename" ? "Išsaugoti vardą" : "Pašalinti komandą"}

@@ -38,7 +38,7 @@ export function OnboardingChecklist({
             {doneCount} / {steps.length}
           </span>
         </div>
-        <Progress value={progress} className="h-1.5 mt-2" />
+        <Progress value={Math.round(progress)} className="h-1.5 mt-2" aria-label="Pirmųjų žingsnių eiga" />
       </CardHeader>
       <CardContent className="space-y-1">
         {steps.map((step, index) => {

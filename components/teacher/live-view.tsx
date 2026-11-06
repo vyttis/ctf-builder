@@ -438,7 +438,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
                     size="sm"
                     onClick={handleAnnounce}
                     disabled={!announcement.trim() || sendingAnnouncement}
-                    className="bg-secondary hover:bg-secondary/90 text-white gap-1.5 shrink-0"
+                    className="bg-secondary-ink hover:bg-secondary-ink/90 text-white gap-1.5 shrink-0"
                   >
                     <Send className="h-3.5 w-3.5" />
                     Siųsti

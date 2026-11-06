@@ -499,7 +499,7 @@ function ManageUserDialog({
                   <Button
                     onClick={() => saveStatus(step.next)}
                     disabled={busy}
-                    className={step.next === "blocked" ? "bg-accent text-white hover:bg-accent/90" : "bg-primary text-primary-foreground hover:bg-primary/90"}
+                    className={step.next === "blocked" ? "bg-accent-ink text-white hover:bg-accent-ink/90" : "bg-primary text-primary-foreground hover:bg-primary/90"}
                   >
                     {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
                     {step.next === "blocked" ? "Užblokuoti paskyrą" : "Aktyvuoti paskyrą"}
@@ -517,7 +517,7 @@ function ManageUserDialog({
                   <Button variant="outline" onClick={() => setStep({ kind: "idle" })} disabled={busy}>
                     Atšaukti
                   </Button>
-                  <Button onClick={() => saveRole(step.next)} disabled={busy} className="bg-secondary text-white hover:bg-secondary/90">
+                  <Button onClick={() => saveRole(step.next)} disabled={busy} className="bg-secondary-ink text-white hover:bg-secondary-ink/90">
                     {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
                     Pakeisti rolę
                   </Button>

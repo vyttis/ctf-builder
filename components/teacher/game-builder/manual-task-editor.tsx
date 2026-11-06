@@ -417,9 +417,9 @@ export function ManualTaskEditor({
       {/* Type + Points */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Tipas</Label>
+          <Label htmlFor={`${fieldId}-type`} className="text-xs font-medium">Tipas</Label>
           <Select value={type} onValueChange={(v) => setType(v as ChallengeType)}>
-            <SelectTrigger className="bg-white">
+            <SelectTrigger id={`${fieldId}-type`} className="bg-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -482,9 +482,10 @@ export function ManualTaskEditor({
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 text-accent-ink"
+                aria-label={`Pašalinti ${i + 1} variantą`}
                 onClick={() => setOptions(options.filter((_, j) => j !== i))}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               </Button>
             </div>
           ))}
@@ -554,9 +555,10 @@ export function ManualTaskEditor({
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 text-accent-ink"
+              aria-label={`Pašalinti ${i + 1} užuominą`}
               onClick={() => setHints(hints.filter((_, j) => j !== i))}
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
         ))}
@@ -645,13 +647,14 @@ export function ManualTaskEditor({
 
           {/* Hint penalty */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">
+            <Label htmlFor={`${fieldId}-hint-penalty`} className="text-xs font-medium">
               Užuominos kaina (taškų)
             </Label>
             <Input
               type="number"
               min={0}
               max={100}
+              id={`${fieldId}-hint-penalty`}
               value={hintPenalty}
               onChange={(e) => setHintPenalty(parseInt(e.target.value) || 0)}
               className="bg-white w-32"

@@ -246,7 +246,7 @@ export function HeroSection() {
                                 showResult && opt.correct
                                   ? "border-primary bg-primary text-primary-foreground"
                                   : showResult && !opt.correct
-                                    ? "border-accent bg-accent text-white"
+                                    ? "border-accent-ink bg-accent-ink text-white"
                                     : "border-border text-muted-foreground"
                               }`}
                             >

@@ -91,6 +91,7 @@ export function QRDisplay({ gameCode, size = 200 }: QRDisplayProps) {
               level="H"
               includeMargin={false}
               fgColor="#00323C"
+              title={`Prisijungimo prie veiklos ${gameCode} QR kodas`}
             />
           </div>
 

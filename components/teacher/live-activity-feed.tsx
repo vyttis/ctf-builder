@@ -408,7 +408,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
                     <div className="flex-1 min-w-0 text-sm text-muted-foreground leading-snug">
                       {getMessage(event)}
                     </div>
-                    <span className="text-[10px] text-muted-foreground/60 shrink-0 tabular-nums mt-0.5">
+                    <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums mt-0.5">
                       {formatTimestamp(event.timestamp)}
                     </span>
                   </motion.div>

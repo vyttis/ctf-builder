@@ -41,7 +41,7 @@ export function FinishRequestCard({ gameCode, sessionToken }: FinishRequestCardP
         <Button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-4 w-full bg-secondary text-white hover:bg-secondary/90"
+          className="mt-4 w-full bg-secondary-ink text-white hover:bg-secondary-ink/90"
         >
           Pateikti prašymą
         </Button>

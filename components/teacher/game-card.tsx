@@ -118,25 +118,27 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
                     variant="ghost"
                     size="sm"
                     className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary-ink"
+                    aria-label={`Redaguoti veiklą „${game.title}“`}
                     onClick={(e) => {
                       e.preventDefault()
                       e.stopPropagation()
                       setEditOpen(true)
                     }}
                   >
-                    <Edit3 className="h-3.5 w-3.5" />
+                    <Edit3 className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-7 w-7 p-0 text-muted-foreground hover:text-accent-ink"
+                    aria-label={`Ištrinti veiklą „${game.title}“`}
                     onClick={(e) => {
                       e.preventDefault()
                       e.stopPropagation()
                       setDeleteOpen(true)
                     }}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
                 </div>
               )}
