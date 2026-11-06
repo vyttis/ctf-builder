@@ -74,7 +74,7 @@ function GenerationProgress() {
             {stages[currentStageIndex].label}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            DI ruošia pedagoginius pasiūlymus pagal Lietuvos BUP — gali užtrukti iki 40 sek.
+            DI ruošia pedagoginius pasiūlymus pagal Lietuvos BUP. Tai gali užtrukti iki 40 sek.
           </p>
         </div>
       </div>

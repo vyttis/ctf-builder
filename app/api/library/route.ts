@@ -87,7 +87,7 @@ export async function GET(request: Request) {
     }
     const items = (data || []).map((item: LibraryRow) => ({
       ...item,
-      publisher_name: item.profiles?.full_name || item.profiles?.email || "—",
+      publisher_name: item.profiles?.full_name || item.profiles?.email || "-",
       publisher_email: item.profiles?.email,
       challenge_count: Array.isArray(item.challenge_data)
         ? item.challenge_data.length
@@ -147,14 +147,14 @@ export async function POST(request: Request) {
 
     if (gameError || !game) {
       return NextResponse.json(
-        { error: "Žaidimas nerastas arba neturite teisės" },
+        { error: "Veikla nerasta arba neturite teisės" },
         { status: 404 }
       )
     }
 
     if (!game.challenges || game.challenges.length === 0) {
       return NextResponse.json(
-        { error: "Žaidimas neturi užduočių" },
+        { error: "Veikla neturi užduočių" },
         { status: 400 }
       )
     }

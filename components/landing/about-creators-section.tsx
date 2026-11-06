@@ -43,7 +43,7 @@ export function AboutCreatorsSection() {
           className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty"
         >
           Klaipėdos universiteto STEAM metodinis centras dirba su mokytojais ir
-          švietimo bendruomene. Įrankis sukurtas siekiant praktinių mokyklų poreikių —
+          švietimo bendruomene. Įrankis sukurtas siekiant praktinių mokyklų poreikių,
           remiantis realiu mokytojų darbu klasėse.
         </motion.p>
       </div>

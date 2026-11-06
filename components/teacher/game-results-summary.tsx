@@ -106,7 +106,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
             Klasės rezultatų suvestinė
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Pedagoginis pamokos eigos apibendrinimas — kas pavyko, kur reikia grįžti.
+            Pedagoginis pamokos eigos apibendrinimas: kas pavyko, kur reikia grįžti.
           </p>
         </CardHeader>
 
@@ -146,7 +146,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ChallengeListPanel
                 title="Sudėtingiausios užduotys"
-                hint="Kur klasė užstrigo — verta aptarti."
+                hint="Kur klasė užstrigo. Verta aptarti."
                 icon={<AlertCircle className="h-4 w-4 text-accent" />}
                 tone="accent"
                 items={hardest}
@@ -167,7 +167,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
           <div className="rounded-lg border border-secondary/30 bg-secondary/5 p-3 text-xs text-muted-foreground leading-relaxed">
             <strong className="text-secondary">Metodinė pastaba.</strong>{" "}
             Suvestinė pateikia kiekybinius rodiklius. Pedagoginis vertinimas reikalauja
-            kokybinės refleksijos su klase — kas pavyko, kodėl, ką darysite kitą pamoką.
+            kokybinės refleksijos su klase: kas pavyko, kodėl, ką darysite kitą pamoką.
           </div>
         </CardContent>
       </Card>

@@ -76,7 +76,7 @@ export function OnboardingChecklist({
           <div className="pt-3 mt-2 border-t border-border/40 flex flex-col sm:flex-row sm:items-center gap-2">
             <p className="text-xs text-muted-foreground flex-1">
               Norite greitai išbandyti? Sukursime paruoštą veiklą su 3
-              užduotimis — beliks tik paleisti.
+              užduotimis, beliks tik pradėti.
             </p>
             <CreateSampleGameButton size="sm" />
           </div>

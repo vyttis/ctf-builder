@@ -55,8 +55,8 @@ export function DraftReadinessChecklist({
         <CardTitle className="text-base flex items-center gap-2">
           <ListChecks className="h-4 w-4 text-primary" />
           {readyToStart
-            ? "Viskas paruošta — galite pradėti žaidimą!"
-            : "Pasiruošimas žaidimui"}
+            ? "Viskas paruošta, galite pradėti veiklą!"
+            : "Pasiruošimas veiklai"}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1.5">

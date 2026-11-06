@@ -28,7 +28,7 @@ export const ACHIEVEMENT_CONFIG: Record<
   first_solver: { name: "Pirmas sprendėjas", icon: "Crown", color: "#FAC846" },
   speed_demon: { name: "Greičio demonas", icon: "Zap", color: "#FA2864" },
   hint_free: { name: "Be užuominų", icon: "Brain", color: "#00D296" },
-  perfect_game: { name: "Tobulas žaidimas", icon: "Trophy", color: "#FAC846" },
+  perfect_game: { name: "Be klaidų", icon: "Trophy", color: "#FAC846" },
   streak: { name: "Sėkmės serija", icon: "Flame", color: "#008CB4" },
 }
 

@@ -19,7 +19,7 @@ export function SteamTemplatesShowcase() {
             Pradėkite nuo paruošto pavyzdžio
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pasirinkite dviejų dalykų derinį — DI sukurs pamokos planą, kuriame veiklos organiškai jungia abu dalykus.
+            Pasirinkite dviejų dalykų derinį, ir DI sukurs pamokos planą, kuriame veiklos organiškai jungia abu dalykus.
           </p>
         </div>
       </div>

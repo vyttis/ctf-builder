@@ -58,7 +58,7 @@ export function DifferenceSection() {
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
           Testų įrankiai pateikia klausimus ir surenka atsakymus. Šis įrankis padeda
-          sukurti visą pamoką — su aiškia struktūra, komandiniu darbu ir refleksija.
+          sukurti visą pamoką su aiškia struktūra, komandiniu darbu ir refleksija.
         </p>
       </div>
 

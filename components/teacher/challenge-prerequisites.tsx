@@ -145,7 +145,7 @@ export function ChallengePrerequisites({
         </div>
       ) : (
         <p className="text-xs text-muted-foreground mb-2">
-          Nėra reikalavimų — užduotis prieinama iš karto
+          Nėra reikalavimų, užduotis prieinama iš karto
         </p>
       )}
 
@@ -209,7 +209,7 @@ export function ChallengePrerequisites({
                       }`}
                       title={
                         isBlocked
-                          ? "Negalima pasirinkti — sukeltų ciklinę priklausomybę"
+                          ? "Negalima pasirinkti: užduotys priklausytų viena nuo kitos ratu"
                           : undefined
                       }
                     >

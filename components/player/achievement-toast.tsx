@@ -17,7 +17,7 @@ const ACHIEVEMENT_DESCRIPTIONS: Record<AchievementType, string> = {
   first_solver: "Išsprendėte užduotį pirmieji!",
   speed_demon: "Išsprendėte greičiau nei per minutę!",
   hint_free: "Išsprendėte be jokių užuominų!",
-  perfect_game: "Visos užduotys be užuominų — tobula!",
+  perfect_game: "Visos užduotys be užuominų!",
   streak: "Teisingi atsakymai iš eilės!",
 }
 

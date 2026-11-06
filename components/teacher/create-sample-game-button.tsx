@@ -30,7 +30,7 @@ export function CreateSampleGameButton({
       const data = (await res.json()) as { game_id: string }
       toast({
         title: "Pavyzdinė veikla sukurta!",
-        description: "Paleiskite žaidimą ir nuskaitykite QR kodą telefonu.",
+        description: "Pradėkite veiklą ir nuskaitykite QR kodą telefonu.",
       })
       router.push(`/games/${data.game_id}`)
     } catch (error: unknown) {

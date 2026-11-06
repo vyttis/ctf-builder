@@ -14,12 +14,12 @@ const capabilities = [
   {
     label: "Pamoka",
     title: "Aiški pamokos struktūra",
-    body: "Įvadas, pagrindinės veiklos, diskusija, refleksija — vienoje vietoje. Užduotis lengvai perdėliojate pagal pamokos laiką.",
+    body: "Įvadas, pagrindinės veiklos, diskusija, refleksija vienoje vietoje. Užduotis lengvai perdėliojate pagal pamokos laiką.",
     accent: "secondary",
   },
   {
     label: "DI",
-    title: "Dirbtinis intelektas — mokytojo pagalbininkas",
+    title: "Dirbtinis intelektas kaip pagalbininkas",
     body: "Dirbtinis intelektas siūlo užduočių idėjas pagal LT BUP. Galutinį turinį visada peržiūri ir patvirtina mokytojas.",
     accent: "highlight",
   },
@@ -32,7 +32,7 @@ const capabilities = [
   {
     label: "Komandos",
     title: "Komandinis arba individualus darbas",
-    body: "Mokiniai prisijungia per QR kodą — be paskyrų ar elektroninio pašto. Vienas kodas — visa klasė platformoje.",
+    body: "Mokiniai prisijungia per QR kodą, be paskyrų ar elektroninio pašto. Vienas kodas visai klasei.",
     accent: "secondary",
   },
   {

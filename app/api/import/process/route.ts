@@ -107,8 +107,8 @@ export async function POST(request: Request) {
 
     // Generate tasks from document content
     const systemPrompt = buildSystemPrompt()
-    const userMessage = `Žaidimo pavadinimas: ${parsed.data.game_title}
-${parsed.data.game_description ? `Žaidimo aprašymas: ${parsed.data.game_description}` : ""}
+    const userMessage = `Veiklos pavadinimas: ${parsed.data.game_title}
+${parsed.data.game_description ? `Veiklos aprašymas: ${parsed.data.game_description}` : ""}
 
 Mokytojas įkėlė dokumentą su mokomąja medžiaga. Pagal šį turinį sugeneruok ${parsed.data.count} edukacines CTF užduotis.
 

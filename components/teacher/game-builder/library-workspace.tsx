@@ -114,7 +114,7 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
         <h2 className="font-semibold text-steam-dark">Biblioteka</h2>
       </div>
       <p className="text-xs text-muted-foreground">
-        Naršykite patvirtintus žaidimus ir pridėkite užduotis
+        Naršykite patvirtintas veiklas ir pridėkite užduotis
       </p>
 
       {/* Search */}
@@ -151,7 +151,7 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
           <BookOpen className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
             {items.length === 0
-              ? "Bibliotekoje dar nėra patvirtintų žaidimų"
+              ? "Bibliotekoje dar nėra patvirtintų veiklų"
               : "Nerasta rezultatų"}
           </p>
         </div>

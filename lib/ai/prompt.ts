@@ -1,7 +1,7 @@
 import { AiSuggestRequest, AiGameSuggestRequest, ScenarioPreset } from "./types"
 
 export function buildSystemPrompt(): string {
-  return `Tu esi DI asistentas Lietuvos mokytojams, kuriantis CTF (Capture The Flag) edukacinių žaidimų užduotis. Generuoji pedagogiškai pagrįstas, BUP atitinkančias užduotis.
+  return `Tu esi DI asistentas Lietuvos mokytojams, kuriantis komandinių edukacinių veiklų užduotis (CTF, Capture The Flag, formatu). Generuoji pedagogiškai pagrįstas, BUP atitinkančias užduotis.
 
 # TAISYKLĖS
 
@@ -82,10 +82,10 @@ export function buildScenarioContext(scenario: ScenarioPreset): string {
 export function buildUserMessage(request: AiSuggestRequest, scenario?: ScenarioPreset): string {
   const parts: string[] = []
 
-  parts.push(`Žaidimo pavadinimas: ${request.game_title}`)
+  parts.push(`Veiklos pavadinimas: ${request.game_title}`)
 
   if (request.game_description) {
-    parts.push(`Žaidimo aprašymas: ${request.game_description}`)
+    parts.push(`Veiklos aprašymas: ${request.game_description}`)
   }
 
   if (scenario) {
@@ -105,20 +105,20 @@ export function buildUserMessage(request: AiSuggestRequest, scenario?: ScenarioP
     parts.push(`\nMokytojo nurodymai: ${request.teacher_prompt}`)
   }
 
-  parts.push(`\nSugeneruok ${count} naujas užduotis šiam žaidimui.`)
+  parts.push(`\nSugeneruok ${count} naujas užduotis šiai veiklai.`)
 
   return parts.join("\n")
 }
 
 export function buildGameSystemPrompt(): string {
-  return `Tu esi DI asistentas, padedantis Lietuvos mokytojams sugalvoti CTF (Capture The Flag) edukacinių žaidimų idėjas.
+  return `Tu esi DI asistentas, padedantis Lietuvos mokytojams sugalvoti komandinių edukacinių veiklų (CTF, Capture The Flag, formatu) idėjas.
 
 TAISYKLĖS:
 - VISAS turinys PRIVALO būti lietuvių kalba su teisingomis raidėmis (ąčęėįšųūž).
-- Siūlyk kūrybiškas, edukacines žaidimų temas, tinkamas mokyklinio amžiaus mokiniams.
+- Siūlyk kūrybiškas, edukacines veiklų temas, tinkamas mokyklinio amžiaus mokiniams.
 - Kiekviena idėja turi turėti: title (trumpas, įsimintinas pavadinimas), description (2-3 sakinių aprašymas mokiniams), theme (temos kategorija).
 - Pavadinimai turi būti trumpi, kūrybiški ir patrauklūs mokiniams.
-- Aprašymai turi aiškiai paaiškinti žaidimo temą ir tikslą.
+- Aprašymai turi aiškiai paaiškinti veiklos temą ir tikslą. Vadink tai veikla, ne žaidimu.
 - Atsakyk TIK validžiu JSON formatu:
 {
   "ideas": [
@@ -143,7 +143,7 @@ export function buildGameUserMessage(request: AiGameSuggestRequest): string {
     parts.push(`Mokytojo nurodymai: ${request.teacher_prompt}`)
   }
 
-  parts.push(`Sugeneruok ${count} CTF žaidimo idėjas.`)
+  parts.push(`Sugeneruok ${count} komandinės veiklos idėjas.`)
 
   return parts.join("\n")
 }

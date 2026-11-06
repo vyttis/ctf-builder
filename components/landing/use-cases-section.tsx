@@ -24,7 +24,7 @@ const useCases = [
   {
     when: "Integruota pamoka",
     what: "STEAM veikla",
-    body: "Du dalykai jungiami į vieną pamoką (pvz., matematika ir fizika) — užduotys kuria natūralų ryšį tarp temų.",
+    body: "Du dalykai jungiami į vieną pamoką (pvz., matematika ir fizika). Užduotys kuria natūralų ryšį tarp temų.",
   },
   {
     when: "Kartojimo pamoka",

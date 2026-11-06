@@ -35,7 +35,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "Per didelis failas",
-          description: "Maksimalus dydis — 5MB",
+          description: "Didžiausias dydis 5 MB",
           variant: "destructive",
         })
         return
@@ -188,7 +188,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
               </span>
             </div>
             <span className="text-xs text-muted-foreground">
-              JPEG, PNG, GIF, WebP — iki 5MB
+              JPEG, PNG, GIF, WebP, iki 5 MB
             </span>
           </div>
         )}

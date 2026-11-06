@@ -114,7 +114,7 @@ export default async function GameReportPage(
           <div className="flex flex-wrap gap-x-6 gap-y-1 mt-3 text-sm">
             <span>
               <span className="text-muted-foreground">Vedėjas:</span>{" "}
-              <span className="font-medium">{profile?.full_name || "—"}</span>
+              <span className="font-medium">{profile?.full_name || "-"}</span>
             </span>
             {profile?.school && (
               <span>
@@ -188,7 +188,7 @@ export default async function GameReportPage(
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Žaidime nedalyvavo nė viena komanda.
+              Veikloje nedalyvavo nė viena komanda.
             </p>
           )}
         </section>
@@ -273,7 +273,7 @@ export default async function GameReportPage(
         >
           <strong className="text-steam-dark">Metodinė pastaba.</strong>{" "}
           Ataskaita pateikia kiekybinius rodiklius. Pedagoginis vertinimas
-          reikalauja kokybinės refleksijos su klase — kas pavyko, kodėl, ką
+          reikalauja kokybinės refleksijos su klase: kas pavyko, kodėl, ką
           darysite kitą pamoką.
         </section>
 

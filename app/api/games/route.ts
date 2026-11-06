@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("Game INSERT error:", error)
-    return NextResponse.json({ error: "Nepavyko sukurti žaidimo. Bandykite dar kartą." }, { status: 500 })
+    return NextResponse.json({ error: "Nepavyko sukurti veiklos. Bandykite dar kartą." }, { status: 500 })
   }
 
   return NextResponse.json(data, { status: 201 })
@@ -89,7 +89,7 @@ export async function GET() {
 
   if (error) {
     console.error("Games SELECT error:", error)
-    return NextResponse.json({ error: "Nepavyko gauti žaidimų sąrašo." }, { status: 500 })
+    return NextResponse.json({ error: "Nepavyko gauti veiklų sąrašo." }, { status: 500 })
   }
 
   // challenges(count) is rejected under column grants; see challenge-count.ts

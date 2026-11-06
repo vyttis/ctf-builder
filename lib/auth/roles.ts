@@ -102,7 +102,7 @@ export function getRoleLabel(role: UserRole): string {
     case "admin":
       return "Administratorius"
     case "teacher":
-      return "Mokytojas"
+      return "Vedėjas"
     default:
       return role
   }

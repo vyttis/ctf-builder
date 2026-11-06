@@ -107,7 +107,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     ok: true,
     status: "approved",
     message: account.existing
-      ? "Paskyra jau buvo, ji aktyvuota: mokytojas gali prisijungti iš karto."
-      : "Kvietimas išsiųstas el. paštu. Paspaudęs nuorodą mokytojas užbaigs registraciją.",
+      ? "Paskyra jau buvo, ji aktyvuota: vedėjas gali prisijungti iš karto."
+      : "Kvietimas išsiųstas el. paštu. Paspaudęs nuorodą vedėjas užbaigs registraciją.",
   })
 }

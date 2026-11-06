@@ -21,7 +21,7 @@ test.describe("canonical host", () => {
     await page.getByPlaceholder("KODAS").fill("ZZZZZZ")
     await page.getByPlaceholder("KODAS").press("Enter")
     await expect(page).toHaveURL(/\/play\/ZZZZZZ$/)
-    await expect(page.getByText("Žaidimas nerastas")).toBeVisible()
+    await expect(page.getByText("Veikla nerasta")).toBeVisible()
   })
 
   test("the old /play entry lands on /prisijungti", async ({ page }) => {
@@ -61,7 +61,7 @@ test.describe("old hosts", () => {
   test("old QR codes on the play host open the activity", async ({ page }) => {
     await page.goto(`${PLAY}/play/ZZZZZZ`)
     await expect(page).toHaveURL(/\/play\/ZZZZZZ$/)
-    await expect(page.getByText("Žaidimas nerastas")).toBeVisible()
+    await expect(page.getByText("Veikla nerasta")).toBeVisible()
   })
 
   test("participant links on the facilitator host leave the login behind", async ({ request }) => {

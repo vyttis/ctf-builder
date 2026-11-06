@@ -193,8 +193,8 @@ export function newRequestEmail(to: string[], d: NewRequestDetails, reviewUrl: s
     footer: ADMIN_FOOTER,
     parts: [
       paragraph(
-        "Mokytojas prašo vedėjo paskyros. Patvirtinus jam iškart išsiųsime kvietimą.",
-        "Mokytojas prašo vedėjo paskyros. Patvirtinus jam iškart išsiųsime kvietimą.",
+        "Gautas naujas vedėjo paskyros prašymas. Jį patvirtinus, prašytojui iškart išsiųsime kvietimą.",
+        "Gautas naujas vedėjo paskyros prašymas. Jį patvirtinus, prašytojui iškart išsiųsime kvietimą.",
       ),
       details(
         [

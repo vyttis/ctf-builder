@@ -68,10 +68,10 @@ export function GameStatusActions({
       toast({
         title:
           newStatus === "active"
-            ? "Žaidimas pradėtas!"
+            ? "Veikla pradėta!"
             : newStatus === "finished"
-            ? "Žaidimas baigtas"
-            : "Žaidimas pristabdytas",
+            ? "Veikla baigta"
+            : "Veikla pristabdyta",
         description:
           newStatus === "active"
             ? "Dalyviai gali prisijungti nuskaitę QR kodą."
@@ -103,12 +103,12 @@ export function GameStatusActions({
           className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
         >
           <Square className="h-4 w-4" />
-          {status === "paused" ? "Baigti" : "Baigti žaidimą"}
+          {status === "paused" ? "Baigti" : "Baigti veiklą"}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Baigti žaidimą?</DialogTitle>
+          <DialogTitle>Baigti veiklą?</DialogTitle>
           <DialogDescription>
             Dalyviai nebegalės pateikti atsakymų, o jūs matysite rezultatų
             suvestinę. Šio veiksmo negalima atšaukti.
@@ -128,7 +128,7 @@ export function GameStatusActions({
             ) : (
               <Square className="h-4 w-4" />
             )}
-            Baigti žaidimą
+            Baigti veiklą
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -144,15 +144,15 @@ export function GameStatusActions({
             disabled={challengeCount === 0}
           >
             <Rocket className="h-4 w-4" />
-            Pradėti žaidimą
+            Pradėti veiklą
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Pradėti žaidimą?</DialogTitle>
+            <DialogTitle>Pradėti veiklą?</DialogTitle>
             <DialogDescription>
-              Dalyviai galės prisijungti nuskaitę QR kodą arba įvedę žaidimo
-              kodą. Galėsite bet kada pristabdyti ar baigti žaidimą.
+              Dalyviai galės prisijungti nuskaitę QR kodą arba įvedę veiklos
+              kodą. Galėsite bet kada pristabdyti ar baigti veiklą.
             </DialogDescription>
           </DialogHeader>
           {challengeCount === 0 && (
@@ -254,7 +254,7 @@ export function GameStatusActions({
   return (
     <Badge variant="secondary" className="text-sm gap-1 py-1.5 px-3">
       <Square className="h-3 w-3" />
-      Žaidimas baigtas
+      Veikla baigta
     </Badge>
   )
 }

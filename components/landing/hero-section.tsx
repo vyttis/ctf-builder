@@ -253,7 +253,7 @@ export function HeroSection() {
                       iliustruoja simbiozę?
                     </p>
                     <p className="text-xs text-muted-foreground mb-5">
-                      Simbiozė — abipusiškai naudingas dviejų skirtingų rūšių santykis.
+                      Simbiozė - abipusiškai naudingas dviejų skirtingų rūšių santykis.
                     </p>
 
                     <div className="space-y-2">
@@ -304,12 +304,12 @@ export function HeroSection() {
                       >
                         {correctPicked ? (
                           <>
-                            <strong>Teisingai!</strong> Bitė renka nektarą — augalą apdulkina.
+                            <strong>Teisingai!</strong> Bitė renka nektarą ir apdulkina augalą.
                             Abu organizmai gauna naudą. Tai klasikinė simbiozė (mutualizmas).
                           </>
                         ) : (
                           <>
-                            <strong>Beveik.</strong> Ieškokite poros, kurioje abu gauna naudą —
+                            <strong>Beveik.</strong> Ieškokite poros, kurioje abu gauna naudą:
                             ne plėšrūnas-auka, ne tos pačios rūšies, ne parazitas.{" "}
                             <button
                               onClick={() => setPicked(null)}

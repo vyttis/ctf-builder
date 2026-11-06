@@ -13,7 +13,7 @@ const stats = [
   {
     metric: "Be",
     label: "Mokinių registracijos",
-    detail: "Mokiniai prisijungia per QR kodą — be paskyrų, elektroninio pašto ar slaptažodžių. Tinka pradinukams, gimnazistams ir tarp jų.",
+    detail: "Mokiniai prisijungia per QR kodą, be paskyrų, elektroninio pašto ar slaptažodžių. Tinka pradinukams, gimnazistams ir tarp jų.",
   },
   {
     metric: "100 %",
@@ -23,7 +23,7 @@ const stats = [
   {
     metric: "Reali",
     label: "Pamokos eiga",
-    detail: "Komandų progresas ir mokinių atsakymai matomi realiu laiku — galima reaguoti dar pamokos metu.",
+    detail: "Komandų progresas ir mokinių atsakymai matomi realiu laiku, todėl galima reaguoti dar pamokos metu.",
   },
 ] as const
 
@@ -46,7 +46,7 @@ export function TeacherValueSection() {
           principai.
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
-          Kuo įrankis naudingas mokytojo darbe — pristatome paprastai ir aiškiai.
+          Kuo įrankis naudingas mokytojo darbe, trumpai ir aiškiai.
         </p>
       </div>
 

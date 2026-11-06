@@ -28,7 +28,7 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
 
   if (gameError || !game) {
     return NextResponse.json(
-      { error: "Žaidimas nerastas arba neturite teisių" },
+      { error: "Veikla nerasta arba neturite teisių" },
       { status: 404 }
     )
   }
@@ -95,7 +95,7 @@ export async function GET(_request: Request, props: { params: Promise<{ gameId: 
 
   if (gameError || !game) {
     return NextResponse.json(
-      { error: "Žaidimas nerastas arba neturite teisių" },
+      { error: "Veikla nerasta arba neturite teisių" },
       { status: 404 }
     )
   }

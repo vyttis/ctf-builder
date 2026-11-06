@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       .single()
 
     if (!game) {
-      return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
+      return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {

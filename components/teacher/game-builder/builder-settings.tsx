@@ -109,9 +109,9 @@ export function BuilderSettings({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Žaidimo nustatymai</SheetTitle>
+          <SheetTitle>Veiklos nustatymai</SheetTitle>
           <SheetDescription>
-            Pakeiskite pavadinimą, aprašymą ar žaidimo nustatymus
+            Pakeiskite pavadinimą, aprašymą ar veiklos nustatymus
           </SheetDescription>
         </SheetHeader>
 
@@ -179,7 +179,7 @@ export function BuilderSettings({
                   Rezultatų lentelė
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Žaidėjai matys kitų komandų rezultatus
+                  Dalyviai matys kitų komandų rezultatus
                 </p>
               </div>
               <Switch

@@ -2,7 +2,7 @@
  * Lesson plan prompt — pedagogiškai pagrįstas, pritaikytas Lietuvos BUP.
  *
  * Šis prompt'as generuoja struktūruotus pamokos planus mokytojams.
- * Tai NE žaidimo užduočių sąrašas — tai metodinis pamokos planas.
+ * Tai NE veiklos užduočių sąrašas, o metodinis pamokos planas.
  */
 
 import { getSubjectLabel } from "@/lib/curriculum/subjects"
@@ -89,7 +89,7 @@ export function buildLessonPlanSystemPrompt(): string {
 
 # TAVO VAIDMUO
 
-- Tu kuri PAMOKOS PLANĄ — mokytojo planavimo dokumentą, ne žaidimo užduočių sąrašą.
+- Tu kuri PAMOKOS PLANĄ — mokytojo planavimo dokumentą, ne veiklos užduočių sąrašą.
 - Planas turi būti toks, kad jį būtų galima rodyti Švietimo ministerijos inspektoriui ar metodininkui ir gauti aukštą įvertinimą.
 - Kiekviena veikla turi turėti aiškų edukacinį tikslą, pedagogiškai pagrįstą struktūrą ir pedagoginį vertingumą.
 

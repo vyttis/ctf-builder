@@ -57,7 +57,7 @@ export function AccessSection() {
             </h2>
             <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl leading-relaxed text-pretty">
               Pradinis kelias trumpas: partnerystė, praktiniai mokymai ir asmeninės
-              prieigos suteikimas. Visa kita — savarankiškas darbas pamokose.
+              prieigos suteikimas. Toliau dirbate savarankiškai.
             </p>
           </div>
 
@@ -113,7 +113,7 @@ export function AccessSection() {
                 <span className="font-display italic text-primary">partnerystę</span>?
               </h3>
               <p className="text-sm text-white/75 leading-relaxed mb-7 max-w-xs">
-                Parašykite STEAM metodiniam centrui — pasikalbėsime apie jūsų mokyklos
+                Parašykite STEAM metodiniam centrui. Pasikalbėsime apie jūsų mokyklos
                 poreikius ir tolesnius žingsnius.
               </p>
 

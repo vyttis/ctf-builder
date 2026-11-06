@@ -101,7 +101,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
                 DI Padėjėjas
               </p>
               <p className="text-xs text-muted-foreground">
-                Leiskite DI sugeneruoti žaidimo idėją
+                Leiskite DI sugeneruoti veiklos idėją
               </p>
             </div>
           </div>
@@ -207,7 +207,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
                 {!loading && ideas.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground font-medium">
-                      Pasiūlymai — paspauskite norėdami pasirinkti
+                      Pasiūlymai. Paspauskite, kad pasirinktumėte
                     </p>
                     <AnimatePresence>
                       {ideas.map((idea, index) => (
