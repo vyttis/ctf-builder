@@ -19,7 +19,7 @@ interface TeacherNavProps {
   avatarUrl?: string | null
   // The teacher's currently running game (active/paused), if any — renders
   // a prominent LIVE shortcut to the class screen
-  activeGame?: { id: string; title: string } | null
+  activeGame?: { id: string; title: string; paused?: boolean } | null
 }
 
 export function TeacherNav({
@@ -93,11 +93,8 @@ export function TeacherNav({
                   size="sm"
                   className="max-w-full min-w-0 gap-2 border-accent/40 text-accent hover:bg-accent/5 font-semibold"
                 >
-                  <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-                  </span>
-                  <span className="truncate">LIVE — {activeGame.title}</span>
+                  <LiveDot paused={activeGame.paused} />
+                  <span className="truncate">{liveLabel(activeGame)}</span>
                 </Button>
               </Link>
             )}
@@ -166,11 +163,8 @@ export function TeacherNav({
                   variant="outline"
                   className="w-full justify-start gap-3 h-11 border-accent/40 text-accent font-semibold"
                 >
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-                  </span>
-                  LIVE — {activeGame.title}
+                  <LiveDot paused={activeGame.paused} />
+                  {liveLabel(activeGame)}
                 </Button>
               </Link>
             )}
@@ -220,5 +214,22 @@ export function TeacherNav({
         </DialogContent>
       </Dialog>
     </nav>
+  )
+}
+
+/** "LIVE" only while a game runs; a paused game says so and does not pulse. */
+function liveLabel(game: { title: string; paused?: boolean }) {
+  return `${game.paused ? "Pristabdyta" : "LIVE"}: ${game.title}`
+}
+
+function LiveDot({ paused }: { paused?: boolean }) {
+  if (paused) {
+    return <span aria-hidden="true" className="inline-flex h-2 w-2 shrink-0 rounded-full bg-muted-foreground" />
+  }
+  return (
+    <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+      <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+    </span>
   )
 }

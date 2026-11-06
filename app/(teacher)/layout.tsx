@@ -23,12 +23,17 @@ export default async function TeacherLayout({
     // navigation (status changes call router.refresh())
     supabase
       .from("games")
-      .select("id, title")
+      .select("id, title, status")
       .eq("teacher_id", user.id)
       .in("status", ["active", "paused"])
       .order("updated_at", { ascending: false })
-      .limit(1),
+      .limit(5),
   ])
+
+  // A running game wins over a paused one, so the shortcut never points at a
+  // paused game while another is live
+  const liveGame =
+    liveGames?.find((g) => g.status === "active") ?? liveGames?.[0] ?? null
 
   return (
     <div className="min-h-screen bg-muted">
@@ -37,7 +42,11 @@ export default async function TeacherLayout({
         fullName={profile?.full_name || ""}
         role={profile?.role || "teacher"}
         avatarUrl={profile?.avatar_url}
-        activeGame={liveGames?.[0] ?? null}
+        activeGame={
+          liveGame
+            ? { id: liveGame.id, title: liveGame.title, paused: liveGame.status === "paused" }
+            : null
+        }
       />
       <main className="container mx-auto px-4 py-6 max-w-6xl">
         <TeacherErrorBoundary>{children}</TeacherErrorBoundary>
