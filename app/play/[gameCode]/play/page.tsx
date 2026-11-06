@@ -29,6 +29,7 @@ import {
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
 import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
 import { type GameClock, secondsLeft } from "@/lib/game/clock"
+import { remapTaskIndex } from "@/lib/game/tasks-version"
 import { pluralizeLt } from "@/lib/utils"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ReflectionForm } from "@/components/player/reflection-form"
@@ -142,6 +143,12 @@ export default function PlayPage() {
   // Bumped on every realtime status event, so a status poll that started
   // earlier can tell its answer is older and must not overwrite it.
   const statusVersionRef = useRef(0)
+  // Marker of the tasks on screen (lib/game/tasks-version.ts): when the
+  // status poll reports another one, the facilitator changed a task and the
+  // tasks reload in place.
+  const tasksVersionRef = useRef<string | null>(null)
+  const challengesRef = useRef<PlayerChallenge[]>([])
+  const reloadingTasksRef = useRef(false)
   const [endedByTeacher, setEndedByTeacher] = useState(false)
   const [loadError, setLoadError] = useState(false)
   // Distinguishes "still loading" from "loaded, but the game has no challenges"
@@ -255,6 +262,7 @@ export default function PlayPage() {
       challenges: PlayerChallenge[]
       team: { id: string; name: string } | null
       solved: { challenge_id: string; points_awarded: number }[]
+      tasks_version?: string | null
     }
     try {
       const res = await fetch(
@@ -316,6 +324,8 @@ export default function PlayPage() {
     }
 
     setChallenges(state.challenges)
+    challengesRef.current = state.challenges
+    tasksVersionRef.current = state.tasks_version ?? null
 
     const solved = new Set(state.solved.map((sub) => sub.challenge_id))
     setSolvedIds(solved)
@@ -327,6 +337,37 @@ export default function PlayPage() {
     if (state.challenges.length > 0 && firstUnsolved < 0) setGameFinished(true)
     setStateLoaded(true)
   }
+
+  // Reload the tasks after the facilitator changed one. Only the tasks are
+  // replaced: answers already counted, the timer and the team stay as they
+  // are, and the task on screen stays open (found by its id).
+  const reloadTasks = useCallback(async () => {
+    const s = getPlayerSession(gameCode)
+    if (!s || reloadingTasksRef.current) return
+    reloadingTasksRef.current = true
+    try {
+      const res = await fetch(`/api/play/state?game_code=${encodeURIComponent(gameCode)}`, {
+        headers: { "x-session-token": s.session_token },
+        cache: "no-store",
+      })
+      if (!res.ok) return
+      const state = (await res.json()) as { challenges?: PlayerChallenge[]; tasks_version?: string | null }
+      if (!Array.isArray(state.challenges)) return
+      tasksVersionRef.current = state.tasks_version ?? null
+      const prev = challengesRef.current
+      const next = state.challenges
+      if (next.length === 0 || JSON.stringify(prev) === JSON.stringify(next)) return
+      challengesRef.current = next
+      setChallenges(next)
+      setCurrentIndex((i) => remapTaskIndex(prev, next, i) ?? Math.min(i, next.length))
+      setSelectedChallengeIndex((i) => remapTaskIndex(prev, next, i))
+      toast({ title: "Vedėjas atnaujino užduotis", description: "Matote naujausią jų versiją." })
+    } catch {
+      // The next poll that still sees a new marker tries again.
+    } finally {
+      reloadingTasksRef.current = false
+    }
+  }, [gameCode, toast])
 
   // Subscribe to game setting changes (time extensions, status changes)
   useEffect(() => {
@@ -398,6 +439,7 @@ export default function PlayPage() {
           paused_ms?: number
           paused_at?: string | null
           now?: string
+          tasks_version?: string | null
         }
         if (disposed || !data.status) return
         if (data.now) skewMsRef.current = Date.parse(data.now) - Date.now()
@@ -408,6 +450,12 @@ export default function PlayPage() {
         if (data.status === "finished") {
           setEndedByTeacher(true)
           setGameFinished(true)
+        } else if (
+          data.tasks_version &&
+          tasksVersionRef.current !== null &&
+          data.tasks_version !== tasksVersionRef.current
+        ) {
+          void reloadTasks()
         }
       } catch {
         // Network hiccup or timeout: the next poll retries
@@ -428,7 +476,7 @@ export default function PlayPage() {
       clearInterval(interval)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [gameCode, gameFinished, applyClock])
+  }, [gameCode, gameFinished, applyClock, reloadTasks])
 
   function handleStart() {
     const storageKey = `ctf_start_${gameCode}`

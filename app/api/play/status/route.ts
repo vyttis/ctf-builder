@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { tasksVersion } from "@/lib/game/tasks-version"
 import { NextResponse } from "next/server"
 
 // GET /api/play/status?game_code=XXXXXX — lightweight game-status poll for
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
     const supabase = createAdminClient()
     const { data: game } = await supabase
       .from("games")
-      .select("status, settings, paused_ms, paused_at")
+      .select("status, settings, paused_ms, paused_at, challenges(updated_at)")
       .eq("game_code", gameCode)
       .maybeSingle()
 
@@ -41,6 +42,9 @@ export async function GET(request: Request) {
         paused_ms: Number(game.paused_ms ?? 0),
         paused_at: game.paused_at ?? null,
         now: new Date().toISOString(),
+        // Changes when a task is added, removed or saved: the phone then
+        // reloads the tasks. Hidden before the start, like the tasks.
+        tasks_version: game.status === "draft" ? null : tasksVersion(game.challenges),
       },
       { headers: { "Cache-Control": "no-store" } }
     )
