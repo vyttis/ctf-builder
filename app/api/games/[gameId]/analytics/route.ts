@@ -17,12 +17,12 @@ export async function GET(_request: Request, props: { params: Promise<{ gameId: 
     // Verify game access (owner or admin)
     const { data: game } = await supabase
       .from("games")
-      .select("id, teacher_id")
+      .select("id, teacher_id, title")
       .eq("id", params.gameId)
       .maybeSingle()
 
     if (!game) {
-      return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
+      return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
     }
 
     // Check if user is owner or admin
@@ -42,10 +42,12 @@ export async function GET(_request: Request, props: { params: Promise<{ gameId: 
     })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error("analytics stats error:", error.message)
+      return NextResponse.json({ error: "Nepavyko gauti statistikos." }, { status: 500 })
     }
 
-    return NextResponse.json(stats)
+    // The title names the exported results file.
+    return NextResponse.json({ ...((stats as object | null) ?? {}), game_title: game.title })
   } catch (error: unknown) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Serverio klaida" },

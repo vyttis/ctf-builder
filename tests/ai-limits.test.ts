@@ -1,0 +1,592 @@
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+// A small in-memory stand-in for the Supabase query builder, enough for the
+// queries lib/ai/usage.ts makes. Each query runs when it is awaited, so
+// concurrent requests interleave the way they do against the real API.
+type Row = Record<string, unknown>
+
+class FakeDb {
+  tables: Record<string, Row[]> = {}
+  failing = new Set<string>()
+  private ids: Record<string, number> = {}
+  rows(table: string): Row[] {
+    this.tables[table] ??= []
+    return this.tables[table]
+  }
+  nextId(table: string): number {
+    this.ids[table] = (this.ids[table] ?? 0) + 1
+    return this.ids[table]
+  }
+  from(table: string) {
+    return new FakeQuery(this, table)
+  }
+  /** reserve_ai_action, same rule as the SQL function (the fake runs one call at a time). */
+  rpc(name: string, args: Record<string, unknown>) {
+    return Promise.resolve().then(() => {
+      if (name !== "reserve_ai_action") return { data: null, error: { code: "PGRST202", message: "unknown function" } }
+      const rows = this.rows("ai_usage")
+      const now = new Date()
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString()
+      const inFlightSince = new Date(now.getTime() - Number(args.p_in_flight_seconds) * 1000).toISOString()
+      const used = rows.filter(
+        (r) =>
+          r.user_id === args.p_user_id &&
+          r.model === "reservation" &&
+          String(r.created_at) >= monthStart &&
+          (String(r.created_at) >= inFlightSince ||
+            rows.some((c) => c.request_id === r.request_id && c.model !== "reservation")),
+      ).length
+      if (used >= Number(args.p_limit)) return { data: -1, error: null }
+      rows.push({
+        id: this.nextId("ai_usage"),
+        user_id: args.p_user_id,
+        request_id: args.p_request_id,
+        endpoint: args.p_endpoint,
+        model: "reservation",
+        cost_usd: 0,
+        created_at: now.toISOString(),
+      })
+      return { data: used, error: null }
+    })
+  }
+}
+
+class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
+  private filters: ((r: Row) => boolean)[] = []
+  private op: "select" | "insert" | "delete" | "update" = "select"
+  private payload: Row[] = []
+  private from_ = 0
+  private to_ = Infinity
+  private mode: "many" | "single" | "maybe" = "many"
+  constructor(
+    private db: FakeDb,
+    private table: string,
+  ) {}
+  select() {
+    return this
+  }
+  insert(p: Row | Row[]) {
+    this.op = "insert"
+    this.payload = Array.isArray(p) ? p : [p]
+    return this
+  }
+  delete() {
+    this.op = "delete"
+    return this
+  }
+  update(p: Row) {
+    this.op = "update"
+    this.payload = [p]
+    return this
+  }
+  gt(c: string, v: string | number) {
+    this.filters.push((r) => (r[c] as string | number) > v)
+    return this
+  }
+  lt(c: string, v: string | number) {
+    this.filters.push((r) => (r[c] as string | number) < v)
+    return this
+  }
+  eq(c: string, v: unknown) {
+    this.filters.push((r) => r[c] === v)
+    return this
+  }
+  in(c: string, vs: unknown[]) {
+    this.filters.push((r) => vs.includes(r[c]))
+    return this
+  }
+  not(c: string, _op: string, v: string) {
+    const list = v.slice(1, -1).split(",")
+    this.filters.push((r) => !list.includes(String(r[c])))
+    return this
+  }
+  gte(c: string, v: string | number) {
+    this.filters.push((r) => (r[c] as string | number) >= v)
+    return this
+  }
+  neq(c: string, v: unknown) {
+    this.filters.push((r) => r[c] !== v)
+    return this
+  }
+  lte(c: string, v: string | number) {
+    this.filters.push((r) => (r[c] as string | number) <= v)
+    return this
+  }
+  order() {
+    return this
+  }
+  range(a: number, b: number) {
+    this.from_ = a
+    this.to_ = b
+    return this
+  }
+  limit(n: number) {
+    this.to_ = n - 1
+    return this
+  }
+  single() {
+    this.mode = "single"
+    return this
+  }
+  maybeSingle() {
+    this.mode = "maybe"
+    return this
+  }
+  private run(): unknown {
+    const rows = this.db.rows(this.table)
+    if (this.op === "insert" && this.table === "admin_audit_log") {
+      // Unique index admin_audit_log_ai_budget_alert_once
+      for (const p of this.payload) {
+        if (p.action === "ai_budget.alert" && rows.some((r) => r.action === p.action && r.target_id === p.target_id)) {
+          throw Object.assign(new Error("duplicate key"), { code: "23505" })
+        }
+      }
+    }
+    if (this.op === "insert") {
+      const inserted = this.payload.map((p) => ({
+        id: this.db.nextId(this.table),
+        created_at: new Date().toISOString(),
+        cost_usd: 0,
+        ...p,
+      }))
+      rows.push(...inserted)
+      return this.mode === "many" ? inserted : inserted[0]
+    }
+    const matched = rows.filter((r) => this.filters.every((f) => f(r)))
+    if (this.op === "delete") {
+      this.db.tables[this.table] = rows.filter((r) => !matched.includes(r))
+      return null
+    }
+    if (this.op === "update") {
+      for (const r of matched) Object.assign(r, this.payload[0])
+      return matched
+    }
+    const sorted = [...matched].sort((a, b) => Number(a.id) - Number(b.id))
+    const page = sorted.slice(this.from_, this.to_ + 1)
+    return this.mode === "many" ? page : (page[0] ?? null)
+  }
+  then<A = { data: unknown; error: null }, B = never>(
+    onFulfilled?: ((v: { data: unknown; error: null }) => A | PromiseLike<A>) | null,
+    onRejected?: ((e: unknown) => B | PromiseLike<B>) | null,
+  ): PromiseLike<A | B> {
+    return Promise.resolve()
+      .then(() => {
+        if (this.db.failing.has(this.table)) return { data: null, error: { message: "unavailable", code: "XX000" } } as never
+        try {
+          return { data: this.run(), error: null as null }
+        } catch (e) {
+          return { data: null, error: { message: String(e), code: (e as { code?: string }).code ?? "XX000" } } as never
+        }
+      })
+      .then(onFulfilled, onRejected)
+  }
+}
+
+const h = vi.hoisted(() => ({
+  db: null as unknown,
+  afterQueue: [] as (() => unknown)[],
+  sendResults: [] as { ok: boolean }[],
+  sent: 0,
+}))
+
+vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => h.db }))
+vi.mock("next/server", () => ({ after: (fn: () => unknown) => h.afterQueue.push(fn) }))
+vi.mock("@/lib/access/notify", () => ({ superAdminEmails: async () => ["admin@example.com"] }))
+vi.mock("@/lib/email/templates", () => ({
+  aiBudgetEmail: (to: string[]) => ({ to, subject: "DI biudžetas", html: "", text: "" }),
+}))
+vi.mock("@/lib/email/send", () => ({
+  sendEmail: async () => {
+    h.sent += 1
+    return h.sendResults.shift() ?? { ok: true }
+  },
+}))
+
+import {
+  budgetLevel,
+  checkAiAllowance,
+  maybeSendBudgetAlert,
+  monthActionsByUser,
+  monthSpendUsd,
+  recordAiUsage,
+  sumUsd,
+  aiContext,
+  RESERVATION_MODEL,
+  usageByUser,
+} from "@/lib/ai/usage"
+
+const USER = "11111111-1111-1111-1111-111111111111"
+const OTHER = "22222222-2222-2222-2222-222222222222"
+
+function setup(): FakeDb {
+  const db = new FakeDb()
+  db.rows("platform_settings").push({
+    id: true,
+    ai_monthly_budget_usd: 50,
+    ai_user_monthly_limit: 40,
+    ai_budget_alert_ratio: 0.8,
+  })
+  db.rows("profiles").push(
+    { id: USER, role: "teacher", status: "active", full_name: "Ona Mokytoja", email: "ona@example.com", ai_monthly_limit: null },
+    { id: OTHER, role: "teacher", status: "active", full_name: "Jonas Naujas", email: "jonas@example.com", ai_monthly_limit: null },
+  )
+  h.db = db
+  h.afterQueue.length = 0
+  h.sendResults.length = 0
+  h.sent = 0
+  return db
+}
+
+/** One finished DI action: its reservation and one model call. */
+function addActions(db: FakeDb, n: number, extra: Row = {}) {
+  for (let i = 0; i < n; i++) {
+    const requestId = `req-${db.rows("ai_usage").length}`
+    const at = (extra.created_at as string) ?? new Date().toISOString()
+    for (const model of ["reservation", "claude-sonnet-4-6"]) {
+      db.rows("ai_usage").push({
+        id: db.nextId("ai_usage"),
+        user_id: USER,
+        request_id: requestId,
+        endpoint: "di/generate",
+        model,
+        cost_usd: model === "reservation" ? 0 : 0.01,
+        created_at: at,
+        ...extra,
+      })
+    }
+  }
+}
+
+/** A model call without a reservation (super admin, or the check failed open). */
+function addCall(db: FakeDb, extra: Row = {}) {
+  db.rows("ai_usage").push({
+    id: db.nextId("ai_usage"),
+    user_id: USER,
+    request_id: `req-${db.rows("ai_usage").length}`,
+    endpoint: "di/generate",
+    model: "claude-sonnet-4-6",
+    cost_usd: 0.01,
+    created_at: new Date().toISOString(),
+    ...extra,
+  })
+}
+
+async function flushAfter() {
+  while (h.afterQueue.length > 0) await h.afterQueue.shift()!()
+}
+
+beforeEach(async () => {
+  // The spend cache lives in the module; start every test from a fresh read.
+  await monthSpendUsd(setup() as never, new Date(), true)
+})
+
+describe("budgetLevel", () => {
+  const settings = { ai_monthly_budget_usd: 50, ai_user_monthly_limit: 40, ai_budget_alert_ratio: 0.8 }
+  it("names the threshold that was crossed", () => {
+    expect(budgetLevel(39.99, settings)).toBeNull()
+    expect(budgetLevel(40, settings)).toBe("alert")
+    expect(budgetLevel(50, settings)).toBe("100")
+    expect(budgetLevel(10, { ...settings, ai_monthly_budget_usd: 0 })).toBeNull()
+  })
+})
+
+describe("personal monthly limit", () => {
+  it("counts every action of the month, past the first page of rows", async () => {
+    const db = setup()
+    addActions(db, 1200)
+    expect(await monthActionsByUser(db as never, USER)).toBe(1200)
+  })
+
+  it("does not count next month's actions in the requested month", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addActions(db, 2, { created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addActions(db, 3, { created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    expect(await monthActionsByUser(db as never, USER, lastDay)).toBe(2)
+  })
+
+  it("keeps an action in the month it was reserved in", async () => {
+    const db = setup()
+    const now = new Date()
+    const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) - 1000).toISOString()
+    db.rows("ai_usage").push(
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "late", endpoint: "di/generate", model: "reservation", cost_usd: 0, created_at: lastMonth },
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "late", endpoint: "di/generate", model: "claude-sonnet-4-6", cost_usd: 0.01, created_at: now.toISOString() },
+    )
+    expect(await monthActionsByUser(db as never, USER, now)).toBe(0)
+  })
+
+  it("stops counting a reservation whose request never finished", async () => {
+    const db = setup()
+    const now = new Date("2026-11-15T12:00:00Z")
+    const old = new Date("2026-11-15T11:40:00Z")
+    db.rows("ai_usage").push(
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "killed", endpoint: "di/generate", model: "reservation", cost_usd: 0, created_at: old.toISOString() },
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "running", endpoint: "di/generate", model: "reservation", cost_usd: 0, created_at: now.toISOString() },
+    )
+    expect(await monthActionsByUser(db as never, USER, now)).toBe(1)
+  })
+
+  it("lets only one of two simultaneous requests take the last slot", async () => {
+    const db = setup()
+    addActions(db, 39)
+    const [a, b] = await Promise.all([checkAiAllowance(USER, "di/generate"), checkAiAllowance(USER, "di/generate")])
+    expect([a.ok, b.ok].sort()).toEqual([false, true])
+    const denied = (a.ok ? b : a) as Extract<typeof a, { ok: false }>
+    expect(denied.code).toBe("ai_user_limit")
+    // The denied request gave its slot back; the allowed one holds it.
+    expect(db.rows("ai_usage").filter((r) => r.model === RESERVATION_MODEL)).toHaveLength(40)
+    expect(await monthActionsByUser(db as never, USER)).toBe(40)
+  })
+
+  it("gives the slot back when the action made no model call", async () => {
+    const db = setup()
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    expect(allowance.ok).toBe(true)
+    await flushAfter()
+    expect(await monthActionsByUser(db as never, USER)).toBe(0)
+  })
+
+  it("keeps the slot once the model was called", async () => {
+    const db = setup()
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    if (!allowance.ok) throw new Error("expected allowance")
+    await aiContext.run(allowance.ctx, () => recordAiUsage("claude-sonnet-4-6", { input_tokens: 1000, output_tokens: 500 }))
+    await flushAfter()
+    expect(await monthActionsByUser(db as never, USER)).toBe(1)
+    expect(db.rows("ai_usage").filter((r) => r.model === RESERVATION_MODEL)).toHaveLength(1)
+  })
+
+  it("counts a standalone task check like any other action", async () => {
+    const db = setup()
+    addActions(db, 40)
+    const allowance = await checkAiAllowance(USER, "di/verify")
+    expect(allowance.ok).toBe(false)
+  })
+
+  it("fails open when the profile cannot be read", async () => {
+    const db = setup()
+    db.rows("platform_settings")[0].ai_user_monthly_limit = 1
+    addActions(db, 5)
+    db.failing.add("profiles")
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    expect(allowance.ok).toBe(true)
+  })
+
+  it("fails open instead of applying defaults when settings cannot be read", async () => {
+    const db = setup()
+    // Configured above the built-in default of 40.
+    db.rows("platform_settings")[0].ai_user_monthly_limit = 100
+    addActions(db, 45)
+    db.failing.add("platform_settings")
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    expect(allowance.ok).toBe(true)
+  })
+})
+
+describe("budget alerts", () => {
+  it("retries the email when it did not go out, then sends it once", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+
+    h.sendResults.push({ ok: false })
+    await maybeSendBudgetAlert(db as never)
+    expect(db.rows("admin_audit_log")).toHaveLength(0)
+
+    h.sendResults.push({ ok: true })
+    await maybeSendBudgetAlert(db as never)
+    await maybeSendBudgetAlert(db as never)
+    const claims = db.rows("admin_audit_log")
+    expect(claims).toHaveLength(1)
+    expect(String(claims[0].target_id)).toMatch(/:alert$/)
+  })
+
+  it("sends one email when two servers claim the same alert", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    await Promise.all([maybeSendBudgetAlert(db as never), maybeSendBudgetAlert(db as never)])
+    expect(db.rows("admin_audit_log")).toHaveLength(1)
+    expect(h.sent).toBe(1)
+  })
+
+  it("sends the alert from an allowance check when another server crossed the threshold", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 45 })
+    await monthSpendUsd(db as never, new Date(), true)
+    await checkAiAllowance(USER, "di/generate")
+    await flushAfter()
+    expect(h.sent).toBe(1)
+    expect(String(db.rows("admin_audit_log")[0]?.target_id)).toMatch(/:alert$/)
+  })
+
+  it("takes over a claim whose worker stopped before sending", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    const monthKey = new Date().toISOString().slice(0, 7)
+    db.rows("admin_audit_log").push({
+      id: db.nextId("admin_audit_log"),
+      action: "ai_budget.alert",
+      target_id: `${monthKey}:alert`,
+      details: {},
+      created_at: new Date(Date.now() - 20 * 60_000).toISOString(),
+    })
+    await maybeSendBudgetAlert(db as never)
+    expect(h.sent).toBe(1)
+    const claims = db.rows("admin_audit_log")
+    expect(claims).toHaveLength(1)
+    expect((claims[0].details as { delivered?: boolean }).delivered).toBe(true)
+  })
+
+  it("leaves a claim that another worker is sending right now", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    const monthKey = new Date().toISOString().slice(0, 7)
+    db.rows("admin_audit_log").push({
+      id: db.nextId("admin_audit_log"),
+      action: "ai_budget.alert",
+      target_id: `${monthKey}:alert`,
+      details: {},
+      created_at: new Date().toISOString(),
+    })
+    await maybeSendBudgetAlert(db as never)
+    expect(h.sent).toBe(0)
+  })
+
+  it("marks a sent alert delivered even when the first write fails", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    let failures = 1
+    const realFrom = db.from.bind(db)
+    vi.spyOn(db, "from").mockImplementation((table: string) => {
+      const query = realFrom(table)
+      const realUpdate = query.update.bind(query)
+      query.update = (payload: Row) => {
+        const q = realUpdate(payload)
+        if (failures-- > 0) {
+          q.then = ((onFulfilled, onRejected) =>
+            Promise.resolve({ data: null, error: { code: "XX000", message: "unavailable" } }).then(
+              onFulfilled as never,
+              onRejected,
+            )) as typeof q.then
+        }
+        return q
+      }
+      return query
+    })
+    await maybeSendBudgetAlert(db as never)
+    expect(h.sent).toBe(1)
+    expect((db.rows("admin_audit_log")[0].details as { delivered?: boolean }).delivered).toBe(true)
+  })
+
+  it("does not read the database below the threshold", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 1 })
+    await monthSpendUsd(db as never, new Date(), true)
+    const spy = vi.spyOn(db, "from")
+    await maybeSendBudgetAlert(db as never)
+    expect(spy.mock.calls.map((c) => c[0])).not.toContain("ai_usage")
+    expect(spy.mock.calls.map((c) => c[0])).not.toContain("admin_audit_log")
+  })
+})
+
+describe("spend total", () => {
+  it("adds many small costs up to the exact budget", () => {
+    expect(sumUsd(Array.from({ length: 5000 }, () => "0.01000"))).toBe(50)
+    expect(sumUsd([0.1, 0.2])).toBe(0.3)
+  })
+})
+
+describe("spend cache", () => {
+  it("counts only the requested month, also when the next one has begun", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addCall(db, { cost_usd: 2, created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addCall(db, { cost_usd: 5, created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    expect(await monthSpendUsd(db as never, lastDay, true)).toBeCloseTo(2, 10)
+  })
+
+  it("does not lose a cost recorded while a spend scan was running", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 1 })
+    await monthSpendUsd(db as never, new Date(), true)
+
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const realFrom = db.from.bind(db)
+    vi.spyOn(db, "from").mockImplementationOnce((table: string) => {
+      const query = realFrom(table)
+      const deliver = query.then.bind(query)
+      // The rows are read now; the answer arrives only after the gate opens.
+      query.then = ((onFulfilled, onRejected) =>
+        deliver((v) => gate.then(() => v)).then(onFulfilled as never, onRejected)) as typeof query.then
+      return query
+    })
+    const scan = monthSpendUsd(db as never, new Date(), true)
+
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    if (!allowance.ok) throw new Error("expected allowance")
+    await aiContext.run(allowance.ctx, () => recordAiUsage("claude-sonnet-4-6", { input_tokens: 1000, output_tokens: 500 }))
+    release()
+    await scan
+
+    const total = db.rows("ai_usage").reduce((sum, r) => sum + Number(r.cost_usd), 0)
+    expect(total).toBeGreaterThan(1)
+    expect(await monthSpendUsd(db as never)).toBeCloseTo(total, 10)
+  })
+})
+
+describe("usage per person", () => {
+  it("lists every active facilitator, past the first page of profiles", async () => {
+    const db = setup()
+    for (let i = 0; i < 1100; i++) {
+      db.rows("profiles").push({
+        id: `33333333-0000-0000-0000-${String(i).padStart(12, "0")}`,
+        role: "teacher",
+        status: "active",
+        full_name: `Vedėjas ${i}`,
+        email: null,
+        ai_monthly_limit: null,
+      })
+    }
+    const users = await usageByUser(db as never)
+    expect(users).toHaveLength(1102)
+  })
+
+  it("counts only the requested month, also when the next one has begun", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addCall(db, { cost_usd: 2, created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addCall(db, { cost_usd: 5, created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    const users = await usageByUser(db as never, lastDay)
+    expect(users.find((u) => u.userId === USER)).toMatchObject({ calls: 1, costUsd: 2 })
+  })
+
+  it("lists active facilitators who have not used DI yet", async () => {
+    const db = setup()
+    addActions(db, 2)
+    addCall(db)
+    const users = await usageByUser(db as never)
+    expect(users.map((u) => u.userId)).toEqual([USER, OTHER])
+    expect(users[0]).toMatchObject({ actions: 3, calls: 3 })
+    expect(users[1]).toMatchObject({ actions: 0, calls: 0, costUsd: 0 })
+  })
+
+  it("leaves an action that ran across the month boundary in the earlier month", async () => {
+    const db = setup()
+    const now = new Date()
+    const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) - 1000).toISOString()
+    db.rows("ai_usage").push(
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "late", endpoint: "di/generate", model: "reservation", cost_usd: 0, created_at: lastMonth },
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "late", endpoint: "di/generate", model: "claude-sonnet-4-6", cost_usd: 0.01, created_at: now.toISOString() },
+    )
+    const users = await usageByUser(db as never, now)
+    expect(users.find((u) => u.userId === USER)).toMatchObject({ actions: 0, calls: 1 })
+  })
+})

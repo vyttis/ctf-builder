@@ -45,7 +45,7 @@ internetinių šriftų ir SVG.
 | Naujas prašymas | Super administratoriams | Platforma |
 | Paskyra patvirtinta (jau buvo paskyra) | Mokytojui | Platforma |
 | Prašymas atmestas | Mokytojui | Platforma |
-| DI biudžetas 80 % ir 100 % | Super administratoriams | Platforma |
+| DI biudžetas 80 % ir 100 % (kiekvienas kartą per mėnesį; jei vienas kvietimas peržengia abi ribas, siunčiamas tik 100 %) | Super administratoriams | Platforma |
 
 Siuntimas: Resend, domenas `kusteam.app` (ES regionas), siuntėjas
 `noreply@kusteam.app`, atsakymai į `steam@ku.lt`. Platformos laiškai

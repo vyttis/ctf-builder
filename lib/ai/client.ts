@@ -1,12 +1,28 @@
 import Anthropic from "@anthropic-ai/sdk"
+import { recordAiUsage } from "@/lib/ai/usage"
 
 let _client: Anthropic | null = null
 
+/**
+ * The shared client. messages.create is wrapped so every call is recorded
+ * with its cost for the request that made it (lib/ai/usage.ts); routes do
+ * not need to remember to log.
+ */
 export function getAnthropicClient(): Anthropic {
   if (_client) return _client
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY missing")
-  _client = new Anthropic({ apiKey, maxRetries: 2 })
+  const client = new Anthropic({ apiKey, maxRetries: 2 })
+  const create = client.messages.create.bind(client.messages)
+  client.messages.create = (async (params: Anthropic.Messages.MessageCreateParams, options?: Anthropic.RequestOptions) => {
+    const result = await create(params as Anthropic.Messages.MessageCreateParamsNonStreaming, options)
+    if (!params.stream) {
+      const message = result as Anthropic.Messages.Message
+      await recordAiUsage(message.model || params.model, message.usage)
+    }
+    return result
+  }) as unknown as typeof client.messages.create
+  _client = client
   return _client
 }
 

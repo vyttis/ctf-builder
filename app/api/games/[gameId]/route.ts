@@ -200,6 +200,10 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
         return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
       }
       if (error.code === "42501") return NextResponse.json({ error: INACTIVE_ACCOUNT }, { status: 403 })
+      // The last task was removed while the start was checked.
+      if (error.code === "KS427") {
+        return NextResponse.json({ error: "Veikla turi turėti bent 1 užduotį" }, { status: 400 })
+      }
       // A task without an answer was added while the start was checked.
       if (error.code === "KS428") {
         return NextResponse.json(
