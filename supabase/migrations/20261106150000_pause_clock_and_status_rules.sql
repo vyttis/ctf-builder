@@ -13,10 +13,11 @@
 -- creates activities as drafts only; the activity only moves forward
 -- (draft -> active <-> paused -> finished), so a stale tab cannot reopen a
 -- finished activity; leaving a pause adds its length to paused_ms; the
--- first start sets starts_at; an activity with a task without an answer
--- does not start, and such a task cannot be added while it runs
--- (challenges_live_rules); values for paused_at, paused_ms or resumed_at
--- sent by a client are ignored.
+-- first start sets starts_at; an activity without tasks, or with a task
+-- without an answer, does not start; while it runs, such a task cannot be
+-- added and no task can be removed or moved away (challenges_live_rules),
+-- and its time limit changes only by extension; values for paused_at,
+-- paused_ms or resumed_at sent by a client are ignored.
 --
 -- set_game_status() changes the status under a row lock for the owner.
 -- extend_game_time() adds minutes in one statement, so two devices adding 5
@@ -369,11 +370,12 @@ BEGIN
   SET settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{time_limit_minutes}', to_jsonb(v_limit + p_minutes))
   WHERE id = p_game_id
   RETURNING * INTO g;
-  PERFORM set_config('kusteam.extend_time', 'off', true);
+  -- Checked before the PERFORM below, which sets FOUND itself.
   IF NOT FOUND THEN
     -- Row security filtered the change out: never report it as a success.
     RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
   END IF;
+  PERFORM set_config('kusteam.extend_time', 'off', true);
 
   RETURN g;
 END;
