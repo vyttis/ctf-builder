@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AiQuotaNote } from "@/components/teacher/ai-quota-note"
 import { AiSuggestion } from "@/lib/ai/types"
 import { Challenge } from "@/types/game"
 import { Button } from "@/components/ui/button"
@@ -180,6 +181,7 @@ export function SuggestionsPanel({
             </>
           )}
         </Button>
+        <AiQuotaNote className="text-center" refreshKey={loading} />
       </div>
 
       {/* Error */}

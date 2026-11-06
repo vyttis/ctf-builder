@@ -68,7 +68,8 @@ be `_` ir aprašymo). Po 1 žingsnio galutinis sąrašas:
 for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
          00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
          00021 00022 00023 00024 00025 00026 \
-         20261106120000 20261106130000 20261106140000; do
+         20261106120000 20261106130000 20261106140000 20261106145000 \
+         20261106150000; do
   supabase migration repair --status applied "$v"
 done
 ```
@@ -179,6 +180,83 @@ select
 ```
 
 Tikimasi: `role_checks_status` `true`, `profile_policy` 1, `admin_policies` 4.
+
+Pritaikyta produkcijoje 2026-11-06 apie 13:57 (SQL Editor, visas failas). Patikra po taikymo: `true`, 1, 4; neaktyvių paskyrų 0.
+
+## 2026-11-06: DI rezervacijos ir biudžeto įspėjimų užraktas
+
+Failas `supabase/migrations/20261106145000_ai_reservations_and_alert_claims.sql`,
+grąžinimas `supabase/rollback/20261106145000_ai_reservations_and_alert_claims.sql`.
+`reserve_ai_action()` suskaičiuoja mėnesio veiksmus ir įrašo rezervaciją
+vienu kvietimu, laikydama asmens užraktą (`pg_advisory_xact_lock`), todėl
+paskutinės laisvos vietos negali užimti dvi užklausos. Mėnuo (UTC) ir
+vykdomų veiksmų langas skaičiuojami nuo to paties laiko, kurį gauna
+rezervacijos eilutė. Unikalus indeksas
+leidžia vieną biudžeto įspėjimą per mėnesį ir lygį. Indeksas `ai_usage(request_id)`
+pagreitina skaičiavimą. Duomenys nekeičiami; funkciją gali kviesti tik
+`service_role`.
+
+Taikymo tvarka: pirma migracija, tada kodas (PR #50).
+
+Patikra po taikymo:
+
+```sql
+select
+  has_function_privilege('service_role', 'public.reserve_ai_action(uuid,uuid,text,integer,integer)', 'EXECUTE') as service_fn,
+  has_function_privilege('authenticated', 'public.reserve_ai_action(uuid,uuid,text,integer,integer)', 'EXECUTE') as auth_fn,
+  (select count(*) from pg_indexes where indexname in ('ai_usage_request', 'admin_audit_log_ai_budget_alert_once')) as indexes;
+```
+
+Tikimasi: `service_fn` `true`, `auth_fn` `false`, `indexes` 2.
+
+Pritaikyta produkcijoje 2026-11-06 13:54 UTC (SQL Editor, visas failas, kontrolinė suma sutapo). Patikra po taikymo: `service_fn` `true`, `auth_fn` `false`, `anon` taip pat `false`, `indexes` 2.
+
+## 2026-11-06: pauzė sustabdo laiką, būsenų taisyklės
+
+Failas `supabase/migrations/20261106150000_pause_clock_and_status_rules.sql`,
+grąžinimas `supabase/rollback/20261106150000_pause_clock_and_status_rules.sql`.
+Prideda `games.paused_at`, `games.paused_ms`, `games.resumed_at`,
+`teams.pause_offset_ms`, trigerį `games_status_rules` (prisijungę klientai
+kuria tik juodraščius, būsena keičiasi tik pirmyn bet kuriam rašytojui,
+pauzės laiką skaičiuoja tik jis, veikla su užduotimi be atsakymo nepradedama),
+trigerį `challenges_live_rules` (vykstančiai veiklai negalima pridėti
+užduoties be atsakymo, o jos užduočių negalima ištrinti ar perkelti į kitą
+veiklą; trinant visą veiklą užduotys trinamos kaip anksčiau; veikla be
+užduočių nepradedama) ir funkcijas `set_game_status()`,
+`extend_game_time()` (minutės pridedamos vienu sakiniu; veiklai be laiko
+limito atsisakoma) ir `update_game_settings()` (nustatymai kartu su pavadinimu ir aprašymu
+išsaugomi vienu sakiniu; vykstančios veiklos limitas keičiamas tik pratęsiant).
+Baigtos veiklos atnaujinti nebegalima ir tiesiai SQL. Vykstančios veiklos laiko limitą keičia tik `extend_game_time()`: kitas nustatymų įrašas (senas skirtukas, tiesioginė API užklausa) limitą palieka. Trigeris
+`teams_pause_offset` komandos pauzės poslinkį įrašo pats, kai komanda
+pradeda (ir tada, kai dar veikia senas kodas). Taikymo metu pristabdytoms
+veikloms nustatomas `paused_at = now()`: jų pauzė skaičiuojama nuo taikymo.
+Esami duomenys nekeičiami. Visos trys funkcijos vykdomos kviečiančiojo teisėmis,
+todėl RLS taisyklės (savininkas, aktyvi paskyra) galioja kaip anksčiau.
+Neaktyvi paskyra gauna klaidą `42501` (sąsajoje 403), o ne nepakeistą eilutę
+kaip sėkmę.
+
+Taikymo tvarka: pirma migracija, tada kodas. Senas kodas su nauja schema
+veikia (nauji stulpeliai turi numatytąsias reikšmes, funkcijų jis nekviečia),
+bet pauzė jame laiko nestabdo, kaip ir iki migracijos, o „Pratęsti“ limito
+nepakeičia. Todėl taikyti, kai nevyksta veiklos, ir kodą diegti iškart po to.
+
+Patikra po taikymo:
+
+```sql
+select
+  (select count(*) from information_schema.columns where table_schema = 'public'
+     and table_name = 'games' and column_name in ('paused_at', 'paused_ms', 'resumed_at')) as game_cols,
+  (select count(*) from information_schema.columns where table_schema = 'public'
+     and table_name = 'teams' and column_name = 'pause_offset_ms') as team_cols,
+  has_function_privilege('authenticated', 'public.set_game_status(uuid,text)', 'EXECUTE') as auth_status_fn,
+  has_function_privilege('anon', 'public.set_game_status(uuid,text)', 'EXECUTE') as anon_status_fn,
+  has_function_privilege('anon', 'public.extend_game_time(uuid,integer)', 'EXECUTE') as anon_extend_fn,
+  has_function_privilege('authenticated', 'public.update_game_settings(uuid,jsonb,jsonb)', 'EXECUTE') as auth_settings_fn,
+  (select count(*) from pg_trigger where tgname in ('games_status_rules', 'teams_pause_offset', 'challenges_live_rules')) as triggers,
+  (select count(*) from public.games where status = 'paused' and paused_at is null) as paused_without_clock;
+```
+
+Tikimasi: `game_cols` 3, `team_cols` 1, `auth_status_fn` `true`, `anon_status_fn` `false`, `anon_extend_fn` `false`, `auth_settings_fn` `true`, `triggers` 3, `paused_without_clock` 0.
 
 ## Konvencija toliau
 

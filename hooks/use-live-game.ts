@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { allRowsById } from "@/lib/supabase/all-pages"
 
 export interface LiveTeam {
   id: string
@@ -36,6 +37,8 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
   const [lastSubmissions, setLastSubmissions] = useState<Map<string, string>>(new Map())
   const [connectionState, setConnectionState] = useState<LiveConnectionState>("connecting")
   const [retryNonce, setRetryNonce] = useState(0)
+  // The activity whose answers the state above holds.
+  const stateGameRef = useRef<string | null>(null)
 
   const retry = useCallback(() => setRetryNonce((n) => n + 1), [])
 
@@ -56,27 +59,59 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
     const teamIds = teamsData.map((t) => t.id)
     if (teamIds.length === 0) return
 
-    const { data: subs } = await supabase
-      .from("submissions")
-      .select("id, team_id, challenge_id, is_correct, attempted_at")
-      .in("team_id", teamIds)
-      .order("attempted_at", { ascending: false })
+    // All answers, past the 1000-row page limit, read in id order so new
+    // answers arriving meanwhile cannot shift a page. A failed read throws,
+    // so the caller keeps the last good state and retries.
+    const { data: subs, error: subsError } = await allRowsById<{
+      id: string
+      team_id: string
+      challenge_id: string
+      is_correct: boolean
+      attempted_at: string
+    }>(() =>
+      supabase
+        .from("submissions")
+        .select("id, team_id, challenge_id, is_correct, attempted_at")
+        .in("team_id", teamIds)
+    )
+    if (!subs) throw subsError
 
-    if (subs) {
-      const latestMap = new Map<string, string>()
-      const solvedMap = new Map<string, Set<string>>()
-      for (const sub of subs) {
-        if (!latestMap.has(sub.team_id)) {
-          latestMap.set(sub.team_id, sub.attempted_at)
-        }
-        if (sub.is_correct) {
-          if (!solvedMap.has(sub.team_id)) solvedMap.set(sub.team_id, new Set())
-          solvedMap.get(sub.team_id)!.add(sub.challenge_id)
-        }
+    const latestMap = new Map<string, string>()
+    const solvedMap = new Map<string, Set<string>>()
+    for (const sub of subs) {
+      const latest = latestMap.get(sub.team_id)
+      if (!latest || Date.parse(sub.attempted_at) > Date.parse(latest)) {
+        latestMap.set(sub.team_id, sub.attempted_at)
       }
-      setLastSubmissions(latestMap)
-      setSolvedSets(solvedMap)
+      if (sub.is_correct) {
+        if (!solvedMap.has(sub.team_id)) solvedMap.set(sub.team_id, new Set())
+        solvedMap.get(sub.team_id)!.add(sub.challenge_id)
+      }
     }
+    // Merge with what realtime delivered meanwhile instead of replacing it:
+    // an answer can arrive after the id-ordered read has passed its place.
+    // Both only grow (a solve is never taken back), so the union and the
+    // later time are always right. State held for another activity is
+    // replaced.
+    const sameGame = stateGameRef.current === gameId
+    stateGameRef.current = gameId
+    setLastSubmissions((prev) => {
+      if (!sameGame) return latestMap
+      const next = new Map(latestMap)
+      for (const [teamId, at] of prev) {
+        const snap = next.get(teamId)
+        if (!snap || Date.parse(at) > Date.parse(snap)) next.set(teamId, at)
+      }
+      return next
+    })
+    setSolvedSets((prev) => {
+      if (!sameGame) return solvedMap
+      const next = new Map(solvedMap)
+      for (const [teamId, solved] of prev) {
+        next.set(teamId, new Set([...(next.get(teamId) ?? []), ...solved]))
+      }
+      return next
+    })
   }, [gameId])
 
   useEffect(() => {

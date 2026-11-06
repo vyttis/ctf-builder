@@ -4,6 +4,7 @@ import { GameStatus, GameSettings, Challenge, LibraryItemStatus } from "@/types/
 import { computeDetailedStats } from "@/lib/game/detailed-stats"
 import { QRDisplay } from "@/components/teacher/qr-display"
 import { GameStatusActions } from "@/components/teacher/game-status-actions"
+import { GameStatusWatcher } from "@/components/teacher/game-status-watcher"
 import { GameDetailClient } from "@/components/teacher/game-detail-client"
 import { DraftReadinessChecklist } from "@/components/teacher/draft-readiness-checklist"
 import { TeamResultsTable } from "@/components/teacher/team-results-table"
@@ -107,9 +108,11 @@ export default async function GameDetailPage(
     .limit(1)
     .maybeSingle()
 
-  // Finished games lead with results — computed server-side, no client fetch
+  // Finished games lead with results, computed server-side. If the answers
+  // cannot be read in full, the page shows without the results block rather
+  // than with partial numbers.
   const detailedStats = isFinished
-    ? await computeDetailedStats(supabase, game.id)
+    ? await computeDetailedStats(supabase, game.id).catch(() => null)
     : null
 
   const statsCards = (
@@ -289,6 +292,7 @@ export default async function GameDetailPage(
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <GameStatusWatcher gameCode={game.game_code} status={status} timeLimit={settings?.time_limit_minutes ?? null} />
           <GameStatusActions
             gameId={game.id}
             status={status}
@@ -365,6 +369,7 @@ export default async function GameDetailPage(
             <TeamResultsTable
               teamStats={detailedStats.team_stats}
               totalChallenges={challenges.length}
+              fileLabel={game.title}
             />
           )}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

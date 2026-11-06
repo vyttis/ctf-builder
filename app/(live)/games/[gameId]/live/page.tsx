@@ -18,7 +18,7 @@ export default async function LiveViewPage(
   const { data: game } = await supabase
     .from("games")
     // challenges(count) is rejected under column grants; embed ids instead
-    .select("id, title, game_code, status, settings, starts_at, challenges(id)")
+    .select("id, title, game_code, status, settings, starts_at, paused_ms, paused_at, challenges(id)")
     .eq("id", params.gameId)
     .eq("teacher_id", user!.id)
     .single()
@@ -51,6 +51,8 @@ export default async function LiveViewPage(
         status: game.status as GameStatus,
         starts_at: game.starts_at,
         time_limit_minutes: settings?.time_limit_minutes ?? null,
+        paused_ms: Number(game.paused_ms ?? 0),
+        paused_at: game.paused_at ?? null,
       }}
       challengeCount={challengeCount}
     />

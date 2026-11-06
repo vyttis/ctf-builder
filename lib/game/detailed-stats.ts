@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { allRowsById } from "@/lib/supabase/all-pages"
 
 // Detailed post-game statistics shared by the analytics API route, the
 // finished game detail page, and the printable report (server components
@@ -58,13 +59,28 @@ export async function computeDetailedStats(
   }
 
   const challengeIds = challenges.map((c) => c.id)
-  const { data: submissions } = await supabase
-    .from("submissions")
-    .select("challenge_id, is_correct, points_awarded, team_id, hints_used, attempted_at")
-    .in("challenge_id", challengeIds)
-    .order("attempted_at", { ascending: true })
+  // All answers, past the 1000-row page limit. A failed read throws: the
+  // report must not show part of the answers as if they were all.
+  const { data: submissions, error: submissionsError } = await allRowsById<{
+    id: string
+    challenge_id: string
+    is_correct: boolean
+    points_awarded: number
+    team_id: string
+    hints_used: number
+    attempted_at: string
+  }>(() =>
+    supabase
+      .from("submissions")
+      .select("id, challenge_id, is_correct, points_awarded, team_id, hints_used, attempted_at")
+      .in("challenge_id", challengeIds)
+  )
+  if (!submissions) throw submissionsError
 
-  const subs = submissions || []
+  // In the order they were given (ties by id), which the per-team counts below rely on.
+  const subs = [...submissions].sort(
+    (a, b) => Date.parse(a.attempted_at) - Date.parse(b.attempted_at) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  )
   const teamCount = teams?.length || 0
 
   const challengeStats: DetailedChallengeStat[] = challenges.map((challenge) => {
