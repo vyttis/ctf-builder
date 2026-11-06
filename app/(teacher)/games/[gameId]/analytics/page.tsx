@@ -36,8 +36,11 @@ export default function GameAnalyticsPage() {
   const [reflectionsLoading, setReflectionsLoading] = useState(false)
   const [reflectionsError, setReflectionsError] = useState("")
 
+  const [reloadKey, setReloadKey] = useState(0)
+
   useEffect(() => {
     async function fetchStats() {
+      setError("")
       try {
         const [basicRes, detailedRes] = await Promise.all([
           fetch(`/api/games/${gameId}/analytics`),
@@ -58,7 +61,7 @@ export default function GameAnalyticsPage() {
       }
     }
     fetchStats()
-  }, [gameId])
+  }, [gameId, reloadKey])
 
   async function loadReflections() {
     if (reflections !== null) return // Already loaded
@@ -91,11 +94,23 @@ export default function GameAnalyticsPage() {
     return (
       <div className="text-center py-20">
         <p className="text-accent text-sm">{error}</p>
-        <Link href={`/games/${gameId}`}>
-          <Button variant="outline" size="sm" className="mt-4">
-            Grįžti
+        <div className="mt-4 flex justify-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => {
+              setLoading(true)
+              setReloadKey((k) => k + 1)
+            }}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            Bandyti dar kartą
           </Button>
-        </Link>
+          <Link href={`/games/${gameId}`}>
+            <Button variant="outline" size="sm">
+              Grįžti
+            </Button>
+          </Link>
+        </div>
       </div>
     )
   }
@@ -109,7 +124,7 @@ export default function GameAnalyticsPage() {
           className="gap-2 text-muted-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Žaidimo detalės
+          Veiklos puslapis
         </Button>
       </Link>
 
@@ -117,12 +132,15 @@ export default function GameAnalyticsPage() {
         <div>
           <h1 className="text-2xl font-bold text-steam-dark flex items-center gap-2">
             <BarChart3 className="h-6 w-6 text-primary" />
-            Žaidimo analitika
+            Veiklos analitika
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Detalūs žaidimo statistikos duomenys
+            Komandų rezultatai, užduočių statistika ir refleksijos
           </p>
         </div>
+        <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+          Atnaujinti
+        </Button>
       </div>
 
       <Tabs defaultValue="stats" onValueChange={(v) => {
@@ -170,6 +188,9 @@ export default function GameAnalyticsPage() {
           {reflectionsError && (
             <div className="text-center py-12">
               <p className="text-accent text-sm">{reflectionsError}</p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => void loadReflections()}>
+                Bandyti dar kartą
+              </Button>
             </div>
           )}
           {reflections !== null && !reflectionsLoading && !reflectionsError && (

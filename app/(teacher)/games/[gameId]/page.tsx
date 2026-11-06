@@ -365,6 +365,7 @@ export default async function GameDetailPage(
             <TeamResultsTable
               teamStats={detailedStats.team_stats}
               totalChallenges={challenges.length}
+              fileLabel={game.title}
             />
           )}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { allPages } from "@/lib/supabase/all-pages"
 
 export interface LiveTeam {
   id: string
@@ -56,11 +57,21 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
     const teamIds = teamsData.map((t) => t.id)
     if (teamIds.length === 0) return
 
-    const { data: subs } = await supabase
-      .from("submissions")
-      .select("id, team_id, challenge_id, is_correct, attempted_at")
-      .in("team_id", teamIds)
-      .order("attempted_at", { ascending: false })
+    // All answers, past the 1000-row page limit (allPages).
+    const { data: subs } = await allPages<{
+      id: string
+      team_id: string
+      challenge_id: string
+      is_correct: boolean
+      attempted_at: string
+    }>(() =>
+      supabase
+        .from("submissions")
+        .select("id, team_id, challenge_id, is_correct, attempted_at")
+        .in("team_id", teamIds)
+        .order("attempted_at", { ascending: false })
+        .order("id", { ascending: true })
+    )
 
     if (subs) {
       const latestMap = new Map<string, string>()

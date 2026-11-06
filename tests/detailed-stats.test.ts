@@ -6,13 +6,18 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 // thenable that resolves to { data } for that table regardless of filters.
 function mockSupabase(tables: Record<string, unknown[]>): SupabaseClient {
   function builder(table: string) {
-    const result = { data: tables[table] ?? [], error: null }
+    let rows = tables[table] ?? []
     const chain: Record<string, unknown> = {}
     for (const method of ["select", "eq", "in", "order"]) {
       chain[method] = () => chain
     }
-    chain.then = (resolve: (value: typeof result) => unknown) =>
-      Promise.resolve(result).then(resolve)
+    // Like PostgREST: a range returns only that slice.
+    chain.range = (from: number, to: number) => {
+      rows = rows.slice(from, to + 1)
+      return chain
+    }
+    chain.then = (resolve: (value: { data: unknown[]; error: null }) => unknown) =>
+      Promise.resolve({ data: rows, error: null }).then(resolve)
     return chain
   }
   return { from: builder } as unknown as SupabaseClient
@@ -121,5 +126,20 @@ describe("computeDetailedStats", () => {
     })
     const stats = await computeDetailedStats(supabase, "game-1")
     expect(stats.challenge_stats[0].auto_difficulty).toBe("hard")
+  })
+
+  it("counts every answer when a session has more than 1000", async () => {
+    const many = Array.from({ length: 2500 }, (_, i) => ({
+      challenge_id: CHALLENGE_A,
+      is_correct: false,
+      points_awarded: 0,
+      team_id: TEAM_2,
+      hints_used: 0,
+      attempted_at: new Date(Date.UTC(2026, 6, 7, 9, 0, i)).toISOString(),
+    }))
+    const supabase = mockSupabase({ challenges, teams, submissions: many })
+    const stats = await computeDetailedStats(supabase, "game-1")
+    const a = stats.challenge_stats.find((c) => c.challenge_id === CHALLENGE_A)!
+    expect(a.total_attempts).toBe(2500)
   })
 })

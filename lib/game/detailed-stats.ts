@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { allPages } from "@/lib/supabase/all-pages"
 
 // Detailed post-game statistics shared by the analytics API route, the
 // finished game detail page, and the printable report (server components
@@ -58,11 +59,23 @@ export async function computeDetailedStats(
   }
 
   const challengeIds = challenges.map((c) => c.id)
-  const { data: submissions } = await supabase
-    .from("submissions")
-    .select("challenge_id, is_correct, points_awarded, team_id, hints_used, attempted_at")
-    .in("challenge_id", challengeIds)
-    .order("attempted_at", { ascending: true })
+  // All answers, past the 1000-row page limit (allPages).
+  const { data: submissions } = await allPages<{
+    id: string
+    challenge_id: string
+    is_correct: boolean
+    points_awarded: number
+    team_id: string
+    hints_used: number
+    attempted_at: string
+  }>(() =>
+    supabase
+      .from("submissions")
+      .select("id, challenge_id, is_correct, points_awarded, team_id, hints_used, attempted_at")
+      .in("challenge_id", challengeIds)
+      .order("attempted_at", { ascending: true })
+      .order("id", { ascending: true })
+  )
 
   const subs = submissions || []
   const teamCount = teams?.length || 0
