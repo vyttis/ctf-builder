@@ -97,6 +97,12 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
     )
   }
 
+  // Moving a task while the activity runs shifts teams in linear mode; the
+  // order changes only through the reorder route, which refuses it too.
+  if (parsed.data.order_index !== undefined && isLiveStatus(owned.gameStatus)) {
+    return NextResponse.json({ error: LIVE_EDIT_BLOCKED.reorder, code: "live" }, { status: 409 })
+  }
+
   const { correct_answer, ...rest } = parsed.data
   const updateData: ChallengeUpdatePayload = { ...rest }
 

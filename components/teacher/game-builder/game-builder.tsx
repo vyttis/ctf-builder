@@ -553,9 +553,9 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
         >
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-highlight-ink" aria-hidden="true" />
           <p>
-            <span className="font-semibold">Veikla vyksta.</span> Užduočių pakeitimus dalyviai mato iš karto.
-            Užduočių ištrinti, kopijuoti ir pertvarkyti negalima, kol veikla nebaigta. Pakeistas atsakymas
-            galioja tik naujiems bandymams.
+            <span className="font-semibold">Veikla vyksta.</span> Pakeistą atsakymą ir taškus sistema taiko
+            iš karto naujiems bandymams, o pakeistą užduoties tekstą dalyviai pamatys tik atnaujinę puslapį.
+            Užduočių ištrinti, kopijuoti ir pertvarkyti negalima, kol veikla nebaigta.
           </p>
         </div>
       )}
