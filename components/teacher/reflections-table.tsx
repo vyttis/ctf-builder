@@ -103,7 +103,7 @@ export function ReflectionsTable({ reflections, totalTeams }: ReflectionsTablePr
         r.hardest_challenge_title || "-",
         r.improvement_text,
         r.liked_text || "-",
-        new Date(r.created_at).toLocaleString("lt-LT"),
+        new Date(r.created_at).toLocaleString("lt-LT", { timeZone: "Europe/Vilnius" }),
       ])
     )
   }

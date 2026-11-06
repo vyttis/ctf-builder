@@ -36,7 +36,9 @@ const DESCRIPTION =
   "KU STEAM AI LAB platforma, kurioje vedėjai kuria ir veda interaktyvias veiklas, o dalyviai prie jų prisijungia su kodu."
 
 export const metadata: Metadata = {
-  title: "KU STEAM CLASSROOM | Interaktyvios pamokos",
+  // Each page names itself ("Mano veiklos | KU STEAM pamokos"); the default
+  // stays for pages without a title of their own.
+  title: { default: "KU STEAM CLASSROOM | Interaktyvios pamokos", template: "%s | KU STEAM pamokos" },
   description: DESCRIPTION,
   icons: {
     icon: "/icon.svg",

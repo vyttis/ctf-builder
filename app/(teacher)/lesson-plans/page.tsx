@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,8 @@ import Image from "next/image"
 import { getSubjectLabel, SUBJECTS } from "@/lib/curriculum/subjects"
 import { LessonPlansFilterBar } from "@/components/teacher/lesson-plans-filter-bar"
 import { SteamTemplatesShowcase } from "@/components/teacher/steam-templates-showcase"
+
+export const metadata: Metadata = { title: "Pamokų planai" }
 
 const VALID_SUBJECT_IDS = new Set(SUBJECTS.map((s) => s.id))
 const VALID_STATUSES = new Set(["draft", "saved", "converted"])

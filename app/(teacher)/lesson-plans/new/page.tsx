@@ -1,8 +1,11 @@
+import type { Metadata } from "next"
 import { LessonPlanGenerator } from "@/components/teacher/lesson-plan-generator"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+
+export const metadata: Metadata = { title: "Naujas pamokos planas" }
 
 export default async function NewLessonPlanPage() {
   // The draft of a generated plan is kept per facilitator in this browser.

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { Challenge } from "@/types/game"
@@ -5,6 +6,8 @@ import { LessonGenerator } from "@/components/teacher/lesson-generator"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+
+export const metadata: Metadata = { title: "Pamokos eiga" }
 
 export default async function LessonGeneratorPage(
   props: {

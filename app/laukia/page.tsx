@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { SteamLogo } from "@/components/steam-logo"
 import { SignOutButton } from "@/components/auth/sign-out-button"
 
-export const metadata: Metadata = { title: "Paskyra laukia patvirtinimo | KU STEAM pamokos" }
+export const metadata: Metadata = { title: "Paskyra laukia patvirtinimo" }
 export const dynamic = "force-dynamic"
 
 // Accounts that are not active (waiting for approval or blocked) land here

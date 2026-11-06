@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import Link from "next/link"
@@ -6,6 +7,8 @@ import { PrintReportButton } from "@/components/teacher/print-report-button"
 import { computeDetailedStats } from "@/lib/game/detailed-stats"
 import { GameStats } from "@/types/game"
 import { ArrowLeft } from "lucide-react"
+
+export const metadata: Metadata = { title: "Veiklos ataskaita" }
 
 interface ReflectionRow {
   id: string

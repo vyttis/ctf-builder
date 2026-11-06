@@ -1,6 +1,9 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { LessonPlanDetail } from "@/components/teacher/lesson-plan-detail"
+
+export const metadata: Metadata = { title: "Pamokos planas" }
 
 export default async function LessonPlanDetailPage(
   props: {

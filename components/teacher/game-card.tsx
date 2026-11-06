@@ -157,7 +157,7 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
               )}
               <div className="flex-1" />
               <span className="text-xs text-muted-foreground">
-                {new Date(game.created_at).toLocaleDateString("lt-LT")}
+                {new Date(game.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}
               </span>
             </div>
           </CardContent>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { AiUsagePanel } from "@/components/admin/ai-usage-panel"
 import { ArrowLeft } from "lucide-react"
 
-export const metadata: Metadata = { title: "DI naudojimas | KU STEAM pamokos" }
+export const metadata: Metadata = { title: "DI naudojimas" }
 
 export default async function AiUsagePage() {
   const supabase = await createClient()

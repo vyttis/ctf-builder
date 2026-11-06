@@ -1,7 +1,10 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { GameStatus, GameSettings, Challenge } from "@/types/game"
 import { GameBuilder } from "@/components/teacher/game-builder/game-builder"
+
+export const metadata: Metadata = { title: "Veiklos redaktorius" }
 
 export default async function BuilderPage(
   props: {

@@ -10,6 +10,10 @@ interface ChecklistItem {
 interface DraftReadinessChecklistProps {
   challengeCount: number
   tasksNeedingAnswer: number
+  /** Tasks with no question text: participants would see only a title. */
+  tasksWithoutText?: number
+  /** DI tasks whose check doubted them and nobody reviewed yet. */
+  tasksNeedingReview?: number
   hasDescription: boolean
   hasTimeLimit: boolean
 }
@@ -19,6 +23,8 @@ interface DraftReadinessChecklistProps {
 export function DraftReadinessChecklist({
   challengeCount,
   tasksNeedingAnswer,
+  tasksWithoutText = 0,
+  tasksNeedingReview = 0,
   hasDescription,
   hasTimeLimit,
 }: DraftReadinessChecklistProps) {
@@ -39,6 +45,16 @@ export function DraftReadinessChecklist({
   ]
 
   const recommended: ChecklistItem[] = [
+    {
+      label: "Visos užduotys turi klausimą",
+      done: challengeCount > 0 && tasksWithoutText === 0,
+      hint: tasksWithoutText > 0 ? `Be klausimo: ${tasksWithoutText} užd.` : undefined,
+    },
+    {
+      label: "DI užduotys peržiūrėtos",
+      done: tasksNeedingReview === 0,
+      hint: tasksNeedingReview > 0 ? `Reikia peržiūros: ${tasksNeedingReview} užd.` : undefined,
+    },
     { label: "Pridėtas veiklos aprašymas", done: hasDescription },
     { label: "Nustatytas laiko limitas", done: hasTimeLimit },
   ]

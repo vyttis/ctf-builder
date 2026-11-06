@@ -7,7 +7,7 @@ import { AccessRequestForm } from "@/components/access/access-request-form"
 import { RequestPageShell } from "@/components/access/request-page-shell"
 
 export const metadata: Metadata = {
-  title: "Vedėjo paskyros prašymas | KU STEAM pamokos",
+  title: "Vedėjo paskyros prašymas",
   robots: { index: false, follow: false },
 }
 export const dynamic = "force-dynamic"
