@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
-import { COMPETENCIES, BLOOM_LEVELS } from "@/lib/ai/schemas"
+import { COMPETENCIES } from "@/lib/ai/schemas"
 import { z } from "zod"
-import { MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
+import { lessonPlanContentSchema } from "@/lib/lesson-plans/schema"
 
 const createSchema = z.object({
   title: z.string().min(1),
@@ -16,21 +16,7 @@ const createSchema = z.object({
   goal: z.string().default(""),
   curriculum_link: z.string().default(""),
   competencies: z.array(z.enum(COMPETENCIES)).default([]),
-  stages: z.array(z.object({
-    activity_type: z.enum(["intro", "challenge", "discussion", "reflection"]),
-    title: z.string().min(1),
-    description: z.string().min(1),
-    type: z.enum(["text", "number", "multiple_choice"]),
-    correct_answer: z.string().min(1).max(MAX_ANSWER_LENGTH, `Atsakymas gali būti iki ${MAX_ANSWER_LENGTH} ženklų`),
-    options: z.array(z.string()).nullable().default(null),
-    hints: z.array(z.string()).default([]),
-    explanation: z.string().default(""),
-    points: z.number().default(100),
-    duration_minutes: z.number().default(5),
-    difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
-    competencies: z.array(z.enum(COMPETENCIES)).default([]),
-    bloom_level: z.enum(BLOOM_LEVELS).optional(),
-  })).min(1),
+  stages: lessonPlanContentSchema.shape.stages,
   reflection_prompt: z.string().default(""),
   teacher_methodical_note: z.string().default(""),
 })

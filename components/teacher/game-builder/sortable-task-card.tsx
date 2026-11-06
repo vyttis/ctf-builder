@@ -110,6 +110,18 @@ export function SortableTaskCard({
                     Trūksta atsakymo
                   </Badge>
                 )}
+                {!challenge.needs_answer &&
+                  challenge.generated_by_di &&
+                  (challenge.verification_verdict === "uncertain" ||
+                    challenge.verification_verdict === "fail") && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] px-1.5 py-0 border-highlight/50 bg-highlight/10 text-steam-dark"
+                      title="DI patikra abejoja šia užduotimi. Atidarykite, peržiūrėkite ir išsaugokite."
+                    >
+                      Reikia peržiūros
+                    </Badge>
+                  )}
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                   {challenge.points} tšk.
                 </Badge>

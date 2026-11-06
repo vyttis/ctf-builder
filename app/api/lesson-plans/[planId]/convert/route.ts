@@ -1,116 +1,183 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { generateGameCode } from "@/lib/game/code-generator"
-import { hashAnswer, MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
+import { hashAnswer } from "@/lib/game/answer-hasher"
+import { checkAiAllowance, enterAiContext } from "@/lib/ai/usage"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
+import { getAnthropicClient } from "@/lib/ai/client"
+import { verifyWithModel } from "@/lib/ai/verify-suggestion"
+import type { VerificationResult } from "@/lib/ai/types"
+import { defaultTaskStageIndexes, reviewTask, stageToTask, type PlanStage } from "@/lib/lesson-plans/convert"
+
+const convertSchema = z
+  .object({
+    // Which plan stages become tasks; by default the "challenge" stages.
+    stage_indexes: z.array(z.number().int().min(0).max(99)).max(100).optional(),
+  })
+  .default({})
 
 /**
- * Convert a saved lesson plan into a student activity (game).
- * Creates a new game with challenges derived from the lesson plan stages.
+ * POST: a draft activity from a saved lesson plan. Only the chosen stages
+ * become scored tasks (by default the task stages, not the introduction,
+ * discussion or reflection), the activity has no time limit, and every
+ * answer the DI wrote is checked first: a doubtful one is marked for review,
+ * a wrong or unusable one is left out for the facilitator to set, which
+ * keeps the activity from starting until then.
  */
 export async function POST(request: Request, props: { params: Promise<{ planId: string }> }) {
-  const params = await props.params;
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+  const { planId } = await props.params
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
 
-    if (!user) {
-      return NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
+  if (!(await checkAiRateLimitAsync("lesson-plans-convert", user.id, 10))) {
+    return NextResponse.json({ error: "Per daug užklausų. Palaukite minutę." }, { status: 429 })
+  }
+
+  const body = await request.json().catch(() => ({}))
+  const parsed = convertSchema.safeParse(body ?? {})
+  if (!parsed.success) return NextResponse.json({ error: "Neteisingi duomenys" }, { status: 400 })
+
+  const { data: plan } = await supabase
+    .from("lesson_plans")
+    .select("id, title, topic, stages")
+    .eq("id", planId)
+    .eq("teacher_id", user.id)
+    .maybeSingle()
+  if (!plan) return NextResponse.json({ error: "Pamokos planas nerastas" }, { status: 404 })
+
+  const stages = (Array.isArray(plan.stages) ? plan.stages : []) as PlanStage[]
+  const chosen = parsed.data.stage_indexes
+    ? [...new Set(parsed.data.stage_indexes)].sort((a, b) => a - b)
+    : defaultTaskStageIndexes(stages)
+  if (chosen.some((i) => i >= stages.length)) {
+    return NextResponse.json({ error: "Plane tokio etapo nėra. Atnaujinkite puslapį." }, { status: 400 })
+  }
+  if (chosen.length === 0) {
+    return NextResponse.json(
+      {
+        error: "Pažymėkite bent vieną etapą, kuris taps užduotimi.",
+        code: "no_tasks",
+      },
+      { status: 400 }
+    )
+  }
+
+  const tasks = chosen.map((i) => stageToTask(stages[i]))
+
+  // One DI check per task that has a usable answer, in parallel, counted as
+  // one DI action. Without DI (no key, limit reached) the tasks are still
+  // created and marked for review.
+  const checkable = tasks.filter((t) => t.answer !== null)
+  let verifications: (VerificationResult | null)[] = tasks.map(() => null)
+  if (checkable.length > 0 && process.env.ANTHROPIC_API_KEY) {
+    const allowance = await checkAiAllowance(user.id, "lesson-plans/convert")
+    if (allowance.ok) {
+      enterAiContext(allowance.ctx)
+      const anthropic = getAnthropicClient()
+      verifications = await Promise.all(
+        tasks.map((t) =>
+          t.answer === null
+            ? Promise.resolve(null)
+            : verifyWithModel(anthropic, {
+                title: t.title,
+                description: t.description,
+                type: t.type,
+                points: t.points,
+                correct_answer: t.answer,
+                hints: t.hints,
+                options: t.options,
+                explanation: t.explanation ?? undefined,
+              })
+        )
+      )
     }
+  }
 
-    // Fetch lesson plan
-    const { data: plan, error: planError } = await supabase
-      .from("lesson_plans")
-      .select("*")
-      .eq("id", params.planId)
-      .eq("teacher_id", user.id)
-      .single()
+  const gameCode = generateGameCode()
+  const { data: game, error: gameError } = await supabase
+    .from("games")
+    .insert({
+      teacher_id: user.id,
+      title: (plan.title as string).slice(0, 200),
+      description: `Pagal pamokos planą. Tema: ${plan.topic}`.slice(0, 1000),
+      game_code: gameCode,
+      status: "draft",
+      settings: {
+        max_teams: 50,
+        // The plan's lesson length includes the facilitator's own parts;
+        // a limit, if any, is set in the activity settings.
+        time_limit_minutes: null,
+        show_leaderboard: true,
+        shuffle_challenges: false,
+      },
+    })
+    .select("id")
+    .single()
+  if (gameError || !game) {
+    console.error("Lesson plan convert: game insert failed", { code: gameError?.code })
+    return NextResponse.json({ error: "Nepavyko sukurti veiklos" }, { status: 500 })
+  }
 
-    if (planError || !plan) {
-      return NextResponse.json({ error: "Pamokos planas nerastas" }, { status: 404 })
-    }
-
-    // Create game
-    const gameCode = generateGameCode()
-    const { data: game, error: gameError } = await supabase
-      .from("games")
-      .insert({
-        teacher_id: user.id,
-        title: plan.title,
-        description: `Veikla mokiniams pagal pamokos planą: ${plan.topic}`,
-        game_code: gameCode,
-        status: "draft",
-        settings: {
-          max_teams: 50,
-          time_limit_minutes: plan.duration,
-          show_leaderboard: true,
-          shuffle_challenges: false,
-        },
-      })
-      .select()
-      .single()
-
-    if (gameError || !game) {
-      console.error("Game creation error:", gameError)
-      return NextResponse.json({ error: "Nepavyko sukurti veiklos" }, { status: 500 })
-    }
-
-    // Convert stages to challenges
-    const stages = (plan.stages as Array<{
-      title: string
-      description: string
-      type: string
-      correct_answer: string
-      options: string[] | null
-      hints: string[]
-      explanation: string
-      points: number
-      difficulty: string
-    }>) || []
-
-    let successCount = 0
-    for (let i = 0; i < stages.length; i++) {
-      const stage = stages[i]
-      // An answer no participant could submit (longer than the limit, or
-      // missing) is not stored: the task is marked as needing an answer,
-      // which the builder flags and which blocks the start until it is set.
-      const answer = String(stage.correct_answer ?? "").trim()
-      const needsAnswer = answer.length === 0 || answer.length > MAX_ANSWER_LENGTH
-      const answerHash = await hashAnswer(needsAnswer ? crypto.randomUUID() : answer, stage.type)
-
-      const { error: challengeError } = await supabase
-        .from("challenges")
-        .insert({
+  const rows = await Promise.all(
+    tasks.map(async (task, i) => {
+      const review = reviewTask(task, verifications[i])
+      const answer = review.keepAnswer && task.answer !== null ? task.answer : null
+      return {
+        row: {
           game_id: game.id,
-          title: stage.title,
-          description: stage.description || "",
-          type: stage.type,
-          points: stage.points || 100,
-          answer_hash: answerHash,
-          hints: (stage.hints || []).slice(0, 10),
-          options: stage.type === "multiple_choice" ? stage.options : null,
-          explanation: stage.explanation || null,
-          difficulty: stage.difficulty || null,
+          title: task.title,
+          description: task.description,
+          type: task.type,
+          points: task.points,
+          // A task without an answer gets an unguessable one until the
+          // facilitator sets it (as for copies from the library).
+          answer_hash: await hashAnswer(answer ?? crypto.randomUUID(), task.type),
+          hints: task.hints,
+          options: task.options,
+          explanation: task.explanation,
+          difficulty: task.difficulty,
           order_index: i,
           generated_by_di: true,
-          needs_answer: needsAnswer,
-        })
-
-      if (!challengeError) successCount++
-    }
-
-    // Mark lesson plan as converted
-    await supabase
-      .from("lesson_plans")
-      .update({ status: "converted", source_game_id: game.id })
-      .eq("id", plan.id)
-
-    return NextResponse.json({
-      game_id: game.id,
-      game_code: gameCode,
-      challenges_created: successCount,
+          needs_answer: answer === null,
+          verification_verdict: review.verdict,
+          verification_issues: review.issues,
+          verification_confidence: review.confidence,
+        },
+        needsAnswer: answer === null,
+        needsReview: answer !== null && review.verdict !== "pass",
+      }
     })
-  } catch (error) {
-    console.error("Convert error:", error)
-    return NextResponse.json({ error: "Konvertavimas nepavyko" }, { status: 500 })
+  )
+
+  // All tasks in one insert: either the activity has every chosen task or
+  // it is removed again, never a half-converted plan.
+  const { error: tasksError } = await supabase.from("challenges").insert(rows.map((r) => r.row))
+  if (tasksError) {
+    console.error("Lesson plan convert: task insert failed", { code: tasksError.code })
+    await supabase.from("games").delete().eq("id", game.id).eq("teacher_id", user.id)
+    return NextResponse.json({ error: "Nepavyko sukurti užduočių. Bandykite dar kartą." }, { status: 500 })
   }
+
+  const { error: planError } = await supabase
+    .from("lesson_plans")
+    .update({ status: "converted", source_game_id: game.id })
+    .eq("id", plan.id)
+    .eq("teacher_id", user.id)
+  if (planError) console.error("Lesson plan convert: plan update failed", { code: planError.code })
+
+  return NextResponse.json({
+    game_id: game.id,
+    game_code: gameCode,
+    challenges_created: rows.length,
+    needs_answers: rows.filter((r) => r.needsAnswer).length,
+    needs_review: rows.filter((r) => r.needsReview).length,
+    skipped_stages: stages.length - rows.length,
+  })
 }
+
+// Up to 30 DI checks run in parallel; give them room.
+export const maxDuration = 60
