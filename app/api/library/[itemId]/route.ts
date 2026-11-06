@@ -38,12 +38,18 @@ export async function GET(_request: Request, props: { params: Promise<{ itemId: 
   }
 }
 
-const reviewSchema = z.object({
-  status: z.enum(["approved", "rejected"]),
-  review_notes: z.string().optional(),
-})
+const reviewSchema = z
+  .object({
+    // "pending_review": an approved or rejected template goes back to review.
+    status: z.enum(["approved", "rejected", "pending_review"]),
+    review_notes: z.string().trim().max(1000).optional(),
+  })
+  .refine((d) => d.status !== "rejected" || (d.review_notes ?? "").length >= 5, {
+    message: "Parašykite autoriui, ką pataisyti (bent 5 ženklai).",
+    path: ["review_notes"],
+  })
 
-// PATCH /api/library/[itemId] — approve/reject (admin+ only)
+// PATCH /api/library/[itemId] — approve, reject or return to review (admin+ only)
 export async function PATCH(request: Request, props: { params: Promise<{ itemId: string }> }) {
   const params = await props.params;
   try {
@@ -64,7 +70,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ itemId:
     }
     const { status, review_notes } = parsed.data
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("library_items")
       .update({
         status,
@@ -73,9 +79,14 @@ export async function PATCH(request: Request, props: { params: Promise<{ itemId:
         reviewed_at: new Date().toISOString(),
       })
       .eq("id", params.itemId)
+      .select("id")
 
     if (error) {
-      return NextResponse.json({ error: error instanceof Error ? error.message : "Vidinė klaida" }, { status: 500 })
+      console.error("Library review update failed", { code: error.code })
+      return NextResponse.json({ error: "Nepavyko išsaugoti sprendimo." }, { status: 500 })
+    }
+    if (!updated || updated.length === 0) {
+      return NextResponse.json({ error: "Šablonas nerastas." }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })
@@ -92,22 +103,30 @@ export async function DELETE(_request: Request, props: { params: Promise<{ itemI
   const params = await props.params;
   try {
     const supabase = await createClient()
-    await requireRole(supabase, "super_admin")
+    try {
+      await requireRole(supabase, "super_admin")
+    } catch {
+      return NextResponse.json({ error: "Šablonus pašalinti gali tik super administratorius." }, { status: 403 })
+    }
 
-    const { error } = await supabase
+    // Activities already copied from the template are the facilitators' own
+    // and stay; only the template leaves the library.
+    const { data: deleted, error } = await supabase
       .from("library_items")
       .delete()
       .eq("id", params.itemId)
+      .select("id")
 
     if (error) {
-      return NextResponse.json({ error: error instanceof Error ? error.message : "Vidinė klaida" }, { status: 500 })
+      console.error("Library delete failed", { code: error.code })
+      return NextResponse.json({ error: "Nepavyko pašalinti šablono." }, { status: 500 })
+    }
+    if (!deleted || deleted.length === 0) {
+      return NextResponse.json({ error: "Šablonas nerastas." }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: unknown) {
-    return NextResponse.json(
-      { error: (error instanceof Error ? error.message : undefined) || "Prieiga uždrausta" },
-      { status: 403 }
-    )
+  } catch {
+    return NextResponse.json({ error: "Serverio klaida." }, { status: 500 })
   }
 }
