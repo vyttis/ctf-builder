@@ -137,8 +137,8 @@ export default async function DashboardPage() {
       </div>
 
       {/* Games grid */}
-      {games && games.length > 0 ? (
-        <GamesGrid games={games as GameWithChallengeCount[]} />
+      {gameRows.length > 0 ? (
+        <GamesGrid games={gameRows} />
       ) : (
         /* Empty state */
         <div className="flex flex-col items-center justify-center py-20 text-center">
