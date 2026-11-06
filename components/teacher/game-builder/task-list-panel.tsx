@@ -18,6 +18,7 @@ interface TaskListPanelProps {
   onDuplicate: (challenge: Challenge) => void
   onAddNew: () => void
   isOverPanel: boolean
+  locked?: boolean
 }
 
 export function TaskListPanel({
@@ -28,6 +29,7 @@ export function TaskListPanel({
   onDuplicate,
   onAddNew,
   isOverPanel,
+  locked = false,
 }: TaskListPanelProps) {
   const { setNodeRef } = useDroppable({
     id: "challenge-list-drop",
@@ -81,6 +83,7 @@ export function TaskListPanel({
                   onSelect={onSelect}
                   onDelete={onDelete}
                   onDuplicate={onDuplicate}
+                  locked={locked}
                 />
               ))}
             </div>

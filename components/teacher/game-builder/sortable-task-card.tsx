@@ -15,6 +15,8 @@ interface SortableTaskCardProps {
   onSelect: (challenge: Challenge) => void
   onDelete: (challenge: Challenge) => void
   onDuplicate: (challenge: Challenge) => void
+  /** The activity is running or paused: no dragging, removing or copying. */
+  locked?: boolean
 }
 
 export function SortableTaskCard({
@@ -24,6 +26,7 @@ export function SortableTaskCard({
   onSelect,
   onDelete,
   onDuplicate,
+  locked = false,
 }: SortableTaskCardProps) {
   const {
     attributes,
@@ -32,7 +35,7 @@ export function SortableTaskCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: `challenge-${challenge.id}` })
+  } = useSortable({ id: `challenge-${challenge.id}`, disabled: locked })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -62,18 +65,28 @@ export function SortableTaskCard({
       >
         <CardContent className="p-3">
           <div className="flex items-start gap-2">
-            <button
-              type="button"
-              className="flex flex-col items-center gap-0.5 pt-0.5 cursor-grab active:cursor-grabbing touch-none shrink-0"
-              {...attributes}
-              {...listeners}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-bold text-primary-ink w-5 text-center">
-                {index + 1}
+            {locked ? (
+              <span className="flex flex-col items-center gap-0.5 pt-0.5 shrink-0">
+                <span className="h-4 w-4" aria-hidden="true" />
+                <span className="text-xs font-bold text-primary-ink w-5 text-center">
+                  {index + 1}
+                </span>
               </span>
-            </button>
+            ) : (
+              <button
+                type="button"
+                aria-label={`Perkelti užduotį ${index + 1}`}
+                className="flex flex-col items-center gap-0.5 pt-0.5 cursor-grab active:cursor-grabbing touch-none shrink-0"
+                {...attributes}
+                {...listeners}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs font-bold text-primary-ink w-5 text-center">
+                  {index + 1}
+                </span>
+              </button>
+            )}
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -128,6 +141,7 @@ export function SortableTaskCard({
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label={`Redaguoti „${challenge.title}“`}
                 className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary"
                 onClick={(e) => {
                   e.stopPropagation()
@@ -136,28 +150,34 @@ export function SortableTaskCard({
               >
                 <Edit3 className="h-3 w-3" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDuplicate(challenge)
-                }}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-accent"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete(challenge)
-                }}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
+              {!locked && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Kopijuoti „${challenge.title}“`}
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDuplicate(challenge)
+                    }}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Ištrinti „${challenge.title}“`}
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-accent"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(challenge)
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
