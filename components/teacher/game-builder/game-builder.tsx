@@ -537,6 +537,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
         title={game.title}
         description={game.description}
         settings={game.settings}
+        live={game.status === "active" || game.status === "paused"}
         onSaved={() => {
           router.refresh()
         }}
