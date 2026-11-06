@@ -419,7 +419,11 @@ export default function PlayPage() {
         before !== undefined &&
         after !== undefined &&
         (before.type !== after.type || JSON.stringify(before.options) !== JSON.stringify(after.options))
-      if (kept !== null) {
+      // The open task was solved elsewhere (the same team on another device)
+      // and nothing here is showing its result: move on like after a solve.
+      const keptSolvedElsewhere =
+        kept !== null && solved.has(next[kept].id) && !showExplanationRef.current && firstUnsolved >= 0
+      if (kept !== null && !keptSolvedElsewhere) {
         setCurrentIndex(kept)
         currentIndexRef.current = kept
         if (shapeChanged) {
