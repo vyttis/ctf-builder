@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { motion, AnimatePresence } from "framer-motion"
 import { Megaphone, X } from "lucide-react"
@@ -27,6 +27,12 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
   const large = variant === "projector"
   const [activeAnnouncement, setActiveAnnouncement] =
     useState<AnnouncementItem | null>(null)
+  // The last announcement shown here, so the polling below never shows the
+  // same one twice (realtime and the poll may both deliver it).
+  const shownIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (activeAnnouncement) shownIdRef.current = activeAnnouncement.id
+  }, [activeAnnouncement])
 
   const dismiss = useCallback(() => {
     setActiveAnnouncement((current) => {
@@ -42,7 +48,9 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
     })
   }, [gameId])
 
-  // Initial fetch: latest recent announcement (missed while not subscribed)
+  // The latest recent announcement: on load (missed while not subscribed)
+  // and every 15 s, because some school networks block the realtime
+  // WebSocket and the announcement would otherwise never arrive.
   useEffect(() => {
     const supabase = createClient()
     let cancelled = false
@@ -64,14 +72,18 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
         // Storage unavailable
       }
       const age = Date.now() - new Date(data.created_at).getTime()
-      if (age < RECENT_WINDOW_MS && data.id !== dismissedId) {
+      if (age < RECENT_WINDOW_MS && data.id !== dismissedId && data.id !== shownIdRef.current) {
         setActiveAnnouncement(data)
       }
     }
 
-    fetchLatest()
+    void fetchLatest()
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") void fetchLatest()
+    }, 15_000)
     return () => {
       cancelled = true
+      clearInterval(interval)
     }
   }, [gameId])
 
@@ -99,6 +111,7 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
         },
         (payload) => {
           const announcement = payload.new as AnnouncementItem
+          if (announcement.id === shownIdRef.current) return
           setActiveAnnouncement(announcement)
         }
       )
