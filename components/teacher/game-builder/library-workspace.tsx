@@ -84,16 +84,18 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
       })
       if (res.ok) {
         toast({
-          title: `Užduotis "${snap.title}" pridėta`,
+          title: `Užduotis „${snap.title}“ pridėta`,
           description: "Nepamirškite nustatyti teisingo atsakymo.",
         })
         onTaskAdded()
       } else {
-        throw new Error("fail")
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error ?? "")
       }
-    } catch {
+    } catch (e) {
       toast({
         title: "Nepavyko pridėti užduoties",
+        description: e instanceof Error && e.message ? e.message : undefined,
         variant: "destructive",
       })
     } finally {

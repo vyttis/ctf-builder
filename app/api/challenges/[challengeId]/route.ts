@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { hashAnswer, MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
+import { isLiveStatus, LIVE_EDIT_BLOCKED, samePrerequisites } from "@/lib/game/live-edit"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -47,7 +48,7 @@ async function verifyChallengeOwnership(
 ) {
   const { data: challenge } = await supabase
     .from("challenges")
-    .select("id, game_id, type")
+    .select("id, game_id, type, prerequisites")
     .eq("id", challengeId)
     .single()
 
@@ -55,12 +56,18 @@ async function verifyChallengeOwnership(
 
   const { data: game } = await supabase
     .from("games")
-    .select("id")
+    .select("id, status")
     .eq("id", challenge.game_id)
     .eq("teacher_id", userId)
     .single()
 
-  return game ? { type: challenge.type as string | null } : null
+  return game
+    ? {
+        type: challenge.type as string | null,
+        gameStatus: game.status as string,
+        prerequisites: (challenge.prerequisites as string[] | null) ?? [],
+      }
+    : null
 }
 
 export async function PATCH(request: Request, props: { params: Promise<{ challengeId: string }> }) {
@@ -100,8 +107,27 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
     )
   }
 
+  // Moving a task while the activity runs shifts teams in linear mode; the
+  // order changes only through the reorder route, which refuses it too.
+  if (parsed.data.order_index !== undefined && isLiveStatus(owned.gameStatus)) {
+    return NextResponse.json({ error: LIVE_EDIT_BLOCKED.reorder, code: "live" }, { status: 409 })
+  }
+  // Participants keep the unlock rules they loaded while the server checks
+  // the stored ones, so a change would lock or open tasks unexpectedly. The
+  // editor sends the list on every save; only an actual change is refused.
+  if (
+    parsed.data.prerequisites !== undefined &&
+    isLiveStatus(owned.gameStatus) &&
+    !samePrerequisites(parsed.data.prerequisites, owned.prerequisites)
+  ) {
+    return NextResponse.json({ error: LIVE_EDIT_BLOCKED.prerequisites, code: "live" }, { status: 409 })
+  }
+
   const { correct_answer, ...rest } = parsed.data
   const updateData: ChallengeUpdatePayload = { ...rest }
+  // A repeated id would make the task need more solves than there are tasks
+  // (is_challenge_unlocked compares with the list length): store each once.
+  if (updateData.prerequisites) updateData.prerequisites = [...new Set(updateData.prerequisites)]
 
   // If answer is being updated, hash it with bcrypt (never stored/returned in
   // plaintext) and clear the needs_answer flag set on duplicated/cloned tasks
@@ -157,6 +183,20 @@ export async function DELETE(_request: Request, props: { params: Promise<{ chall
       { status: 404 }
     )
   }
+  if (isLiveStatus(owned.gameStatus)) {
+    return NextResponse.json({ error: LIVE_EDIT_BLOCKED.delete, code: "live" }, { status: 409 })
+  }
+  // Removing a task takes its answers with it while team points stay, so a
+  // finished activity keeps every task that has answers in its report.
+  if (owned.gameStatus === "finished") {
+    const { count, error: countError } = await supabase
+      .from("submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("challenge_id", params.challengeId)
+    if (countError || (count ?? 0) > 0) {
+      return NextResponse.json({ error: LIVE_EDIT_BLOCKED.finishedWithAnswers, code: "has_results" }, { status: 409 })
+    }
+  }
 
   const { error } = await supabase
     .from("challenges")
@@ -164,6 +204,11 @@ export async function DELETE(_request: Request, props: { params: Promise<{ chall
     .eq("id", params.challengeId)
 
   if (error) {
+    // The database refuses it too when the activity started meanwhile
+    // (challenges_live_rules, 20261106150000).
+    if (error.code === "KS409") {
+      return NextResponse.json({ error: LIVE_EDIT_BLOCKED.delete, code: "live" }, { status: 409 })
+    }
     console.error("Challenge DELETE error:", error)
     return NextResponse.json({ error: "Nepavyko ištrinti užduoties." }, { status: 500 })
   }

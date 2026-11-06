@@ -10,6 +10,8 @@ export interface GameSettings {
   challenge_path_mode?: "linear" | "free"
   /** Participants may ask for a facilitator account (activities for teachers). */
   allow_access_requests?: boolean
+  /** The facilitator closed joining: no new teams (teams in keep playing). */
+  joining_closed?: boolean
 }
 
 export interface GameWithChallengeCount {

@@ -4,11 +4,17 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import type { LiveTeam } from "@/hooks/use-live-game"
 import { Crown, Medal, Users } from "lucide-react"
+import { pluralizeLt } from "@/lib/utils"
 
 interface LiveLeaderboardBoardProps {
   teams: LiveTeam[]
   solvedCounts: Map<string, number>
   totalChallenges: number
+  /**
+   * false when the activity's leaderboard is off: the class screen then
+   * lists the teams that joined, by name, without places, points or progress.
+   */
+  ranked?: boolean
 }
 
 const podiumStyles = [
@@ -28,6 +34,7 @@ export function LiveLeaderboardBoard({
   teams,
   solvedCounts,
   totalChallenges,
+  ranked = true,
 }: LiveLeaderboardBoardProps) {
   const prefersReduced = useReducedMotion()
 
@@ -43,8 +50,34 @@ export function LiveLeaderboardBoard({
     )
   }
 
+  if (!ranked) {
+    const byName = [...teams].sort((a, b) => a.name.localeCompare(b.name, "lt"))
+    return (
+      <div>
+        <p className="mb-4 text-base text-white/60">
+          Prisijungė {teams.length} {pluralizeLt(teams.length, "komanda", "komandos", "komandų")}. Rezultatų lentelė
+          šioje veikloje nerodoma.
+        </p>
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {byName.map((team) => (
+            <li
+              key={team.id}
+              className="truncate rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-2xl font-bold text-white"
+            >
+              {team.name}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  // More than six teams: compact rows, so a class of ten or more fits on
+  // one projector screen.
+  const compact = teams.length > 6
+
   return (
-    <div className="space-y-3">
+    <div className={compact ? "space-y-2" : "space-y-3"}>
       <AnimatePresence initial={false}>
         {teams.map((team, index) => {
           const isTop3 = index < 3
@@ -58,14 +91,14 @@ export function LiveLeaderboardBoard({
               animate={{ opacity: 1, y: 0 }}
               exit={prefersReduced ? undefined : { opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={`flex items-center gap-5 rounded-2xl border px-6 py-4 ${
+              className={`flex items-center rounded-2xl border ${compact ? "gap-4 px-5 py-2" : "gap-5 px-6 py-4"} ${
                 isTop3
                   ? podiumStyles[index]
                   : "border-white/10 bg-white/5"
               }`}
             >
               <div
-                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-2xl font-bold ${
+                className={`flex shrink-0 items-center justify-center rounded-full font-bold ${compact ? "h-10 w-10 text-xl" : "h-14 w-14 text-2xl"} ${
                   isTop3 ? "bg-white/15" : "bg-white/10 text-white/60"
                 }`}
               >
@@ -75,12 +108,12 @@ export function LiveLeaderboardBoard({
               <div className="min-w-0 flex-1">
                 <p
                   className={`truncate font-bold text-white ${
-                    isTop3 ? "text-3xl" : "text-2xl"
+                    compact ? "text-2xl" : isTop3 ? "text-3xl" : "text-2xl"
                   }`}
                 >
                   {team.name}
                 </p>
-                <p className="text-sm text-white/50 mt-0.5">
+                <p className={`text-sm text-white/60 ${compact ? "" : "mt-0.5"}`}>
                   {solved} / {totalChallenges} užd. išspręsta
                 </p>
               </div>
@@ -88,12 +121,12 @@ export function LiveLeaderboardBoard({
               <div className="shrink-0 text-right">
                 <p
                   className={`font-bold tabular-nums text-white ${
-                    isTop3 ? "text-4xl" : "text-3xl"
+                    compact ? "text-3xl" : isTop3 ? "text-4xl" : "text-3xl"
                   }`}
                 >
                   {team.total_points}
                 </p>
-                <p className="text-xs text-white/50">taškų</p>
+                <p className="text-xs text-white/60">taškų</p>
               </div>
             </motion.div>
           )

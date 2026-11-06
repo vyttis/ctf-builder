@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { isLiveStatus, LIVE_EDIT_BLOCKED } from "@/lib/game/live-edit"
 
 const reorderSchema = z.object({
   game_id: z.string().uuid(),
@@ -43,13 +44,16 @@ export async function PATCH(request: Request) {
   // Verify game ownership
   const { data: game } = await supabase
     .from("games")
-    .select("id")
+    .select("id, status")
     .eq("id", parsed.data.game_id)
     .eq("teacher_id", user.id)
     .single()
 
   if (!game) {
-    return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
+    return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
+  }
+  if (isLiveStatus(game.status)) {
+    return NextResponse.json({ error: LIVE_EDIT_BLOCKED.reorder, code: "live" }, { status: 409 })
   }
 
   // Update all order_index values
@@ -64,7 +68,7 @@ export async function PATCH(request: Request) {
   const results = await Promise.all(updates)
   const failed = results.find((r) => r.error)
   if (failed?.error) {
-    return NextResponse.json({ error: failed.error.message }, { status: 500 })
+    return NextResponse.json({ error: "Nepavyko išsaugoti tvarkos." }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

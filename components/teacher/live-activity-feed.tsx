@@ -30,9 +30,11 @@ interface LiveActivityFeedProps {
   // "projector" renders a translucent dark card with larger text for the
   // class-screen live view
   variant?: "default" | "projector"
+  /** The activity shows no leaderboard: the class screen then shows no points. */
+  hidePoints?: boolean
 }
 
-export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFeedProps) {
+export function LiveActivityFeed({ gameId, variant = "default", hidePoints = false }: LiveActivityFeedProps) {
   const [events, setEvents] = useState<ActivityEvent[]>([])
   const [teamCount, setTeamCount] = useState(0)
   const [degraded, setDegraded] = useState(false)
@@ -280,7 +282,7 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
             <span className="font-medium text-steam-dark">{event.team_name}</span>
             {" "}išsprendė{" "}
             <span className="font-medium">{event.challenge_title}</span>
-            {event.points ? (
+            {event.points && !hidePoints ? (
               <Badge variant="outline" className="ml-1.5 text-[10px] py-0 px-1.5 text-primary-ink border-primary/30">
                 +{event.points} tšk.
               </Badge>
@@ -299,27 +301,29 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
         return (
           <>
             <span className="font-medium text-steam-dark">{event.team_name}</span>
-            {" "}prisijungė prie žaidimo
+            {" "}prisijungė prie veiklos
           </>
         )
     }
   }
 
   if (isProjector) {
+    // The whole class sees this screen: who answered wrong is not shown.
+    const shown = events.filter((event) => event.type !== "submission_wrong")
     return (
       <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur p-4">
         <div className="flex items-center gap-2 text-white/70 text-sm font-medium mb-3">
           <Activity className="h-4 w-4" />
           Gyva veikla
         </div>
-        {events.length === 0 ? (
+        {shown.length === 0 ? (
           <p className="text-white/40 text-sm py-4 text-center">
             Laukiama veiklos...
           </p>
         ) : (
           <div className="space-y-1.5">
             <AnimatePresence initial={false}>
-              {events.map((event) => (
+              {shown.map((event) => (
                 <motion.div
                   key={event.id}
                   initial={{ opacity: 0, height: 0, y: -10 }}

@@ -4,6 +4,7 @@ import { Radio } from "lucide-react"
 import { LiveTeamProgress } from "@/components/teacher/live-team-progress"
 import { AnnouncementPanel } from "@/components/teacher/announcement-panel"
 import { TimeControls } from "@/components/teacher/time-controls"
+import { JoiningControl } from "@/components/teacher/joining-control"
 
 interface LiveControlCenterProps {
   gameId: string
@@ -14,6 +15,7 @@ interface LiveControlCenterProps {
   settings: {
     time_limit_minutes: number | null
     max_teams: number
+    joining_closed?: boolean
   }
 }
 
@@ -63,6 +65,7 @@ export function LiveControlCenter({
         {/* Right sidebar: Announcements + Time Controls */}
         <div className="space-y-6">
           <AnnouncementPanel gameId={gameId} />
+          <JoiningControl gameId={gameId} closed={settings.joining_closed === true} />
           <TimeControls
             gameId={gameId}
             currentTimeLimit={settings.time_limit_minutes}
