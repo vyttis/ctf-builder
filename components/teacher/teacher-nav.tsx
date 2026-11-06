@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { clearLocalWork } from "@/hooks/use-leave-warning"
 import { SteamLogo } from "@/components/steam-logo"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -48,6 +49,7 @@ export function TeacherNav({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   async function handleLogout() {
+    clearLocalWork()
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push("/auth/login")

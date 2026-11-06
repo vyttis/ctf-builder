@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { useLeaveWarning } from "@/hooks/use-leave-warning"
 import {
   Loader2,
   Plus,
@@ -50,6 +51,64 @@ interface ManualTaskEditorProps {
     prerequisites?: string[]
   }>
 }
+
+interface TaskForm {
+  title: string
+  description: string
+  type: ChallengeType
+  pointsText: string
+  correctAnswer: string
+  hints: string[]
+  options: string[]
+  imageUrl: string | null
+  mapsUrl: string
+  explanation: string
+  difficulty: "easy" | "medium" | "hard" | null
+  hintPenalty: number
+  prerequisites: string[]
+}
+
+function initialForm(challenge: Challenge | null, prefill: AiSuggestion | null): TaskForm {
+  if (challenge) {
+    return {
+      title: challenge.title,
+      description: challenge.description || "",
+      type: challenge.type,
+      pointsText: String(challenge.points),
+      // The stored answer is only a hash: the field starts empty.
+      correctAnswer: "",
+      hints: challenge.hints || [],
+      options: challenge.options || [],
+      imageUrl: challenge.image_url,
+      mapsUrl: challenge.maps_url || "",
+      explanation: challenge.explanation || "",
+      difficulty: challenge.difficulty,
+      hintPenalty: challenge.hint_penalty,
+      prerequisites: challenge.prerequisites || [],
+    }
+  }
+  return {
+    title: prefill?.title ?? "",
+    description: prefill?.description ?? "",
+    type: prefill?.type ?? "text",
+    pointsText: String(prefill?.points ?? 100),
+    correctAnswer: prefill?.correct_answer ?? "",
+    hints: prefill?.hints || [],
+    options: prefill?.type === "multiple_choice" && prefill.options ? prefill.options : [],
+    imageUrl: null,
+    mapsUrl: "",
+    explanation: prefill?.explanation || "",
+    difficulty: prefill?.difficulty || null,
+    hintPenalty: 20,
+    prerequisites: [],
+  }
+}
+
+const formKey = (f: TaskForm) =>
+  JSON.stringify([
+    f.title, f.description, f.type, f.pointsText, f.correctAnswer, f.hints, f.options, f.imageUrl,
+    f.mapsUrl, f.explanation, f.difficulty, f.hintPenalty, f.prerequisites,
+  ])
 
 export function ManualTaskEditor({
   gameId,
@@ -92,67 +151,38 @@ export function ManualTaskEditor({
 
   const showPrerequisites = pathMode === "free" && !!challenge
 
-  // Initialize from challenge or prefill
+  // The form as last loaded: an edit compared against it is unsaved work.
+  const [baseline, setBaseline] = useState<string | null>(null)
+  const snapshot = formKey({
+    title, description, type, pointsText, correctAnswer, hints, options, imageUrl,
+    mapsUrl, explanation, difficulty, hintPenalty, prerequisites,
+  })
+  // Stays set while saving: the work is safe only once the save succeeded.
+  const dirty = baseline !== null && snapshot !== baseline
+  useLeaveWarning(dirty)
+
+  // Initialize from challenge or prefill. Every field is set each time, so
+  // nothing carries over from the task edited before.
   useEffect(() => {
-    if (challenge) {
-      setTitle(challenge.title)
-      setDescription(challenge.description || "")
-      setType(challenge.type)
-      setPointsText(String(challenge.points))
-      setCorrectAnswer("")
-      setHints(challenge.hints || [])
-      setOptions(challenge.options || [])
-      setInitialOptions(challenge.options || [])
-      setImageUrl(challenge.image_url)
-      setMapsUrl(challenge.maps_url || "")
-      setExplanation(challenge.explanation || "")
-      setDifficulty(challenge.difficulty)
-      setHintPenalty(challenge.hint_penalty)
-      setPrerequisites(challenge.prerequisites || [])
-      if (
-        challenge.explanation ||
-        challenge.difficulty ||
-        challenge.image_url ||
-        challenge.maps_url ||
-        (challenge.prerequisites && challenge.prerequisites.length > 0)
-      ) {
-        setShowExtras(true)
-      }
-    } else if (prefillData) {
-      setTitle(prefillData.title)
-      setDescription(prefillData.description)
-      setType(prefillData.type)
-      setPointsText(String(prefillData.points))
-      setCorrectAnswer(prefillData.correct_answer)
-      setHints(prefillData.hints || [])
-      setOptions(
-        prefillData.type === "multiple_choice" && prefillData.options
-          ? prefillData.options
-          : []
-      )
-      setExplanation(prefillData.explanation || "")
-      setDifficulty(prefillData.difficulty || null)
-      if (prefillData.explanation || prefillData.difficulty) {
-        setShowExtras(true)
-      }
-    } else {
-      // A new empty task: nothing carries over from the task edited before.
-      setTitle("")
-      setDescription("")
-      setType("text")
-      setPointsText("100")
-      setCorrectAnswer("")
-      setHints([])
-      setOptions([])
-      setInitialOptions(null)
-      setImageUrl(null)
-      setMapsUrl("")
-      setExplanation("")
-      setDifficulty(null)
-      setHintPenalty(20)
-      setPrerequisites([])
-      setShowExtras(false)
-    }
+    const f = initialForm(challenge ?? null, prefillData ?? null)
+    setTitle(f.title)
+    setDescription(f.description)
+    setType(f.type)
+    setPointsText(f.pointsText)
+    setCorrectAnswer(f.correctAnswer)
+    setHints(f.hints)
+    setOptions(f.options)
+    setInitialOptions(challenge ? challenge.options || [] : null)
+    setImageUrl(f.imageUrl)
+    setMapsUrl(f.mapsUrl)
+    setExplanation(f.explanation)
+    setDifficulty(f.difficulty)
+    setHintPenalty(f.hintPenalty)
+    setPrerequisites(f.prerequisites)
+    setShowExtras(
+      !!(f.explanation || f.difficulty || f.imageUrl || f.mapsUrl || f.prerequisites.length > 0)
+    )
+    setBaseline(formKey(f))
   }, [challenge, prefillData])
 
   // A DI-made task whose answer the check doubted or rejected: saving it is
@@ -309,7 +339,7 @@ export function ManualTaskEditor({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-unsaved-task={dirty ? "true" : undefined}>
       {/* AI prefill badge */}
       {prefillData && !challenge && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20 text-sm text-steam-dark">
@@ -666,7 +696,13 @@ export function ManualTaskEditor({
           )}
           {challenge ? "Atnaujinti" : "Pridėti užduotį"}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            if (!dirty || window.confirm("Užduoties pakeitimai neišsaugoti. Atmesti juos?")) onCancel()
+          }}
+        >
           Atšaukti
         </Button>
       </div>

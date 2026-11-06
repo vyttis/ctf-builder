@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   DndContext,
@@ -30,6 +30,7 @@ import { TaskCardOverlay } from "./sortable-task-card"
 import { AiSuggestionCard } from "../ai-suggestion-card"
 import { useToast } from "@/hooks/use-toast"
 import { useIsDesktop } from "@/hooks/use-is-desktop"
+import { confirmDiscardTask } from "@/hooks/use-leave-warning"
 import {
   Sheet,
   SheetContent,
@@ -93,11 +94,46 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   const [teacherPrompt, setTeacherPrompt] = useState("")
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [addedIds, setAddedIds] = useState<Set<number>>(new Set())
+  // The suggestion open in the editor: saving it there adds it.
+  const [editingSuggestionIndex, setEditingSuggestionIndex] = useState<number | null>(null)
   const [adding, setAdding] = useState(false)
   const [selectedScenario, setSelectedScenario] = useState<ScenarioPreset | null>(null)
 
   // Mobile sheet
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
+
+  // DI suggestions survive a reload of this tab: generating them took a
+  // minute of DI work. Kept per activity, for this tab only.
+  const suggestionsKey = `ks-di-suggestions:${game.id}`
+  const suggestionsRestored = useRef(false)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(suggestionsKey)
+      const saved = raw ? (JSON.parse(raw) as { suggestions?: unknown; added?: unknown }) : null
+      if (saved && Array.isArray(saved.suggestions) && saved.suggestions.length > 0) {
+        setSuggestions(saved.suggestions as AiSuggestion[])
+        setAddedIds(new Set(Array.isArray(saved.added) ? (saved.added as number[]) : []))
+      }
+    } catch {
+      // Storage blocked or unreadable: start without saved suggestions.
+    }
+    suggestionsRestored.current = true
+  }, [suggestionsKey])
+  useEffect(() => {
+    if (!suggestionsRestored.current) return
+    try {
+      if (suggestions.length > 0) {
+        sessionStorage.setItem(suggestionsKey, JSON.stringify({ suggestions, added: [...addedIds] }))
+      } else {
+        sessionStorage.removeItem(suggestionsKey)
+      }
+    } catch {
+      // Storage full or blocked: the suggestions stay for this visit.
+    }
+  }, [suggestions, addedIds, suggestionsKey])
+
+  // Leaving a task with unsaved changes asks first.
+  const confirmDiscard = confirmDiscardTask
 
   // Generation success feedback
   const [generationSuccess, setGenerationSuccess] = useState<number | null>(null)
@@ -201,6 +237,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
 
   // ========== Suggestion helpers ==========
   function handleReject(index: number) {
+    setEditingSuggestionIndex((cur) => (cur === null || cur === index ? null : cur > index ? cur - 1 : cur))
     setSuggestions((prev) => prev.filter((_, i) => i !== index))
     setSelectedIds((prev) => {
       const next = new Set<number>()
@@ -323,7 +360,8 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   // ========== Edit suggestion (open in manual editor) ==========
   function handleEditSuggestion(index: number) {
     const suggestion = suggestions[index]
-    if (!suggestion) return
+    if (!suggestion || !confirmDiscard()) return
+    setEditingSuggestionIndex(index)
     setPrefillData(suggestion)
     setEditingChallenge(null)
     setIsCreatingNew(true)
@@ -334,6 +372,8 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
 
   // ========== Challenge actions ==========
   function handleSelectChallenge(challenge: Challenge) {
+    if (editingChallenge?.id !== challenge.id && !confirmDiscard()) return
+    setEditingSuggestionIndex(null)
     setSelectedChallengeId(challenge.id)
     setEditingChallenge(challenge)
     setIsCreatingNew(false)
@@ -345,6 +385,8 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   }
 
   function handleAddNew() {
+    if (!confirmDiscard()) return
+    setEditingSuggestionIndex(null)
     setEditingChallenge(null)
     setIsCreatingNew(true)
     setPrefillData(null)
@@ -428,6 +470,18 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   }
 
   function handleEditorSuccess() {
+    // A suggestion saved from the editor counts as added, so "Pasirinkti
+    // visas" does not add it a second time.
+    if (editingSuggestionIndex !== null) {
+      const index = editingSuggestionIndex
+      setAddedIds((prev) => new Set(prev).add(index))
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        next.delete(index)
+        return next
+      })
+    }
+    setEditingSuggestionIndex(null)
     setEditingChallenge(null)
     setIsCreatingNew(false)
     setPrefillData(null)
@@ -435,6 +489,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   }
 
   function handleEditorCancel() {
+    setEditingSuggestionIndex(null)
     setEditingChallenge(null)
     setIsCreatingNew(false)
     setPrefillData(null)
@@ -676,7 +731,11 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
             coexist with the desktop panel */}
         <Sheet
           open={!isDesktop && mobileSheetOpen}
-          onOpenChange={setMobileSheetOpen}
+          onOpenChange={(open) => {
+            // Closing the sheet drops the editor: unsaved changes ask first.
+            if (!open && !confirmDiscardTask()) return
+            setMobileSheetOpen(open)
+          }}
         >
           <SheetContent
             side="right"
