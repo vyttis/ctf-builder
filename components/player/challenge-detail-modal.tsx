@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { AnswerInput } from "@/components/player/answer-input"
+import { TaskImage } from "@/components/player/task-image"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Send,
@@ -23,7 +24,6 @@ import { Badge } from "@/components/ui/badge"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { HintList } from "@/components/player/hint-list"
 import { pluralizeLt } from "@/lib/utils"
-import Image from "next/image"
 
 interface ChallengeDetailModalProps {
   challenge: {
@@ -171,11 +171,7 @@ export function ChallengeDetailModal({
         )}
 
         {/* Image */}
-        {challenge.image_url && (
-          <div className="mb-4 rounded-xl overflow-hidden border border-gray-200">
-            <Image src={challenge.image_url} alt={challenge.title} width={800} height={256} className="w-full max-h-64 object-cover" unoptimized />
-          </div>
-        )}
+        {challenge.image_url && <TaskImage src={challenge.image_url} title={challenge.title} />}
 
         {/* Google Maps */}
         {challenge.maps_url && (
