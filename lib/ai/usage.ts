@@ -112,12 +112,6 @@ export async function monthSpendUsd(admin: SupabaseClient, now = new Date(), fre
   return total
 }
 
-/**
- * Checking a task again (di/verify) follows a generation the teacher already
- * paid for with one action, so it costs money but not a limit slot.
- */
-export const UNCOUNTED_ENDPOINTS = ["di/verify"]
-
 /** Placeholder row that holds a limit slot while the action runs. */
 export const RESERVATION_MODEL = "reservation"
 
@@ -246,7 +240,6 @@ export async function checkAiAllowance(
   userId: string,
   endpoint: string,
   now = new Date(),
-  opts: { countsTowardLimit?: boolean } = {},
 ): Promise<AiAllowance> {
   const ctx: AiContext = { userId, endpoint, requestId: randomUUID() }
   try {
@@ -266,7 +259,6 @@ export async function checkAiAllowance(
       }
     }
     const limit = profile?.ai_monthly_limit ?? settings.ai_user_monthly_limit
-    if (opts.countsTowardLimit === false) return { ok: true, ctx, used: 0, limit }
     const used = await reserveAction(admin, ctx, limit, now)
     if (used === null) {
       return {
@@ -461,7 +453,7 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
       u.reserved.set(r.request_id, new Date(r.created_at).getTime())
     } else {
       u.calls += 1
-      if (!UNCOUNTED_ENDPOINTS.includes(r.endpoint)) u.called.add(r.request_id)
+      u.called.add(r.request_id)
     }
     u.cost += Number(r.cost_usd)
     byUser.set(r.user_id, u)
