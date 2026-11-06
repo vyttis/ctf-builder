@@ -10,9 +10,11 @@ const renameSchema = z.object({
 type Params = { params: Promise<{ gameId: string; teamId: string }> }
 
 /**
- * The facilitator's own activity and a team in it, or the response to send.
- * Teams are written with the service role (participants have no accounts),
- * so ownership is checked here first.
+ * The facilitator's own running or paused activity and a team in it, or the
+ * response to send. Teams are written with the service role (participants
+ * have no accounts), so ownership is checked here first. A finished activity
+ * is a record: a stale tab must not rename or remove its teams (removal
+ * would take their answers out of the report).
  */
 async function ownedTeam(gameId: string, teamId: string) {
   const supabase = await createClient()
@@ -23,11 +25,19 @@ async function ownedTeam(gameId: string, teamId: string) {
 
   const { data: game } = await supabase
     .from("games")
-    .select("id")
+    .select("id, status")
     .eq("id", gameId)
     .eq("teacher_id", user.id)
     .maybeSingle()
   if (!game) return { response: NextResponse.json({ error: "Veikla nerasta" }, { status: 404 }) }
+  if (game.status !== "active" && game.status !== "paused") {
+    return {
+      response: NextResponse.json(
+        { error: "Komandas tvarkyti galima tik vykstant veiklai.", code: "not_live" },
+        { status: 409 }
+      ),
+    }
+  }
 
   const admin = createAdminClient()
   const { data: team } = await admin

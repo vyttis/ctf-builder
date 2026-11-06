@@ -155,10 +155,18 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
                 .map((t) => (t.id === updated.id ? updated : t))
                 .sort((a, b) => b.total_points - a.total_points)
             )
-          } else if (payload.eventType === "DELETE") {
-            const old = payload.old as { id: string }
-            setTeams((prev) => prev.filter((t) => t.id !== old.id))
           }
+        }
+      )
+      // DELETE events cannot be filtered by game (they carry only the id), so
+      // a filtered subscription never sees them. Listen to all and drop the
+      // team if it is one of ours; every screen using this hook follows.
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "teams" },
+        (payload) => {
+          const removedId = (payload.old as { id?: string }).id
+          if (removedId) setTeams((prev) => prev.filter((t) => t.id !== removedId))
         }
       )
       .subscribe(handleChannelStatus("teams"))
