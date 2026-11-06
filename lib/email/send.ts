@@ -10,7 +10,7 @@
 
 const ENDPOINT = "https://api.resend.com/emails"
 
-export const EMAIL_FROM = process.env.EMAIL_FROM || "KU STEAM pamokos <noreply@kusteam.app>"
+export const EMAIL_FROM = process.env.EMAIL_FROM || "KU STEAM DI Lab <noreply@kusteam.app>"
 export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || "steam@ku.lt"
 
 export interface EmailMessage {

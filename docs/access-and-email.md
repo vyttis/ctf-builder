@@ -63,7 +63,7 @@ adreso).
      (Production, Preview);
    - Supabase → Authentication → Emails → SMTP Settings: host
      `smtp.resend.com`, port `465`, username `resend`, password = raktas,
-     sender `noreply@kusteam.app`, vardas „KU STEAM pamokos“.
+     sender `noreply@kusteam.app`, vardas „KU STEAM DI Lab“.
 4. Supabase → Authentication → Emails → Templates: „Invite user“ ir „Magic
    link or OTP“ turinys iš `supabase/templates/` (temos nurodytos failų
    pradžioje).
