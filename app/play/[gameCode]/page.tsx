@@ -90,7 +90,8 @@ export default function JoinGamePage() {
         const res = await fetch(`/api/play/status?game_code=${encodeURIComponent(gameCode)}`, { cache: "no-store" })
         if (!res.ok) return
         const data = (await res.json()) as { status: string | null }
-        if (!disposed && data.status && data.status !== waitingFor) void validateGame()
+        // null: the activity was deleted; validateGame shows "not found".
+        if (!disposed && data.status !== waitingFor) void validateGame()
       } catch {
         // The next round retries.
       }

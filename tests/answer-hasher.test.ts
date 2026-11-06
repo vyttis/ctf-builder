@@ -156,6 +156,20 @@ describe("number answers by value", () => {
     expect(canonicalNumber("0,123 4")).toBeNull()
   })
 
+  it("reads scientific notation by value", () => {
+    expect(canonicalNumber("1e3")).toBe("1000")
+    expect(canonicalNumber("1E3")).toBe("1000")
+    expect(canonicalNumber("2,5e-2")).toBe("0.025")
+    expect(canonicalNumber("1.5e-2")).toBe("0.015")
+    expect(canonicalNumber("-12.5e1")).toBe("-125")
+    expect(canonicalNumber(".5e1")).toBe("5")
+    expect(canonicalNumber("0e5")).toBe("0")
+    expect(canonicalNumber("1e100")).toBe("1" + "0".repeat(100))
+    expect(canonicalNumber("e3")).toBeNull()
+    expect(canonicalNumber("1e")).toBeNull()
+    expect(canonicalNumber("1 000e3")).toBeNull()
+  })
+
   it("keeps every digit of long and tiny numbers", () => {
     expect(canonicalNumber("9007199254740993")).toBe("9007199254740993")
     expect(canonicalNumber("9007199254740992")).toBe("9007199254740992")
@@ -187,6 +201,19 @@ describe("number answers by value", () => {
   it("does not credit a neighbouring large integer", async () => {
     const hash = await hashAnswer("9007199254740992", "number")
     expect(await verifyAnswer("9007199254740993", hash, NUMBER)).toBe(false)
+  })
+
+  it("tells apart long numbers that share their first 72 digits", async () => {
+    const prefix = "1".repeat(72)
+    const hash = await hashAnswer(prefix + "3", "number")
+    expect(await verifyAnswer(prefix + "3", hash, NUMBER)).toBe(true)
+    expect(await verifyAnswer(prefix + "4", hash, NUMBER)).toBe(false)
+  })
+
+  it("matches an answer stored in scientific notation", async () => {
+    const hash = await hashAnswer("1e3", "number")
+    expect(await verifyAnswer("1000", hash, NUMBER)).toBe(true)
+    expect(await verifyAnswer("1 000", hash, NUMBER)).toBe(true)
   })
 
   it("lists the spellings a facilitator may have typed before", () => {

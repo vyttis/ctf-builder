@@ -1,8 +1,11 @@
 import bcrypt from "bcryptjs"
-import { timingSafeEqual } from "crypto"
+import { createHash, timingSafeEqual } from "crypto"
 import { canonicalNumber, legacyNumberSpellings } from "@/lib/game/number-answer"
 
 const BCRYPT_ROUNDS = 10
+
+/** Longest answer a facilitator can set and a participant can submit. */
+export const MAX_ANSWER_LENGTH = 500
 
 /**
  * A number answer stored by value has this suffix after its bcrypt hash
@@ -15,6 +18,15 @@ const BCRYPT_ROUNDS = 10
  * and does not read the suffix.)
  */
 const NUMBER_VALUE_SUFFIX = ":num"
+
+/**
+ * bcrypt reads only the first 72 bytes of its input, so a value hash is made
+ * from a SHA-256 digest of the canonical number: two long numbers that share
+ * their first 72 digits stay different answers.
+ */
+function valueDigest(canonical: string): string {
+  return createHash("sha256").update(canonical, "utf8").digest("hex")
+}
 
 /** The challenge facts that decide how an answer is compared. */
 export interface AnswerRules {
@@ -113,9 +125,11 @@ export function storedForm(answer: string, type: string | null | undefined): str
 }
 
 export async function hashAnswer(answer: string, type: string | null | undefined): Promise<string> {
-  const hash = await bcrypt.hash(storedForm(answer, type), BCRYPT_ROUNDS)
-  const byValue = type === "number" && canonicalNumber(answer) !== null
-  return byValue ? hash + NUMBER_VALUE_SUFFIX : hash
+  const canonical = type === "number" ? canonicalNumber(answer) : null
+  if (canonical !== null) {
+    return (await bcrypt.hash(valueDigest(canonical), BCRYPT_ROUNDS)) + NUMBER_VALUE_SUFFIX
+  }
+  return bcrypt.hash(storedForm(answer, type), BCRYPT_ROUNDS)
 }
 
 function plaintextEquals(candidate: string, stored: string): boolean {
@@ -133,7 +147,7 @@ export async function verifyAnswer(
   if (storedHash.endsWith(NUMBER_VALUE_SUFFIX)) {
     const canonical = canonicalNumber(submitted)
     if (canonical === null) return false
-    return bcrypt.compare(canonical, storedHash.slice(0, -NUMBER_VALUE_SUFFIX.length))
+    return bcrypt.compare(valueDigest(canonical), storedHash.slice(0, -NUMBER_VALUE_SUFFIX.length))
   }
 
   const forms = candidateForms(submitted, rules)

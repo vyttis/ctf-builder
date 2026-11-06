@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import { verifyAnswer } from "@/lib/game/answer-hasher"
+import { MAX_ANSWER_LENGTH, verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { pluralizeLt } from "@/lib/utils"
 import { NextResponse } from "next/server"
@@ -13,7 +13,7 @@ const VERIFY_PER_MINUTE = 20
 const submitAnswerSchema = z.object({
   session_token: z.string().min(1),
   challenge_id: z.string().uuid(),
-  answer: z.string().min(1, "Atsakymas privalomas").max(500, "Atsakymas per ilgas"),
+  answer: z.string().min(1, "Atsakymas privalomas").max(MAX_ANSWER_LENGTH, "Atsakymas per ilgas"),
   hints_used: z.number().int().min(0).max(20).default(0),
 })
 

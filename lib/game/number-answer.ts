@@ -12,6 +12,33 @@
 // three separated by single spaces ("1 000 000"); an optional fraction after
 // a dot or a comma. A space anywhere else ("1 2", "10 00") is not a number.
 const NUMBER_PATTERN = /^([+-]?)(\d{1,3}(?: \d{3})+|\d+)?(?:[.,](\d+))?$/
+// Scientific notation as a number field may give it ("1e3", "2,5E-2").
+const EXPONENT_PATTERN = /^([+-]?)(\d+)?(?:[.,](\d+))?[eE]([+-]?\d{1,3})$/
+
+/**
+ * The canonical text of a number given as its digits and the position of the
+ * decimal point (how many digits stand before it; may be negative or past
+ * the end): no leading or trailing zeros, "-" only for a value below zero.
+ */
+function fromDigits(sign: string, digits: string, point: number): string {
+  let integer: string
+  let fraction: string
+  if (point <= 0) {
+    integer = "0"
+    fraction = "0".repeat(-point) + digits
+  } else if (point >= digits.length) {
+    integer = digits + "0".repeat(point - digits.length)
+    fraction = ""
+  } else {
+    integer = digits.slice(0, point)
+    fraction = digits.slice(point)
+  }
+  integer = integer.replace(/^0+/, "") || "0"
+  fraction = fraction.replace(/0+$/, "")
+  const text = fraction ? `${integer}.${fraction}` : integer
+  if (text === "0") return "0"
+  return sign === "-" ? `-${text}` : text
+}
 
 /** The canonical text of a typed number ("2.5", "-3", "1000"), or null if it is not a number. */
 export function canonicalNumber(input: string): string | null {
@@ -19,16 +46,20 @@ export function canonicalNumber(input: string): string | null {
     .trim()
     .replace(/\s/g, " ")
     .replace(/^[−–]/, "-")
+
+  const exp = EXPONENT_PATTERN.exec(s)
+  if (exp) {
+    const [, sign, intPart = "", fracPart = "", exponent] = exp
+    if (!intPart && !fracPart) return null
+    return fromDigits(sign, intPart + fracPart, intPart.length + Number(exponent))
+  }
+
   const match = NUMBER_PATTERN.exec(s)
   if (!match) return null
   const [, sign, intPart, fracPart] = match
   if (intPart === undefined && fracPart === undefined) return null
-
-  const integer = (intPart ?? "").replace(/ /g, "").replace(/^0+/, "") || "0"
-  const fraction = (fracPart ?? "").replace(/0+$/, "")
-  const digits = fraction ? `${integer}.${fraction}` : integer
-  if (digits === "0") return "0"
-  return sign === "-" ? `-${digits}` : digits
+  const integer = (intPart ?? "").replace(/ /g, "")
+  return fromDigits(sign, integer + (fracPart ?? ""), integer.length)
 }
 
 /** True when the text can be read as a number. */
