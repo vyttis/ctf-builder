@@ -1,4 +1,10 @@
 import type { Instrumentation } from "next"
+import { installLithuanianValidation } from "@/lib/validation/zod-lt"
+
+/** Runs once per server instance: API validation errors read in Lithuanian. */
+export function register() {
+  installLithuanianValidation()
+}
 
 /**
  * One structured log line per server error, so failures show up in Vercel's
