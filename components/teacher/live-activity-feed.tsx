@@ -60,27 +60,21 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
     let pollInterval: NodeJS.Timeout | null = null
     let cancelled = false
 
-    // Load recent activity on mount
+    // Load recent activity on mount. Two reads: the teams (their number is
+    // the team count) and their latest answers; task titles come from the
+    // task list read for the realtime filter (PERF-03).
     async function loadRecent() {
-      // Get team count. Count on a named column, not "*": client roles have
-      // column-level SELECT grants on teams (session_token is revoked), and
-      // "*" expands to the revoked column → permission denied.
-      const { count, error: countError } = await supabase
-        .from("teams")
-        .select("id", { count: "exact", head: true })
-        .eq("game_id", gameId)
-
-      if (countError) throw countError
-
-      setTeamCount(count || 0)
-
-      // Get teams for this game, then fetch their submissions
+      // Named columns, not "*": client roles have column-level SELECT grants
+      // on teams (session_token is revoked), "*" would be denied.
       const { data: teams, error: teamsError } = await supabase
         .from("teams")
         .select("id, name")
         .eq("game_id", gameId)
 
       if (teamsError) throw teamsError
+      if (cancelled) return
+
+      setTeamCount(teams?.length ?? 0)
 
       if (!teams || teams.length === 0) {
         initialLoadDone.current = true
@@ -97,12 +91,17 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
         .order("attempted_at", { ascending: false })
         .limit(15)
 
-      const { data: challenges } = await supabase
-        .from("challenges")
-        .select("id, title")
-        .eq("game_id", gameId)
-
-      const challengeMap = new Map((challenges || []).map(c => [c.id, c.title]))
+      // A task added a moment ago may not be in the list yet: read titles
+      // only then.
+      let challengeMap = titlesRef.current
+      if (subs?.some((sub) => !challengeMap.has(sub.challenge_id))) {
+        const { data: challenges } = await supabase
+          .from("challenges")
+          .select("id, title")
+          .eq("game_id", gameId)
+        challengeMap = new Map((challenges || []).map((c) => [c.id, c.title as string]))
+      }
+      if (cancelled) return
 
       if (subs) {
         const recentEvents: ActivityEvent[] = subs.map(s => ({
@@ -144,21 +143,13 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
       }
     }
 
-    // Per-channel status: healthy only when BOTH channels are subscribed —
-    // a shared handler would let one healthy channel clear the degraded state
-    // (and stop polling) while the other is broken.
-    const channelStatuses = new Map<string, string>()
-    const handleChannelStatus = (channelKey: string) => (status: string) => {
+    // One channel carries answers and team changes (PERF-03).
+    const handleStatus = (status: string) => {
       if (cancelled) return
-      channelStatuses.set(channelKey, status)
-      const statuses = Array.from(channelStatuses.values())
-      if (statuses.some((s) => s === "CHANNEL_ERROR" || s === "TIMED_OUT")) {
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         setDegraded(true)
         startPolling()
-      } else if (
-        statuses.length === 2 &&
-        statuses.every((s) => s === "SUBSCRIBED")
-      ) {
+      } else if (status === "SUBSCRIBED") {
         setDegraded(false)
         stopPolling()
       }
@@ -171,9 +162,9 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
       }
     })
 
-    // Subscribe to new submissions
-    const submissionChannel = supabase
-      .channel(`activity_submissions_${gameId}`)
+    // New answers, and teams joining, renamed or removed.
+    const channel = supabase
+      .channel(`activity_${gameId}`)
       .on(
         "postgres_changes",
         {
@@ -226,11 +217,6 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
           setEvents(prev => [event, ...prev].slice(0, maxEvents))
         }
       )
-      .subscribe(handleChannelStatus("submissions"))
-
-    // Subscribe to new team joins
-    const teamChannel = supabase
-      .channel(`activity_teams_${gameId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "teams", filter: `game_id=eq.${gameId}` },
@@ -278,7 +264,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
           if (!cancelled && typeof count === "number") setTeamCount(count)
         }
       )
-      .subscribe(handleChannelStatus("teams"))
+      .subscribe(handleStatus)
 
     // Events missed while the laptop slept or the network was down: read the
     // recent ones again when the page is shown or the network is back.
@@ -293,8 +279,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
       cancelled = true
       document.removeEventListener("visibilitychange", refresh)
       window.removeEventListener("online", refresh)
-      supabase.removeChannel(submissionChannel)
-      supabase.removeChannel(teamChannel)
+      supabase.removeChannel(channel)
       stopPolling()
     }
   }, [gameId, maxEvents, retryNonce, submissionFilter])

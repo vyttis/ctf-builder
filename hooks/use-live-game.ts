@@ -159,29 +159,21 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
         }
       })
 
-    // Per-channel status: "live" only when EVERY channel is subscribed.
-    // A single shared handler would let a healthy submissions channel report
-    // SUBSCRIBED and cancel the polling that a broken teams channel needs —
-    // the teacher would see a healthy indicator over a frozen leaderboard.
-    const channelStatuses = new Map<string, string>()
-    const handleChannelStatus = (channelKey: string) => (status: string) => {
+    // One channel carries team and answer changes (PERF-03): it is either
+    // subscribed or not, so the board is never "live" over half its data.
+    const handleStatus = (status: string) => {
       if (cancelled) return
-      channelStatuses.set(channelKey, status)
-      const statuses = Array.from(channelStatuses.values())
-      if (statuses.some((s) => s === "CHANNEL_ERROR" || s === "TIMED_OUT")) {
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         setConnectionState("degraded")
         startPolling()
-      } else if (
-        statuses.length === 2 &&
-        statuses.every((s) => s === "SUBSCRIBED")
-      ) {
+      } else if (status === "SUBSCRIBED") {
         setConnectionState("live")
         stopPolling()
       }
     }
 
-    const teamChannel = supabase
-      .channel(`live_game_teams_${gameId}`)
+    const channel = supabase
+      .channel(`live_game_${gameId}`)
       .on(
         "postgres_changes",
         {
@@ -219,10 +211,6 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
           if (removedId) setTeams((prev) => prev.filter((t) => t.id !== removedId))
         }
       )
-      .subscribe(handleChannelStatus("teams"))
-
-    const submissionChannel = supabase
-      .channel(`live_game_subs_${gameId}`)
       .on(
         "postgres_changes",
         {
@@ -269,7 +257,7 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
           }
         }
       )
-      .subscribe(handleChannelStatus("submissions"))
+      .subscribe(handleStatus)
 
     // After the laptop sleeps or the network drops, realtime events from that
     // time are lost and the board would stay stale until the next change.
@@ -286,8 +274,7 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
       cancelled = true
       document.removeEventListener("visibilitychange", refresh)
       window.removeEventListener("online", refresh)
-      supabase.removeChannel(teamChannel)
-      supabase.removeChannel(submissionChannel)
+      supabase.removeChannel(channel)
       stopPolling()
     }
   }, [gameId, fetchInitialData, retryNonce, submissionFilter])
