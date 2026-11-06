@@ -105,7 +105,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
           Skenuoti QR kodą
         </Button>
         {error && (
-          <p className="text-xs text-accent text-center">{error}</p>
+          <p className="text-xs text-accent-ink text-center">{error}</p>
         )}
       </div>
     )

@@ -49,16 +49,16 @@ interface LessonActivityCardProps {
 }
 
 const ACTIVITY_TYPE_CONFIG = {
-  intro: { label: "Įvadas", icon: Play, color: "text-secondary", bg: "bg-secondary/10" },
+  intro: { label: "Įvadas", icon: Play, color: "text-secondary-ink", bg: "bg-secondary/10" },
   challenge: { label: "Užduotis", icon: Zap, color: "text-primary-ink", bg: "bg-primary/10" },
-  discussion: { label: "Diskusija", icon: MessageSquare, color: "text-highlight", bg: "bg-highlight/10" },
-  reflection: { label: "Refleksija", icon: BookOpen, color: "text-accent", bg: "bg-accent/10" },
+  discussion: { label: "Diskusija", icon: MessageSquare, color: "text-highlight-ink", bg: "bg-highlight/10" },
+  reflection: { label: "Refleksija", icon: BookOpen, color: "text-accent-ink", bg: "bg-accent/10" },
 }
 
 const DIFFICULTY_CONFIG = {
   easy: { label: "Lengva", className: "bg-primary/10 text-primary-ink border-primary/20" },
-  medium: { label: "Vidutinė", className: "bg-highlight/10 text-highlight border-highlight/20" },
-  hard: { label: "Sunki", className: "bg-accent/10 text-accent border-accent/20" },
+  medium: { label: "Vidutinė", className: "bg-highlight/10 text-highlight-ink border-highlight/20" },
+  hard: { label: "Sunki", className: "bg-accent/10 text-accent-ink border-accent/20" },
 }
 
 const TYPE_LABELS = {
@@ -121,13 +121,13 @@ export function LessonActivityCard({
 
             {/* Verification */}
             {verificationVerdict === "pass" && (
-              <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-primary-ink shrink-0" />
             )}
             {verificationVerdict === "fail" && (
-              <AlertCircle className="h-4 w-4 text-accent shrink-0" />
+              <AlertCircle className="h-4 w-4 text-accent-ink shrink-0" />
             )}
             {verificationVerdict === "uncertain" && (
-              <HelpCircle className="h-4 w-4 text-highlight shrink-0" />
+              <HelpCircle className="h-4 w-4 text-highlight-ink shrink-0" />
             )}
           </div>
 
@@ -165,7 +165,7 @@ export function LessonActivityCard({
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 w-9 p-0 text-accent hover:text-accent"
+              className="h-9 w-9 p-0 text-accent-ink hover:text-accent-ink"
               onClick={() => setConfirmDelete(true)}
               aria-label="Pašalinti veiklą"
             >
@@ -333,7 +333,7 @@ export function LessonActivityCard({
             {/* Verification issues */}
             {activity.verification?.issues && activity.verification.issues.length > 0 && (
               <div className="rounded bg-highlight/5 border border-highlight/20 p-2">
-                <p className="text-xs font-medium text-highlight mb-1">Patikros pastabos:</p>
+                <p className="text-xs font-medium text-highlight-ink mb-1">Patikros pastabos:</p>
                 <ul className="text-xs text-muted-foreground space-y-0.5">
                   {activity.verification.issues.map((issue, i) => (
                     <li key={i}>• {issue}</li>

@@ -131,7 +131,7 @@ export function ReflectionForm({
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <MessageCircle className="h-4 w-4 text-primary" />
+              <MessageCircle className="h-4 w-4 text-primary-ink" />
             </div>
             <h3 className="font-semibold text-steam-dark text-base">
               Trumpa refleksija
@@ -208,7 +208,7 @@ export function ReflectionForm({
             </div>
 
             {error && (
-              <p className="text-sm text-accent font-medium">{error}</p>
+              <p className="text-sm text-accent-ink font-medium">{error}</p>
             )}
 
             {/* Actions */}

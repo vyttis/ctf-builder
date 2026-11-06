@@ -54,13 +54,13 @@ export function LibraryCard({ item }: LibraryCardProps) {
 
   // Map subjects to project palette tokens (steam-*)
   const subjectColors: Record<string, string> = {
-    Fizika: "bg-secondary/10 text-secondary",
+    Fizika: "bg-secondary/10 text-secondary-ink",
     Chemija: "bg-primary/10 text-primary-ink",
     Biologija: "bg-primary/10 text-primary-ink",
-    Matematika: "bg-accent/10 text-accent",
+    Matematika: "bg-accent/10 text-accent-ink",
     Informatika: "bg-highlight/15 text-steam-dark",
     Technologijos: "bg-highlight/15 text-steam-dark",
-    Menas: "bg-accent/10 text-accent",
+    Menas: "bg-accent/10 text-accent-ink",
   }
 
   return (

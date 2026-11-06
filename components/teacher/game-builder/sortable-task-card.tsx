@@ -94,13 +94,13 @@ export function SortableTaskCard({
                   {challenge.title}
                 </h3>
                 {challenge.generated_by_di && (
-                  <Sparkles className="h-3 w-3 text-highlight shrink-0" />
+                  <Sparkles className="h-3 w-3 text-highlight-ink shrink-0" />
                 )}
               </div>
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {challenge.needs_answer && (
                   <Badge
-                    className="text-[10px] px-1.5 py-0 bg-accent/10 text-accent border-accent/40 hover:bg-accent/15 gap-0.5"
+                    className="text-[10px] px-1.5 py-0 bg-accent/10 text-accent-ink border-accent/40 hover:bg-accent/15 gap-0.5"
                     onClick={(e) => {
                       e.stopPropagation()
                       onSelect(challenge)
@@ -127,8 +127,8 @@ export function SortableTaskCard({
                       challenge.difficulty === "easy"
                         ? "text-primary-ink border-primary/30"
                         : challenge.difficulty === "hard"
-                        ? "text-accent border-accent/30"
-                        : "text-highlight border-highlight/30"
+                        ? "text-accent-ink border-accent/30"
+                        : "text-highlight-ink border-highlight/30"
                     }`}
                   >
                     {difficultyLabel}
@@ -142,7 +142,7 @@ export function SortableTaskCard({
                 variant="ghost"
                 size="sm"
                 aria-label={`Redaguoti „${challenge.title}“`}
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary-ink"
                 onClick={(e) => {
                   e.stopPropagation()
                   onSelect(challenge)
@@ -156,7 +156,7 @@ export function SortableTaskCard({
                     variant="ghost"
                     size="sm"
                     aria-label={`Kopijuoti „${challenge.title}“`}
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary-ink"
                     onClick={(e) => {
                       e.stopPropagation()
                       onDuplicate(challenge)
@@ -168,7 +168,7 @@ export function SortableTaskCard({
                     variant="ghost"
                     size="sm"
                     aria-label={`Ištrinti „${challenge.title}“`}
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-accent"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-accent-ink"
                     onClick={(e) => {
                       e.stopPropagation()
                       onDelete(challenge)
@@ -197,7 +197,7 @@ export function TaskCardOverlay({
     <Card className="border-primary/30 bg-white shadow-lg shadow-primary/10 w-full max-w-md">
       <CardContent className="p-3">
         <div className="flex items-center gap-2">
-          <GripVertical className="h-4 w-4 text-primary" />
+          <GripVertical className="h-4 w-4 text-primary-ink" />
           <span className="text-xs font-bold text-primary-ink">{index + 1}</span>
           <h3 className="font-medium text-sm text-steam-dark truncate flex-1">
             {challenge.title}

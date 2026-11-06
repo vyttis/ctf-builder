@@ -92,7 +92,7 @@ export default async function AdminDashboardPage() {
           className="mb-8 flex items-center justify-between gap-4 rounded-xl border border-secondary/30 bg-secondary/5 px-5 py-4 transition-colors hover:bg-secondary/10"
         >
           <div className="flex items-center gap-3">
-            <UserCheck className="h-5 w-5 text-secondary" aria-hidden="true" />
+            <UserCheck className="h-5 w-5 text-secondary-ink" aria-hidden="true" />
             <div>
               <p className="font-semibold text-steam-dark">Paskyrų prašymai</p>
               <p className="text-sm text-muted-foreground">
@@ -124,7 +124,7 @@ export default async function AdminDashboardPage() {
       {/* Stats */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-steam-dark mb-4 flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
+          <BarChart3 className="h-5 w-5 text-primary-ink" />
           Platformos statistika
         </h2>
         <StatsCards stats={stats} />
@@ -135,7 +135,7 @@ export default async function AdminDashboardPage() {
         <Card className="border-border/50 bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4 text-secondary" />
+              <Users className="h-4 w-4 text-secondary-ink" />
               Naujausi vartotojai
             </CardTitle>
             <Link href="/admin/users">
@@ -189,7 +189,7 @@ export default async function AdminDashboardPage() {
         <Card className="border-border/50 bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-highlight" />
+              <BookOpen className="h-4 w-4 text-highlight-ink" />
               Laukia patvirtinimo
               {stats.library_items_pending > 0 && (
                 <Badge className="bg-highlight/10 text-highlight-ink border-highlight/20 text-xs">

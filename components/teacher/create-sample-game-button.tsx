@@ -52,7 +52,7 @@ export function CreateSampleGameButton({
       disabled={loading}
       className={
         variant === "outline"
-          ? "gap-2 border-highlight/40 text-highlight hover:bg-highlight/5"
+          ? "gap-2 border-highlight/40 text-highlight-ink hover:bg-highlight/5"
           : "gap-2 bg-highlight hover:bg-highlight/90 text-steam-dark"
       }
     >

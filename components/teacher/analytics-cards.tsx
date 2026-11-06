@@ -23,7 +23,7 @@ export function AnalyticsCards({ stats }: AnalyticsCardsProps) {
       label: "Komandos",
       value: stats.total_teams,
       icon: Users,
-      color: "text-secondary",
+      color: "text-secondary-ink",
       bg: "bg-secondary/10",
     },
     {
@@ -44,7 +44,7 @@ export function AnalyticsCards({ stats }: AnalyticsCardsProps) {
       label: "Vid. laikas",
       value: avgTime,
       icon: Clock,
-      color: "text-highlight",
+      color: "text-highlight-ink",
       bg: "bg-highlight/10",
     },
   ]

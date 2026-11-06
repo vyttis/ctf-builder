@@ -111,11 +111,11 @@ export function getRoleLabel(role: UserRole): string {
 export function getRoleBadgeColor(role: UserRole): string {
   switch (role) {
     case "super_admin":
-      return "bg-accent/10 text-accent border-accent/20"
+      return "bg-accent/10 text-accent-ink border-accent/20"
     case "admin":
-      return "bg-secondary/10 text-secondary border-secondary/20"
+      return "bg-secondary/10 text-secondary-ink border-secondary/20"
     case "teacher":
-      return "bg-primary/10 text-primary border-primary/20"
+      return "bg-primary/10 text-primary-ink border-primary/20"
     default:
       return "bg-muted text-muted-foreground"
   }

@@ -48,7 +48,7 @@ export function Footer() {
                   onClick={() =>
                     document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })
                   }
-                  className="text-sm text-steam-dark hover:text-primary transition-colors"
+                  className="text-sm text-steam-dark hover:text-primary-ink transition-colors"
                 >
                   Kaip veikia
                 </button>
@@ -58,18 +58,18 @@ export function Footer() {
                   onClick={() =>
                     document.getElementById("access")?.scrollIntoView({ behavior: "smooth" })
                   }
-                  className="text-sm text-steam-dark hover:text-primary transition-colors"
+                  className="text-sm text-steam-dark hover:text-primary-ink transition-colors"
                 >
                   Prieiga
                 </button>
               </li>
               <li>
-                <Link href="/vedejui" className="text-sm text-steam-dark hover:text-primary transition-colors">
+                <Link href="/vedejui" className="text-sm text-steam-dark hover:text-primary-ink transition-colors">
                   Vesti veiklą
                 </Link>
               </li>
               <li>
-                <Link href="/prisijungti" className="text-sm text-steam-dark hover:text-primary transition-colors">
+                <Link href="/prisijungti" className="text-sm text-steam-dark hover:text-primary-ink transition-colors">
                   Prisijungti prie veiklos
                 </Link>
               </li>
@@ -87,7 +87,7 @@ export function Footer() {
                   href="https://www.ku.lt/steam"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-1.5 text-sm text-steam-dark hover:text-primary transition-colors"
+                  className="group inline-flex items-center gap-1.5 text-sm text-steam-dark hover:text-primary-ink transition-colors"
                 >
                   STEAM metodinis centras
                   <ArrowUpRight className="h-3 w-3 opacity-40 group-hover:opacity-100 transition-opacity" />
@@ -98,7 +98,7 @@ export function Footer() {
                   href="https://www.ku.lt"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-1.5 text-sm text-steam-dark hover:text-primary transition-colors"
+                  className="group inline-flex items-center gap-1.5 text-sm text-steam-dark hover:text-primary-ink transition-colors"
                 >
                   Klaipėdos universitetas
                   <ArrowUpRight className="h-3 w-3 opacity-40 group-hover:opacity-100 transition-opacity" />
@@ -116,18 +116,18 @@ export function Footer() {
               <li>
                 <a
                   href="mailto:steam@ku.lt"
-                  className="flex items-center gap-2 text-sm text-steam-dark hover:text-primary transition-colors"
+                  className="flex items-center gap-2 text-sm text-steam-dark hover:text-primary-ink transition-colors"
                 >
-                  <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <Mail className="h-3.5 w-3.5 text-primary-ink shrink-0" />
                   steam@ku.lt
                 </a>
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
+                <Phone className="h-3.5 w-3.5 text-primary-ink shrink-0" />
                 +370 (46) 398 978
               </li>
               <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                <MapPin className="h-3.5 w-3.5 text-primary-ink shrink-0 mt-0.5" />
                 Herkaus Manto g. 84
                 <br />
                 Klaipėda

@@ -612,7 +612,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
               <div className="lg:hidden mt-4">
                 <button
                   type="button"
-                  className="w-full p-3 rounded-lg border border-highlight/30 bg-highlight/5 text-sm font-medium text-highlight flex items-center justify-center gap-2"
+                  className="w-full p-3 rounded-lg border border-highlight/30 bg-highlight/5 text-sm font-medium text-highlight-ink flex items-center justify-center gap-2"
                   onClick={() => setMobileSheetOpen(true)}
                 >
                   <Sparkles className="h-4 w-4" />

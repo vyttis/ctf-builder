@@ -167,7 +167,7 @@ export default function JoinGamePage() {
   if (gameState.status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
       </div>
     )
   }
@@ -208,7 +208,7 @@ export default function JoinGamePage() {
           className="w-full max-w-sm text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center">
-            <AlertCircle className="h-10 w-10 text-accent" />
+            <AlertCircle className="h-10 w-10 text-accent-ink" />
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
             Veikla nerasta
@@ -247,7 +247,7 @@ export default function JoinGamePage() {
           className="w-full max-w-sm text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-highlight/10 flex items-center justify-center">
-            <AlertCircle className="h-10 w-10 text-highlight" />
+            <AlertCircle className="h-10 w-10 text-highlight-ink" />
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
             {gameState.gameStatus === "finished"
@@ -303,7 +303,7 @@ export default function JoinGamePage() {
         <Card className="border-0 shadow-2xl shadow-primary/10 bg-white/90 backdrop-blur-xl">
           <CardHeader className="text-center pb-2">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Gamepad2 className="h-5 w-5 text-primary" />
+              <Gamepad2 className="h-5 w-5 text-primary-ink" />
               <span className="font-mono text-sm font-bold text-primary-ink tracking-widest">
                 {gameCode}
               </span>

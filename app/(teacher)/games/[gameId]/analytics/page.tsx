@@ -91,7 +91,7 @@ export default function GameAnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
       </div>
     )
   }
@@ -99,7 +99,7 @@ export default function GameAnalyticsPage() {
   if (error) {
     return (
       <div className="text-center py-20">
-        <p className="text-accent text-sm">{error}</p>
+        <p className="text-accent-ink text-sm">{error}</p>
         <div className="mt-4 flex justify-center gap-2">
           <Button
             size="sm"
@@ -137,7 +137,7 @@ export default function GameAnalyticsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-steam-dark flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" />
+            <BarChart3 className="h-6 w-6 text-primary-ink" />
             Veiklos analitika
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -202,12 +202,12 @@ export default function GameAnalyticsPage() {
         <TabsContent value="reflections">
           {reflectionsLoading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Loader2 className="h-6 w-6 animate-spin text-primary-ink" />
             </div>
           )}
           {reflectionsError && (
             <div className="text-center py-12">
-              <p className="text-accent text-sm">{reflectionsError}</p>
+              <p className="text-accent-ink text-sm">{reflectionsError}</p>
               <Button variant="outline" size="sm" className="mt-4" onClick={() => void loadReflections(true)}>
                 Bandyti dar kartą
               </Button>

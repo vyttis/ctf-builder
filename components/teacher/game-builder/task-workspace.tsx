@@ -100,7 +100,7 @@ export function TaskWorkspace({
     return (
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <Edit3 className="h-4 w-4 text-primary" />
+          <Edit3 className="h-4 w-4 text-primary-ink" />
           <h3 className="font-semibold text-sm text-steam-dark">
             {editingChallenge ? "Redaguoti užduotį" : "Nauja užduotis"}
           </h3>

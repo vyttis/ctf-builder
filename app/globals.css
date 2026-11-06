@@ -21,12 +21,16 @@
 
     --secondary: 193 100% 35%;
     --secondary-foreground: 0 0% 100%;
+    /* Darker blue for blue text on light and blue-tinted surfaces: 5.6:1 on white. */
+    --secondary-ink: 193 100% 28%;
 
     --muted: 210 20% 96%;
     --muted-foreground: 215 20% 38%;
 
     --accent: 343 95% 57%;
     --accent-foreground: 0 0% 100%;
+    /* Darker pink for pink text on light and pink-tinted surfaces: 5.5:1 on white. */
+    --accent-ink: 343 95% 42%;
 
     --highlight: 43 95% 63%;
     --highlight-foreground: 186 100% 12%;
@@ -66,12 +70,16 @@
 
     --secondary: 193 100% 35%;
     --secondary-foreground: 0 0% 100%;
+    /* Darker blue for blue text on light and blue-tinted surfaces: 5.6:1 on white. */
+    --secondary-ink: 193 100% 28%;
 
     --muted: 186 60% 18%;
     --muted-foreground: 215 20% 65%;
 
     --accent: 343 95% 57%;
     --accent-foreground: 0 0% 100%;
+    /* Darker pink for pink text on light and pink-tinted surfaces: 5.5:1 on white. */
+    --accent-ink: 343 95% 42%;
 
     --highlight: 43 95% 63%;
     --highlight-foreground: 186 100% 12%;

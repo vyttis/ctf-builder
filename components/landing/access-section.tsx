@@ -28,9 +28,9 @@ const steps = [
 ] as const
 
 const ACCENT_CLASS: Record<string, string> = {
-  primary: "text-primary",
-  secondary: "text-secondary",
-  highlight: "text-highlight",
+  primary: "text-primary-ink",
+  secondary: "text-secondary-ink",
+  highlight: "text-highlight-ink",
 }
 
 export function AccessSection() {
@@ -45,7 +45,7 @@ export function AccessSection() {
           <div className="mb-14">
             <div className="flex items-center gap-3 mb-5">
               <span className="inline-flex h-px w-10 bg-highlight" />
-              <span className="text-[11px] uppercase tracking-[0.22em] text-highlight font-semibold">
+              <span className="text-[11px] uppercase tracking-[0.22em] text-highlight-ink font-semibold">
                 §8 · Prieiga
               </span>
             </div>
