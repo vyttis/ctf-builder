@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { GameSettings } from "@/types/game"
+import { readJson } from "@/lib/http/read-json"
 import {
   Dialog,
   DialogContent,
@@ -100,7 +101,7 @@ export function GameEditDialog({
       })
 
       if (!res.ok) {
-        const err = await res.json()
+        const err = await readJson<{ error?: unknown }>(res)
         throw new Error(typeof err.error === "string" ? err.error : "Nepavyko atnaujinti veiklos")
       }
 

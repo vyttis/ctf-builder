@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { readJson } from "@/lib/http/read-json"
 import { useToast } from "@/hooks/use-toast"
 import { AlertCircle, Loader2 } from "lucide-react"
 
@@ -41,7 +42,7 @@ export function GameDeleteDialog({
       })
 
       if (!res.ok) {
-        const err = await res.json()
+        const err = await readJson<{ error?: unknown }>(res)
         throw new Error(typeof err.error === "string" ? err.error : "Nepavyko ištrinti veiklos")
       }
 

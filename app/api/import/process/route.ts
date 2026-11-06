@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { checkAiAllowance, enterAiContext } from "@/lib/ai/usage"
 import { NextResponse } from "next/server"
+import { IMPORT_TEXT_LIMIT } from "@/lib/upload-limits"
 import { z } from "zod"
 import { buildSystemPrompt } from "@/lib/ai/prompt"
 import { aiSuggestResponseSchema } from "@/lib/ai/schemas"
@@ -88,7 +89,8 @@ export async function POST(request: Request) {
     }
 
     // Truncate to reasonable length for AI processing
-    const truncatedText = text.slice(0, 8000)
+    const truncated = text.length > IMPORT_TEXT_LIMIT
+    const truncatedText = text.slice(0, IMPORT_TEXT_LIMIT)
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
@@ -132,7 +134,7 @@ Sugeneruok ${parsed.data.count} užduotis pagal šį dokumentą. Užduotys turi 
       })
     )
 
-    return NextResponse.json({ suggestions: enriched })
+    return NextResponse.json({ suggestions: enriched, truncated })
   } catch (error) {
     console.error("Import process error:", error)
     return NextResponse.json(

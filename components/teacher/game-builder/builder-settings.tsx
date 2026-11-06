@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { GameSettings } from "@/types/game"
+import { readJson } from "@/lib/http/read-json"
 import {
   Sheet,
   SheetContent,
@@ -94,7 +95,7 @@ export function BuilderSettings({
       })
 
       if (!res.ok) {
-        const err = await res.json()
+        const err = await readJson<{ error?: unknown }>(res)
         throw new Error(
           typeof err.error === "string"
             ? err.error

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
+import { readJson } from "@/lib/http/read-json"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -92,7 +93,7 @@ export function GameForm({ prefillData }: GameFormProps) {
       })
 
       if (!res.ok) {
-        const err = await res.json()
+        const err = await readJson<{ error?: unknown }>(res)
         const errorMessage = typeof err.error === "string" ? err.error : "Nepavyko sukurti veiklos"
         throw new Error(errorMessage)
       }

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { AiQuotaNote } from "@/components/teacher/ai-quota-note"
+import { readJson } from "@/lib/http/read-json"
 import { AiGameIdea, AiGameSuggestResponse } from "@/lib/ai/types"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -61,7 +62,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
       })
 
       if (!res.ok) {
-        const err = await res.json()
+        const err = await readJson<{ error?: unknown }>(res)
         throw new Error(err.error || "Nepavyko sugeneruoti idėjų")
       }
 

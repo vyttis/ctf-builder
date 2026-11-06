@@ -20,6 +20,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable"
 import { Challenge, GameStatus, GameSettings } from "@/types/game"
+import { readJson } from "@/lib/http/read-json"
 import { AiSuggestion, DiGenerateResponse, ScenarioPreset } from "@/lib/ai/types"
 import { BuilderHeader } from "./builder-header"
 import { BuilderSettings } from "./builder-settings"
@@ -203,7 +204,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
           }),
         })
         if (!res.ok) {
-          const err = await res.json()
+          const err = await readJson<{ error?: unknown }>(res)
           throw new Error(err.error || "Nepavyko sugeneruoti pasiūlymų")
         }
         const data: DiGenerateResponse = await res.json()
