@@ -236,7 +236,9 @@ Neaktyvi paskyra gauna klaidą `42501` (sąsajoje 403), o ne nepakeistą eilutę
 kaip sėkmę.
 
 Taikymo tvarka: pirma migracija, tada kodas. Senas kodas su nauja schema
-veikia (nauji stulpeliai turi numatytąsias reikšmes, funkcijų jis nekviečia).
+veikia (nauji stulpeliai turi numatytąsias reikšmes, funkcijų jis nekviečia),
+bet pauzė jame laiko nestabdo, kaip ir iki migracijos, o „Pratęsti“ limito
+nepakeičia. Todėl taikyti, kai nevyksta veiklos, ir kodą diegti iškart po to.
 
 Patikra po taikymo:
 

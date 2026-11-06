@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -28,6 +27,7 @@ import {
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
 import { getPlayerSession, clearPlayerSession, savePlayerSession } from "@/lib/game/session"
+import { AnswerInput } from "@/components/player/answer-input"
 import { type GameClock, secondsLeft } from "@/lib/game/clock"
 import { pluralizeLt } from "@/lib/utils"
 import { MapsEmbed } from "@/components/shared/maps-embed"
@@ -536,6 +536,8 @@ export default function PlayPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Close the phone keyboard so the result below the button is visible.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
     if (!answer.trim() || !session || !challenges[currentIndex] || timeExpired) return
 
     setLoading(true)
@@ -1193,15 +1195,7 @@ export default function PlayPage() {
                       ))}
                     </div>
                   ) : (
-                    <Input
-                      type="text"
-                      inputMode={currentChallenge.type === "number" ? "decimal" : "text"}
-                      placeholder="Jūsų atsakymas..."
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      className="h-12 text-base bg-white"
-                      autoFocus
-                    />
+                    <AnswerInput type={currentChallenge.type} value={answer} onChange={setAnswer} />
                   )}
 
                   <Button
