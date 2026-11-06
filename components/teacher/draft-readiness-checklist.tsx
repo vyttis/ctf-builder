@@ -53,7 +53,7 @@ export function DraftReadinessChecklist({
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <ListChecks className="h-4 w-4 text-primary" />
+          <ListChecks className="h-4 w-4 text-primary-ink" />
           {readyToStart
             ? "Viskas paruošta, galite pradėti veiklą!"
             : "Pasiruošimas veiklai"}
@@ -63,7 +63,7 @@ export function DraftReadinessChecklist({
         {[...required, ...recommended].map((item) => (
           <div key={item.label} className="flex items-center gap-2 text-sm">
             {item.done ? (
-              <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-primary-ink shrink-0" />
             ) : (
               <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
             )}
@@ -71,7 +71,7 @@ export function DraftReadinessChecklist({
               {item.label}
             </span>
             {item.hint && (
-              <span className="text-xs text-accent ml-auto">{item.hint}</span>
+              <span className="text-xs text-accent-ink ml-auto">{item.hint}</span>
             )}
           </div>
         ))}

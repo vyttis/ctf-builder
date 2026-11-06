@@ -169,10 +169,10 @@ export function AccessRequestsPanel({ onPendingChange }: { onPendingChange?: (n:
                   {sourceText(r)}. Pateikta {dateFormat.format(new Date(r.created_at))}
                 </p>
                 {r.account_status === "active" && tab === "pending" && (
-                  <p className="text-xs font-medium text-secondary">Šis el. paštas jau turi aktyvią paskyrą.</p>
+                  <p className="text-xs font-medium text-secondary-ink">Šis el. paštas jau turi aktyvią paskyrą.</p>
                 )}
                 {r.account_status === "pending" && tab === "pending" && (
-                  <p className="text-xs font-medium text-secondary">
+                  <p className="text-xs font-medium text-secondary-ink">
                     Jau bandė prisijungti: patvirtinus paskyra bus aktyvuota be kvietimo laiško.
                   </p>
                 )}

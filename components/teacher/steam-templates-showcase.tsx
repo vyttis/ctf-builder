@@ -9,7 +9,7 @@ export function SteamTemplatesShowcase() {
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="mb-1 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent-ink">
               <Sparkles className="h-3 w-3" />
               NAUJIENA
             </span>
@@ -37,17 +37,17 @@ export function SteamTemplatesShowcase() {
             </div>
             <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{t.description}</p>
             <div className="flex flex-wrap gap-1.5 text-[10px]">
-              <span className="rounded-full bg-secondary/10 px-2 py-0.5 font-medium text-secondary">
+              <span className="rounded-full bg-secondary/10 px-2 py-0.5 font-medium text-secondary-ink">
                 {getSubjectLabel(t.subject)}
               </span>
-              <span className="rounded-full bg-accent/10 px-2 py-0.5 font-medium text-accent">
+              <span className="rounded-full bg-accent/10 px-2 py-0.5 font-medium text-accent-ink">
                 + {getSubjectLabel(t.secondary_subject)}
               </span>
               <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
                 {t.grade} kl.
               </span>
             </div>
-            <div className="mt-3 flex items-center text-xs font-medium text-accent opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="mt-3 flex items-center text-xs font-medium text-accent-ink opacity-0 transition-opacity group-hover:opacity-100">
               Atidaryti formą
               <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
             </div>

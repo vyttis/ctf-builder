@@ -105,7 +105,7 @@ export function PublishDialog({
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5"
+          className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
         >
           <Share2 className="h-4 w-4" />
           Dalintis bibliotekoje

@@ -46,7 +46,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5"
+            className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
           >
             <BookOpen className="h-4 w-4" />
             Sukurti pamoką
@@ -67,7 +67,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               onClick={() => setEditDialogOpen(true)}
               variant="outline"
               size="sm"
-              className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5"
+              className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
             >
               <Edit3 className="h-4 w-4" />
               Redaguoti
@@ -76,7 +76,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               onClick={() => setDeleteDialogOpen(true)}
               variant="outline"
               size="sm"
-              className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
+              className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
             >
               <Trash2 className="h-4 w-4" />
               Ištrinti

@@ -82,7 +82,7 @@ export default async function DashboardPage() {
           <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 to-secondary/10 hover:shadow-lg hover:shadow-secondary/10 transition-all duration-300 group cursor-pointer h-full">
             <CardContent className="p-6 flex flex-col items-center text-center gap-3">
               <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-                <GraduationCap className="h-7 w-7 text-secondary" />
+                <GraduationCap className="h-7 w-7 text-secondary-ink" />
               </div>
               <div>
                 <h3 className="font-bold text-steam-dark text-base mb-1">
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
                   Struktūruotas pamokos planas pagal ugdymo programą su DI pagalba
                 </p>
               </div>
-              <ArrowRight className="h-4 w-4 text-secondary group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="h-4 w-4 text-secondary-ink group-hover:translate-x-1 transition-transform" />
             </CardContent>
           </Card>
         </Link>
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
           <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 group cursor-pointer h-full">
             <CardContent className="p-6 flex flex-col items-center text-center gap-3">
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <Gamepad2 className="h-7 w-7 text-primary" />
+                <Gamepad2 className="h-7 w-7 text-primary-ink" />
               </div>
               <div>
                 <h3 className="font-bold text-steam-dark text-base mb-1">
@@ -112,7 +112,7 @@ export default async function DashboardPage() {
                   Interaktyvi veikla su užduotimis, kurią dalyviai atlieka klasėje
                 </p>
               </div>
-              <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="h-4 w-4 text-primary-ink group-hover:translate-x-1 transition-transform" />
             </CardContent>
           </Card>
         </Link>
@@ -154,7 +154,7 @@ export default async function DashboardPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link href="/lesson-plans/new">
-              <Button variant="outline" className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5">
+              <Button variant="outline" className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5">
                 <GraduationCap className="h-4 w-4" />
                 Kurti pamokos planą
               </Button>

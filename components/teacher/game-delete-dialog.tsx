@@ -69,7 +69,7 @@ export function GameDeleteDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-accent" />
+            <AlertCircle className="h-5 w-5 text-accent-ink" />
             Ištrinti veiklą?
           </DialogTitle>
           <DialogDescription>

@@ -262,7 +262,7 @@ export function LessonGenerator({
         <Card className="border-border/50 bg-white">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-secondary" />
+              <GraduationCap className="h-5 w-5 text-secondary-ink" />
               Pamokos parametrai
             </CardTitle>
           </CardHeader>
@@ -422,7 +422,7 @@ export function LessonGenerator({
                 animate={{ opacity: 1 }}
                 className="rounded-lg bg-secondary/5 border border-secondary/20 p-3"
               >
-                <p className="text-xs font-medium text-secondary mb-1 flex items-center gap-1">
+                <p className="text-xs font-medium text-secondary-ink mb-1 flex items-center gap-1">
                   <BookOpen className="h-3 w-3" />
                   Programos kontekstas
                 </p>
@@ -512,7 +512,7 @@ export function LessonGenerator({
         {lesson?.curriculum_link && (
           <CardContent className="pt-0">
             <div className="rounded-lg bg-secondary/5 border border-secondary/20 p-3">
-              <p className="text-xs font-medium text-secondary mb-1 flex items-center gap-1">
+              <p className="text-xs font-medium text-secondary-ink mb-1 flex items-center gap-1">
                 <Target className="h-3 w-3" />
                 Programos ryšys
               </p>
@@ -527,7 +527,7 @@ export function LessonGenerator({
       {/* Activities */}
       <div className="space-y-1">
         <h3 className="text-sm font-medium text-steam-dark flex items-center gap-2 mb-3">
-          <Clock className="h-4 w-4 text-secondary" />
+          <Clock className="h-4 w-4 text-secondary-ink" />
           Veiklų seka ({activities.length} veiklos)
         </h3>
 
@@ -581,7 +581,7 @@ export function LessonGenerator({
       {/* Teacher note */}
       <Card className="border-highlight/30 bg-highlight/5">
         <CardContent className="p-4 space-y-2">
-          <Label className="text-xs text-highlight flex items-center gap-1">
+          <Label className="text-xs text-highlight-ink flex items-center gap-1">
             <BookOpen className="h-3 w-3" />
             Metodinė pastaba mokytojui
           </Label>

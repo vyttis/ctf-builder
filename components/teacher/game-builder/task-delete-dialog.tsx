@@ -31,7 +31,7 @@ export function TaskDeleteDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-accent" />
+            <AlertCircle className="h-5 w-5 text-accent-ink" />
             Ištrinti užduotį?
           </DialogTitle>
           <DialogDescription>

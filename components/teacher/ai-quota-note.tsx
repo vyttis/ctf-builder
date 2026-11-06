@@ -35,7 +35,7 @@ export function AiQuotaNote({ className, refreshKey }: { className?: string; ref
   if (!quota) return null
   if (quota.blocked === "ai_budget") {
     return (
-      <p className={cn("text-xs text-accent", className)} role="status">
+      <p className={cn("text-xs text-accent-ink", className)} role="status">
         Šį mėnesį platformos DI biudžetas išnaudotas. DI vėl veiks nuo {quota.resetsOn}
       </p>
     )
@@ -43,7 +43,7 @@ export function AiQuotaNote({ className, refreshKey }: { className?: string; ref
   if (quota.limit === null || quota.remaining === null) return null
   if (quota.blocked === "ai_user_limit") {
     return (
-      <p className={cn("text-xs text-accent", className)} role="status">
+      <p className={cn("text-xs text-accent-ink", className)} role="status">
         Šio mėnesio DI užklausos panaudotos. Limitas atsinaujins {quota.resetsOn}
       </p>
     )

@@ -95,7 +95,7 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <BookOpen className="h-5 w-5 text-secondary" />
+        <BookOpen className="h-5 w-5 text-secondary-ink" />
         <h2 className="font-semibold text-steam-dark">Biblioteka</h2>
       </div>
       <p className="text-xs text-muted-foreground">

@@ -48,7 +48,7 @@ const formatDate = (iso: string | null) => (iso ? dateFormat.format(new Date(iso
 const STATUS_STYLE: Record<AccountStatus, string> = {
   active: "bg-primary/10 text-primary-ink border-primary/25",
   pending: "bg-highlight/15 text-steam-dark border-highlight/40",
-  blocked: "bg-accent/10 text-accent border-accent/25",
+  blocked: "bg-accent/10 text-accent-ink border-accent/25",
 }
 
 function StatusBadge({ status }: { status: AccountStatus }) {
@@ -223,7 +223,7 @@ export function UsersManager({ users, currentUserId, currentUserRole, defaultAiL
           {isFiltered && (
             <button
               type="button"
-              className="text-secondary underline-offset-4 hover:underline"
+              className="text-secondary-ink underline-offset-4 hover:underline"
               onClick={() => {
                 setQuery("")
                 setStatus(ALL)
@@ -368,7 +368,7 @@ function BreakdownList({ title, items }: { title: string; items: Breakdown[] }) 
       {items.length > 8 && (
         <button
           type="button"
-          className="mt-3 text-sm text-secondary underline-offset-4 hover:underline"
+          className="mt-3 text-sm text-secondary-ink underline-offset-4 hover:underline"
           onClick={() => setExpanded((e) => !e)}
           aria-expanded={expanded}
         >
@@ -610,12 +610,12 @@ function ManageUserDialog({
                       <Button onClick={() => setStep({ kind: "confirm-status", next: "active" })} disabled={busy} className="bg-primary text-primary-foreground hover:bg-primary/90">
                         Aktyvuoti paskyrą
                       </Button>
-                      <Button variant="outline" onClick={() => setStep({ kind: "confirm-status", next: "blocked" })} disabled={busy} className="text-accent">
+                      <Button variant="outline" onClick={() => setStep({ kind: "confirm-status", next: "blocked" })} disabled={busy} className="text-accent-ink">
                         Užblokuoti
                       </Button>
                     </div>
                   ) : (
-                    <Button variant="outline" onClick={() => setStep({ kind: "confirm-status", next: "blocked" })} disabled={busy} className="text-accent">
+                    <Button variant="outline" onClick={() => setStep({ kind: "confirm-status", next: "blocked" })} disabled={busy} className="text-accent-ink">
                       Užblokuoti paskyrą
                     </Button>
                   )}

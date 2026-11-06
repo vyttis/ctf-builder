@@ -31,7 +31,7 @@ export function OnboardingChecklist({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-4">
           <CardTitle className="text-base flex items-center gap-2">
-            <Rocket className="h-4 w-4 text-primary" />
+            <Rocket className="h-4 w-4 text-primary-ink" />
             Pirmieji žingsniai
           </CardTitle>
           <span className="text-xs text-muted-foreground tabular-nums">
@@ -56,7 +56,7 @@ export function OnboardingChecklist({
               }`}
             >
               {step.done ? (
-                <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                <CheckCircle2 className="h-4 w-4 text-primary-ink shrink-0" />
               ) : (
                 <Circle
                   className={`h-4 w-4 shrink-0 ${
@@ -67,7 +67,7 @@ export function OnboardingChecklist({
               <span className={step.done ? "line-through decoration-muted-foreground/40" : ""}>
                 {index + 1}. {step.label}
               </span>
-              {isNext && <ChevronRight className="h-4 w-4 text-primary ml-auto shrink-0" />}
+              {isNext && <ChevronRight className="h-4 w-4 text-primary-ink ml-auto shrink-0" />}
             </Link>
           )
         })}

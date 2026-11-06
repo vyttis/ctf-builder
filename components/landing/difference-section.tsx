@@ -47,7 +47,7 @@ export function DifferenceSection() {
       <div className="max-w-3xl mb-16">
         <div className="flex items-center gap-3 mb-5">
           <span className="inline-flex h-px w-10 bg-accent" />
-          <span className="text-[11px] uppercase tracking-[0.22em] text-accent font-semibold">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-accent-ink font-semibold">
             §7 · Skirtumas
           </span>
         </div>
@@ -97,12 +97,12 @@ export function DifferenceSection() {
 
         {/* Platform column */}
         <div className="bg-primary/[0.03] p-8 md:p-10 relative">
-          <div className="absolute top-8 right-8 md:right-10 numeral-display font-display italic text-5xl text-primary/15">
+          <div className="absolute top-8 right-8 md:right-10 numeral-display font-display italic text-5xl text-primary-ink/15">
             vs.
           </div>
           <div className="flex items-center gap-2 mb-1">
-            <Check className="h-4 w-4 text-primary" strokeWidth={2.5} />
-            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-primary">
+            <Check className="h-4 w-4 text-primary-ink" strokeWidth={2.5} />
+            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-primary-ink">
               Šis įrankis
             </span>
           </div>
@@ -112,7 +112,7 @@ export function DifferenceSection() {
           <dl className="space-y-4">
             {rows.map((row) => (
               <div key={row.label} className="border-t border-primary/15 pt-3">
-                <dt className="text-[10px] uppercase tracking-wider text-primary/80 font-bold mb-1">
+                <dt className="text-[10px] uppercase tracking-wider text-primary-ink/80 font-bold mb-1">
                   {row.label}
                 </dt>
                 <dd className="text-sm font-medium text-steam-dark leading-snug">

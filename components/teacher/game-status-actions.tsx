@@ -100,7 +100,7 @@ export function GameStatusActions({
         <Button
           variant="outline"
           disabled={loading}
-          className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
+          className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
         >
           <Square className="h-4 w-4" />
           {status === "paused" ? "Baigti" : "Baigti veiklą"}
@@ -156,14 +156,14 @@ export function GameStatusActions({
             </DialogDescription>
           </DialogHeader>
           {challengeCount === 0 && (
-            <div className="flex items-center gap-2 text-accent text-sm">
+            <div className="flex items-center gap-2 text-accent-ink text-sm">
               <AlertCircle className="h-4 w-4" />
               Pridėkite bent 1 užduotį prieš pradėdami
             </div>
           )}
           {hasPendingAnswers && (
             <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-2">
-              <div className="flex items-center gap-2 text-accent text-sm font-medium">
+              <div className="flex items-center gap-2 text-accent-ink text-sm font-medium">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 Šios užduotys neturi nustatyto atsakymo:
               </div>
@@ -176,7 +176,7 @@ export function GameStatusActions({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2 mt-1 border-accent/30 text-accent hover:bg-accent/5"
+                  className="gap-2 mt-1 border-accent/30 text-accent-ink hover:bg-accent/5"
                 >
                   <Wrench className="h-3.5 w-3.5" />
                   Taisyti užduotis

@@ -812,7 +812,7 @@ export default function PlayPage() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
-            <AlertTriangle className="h-8 w-8 text-accent" />
+            <AlertTriangle className="h-8 w-8 text-accent-ink" />
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
             Nepavyko įkelti veiklos
@@ -847,7 +847,7 @@ export default function PlayPage() {
   if (!session || !stateLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
       </div>
     )
   }
@@ -859,7 +859,7 @@ export default function PlayPage() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-highlight/10 flex items-center justify-center">
-            <Clock className="h-8 w-8 text-highlight" />
+            <Clock className="h-8 w-8 text-highlight-ink" />
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
             {gameStatus === "draft"
@@ -927,7 +927,7 @@ export default function PlayPage() {
           className="w-full max-w-md text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center">
-            <AlertTriangle className="h-10 w-10 text-accent" />
+            <AlertTriangle className="h-10 w-10 text-accent-ink" />
           </div>
           <h1 className="text-2xl font-bold text-steam-dark mb-2">
             Laikas baigėsi!
@@ -937,7 +937,7 @@ export default function PlayPage() {
           </p>
 
           <div className="bg-primary/5 rounded-2xl p-6 mb-6">
-            <Trophy className="h-8 w-8 text-highlight mx-auto mb-2" />
+            <Trophy className="h-8 w-8 text-highlight-ink mx-auto mb-2" />
             <p className="text-3xl font-bold text-steam-dark">{totalPoints}</p>
             <p className="text-sm text-muted-foreground">surinktų taškų</p>
           </div>
@@ -986,7 +986,7 @@ export default function PlayPage() {
           className="w-full max-w-sm text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-            <Clock className="h-10 w-10 text-primary" />
+            <Clock className="h-10 w-10 text-primary-ink" />
           </div>
 
           <h1 className="text-2xl font-bold text-steam-dark mb-2">
@@ -1059,7 +1059,7 @@ export default function PlayPage() {
           </p>
 
           <div className="bg-primary/5 rounded-2xl p-6 mb-6">
-            <Trophy className="h-8 w-8 text-highlight mx-auto mb-2" />
+            <Trophy className="h-8 w-8 text-highlight-ink mx-auto mb-2" />
             <p className="text-3xl font-bold text-steam-dark">{totalPoints}</p>
             <p className="text-sm text-muted-foreground">surinktų taškų</p>
           </div>
@@ -1117,7 +1117,7 @@ export default function PlayPage() {
                 {gameCode}
               </Badge>
               <Badge variant="secondary" className="gap-1">
-                <Star className="h-3 w-3 text-highlight" />
+                <Star className="h-3 w-3 text-highlight-ink" />
                 {totalPoints} tšk.
               </Badge>
             </div>
@@ -1182,7 +1182,7 @@ export default function PlayPage() {
             <span className="mx-2">&middot;</span>
             <button
               onClick={() => { clearPlayerSession(gameCode); router.replace(`/play/${gameCode}`) }}
-              className="text-xs text-muted-foreground/60 hover:text-accent transition-colors inline-flex items-center gap-1"
+              className="text-xs text-muted-foreground/60 hover:text-accent-ink transition-colors inline-flex items-center gap-1"
             >
               <LogOut className="h-3 w-3" />
               Išeiti
@@ -1219,7 +1219,7 @@ export default function PlayPage() {
               {gameCode}
             </Badge>
             <Badge variant="secondary" className="gap-1">
-              <Star className="h-3 w-3 text-highlight" />
+              <Star className="h-3 w-3 text-highlight-ink" />
               {totalPoints} tšk.
             </Badge>
           </div>
@@ -1371,12 +1371,12 @@ export default function PlayPage() {
                         }`}
                       >
                         {feedback.is_correct ? (
-                          <CheckCircle2 className="h-6 w-6 text-primary shrink-0" />
+                          <CheckCircle2 className="h-6 w-6 text-primary-ink shrink-0" />
                         ) : (
-                          <XCircle className="h-6 w-6 text-accent shrink-0" />
+                          <XCircle className="h-6 w-6 text-accent-ink shrink-0" />
                         )}
                         <div>
-                          <p className={`font-medium ${feedback.is_correct ? "text-primary-ink" : "text-accent"}`}>
+                          <p className={`font-medium ${feedback.is_correct ? "text-primary-ink" : "text-accent-ink"}`}>
                             {feedback.message}
                           </p>
                           {feedback.is_correct && !showExplanation && (
@@ -1396,8 +1396,8 @@ export default function PlayPage() {
                         >
                           <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
                             <div className="flex items-center gap-2 mb-2">
-                              <BookOpen className="h-4 w-4 text-secondary" />
-                              <p className="text-sm font-semibold text-secondary">
+                              <BookOpen className="h-4 w-4 text-secondary-ink" />
+                              <p className="text-sm font-semibold text-secondary-ink">
                                 Ar žinojote?
                               </p>
                             </div>
@@ -1436,7 +1436,7 @@ export default function PlayPage() {
               clearPlayerSession(gameCode)
               router.replace(`/play/${gameCode}`)
             }}
-            className="text-xs text-muted-foreground/60 hover:text-accent transition-colors inline-flex items-center gap-1"
+            className="text-xs text-muted-foreground/60 hover:text-accent-ink transition-colors inline-flex items-center gap-1"
           >
             <LogOut className="h-3 w-3" />
             Išeiti

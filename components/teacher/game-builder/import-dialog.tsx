@@ -143,7 +143,7 @@ export function ImportDialog({
 
         {step === "processing" && (
           <div className="py-8 text-center">
-            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-3" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary-ink mx-auto mb-3" />
             <p className="text-sm font-medium text-steam-dark mb-1">
               Apdorojama...
             </p>
@@ -155,7 +155,7 @@ export function ImportDialog({
 
         {step === "done" && (
           <div className="py-8 text-center">
-            <CheckCircle2 className="h-10 w-10 text-primary mx-auto mb-3" />
+            <CheckCircle2 className="h-10 w-10 text-primary-ink mx-auto mb-3" />
             <p className="text-sm font-medium text-steam-dark">
               Užduotys sugeneruotos!
             </p>
@@ -164,8 +164,8 @@ export function ImportDialog({
 
         {step === "error" && (
           <div className="py-8 text-center">
-            <AlertCircle className="h-10 w-10 text-accent mx-auto mb-3" />
-            <p className="text-sm font-medium text-accent mb-1">Klaida</p>
+            <AlertCircle className="h-10 w-10 text-accent-ink mx-auto mb-3" />
+            <p className="text-sm font-medium text-accent-ink mb-1">Klaida</p>
             <p className="text-xs text-muted-foreground mb-4">
               {errorMessage}
             </p>

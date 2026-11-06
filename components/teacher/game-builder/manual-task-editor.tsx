@@ -277,7 +277,7 @@ export function ManualTaskEditor({
       {/* AI prefill badge */}
       {prefillData && !challenge && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20 text-sm text-steam-dark">
-          <Sparkles className="h-4 w-4 text-highlight shrink-0" />
+          <Sparkles className="h-4 w-4 text-highlight-ink shrink-0" />
           <span>Užpildyta pagal DI pasiūlymą. Peržiūrėkite ir patvirtinkite.</span>
         </div>
       )}
@@ -285,7 +285,7 @@ export function ManualTaskEditor({
       {/* Needs-answer notice for duplicated/cloned tasks */}
       {challenge?.needs_answer && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20 text-sm text-steam-dark">
-          <AlertTriangle className="h-4 w-4 text-accent shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-accent-ink shrink-0" />
           <span>
             Ši užduotis dar neturi teisingo atsakymo. Įveskite jį žemiau, kad
             galėtumėte pradėti veiklą.
@@ -388,7 +388,7 @@ export function ManualTaskEditor({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-accent"
+                className="h-8 w-8 p-0 text-accent-ink"
                 onClick={() => setOptions(options.filter((_, j) => j !== i))}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -441,7 +441,7 @@ export function ManualTaskEditor({
       {/* Hints */}
       <div className="space-y-2">
         <Label className="text-xs font-medium flex items-center gap-1.5">
-          <Lightbulb className="h-3 w-3 text-highlight" />
+          <Lightbulb className="h-3 w-3 text-highlight-ink" />
           Užuominos
         </Label>
         {hints.map((hint, i) => (
@@ -460,7 +460,7 @@ export function ManualTaskEditor({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-accent"
+              className="h-8 w-8 p-0 text-accent-ink"
               onClick={() => setHints(hints.filter((_, j) => j !== i))}
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -509,7 +509,7 @@ export function ManualTaskEditor({
           {/* Explanation */}
           <div className="space-y-1.5">
             <Label className="text-xs font-medium flex items-center gap-1.5">
-              <BookOpen className="h-3 w-3 text-secondary" />
+              <BookOpen className="h-3 w-3 text-secondary-ink" />
               Paaiškinimas (rodomas po teisingo atsakymo)
             </Label>
             <Textarea
@@ -528,8 +528,8 @@ export function ManualTaskEditor({
               {(
                 [
                   { value: "easy", label: "Lengva", color: "text-primary-ink border-primary/30 hover:bg-primary/5" },
-                  { value: "medium", label: "Vidutinė", color: "text-highlight border-highlight/30 hover:bg-highlight/5" },
-                  { value: "hard", label: "Sunki", color: "text-accent border-accent/30 hover:bg-accent/5" },
+                  { value: "medium", label: "Vidutinė", color: "text-highlight-ink border-highlight/30 hover:bg-highlight/5" },
+                  { value: "hard", label: "Sunki", color: "text-accent-ink border-accent/30 hover:bg-accent/5" },
                 ] as const
               ).map((d) => (
                 <Badge
@@ -571,7 +571,7 @@ export function ManualTaskEditor({
           {/* Maps */}
           <div className="space-y-1.5">
             <Label className="text-xs font-medium flex items-center gap-1.5">
-              <MapPin className="h-3 w-3 text-primary" />
+              <MapPin className="h-3 w-3 text-primary-ink" />
               Google Maps nuoroda
             </Label>
             <Input

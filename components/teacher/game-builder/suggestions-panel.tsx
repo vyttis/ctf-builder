@@ -100,7 +100,7 @@ export function SuggestionsPanel({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-highlight" />
+        <Sparkles className="h-5 w-5 text-highlight-ink" />
         <h2 className="font-semibold text-steam-dark">DI Padėjėjas</h2>
       </div>
       <p className="text-xs text-muted-foreground">
@@ -110,7 +110,7 @@ export function SuggestionsPanel({
       {/* Game context */}
       <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
         <div className="flex items-center gap-2 mb-1">
-          <Puzzle className="h-3.5 w-3.5 text-primary" />
+          <Puzzle className="h-3.5 w-3.5 text-primary-ink" />
           <span className="text-xs font-medium text-steam-dark">
             {gameTitle}
           </span>
@@ -187,14 +187,14 @@ export function SuggestionsPanel({
       {/* Error */}
       {error && (
         <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 flex items-start gap-2">
-          <AlertCircle className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+          <AlertCircle className="h-4 w-4 text-accent-ink shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-accent font-medium">{error}</p>
+            <p className="text-sm text-accent-ink font-medium">{error}</p>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onGenerate()}
-              className="text-xs text-accent mt-1 h-6 px-0 hover:bg-transparent hover:text-accent/80"
+              className="text-xs text-accent-ink mt-1 h-6 px-0 hover:bg-transparent hover:text-accent-ink/80"
             >
               Bandyti dar kartą
             </Button>
@@ -206,7 +206,7 @@ export function SuggestionsPanel({
       {loading && (
         <div className="text-center py-8">
           <div className="relative mx-auto w-16 h-16 mb-4">
-            <Sparkles className="h-8 w-8 text-highlight absolute inset-0 m-auto animate-pulse" />
+            <Sparkles className="h-8 w-8 text-highlight-ink absolute inset-0 m-auto animate-pulse" />
             <div className="absolute inset-0 border-2 border-highlight/20 border-t-highlight rounded-full animate-spin" />
           </div>
           <p className="text-sm font-medium text-steam-dark">
@@ -227,7 +227,7 @@ export function SuggestionsPanel({
             exit={{ opacity: 0, y: -10 }}
             className="p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-center gap-2"
           >
-            <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+            <CheckCircle2 className="h-5 w-5 text-primary-ink shrink-0" />
             <span className="text-sm font-medium text-steam-dark">
               Sugeneruota užduočių: {generationSuccess}
             </span>
@@ -314,7 +314,7 @@ export function SuggestionsPanel({
           <Button
             variant="outline"
             size="sm"
-            className="text-xs gap-1 flex-1 text-accent border-accent/30 hover:bg-accent/5"
+            className="text-xs gap-1 flex-1 text-accent-ink border-accent/30 hover:bg-accent/5"
             onClick={() => setRegenerateConfirmOpen(true)}
           >
             <RefreshCw className="h-3 w-3" />
@@ -328,7 +328,7 @@ export function SuggestionsPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <RefreshCw className="h-5 w-5 text-accent" />
+              <RefreshCw className="h-5 w-5 text-accent-ink" />
               Pergeneruoti pasiūlymus?
             </DialogTitle>
             <DialogDescription>
@@ -358,7 +358,7 @@ export function SuggestionsPanel({
       {/* Empty state */}
       {!loading && suggestions.length === 0 && !error && (
         <div className="text-center py-6">
-          <Sparkles className="h-8 w-8 text-highlight/30 mx-auto mb-3" />
+          <Sparkles className="h-8 w-8 text-highlight-ink/30 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
             Paspauskite mygtuką arba pasirinkite greitą veiksmą, kad DI
             sugeneruotų užduočių pasiūlymus pagal jūsų veiklos temą.

@@ -68,7 +68,7 @@ export function MapsEmbed({ url, className = "" }: MapsEmbedProps) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`flex items-center gap-2 text-sm text-primary-ink hover:text-primary/80 transition-colors ${className}`}
+        className={`flex items-center gap-2 text-sm text-primary-ink hover:text-primary-ink/80 transition-colors ${className}`}
       >
         <MapPin className="h-4 w-4" />
         Atidaryti žemėlapyje
@@ -95,7 +95,7 @@ export function MapsEmbed({ url, className = "" }: MapsEmbedProps) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-primary transition-colors bg-muted/30"
+        className="flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-primary-ink transition-colors bg-muted/30"
       >
         <MapPin className="h-3 w-3" />
         Atidaryti Google Maps

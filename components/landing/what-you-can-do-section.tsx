@@ -44,10 +44,10 @@ const capabilities = [
 ] as const
 
 const ACCENT: Record<string, { num: string; bar: string; tag: string }> = {
-  primary: { num: "text-primary", bar: "bg-primary", tag: "text-primary" },
-  secondary: { num: "text-secondary", bar: "bg-secondary", tag: "text-secondary" },
-  highlight: { num: "text-highlight", bar: "bg-highlight", tag: "text-highlight" },
-  accent: { num: "text-accent", bar: "bg-accent", tag: "text-accent" },
+  primary: { num: "text-primary-ink", bar: "bg-primary", tag: "text-primary-ink" },
+  secondary: { num: "text-secondary-ink", bar: "bg-secondary", tag: "text-secondary-ink" },
+  highlight: { num: "text-highlight-ink", bar: "bg-highlight", tag: "text-highlight-ink" },
+  accent: { num: "text-accent-ink", bar: "bg-accent", tag: "text-accent-ink" },
 }
 
 export function WhatYouCanDoSection() {

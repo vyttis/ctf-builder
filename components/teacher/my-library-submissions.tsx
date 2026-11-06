@@ -13,7 +13,7 @@ const STATUS_CONFIG: Record<
 > = {
   pending_review: {
     label: "Laukia peržiūros",
-    className: "border-highlight/40 text-highlight bg-highlight/5",
+    className: "border-highlight/40 text-highlight-ink bg-highlight/5",
     icon: Clock,
   },
   approved: {
@@ -23,7 +23,7 @@ const STATUS_CONFIG: Record<
   },
   rejected: {
     label: "Atmesta",
-    className: "border-accent/40 text-accent bg-accent/5",
+    className: "border-accent/40 text-accent-ink bg-accent/5",
     icon: XCircle,
   },
 }
@@ -54,7 +54,7 @@ export function MyLibrarySubmissions() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
       </div>
     )
   }
@@ -121,7 +121,7 @@ export function MyLibrarySubmissions() {
                   </div>
                   {item.status === "rejected" && item.review_notes && (
                     <div className="mt-2 p-2 rounded-lg bg-accent/5 border border-accent/20 text-xs text-steam-dark">
-                      <span className="font-medium text-accent">
+                      <span className="font-medium text-accent-ink">
                         Administratoriaus pastaba:
                       </span>{" "}
                       {item.review_notes}

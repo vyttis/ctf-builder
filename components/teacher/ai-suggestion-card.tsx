@@ -35,12 +35,12 @@ function VerdictBadge({ verdict }: { verdict?: VerificationVerdict }) {
     },
     uncertain: {
       label: "Reikia peržiūros",
-      className: "bg-highlight/10 text-highlight border-highlight/20",
+      className: "bg-highlight/10 text-highlight-ink border-highlight/20",
       Icon: AlertTriangle,
     },
     fail: {
       label: "Klaida",
-      className: "bg-accent/10 text-accent border-accent/20",
+      className: "bg-accent/10 text-accent-ink border-accent/20",
       Icon: XCircle,
     },
   }
@@ -155,7 +155,7 @@ export function AiSuggestionCard({
 
           {/* Answer */}
           <div className="flex items-center gap-1.5 p-2 rounded-md bg-primary/5 border border-primary/10 ml-7">
-            <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-primary-ink shrink-0" />
             <span className="text-xs font-medium text-steam-dark">
               Atsakymas: {suggestion.correct_answer}
             </span>
@@ -186,7 +186,7 @@ export function AiSuggestionCard({
           {/* Hints */}
           {suggestion.hints.length > 0 && (
             <div className="flex items-start gap-1.5 pl-7">
-              <Lightbulb className="h-3.5 w-3.5 text-highlight shrink-0 mt-0.5" />
+              <Lightbulb className="h-3.5 w-3.5 text-highlight-ink shrink-0 mt-0.5" />
               <div className="text-xs text-muted-foreground">
                 {suggestion.hints.map((hint, i) => (
                   <span key={i}>
@@ -240,7 +240,7 @@ export function AiSuggestionCard({
                 variant="ghost"
                 onClick={() => onAdd(index)}
                 disabled={adding}
-                className="text-primary-ink hover:text-primary/80 gap-1.5 text-xs h-8"
+                className="text-primary-ink hover:text-primary-ink/80 gap-1.5 text-xs h-8"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Pridėti
@@ -251,7 +251,7 @@ export function AiSuggestionCard({
                 size="sm"
                 variant="ghost"
                 onClick={() => onEdit(index)}
-                className="text-secondary hover:text-secondary/80 gap-1.5 text-xs h-8"
+                className="text-secondary-ink hover:text-secondary-ink/80 gap-1.5 text-xs h-8"
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 Redaguoti
@@ -262,7 +262,7 @@ export function AiSuggestionCard({
                 size="sm"
                 variant="ghost"
                 onClick={() => onReject(index)}
-                className="text-muted-foreground hover:text-accent gap-1.5 text-xs h-8"
+                className="text-muted-foreground hover:text-accent-ink gap-1.5 text-xs h-8"
               >
                 <X className="h-3.5 w-3.5" />
                 Atmesti

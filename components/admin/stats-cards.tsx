@@ -27,14 +27,14 @@ export function StatsCards({ stats }: StatsCardsProps) {
       label: "Vykstančios veiklos",
       value: stats.active_games,
       icon: Zap,
-      color: "text-highlight",
+      color: "text-highlight-ink",
       bg: "bg-highlight/10",
     },
     {
       label: "Vedėjai",
       value: stats.total_teachers,
       icon: Users,
-      color: "text-secondary",
+      color: "text-secondary-ink",
       bg: "bg-secondary/10",
     },
     {
@@ -48,7 +48,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       label: "Komandos",
       value: stats.total_teams,
       icon: Trophy,
-      color: "text-accent",
+      color: "text-accent-ink",
       bg: "bg-accent/10",
     },
     {
@@ -69,7 +69,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       label: "Biblioteka",
       value: stats.library_items_approved,
       icon: BookOpen,
-      color: "text-secondary",
+      color: "text-secondary-ink",
       bg: "bg-secondary/10",
       extra: stats.library_items_pending > 0
         ? `+${stats.library_items_pending} laukia`

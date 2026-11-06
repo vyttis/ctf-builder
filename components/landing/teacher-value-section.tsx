@@ -64,7 +64,7 @@ export function TeacherValueSection() {
             <div className="numeral-display font-medium text-5xl lg:text-6xl text-steam-dark leading-none tabular-nums">
               {stat.metric}
             </div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-primary font-bold mt-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-primary-ink font-bold mt-3">
               {stat.label}
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mt-2 max-w-xs text-pretty">

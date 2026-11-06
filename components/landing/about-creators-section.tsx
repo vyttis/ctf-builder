@@ -92,7 +92,7 @@ export function AboutCreatorsSection() {
               // link wraps the value only.
               return (
                 <div key={i} className="relative pl-7">
-                  <Icon className="absolute left-0 top-0.5 h-4 w-4 text-primary" aria-hidden="true" />
+                  <Icon className="absolute left-0 top-0.5 h-4 w-4 text-primary-ink" aria-hidden="true" />
                   <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold mb-0.5">
                     {item.label}
                   </dt>
@@ -114,7 +114,7 @@ export function AboutCreatorsSection() {
             href="https://www.ku.lt/steam"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-2 mt-10 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            className="group inline-flex items-center gap-2 mt-10 text-sm font-medium text-primary-ink hover:text-primary-ink/80 transition-colors"
           >
             Sužinoti daugiau apie centrą
             <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
