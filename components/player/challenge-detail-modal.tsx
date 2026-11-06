@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Send,
   Loader2,
-  Lightbulb,
   CheckCircle2,
   XCircle,
   BookOpen,
@@ -22,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { MapsEmbed } from "@/components/shared/maps-embed"
+import { HintList } from "@/components/player/hint-list"
 import { pluralizeLt } from "@/lib/utils"
 import Image from "next/image"
 
@@ -32,7 +32,8 @@ interface ChallengeDetailModalProps {
     description: string | null
     type: string
     points: number
-    hints: string[]
+    // null: not opened yet by this team
+    hints: (string | null)[]
     options: string[] | null
     image_url: string | null
     maps_url: string | null
@@ -50,9 +51,9 @@ interface ChallengeDetailModalProps {
     explanation?: string | null
   }>
   isSolved: boolean
-  // Called when the student reveals a hint (0-based index), so the parent can
-  // record it server-side for the hint penalty.
-  onRevealHint?: (hintIndex: number) => void
+  // Opens a hint (0-based index): the parent records it server-side for the
+  // penalty and stores the returned text on the task. false when it failed.
+  onRevealHint: (hintIndex: number) => Promise<boolean>
 }
 
 export function ChallengeDetailModal({
@@ -71,14 +72,12 @@ export function ChallengeDetailModal({
     message: string
     explanation?: string | null
   } | null>(null)
-  const [revealedHintCount, setRevealedHintCount] = useState(0)
   const [showExplanation, setShowExplanation] = useState(false)
 
   function handleClose() {
     // Reset state when closing
     setAnswer("")
     setFeedback(null)
-    setRevealedHintCount(0)
     setShowExplanation(false)
     onOpenChange(false)
   }
@@ -91,7 +90,8 @@ export function ChallengeDetailModal({
     setFeedback(null)
 
     try {
-      const result = await onSubmit(answer.trim(), revealedHintCount)
+      const opened = (challenge.hints ?? []).filter((hint) => hint !== null).length
+      const result = await onSubmit(answer.trim(), opened)
       setFeedback(result)
 
       if (result.is_correct) {
@@ -109,7 +109,6 @@ export function ChallengeDetailModal({
 
   if (!challenge) return null
 
-  const challengeHints = challenge.hints ?? []
 
   return (
     <Sheet open={open} onOpenChange={handleClose}>
@@ -186,47 +185,14 @@ export function ChallengeDetailModal({
           </div>
         )}
 
-        {/* Progressive hints */}
-        {challengeHints.length > 0 && !isSolved && (
-          <div className="mb-4 space-y-2">
-            {revealedHintCount > 0 && (
-              <div className="space-y-1.5">
-                {challengeHints.slice(0, revealedHintCount).map((hint, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                  >
-                    <div className="bg-steam-yellow/5 border border-steam-yellow/20 rounded-lg p-3 text-sm flex items-start gap-2">
-                      <Lightbulb className="h-3.5 w-3.5 text-steam-yellow shrink-0 mt-0.5" />
-                      <p className="text-steam-dark">{hint}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-            {revealedHintCount < challengeHints.length && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  onRevealHint?.(revealedHintCount)
-                  setRevealedHintCount((prev) => prev + 1)
-                }}
-                className="text-steam-yellow hover:text-steam-yellow/80 gap-1.5"
-              >
-                <Lightbulb className="h-3.5 w-3.5" />
-                {revealedHintCount === 0
-                  ? "Reikia užuominos?"
-                  : `Kita užuomina (${revealedHintCount}/${challengeHints.length})`}
-                {challenge.hint_penalty > 0 && (
-                  <span className="text-steam-pink text-[10px]">
-                    -{challenge.hint_penalty} tšk.
-                  </span>
-                )}
-              </Button>
-            )}
-          </div>
+        {/* Hints: the text arrives when the team opens one */}
+        {!isSolved && (
+          <HintList
+            key={challenge.id}
+            hints={challenge.hints ?? []}
+            penalty={challenge.hint_penalty}
+            onReveal={onRevealHint}
+          />
         )}
 
         {/* Answer form */}

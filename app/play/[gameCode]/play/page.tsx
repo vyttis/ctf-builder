@@ -14,7 +14,6 @@ import {
   Send,
   Loader2,
   Trophy,
-  Lightbulb,
   CheckCircle2,
   XCircle,
   Star,
@@ -38,6 +37,7 @@ import { AnnouncementBanner } from "@/components/player/announcement-banner"
 import { AchievementToast } from "@/components/player/achievement-toast"
 import { ChallengeGrid } from "@/components/player/challenge-grid"
 import { ChallengeDetailModal } from "@/components/player/challenge-detail-modal"
+import { HintList } from "@/components/player/hint-list"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -47,7 +47,8 @@ interface PlayerChallenge {
   description: string | null
   type: ChallengeType
   points: number
-  hints: string[]
+  // null: a hint the team has not opened yet (its text comes from /api/play/hint)
+  hints: (string | null)[]
   options: string[] | null
   order_index: number
   image_url: string | null
@@ -58,6 +59,10 @@ interface PlayerChallenge {
 
 interface ExtendedSubmissionResult extends SubmissionResult {
   explanation?: string | null
+}
+
+function openedHintCount(challenge: { hints?: (string | null)[] } | undefined): number {
+  return (challenge?.hints ?? []).filter((hint) => hint !== null).length
 }
 
 function formatTime(seconds: number): string {
@@ -95,29 +100,6 @@ async function stampGameStart(token: string): Promise<{ startedAtMs: number; off
   }
 }
 
-// Record a hint reveal server-side so the penalty is computed from stored rows,
-// not the client-declared count. Best-effort: a failed call just means the
-// student keeps the benefit of the doubt on that hint.
-async function recordHintReveal(
-  token: string,
-  challengeId: string,
-  hintIndex: number
-): Promise<void> {
-  try {
-    await fetch("/api/play/hint", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_token: token,
-        challenge_id: challengeId,
-        hint_index: hintIndex,
-      }),
-    })
-  } catch {
-    // Ignored — best effort.
-  }
-}
-
 export default function PlayPage() {
   const params = useParams()
   const router = useRouter()
@@ -132,7 +114,6 @@ export default function PlayPage() {
   const [feedback, setFeedback] = useState<ExtendedSubmissionResult | null>(null)
   const [totalPoints, setTotalPoints] = useState(0)
   const [solvedIds, setSolvedIds] = useState<Set<string>>(new Set())
-  const [revealedHintCount, setRevealedHintCount] = useState(0)
   const [showExplanation, setShowExplanation] = useState(false)
   const [currentExplanation, setCurrentExplanation] = useState<string | null>(null)
   const [gameFinished, setGameFinished] = useState(false)
@@ -149,6 +130,9 @@ export default function PlayPage() {
   const tasksVersionRef = useRef<string | null>(null)
   const challengesRef = useRef<PlayerChallenge[]>([])
   const reloadingTasksRef = useRef(false)
+  useEffect(() => {
+    challengesRef.current = challenges
+  }, [challenges])
   const [endedByTeacher, setEndedByTeacher] = useState(false)
   const [loadError, setLoadError] = useState(false)
   // Distinguishes "still loading" from "loaded, but the game has no challenges"
@@ -337,6 +321,34 @@ export default function PlayPage() {
     if (state.challenges.length > 0 && firstUnsolved < 0) setGameFinished(true)
     setStateLoaded(true)
   }
+
+  // Open a hint: the server records it (the penalty counts from that row) and
+  // returns its text, which stays with the task until the page is closed and
+  // comes back with the play state after a reload.
+  const revealHint = useCallback(
+    async (challengeId: string, index: number): Promise<boolean> => {
+      const s = getPlayerSession(gameCode)
+      if (!s) return false
+      try {
+        const res = await fetch("/api/play/hint", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_token: s.session_token, challenge_id: challengeId, hint_index: index }),
+        })
+        if (!res.ok) return false
+        const data = (await res.json()) as { hint?: unknown }
+        if (typeof data.hint !== "string") return false
+        const text = data.hint
+        setChallenges((prev) =>
+          prev.map((c) => (c.id === challengeId ? { ...c, hints: c.hints.map((h, i) => (i === index ? text : h)) } : c))
+        )
+        return true
+      } catch {
+        return false
+      }
+    },
+    [gameCode]
+  )
 
   // Reload the tasks after the facilitator changed one. Only the tasks are
   // replaced: answers already counted, the timer and the team stay as they
@@ -581,7 +593,7 @@ export default function PlayPage() {
             challenges[currentIndex].type === "number"
               ? normalizeNumericAnswer(answer)
               : answer.trim(),
-          hints_used: revealedHintCount,
+          hints_used: openedHintCount(challenges[currentIndex]),
         }),
       })
 
@@ -641,7 +653,6 @@ export default function PlayPage() {
         } else {
           setTimeout(() => {
             setFeedback(null)
-            setRevealedHintCount(0)
             if (currentIndex + 1 < challenges.length) {
               setCurrentIndex(currentIndex + 1)
             } else {
@@ -1020,11 +1031,11 @@ export default function PlayPage() {
             onOpenChange={(open) => { if (!open) setSelectedChallengeIndex(null) }}
             onSubmit={handleFreeSubmit}
             isSolved={selectedChallengeIndex !== null ? solvedIds.has(challenges[selectedChallengeIndex].id) : false}
-            onRevealHint={(idx) => {
-              if (session && selectedChallengeIndex !== null) {
-                recordHintReveal(session.session_token, challenges[selectedChallengeIndex].id, idx)
-              }
-            }}
+            onRevealHint={(idx) =>
+              selectedChallengeIndex !== null
+                ? revealHint(challenges[selectedChallengeIndex].id, idx)
+                : Promise.resolve(false)
+            }
           />
 
           <div className="text-center text-sm text-muted-foreground mt-4">
@@ -1046,7 +1057,6 @@ export default function PlayPage() {
 
   const currentChallenge = challenges[currentIndex]
   const progressValue = (solvedIds.size / challenges.length) * 100
-  const challengeHints = (currentChallenge.hints as string[]) || []
   const isTimerCritical = timeLimitMinutes && remainingSeconds > 0 && remainingSeconds <= 60
   const isTimerWarning = timeLimitMinutes && remainingSeconds > 0 && remainingSeconds <= 300 // 5 min
 
@@ -1154,51 +1164,13 @@ export default function PlayPage() {
                   </div>
                 )}
 
-                {/* Progressive hints */}
-                {challengeHints.length > 0 && (
-                  <div className="mb-4 space-y-2">
-                    {revealedHintCount > 0 && (
-                      <div className="space-y-1.5">
-                        {challengeHints.slice(0, revealedHintCount).map((hint, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                          >
-                            <div className="bg-highlight/5 border border-highlight/20 rounded-lg p-3 text-sm flex items-start gap-2">
-                              <Lightbulb className="h-3.5 w-3.5 text-highlight shrink-0 mt-0.5" />
-                              <p className="text-steam-dark">{hint}</p>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
-                    {revealedHintCount < challengeHints.length && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const idx = revealedHintCount
-                          setRevealedHintCount((prev) => prev + 1)
-                          if (session) {
-                            recordHintReveal(session.session_token, currentChallenge.id, idx)
-                          }
-                        }}
-                        className="text-highlight hover:text-highlight/80 gap-1.5"
-                      >
-                        <Lightbulb className="h-3.5 w-3.5" />
-                        {revealedHintCount === 0
-                          ? "Reikia užuominos?"
-                          : `Kita užuomina (${revealedHintCount}/${challengeHints.length})`}
-                        {currentChallenge.hint_penalty > 0 && (
-                          <span className="text-accent text-[10px]">
-                            -{currentChallenge.hint_penalty} tšk.
-                          </span>
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                )}
+                {/* Hints: the text arrives when the team opens one */}
+                <HintList
+                  key={currentChallenge.id}
+                  hints={currentChallenge.hints ?? []}
+                  penalty={currentChallenge.hint_penalty}
+                  onReveal={(index) => revealHint(currentChallenge.id, index)}
+                />
 
                 {!feedback?.is_correct && (
                 <form onSubmit={handleSubmit} className="space-y-3" aria-label="Atsakymo forma">
@@ -1307,7 +1279,6 @@ export default function PlayPage() {
                               setFeedback(null)
                               setShowExplanation(false)
                               setCurrentExplanation(null)
-                              setRevealedHintCount(0)
                               if (currentIndex + 1 < challenges.length) {
                                 setCurrentIndex(currentIndex + 1)
                               } else {

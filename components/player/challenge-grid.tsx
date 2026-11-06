@@ -13,7 +13,7 @@ interface ChallengeGridProps {
     description: string | null
     type: string
     points: number
-    hints: string[]
+    hints: (string | null)[]
     options: string[] | null
     order_index: number
     image_url: string | null
