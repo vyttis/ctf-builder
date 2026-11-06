@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { useLeaveWarning } from "@/hooks/use-leave-warning"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Sparkles,
@@ -90,6 +91,66 @@ function GenerationProgress() {
   )
 }
 
+// The generated plan, kept in this browser until it is saved (TCH-07).
+const PLAN_DRAFT_KEY = "ks-lesson-plan-draft:v1"
+const PLAN_DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000
+
+interface PlanDraft {
+  savedAt: number
+  form: {
+    subject: string
+    isIntegrated: boolean
+    secondarySubject: string
+    grade: number | null
+    topicId: string
+    customTopic: string
+    lessonType: string
+    duration: number
+    learningGoal: string
+  }
+  plan: {
+    title: string
+    goal: string
+    curriculumLink: string
+    teacherNote: string
+    reflection: string
+    competencies: string[]
+    stages: LessonStage[]
+  }
+}
+
+function readPlanDraft(): PlanDraft | null {
+  try {
+    const raw = localStorage.getItem(PLAN_DRAFT_KEY)
+    if (!raw) return null
+    const draft = JSON.parse(raw) as PlanDraft
+    const fresh = typeof draft?.savedAt === "number" && Date.now() - draft.savedAt < PLAN_DRAFT_TTL_MS
+    if (!fresh || !Array.isArray(draft.plan?.stages) || draft.plan.stages.length === 0 || !draft.form) {
+      localStorage.removeItem(PLAN_DRAFT_KEY)
+      return null
+    }
+    return draft
+  } catch {
+    return null
+  }
+}
+
+function writePlanDraft(draft: PlanDraft) {
+  try {
+    localStorage.setItem(PLAN_DRAFT_KEY, JSON.stringify(draft))
+  } catch {
+    // Storage full or blocked: the leave warning still protects the plan.
+  }
+}
+
+function clearPlanDraft() {
+  try {
+    localStorage.removeItem(PLAN_DRAFT_KEY)
+  } catch {
+    // Nothing stored.
+  }
+}
+
 export function LessonPlanGenerator() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -139,6 +200,59 @@ export function LessonPlanGenerator() {
   const [editCurriculumLink, setEditCurriculumLink] = useState("")
   const [editCompetencies, setEditCompetencies] = useState<string[]>([])
   const [stages, setStages] = useState<LessonStage[]>([])
+  // When the plan on screen was restored from this browser (not saved yet).
+  const [restoredAt, setRestoredAt] = useState<number | null>(null)
+
+  // A generated plan is minutes of DI work: leaving or reloading before it
+  // is saved asks first, and the plan is kept in this browser until saved.
+  useLeaveWarning(loading || (phase === "preview" && stages.length > 0))
+
+  useEffect(() => {
+    if (searchParams.get("template")) return
+    const draft = readPlanDraft()
+    if (!draft) return
+    const f = draft.form
+    setSubject(f.subject)
+    setIsIntegrated(f.isIntegrated)
+    setSecondarySubject(f.secondarySubject)
+    setGrade(f.grade)
+    setTopicId(f.topicId)
+    setCustomTopic(f.customTopic)
+    setLessonType(f.lessonType)
+    setDuration(f.duration)
+    setLearningGoal(f.learningGoal)
+    const p = draft.plan
+    setEditTitle(p.title)
+    setEditGoal(p.goal)
+    setEditCurriculumLink(p.curriculumLink)
+    setEditTeacherNote(p.teacherNote)
+    setEditReflection(p.reflection)
+    setEditCompetencies(p.competencies)
+    setStages(p.stages)
+    setRestoredAt(draft.savedAt)
+    setPhase("preview")
+  }, [searchParams])
+
+  useEffect(() => {
+    if (phase !== "preview" || stages.length === 0) return
+    writePlanDraft({
+      savedAt: restoredAt ?? Date.now(),
+      form: { subject, isIntegrated, secondarySubject, grade, topicId, customTopic, lessonType, duration, learningGoal },
+      plan: {
+        title: editTitle,
+        goal: editGoal,
+        curriculumLink: editCurriculumLink,
+        teacherNote: editTeacherNote,
+        reflection: editReflection,
+        competencies: editCompetencies,
+        stages,
+      },
+    })
+  }, [
+    phase, restoredAt, subject, isIntegrated, secondarySubject, grade, topicId, customTopic, lessonType,
+    duration, learningGoal, editTitle, editGoal, editCurriculumLink, editTeacherNote, editReflection,
+    editCompetencies, stages,
+  ])
 
   // Derived
   const curriculumTopics = useMemo(
@@ -206,6 +320,7 @@ export function LessonPlanGenerator() {
       setEditReflection(plan.reflection_prompt)
       setEditCompetencies(plan.competencies ?? [])
       setStages(plan.stages.map((s: LessonStage) => ({ ...s })))
+      setRestoredAt(null)
       setPhase("preview")
     } catch (err) {
       toast({
@@ -263,6 +378,7 @@ export function LessonPlanGenerator() {
 
       const data = (await res.json().catch(() => ({}))) as { lesson_plan?: { id: string }; error?: string }
       if (!res.ok || !data.lesson_plan) throw new Error(data.error || "Nepavyko išsaugoti")
+      clearPlanDraft()
 
       toast({
         title: "Pamokos planas išsaugotas!",
@@ -308,6 +424,7 @@ export function LessonPlanGenerator() {
 
       const saveData = (await saveRes.json().catch(() => ({}))) as { lesson_plan?: { id: string }; error?: string }
       if (!saveRes.ok || !saveData.lesson_plan) throw new Error(saveData.error || "Nepavyko išsaugoti")
+      clearPlanDraft()
 
       router.push(`/lesson-plans/${saveData.lesson_plan.id}?convert=1`)
     } catch (err) {
@@ -321,6 +438,8 @@ export function LessonPlanGenerator() {
   }
 
   function handleRegenerate() {
+    clearPlanDraft()
+    setRestoredAt(null)
     setPhase("input")
     setStages([])
   }
@@ -649,6 +768,27 @@ export function LessonPlanGenerator() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
+      {restoredAt !== null && (
+        <div
+          role="status"
+          className="flex flex-col gap-3 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm text-steam-dark sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p>
+            Atkurtas neišsaugotas planas, sugeneruotas{" "}
+            {new Date(restoredAt).toLocaleString("lt-LT", {
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Europe/Vilnius",
+            })}
+            . Išsaugokite jį arba išmeskite.
+          </p>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={handleRegenerate}>
+            Išmesti
+          </Button>
+        </div>
+      )}
       {/* Lesson plan header */}
       <Card className="border-secondary/30 bg-white">
         <CardHeader className="pb-3">
