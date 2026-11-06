@@ -121,6 +121,9 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
 
   const { correct_answer, ...rest } = parsed.data
   const updateData: ChallengeUpdatePayload = { ...rest }
+  // A repeated id would make the task need more solves than there are tasks
+  // (is_challenge_unlocked compares with the list length): store each once.
+  if (updateData.prerequisites) updateData.prerequisites = [...new Set(updateData.prerequisites)]
 
   // If answer is being updated, hash it with bcrypt (never stored/returned in
   // plaintext) and clear the needs_answer flag set on duplicated/cloned tasks

@@ -155,7 +155,7 @@ export async function POST(request: Request) {
     verification_verdict: parsed.data.verification_verdict ?? null,
     verification_issues: parsed.data.verification_issues,
     verification_confidence: parsed.data.verification_confidence ?? null,
-    prerequisites: parsed.data.prerequisites,
+    prerequisites: [...new Set(parsed.data.prerequisites)],
   }
 
   const isColumnError = (err: { message?: string; code?: string }) =>
