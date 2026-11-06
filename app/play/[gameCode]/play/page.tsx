@@ -385,7 +385,8 @@ export default function PlayPage() {
       if (!res.ok) return
       const state = (await res.json()) as {
         challenges?: PlayerChallenge[]
-        solved?: { challenge_id: string }[]
+        solved?: { challenge_id: string; points_awarded?: number }[]
+        team?: { total_points?: number } | null
         tasks_version?: string | null
       }
       if (!Array.isArray(state.challenges)) return
@@ -411,6 +412,14 @@ export default function PlayPage() {
       solvedIdsRef.current = solved
       setChallenges(next)
       setSolvedIds(solved)
+      // Answers counted elsewhere (the same team on another device) bring
+      // their points; the score never goes down here, so an answer this page
+      // is still sending keeps its points too.
+      const serverPoints =
+        typeof state.team?.total_points === "number"
+          ? state.team.total_points
+          : (state.solved ?? []).reduce((sum, sub) => sum + (sub.points_awarded ?? 0), 0)
+      setTotalPoints((points) => Math.max(points, serverPoints))
       // The open task changed what an answer looks like (type or choices):
       // a typed or selected answer no longer fits, so it is cleared.
       const before = prev[currentIndexRef.current]
@@ -650,6 +659,8 @@ export default function PlayPage() {
         solvedNow.add(challenge.id)
         if (challengesRef.current.every((c) => solvedNow.has(c.id))) {
           setTimeout(() => {
+            // A task added in these two seconds keeps the team playing.
+            if (!challengesRef.current.every((c) => solvedIdsRef.current.has(c.id))) return
             setSelectedChallengeIndex(null)
             setGameFinished(true)
           }, 2000)

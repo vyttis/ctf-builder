@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   let reveals: HintReveal[] = []
   if (sessionToken) {
     const [stampsRes, revealsRes] = await Promise.all([
-      supabase.from("games").select("status, challenges(updated_at)").eq("game_code", gameCode).maybeSingle(),
+      supabase.from("games").select("status, challenges(id, updated_at)").eq("game_code", gameCode).maybeSingle(),
       supabase
         .from("hint_reveals")
         .select("challenge_id, hint_index, teams!inner(session_token)")
