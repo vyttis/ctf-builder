@@ -3,7 +3,8 @@
 -- Checked in production on 2026-11-06 before this migration:
 --   * any signed-in user could SELECT submissions.answer and
 --     challenges.answer_hash of every active, paused or finished activity
---     (00005/00006 revoked those columns from anon only);
+--     (00005/00006 revoked those columns from anon only), and the
+--     explanations shown only after a correct answer;
 --   * any signed-in user could UPDATE their own profiles.role
 --     ("Users can update own profile" has no column or WITH CHECK limit);
 --   * anon could EXECUTE get_game_stats, get_game_reflections and
@@ -34,6 +35,22 @@ BEGIN
   EXECUTE 'REVOKE SELECT ON public.submissions FROM authenticated';
   EXECUTE format('GRANT SELECT (%s) ON public.submissions TO authenticated', cols);
 END $$;
+
+-- 1b. Task content of other teachers' activities (hints, explanations, DI
+--     notes) is for participants through the server only. Signed-in users
+--     read the tasks of their own activities (teacher policy) or, as admins,
+--     all of them; the open read stays for anon, whose column grants exclude
+--     explanations (00005).
+DROP POLICY IF EXISTS "Anyone can read challenges for active games" ON public.challenges;
+CREATE POLICY "Anyone can read challenges for active games" ON public.challenges
+  FOR SELECT TO anon
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.games
+      WHERE games.id = challenges.game_id
+        AND games.status IN ('active', 'paused', 'finished')
+    )
+  );
 
 COMMENT ON COLUMN public.challenges.answer_hash IS
   'Never readable by anon or authenticated (00005, 20261106120000_close_answer_and_role_gaps). New columns on challenges must be granted to both roles explicitly.';

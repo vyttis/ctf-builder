@@ -37,9 +37,9 @@ UPDATE public.profiles SET role = 'super_admin' WHERE id = '00000000-0000-0000-0
 INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
   ('10000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'A', 'AAAAAA', 'active'),
   ('10000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000b', 'B', 'BBBBBB', 'active');
-INSERT INTO public.challenges (id, game_id, title, answer_hash) VALUES
-  ('20000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-00000000000a', 'A1', '$2a$10$hashA'),
-  ('20000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000b', 'B1', '$2a$10$hashB');
+INSERT INTO public.challenges (id, game_id, title, answer_hash, explanation) VALUES
+  ('20000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-00000000000a', 'A1', '$2a$10$hashA', 'A sprendimas'),
+  ('20000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000b', 'B1', '$2a$10$hashB', 'B sprendimas');
 INSERT INTO public.teams (id, game_id, name, session_token) VALUES
   ('30000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000b', 'Komanda', 'token-b');
 INSERT INTO public.submissions (team_id, challenge_id, answer, is_correct, points_awarded) VALUES
@@ -55,7 +55,10 @@ SELECT public.t_denied('SELECT * FROM public.challenges');
 SELECT public.t_denied('SELECT answer FROM public.submissions');
 SELECT public.t_denied('SELECT * FROM public.submissions');
 -- What pages and the live view still read keeps working.
-SELECT public.t_ok('SELECT id, title, hints, options, needs_answer FROM public.challenges');
+SELECT public.t_ok('SELECT id, title, hints, options, needs_answer, explanation, verification_issues FROM public.challenges');
+-- Only own tasks: explanations of other activities stay hidden.
+SELECT public.t_rows('SELECT id FROM public.challenges', 1);
+SELECT public.t_rows($q$SELECT explanation FROM public.challenges WHERE game_id = '10000000-0000-0000-0000-00000000000b'$q$, 0);
 SELECT public.t_ok('SELECT count(*) FROM public.challenges');
 SELECT public.t_ok('SELECT id, team_id, challenge_id, is_correct, points_awarded, attempted_at FROM public.submissions');
 SELECT public.t_ok('SELECT g.id, (SELECT count(*) FROM public.challenges c WHERE c.game_id = g.id) FROM public.games g');
@@ -85,6 +88,7 @@ SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000ad', false);
 SELECT public.t_ok($q$SELECT public.get_platform_stats()$q$);
 SELECT public.t_ok($q$SELECT public.get_game_stats('10000000-0000-0000-0000-00000000000b')$q$);
+SELECT public.t_rows('SELECT id FROM public.challenges', 2);
 SELECT public.t_denied('SELECT answer_hash FROM public.challenges');
 RESET ROLE;
 
@@ -94,7 +98,8 @@ SELECT set_config('request.jwt.claim.sub', '', false);
 SELECT set_config('request.jwt.claim.role', 'anon', false);
 SELECT public.t_denied('SELECT answer_hash FROM public.challenges');
 SELECT public.t_denied('SELECT answer FROM public.submissions');
-SELECT public.t_ok('SELECT id, title FROM public.challenges');
+SELECT public.t_ok('SELECT id, title, hints FROM public.challenges');
+SELECT public.t_denied('SELECT explanation FROM public.challenges');
 SELECT public.t_rows('SELECT id FROM public.challenges', 2);
 SELECT public.t_denied($q$SELECT public.get_game_stats('10000000-0000-0000-0000-00000000000b')$q$);
 SELECT public.t_denied($q$SELECT public.get_game_reflections('10000000-0000-0000-0000-00000000000b')$q$);

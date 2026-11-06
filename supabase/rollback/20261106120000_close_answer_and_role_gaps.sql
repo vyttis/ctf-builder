@@ -23,6 +23,18 @@ BEGIN
   EXECUTE 'GRANT SELECT ON public.submissions TO authenticated';
 END $$;
 
+-- 1b. Open challenge read for every role, as in 00020.
+DROP POLICY IF EXISTS "Anyone can read challenges for active games" ON public.challenges;
+CREATE POLICY "Anyone can read challenges for active games" ON public.challenges
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.games
+      WHERE games.id = challenges.game_id
+        AND games.status IN ('active', 'paused', 'finished')
+    )
+  );
+
 -- 2. Profiles: table-level INSERT and UPDATE again (RLS still applies).
 REVOKE UPDATE (full_name, school, phone, avatar_url, onboarding_completed)
   ON public.profiles FROM authenticated;

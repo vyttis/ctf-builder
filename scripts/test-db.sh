@@ -7,10 +7,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PSQL_OPTS=(-v ON_ERROR_STOP=1 -q -X)
+RUN=()
 
 cleanup() {
   if [[ -n "${PGTMP:-}" ]]; then
-    "$PGBIN/pg_ctl" -D "$PGTMP/data" -m immediate stop >/dev/null 2>&1 || true
+    "${RUN[@]}" "$PGBIN/pg_ctl" -D "$PGTMP/data" -m immediate stop >/dev/null 2>&1 || true
     rm -rf "$PGTMP"
   fi
 }
@@ -22,10 +23,9 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   PGTMP="$(mktemp -d)"
   PORT="${PGPORT_TEST:-55432}"
   if [[ "$(id -u)" == "0" ]]; then
+    # Postgres refuses to run as root: start and stop it as nobody.
     chown -R nobody "$PGTMP"
     RUN=(runuser -u nobody --)
-  else
-    RUN=()
   fi
   "${RUN[@]}" "$PGBIN/initdb" -D "$PGTMP/data" -U postgres -A trust >/dev/null
   "${RUN[@]}" "$PGBIN/pg_ctl" -D "$PGTMP/data" -o "-p $PORT -k $PGTMP -c listen_addresses=''" -w start >/dev/null
