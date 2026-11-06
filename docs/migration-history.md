@@ -189,7 +189,9 @@ Prideda `games.paused_at`, `games.paused_ms`, `games.resumed_at`,
 kuria tik juodraščius, būsena keičiasi tik pirmyn bet kuriam rašytojui,
 pauzės laiką skaičiuoja tik jis, veikla su užduotimi be atsakymo nepradedama),
 trigerį `challenges_live_rules` (vykstančiai veiklai negalima pridėti
-užduoties be atsakymo) ir funkcijas `set_game_status()`,
+užduoties be atsakymo, o jos užduočių negalima ištrinti ar perkelti į kitą
+veiklą; trinant visą veiklą užduotys trinamos kaip anksčiau; veikla be
+užduočių nepradedama) ir funkcijas `set_game_status()`,
 `extend_game_time()` (minutės pridedamos vienu sakiniu; veiklai be laiko
 limito atsisakoma) ir `update_game_settings()` (nustatymai kartu su pavadinimu ir aprašymu
 išsaugomi vienu sakiniu; vykstančios veiklos limitas keičiamas tik pratęsiant).

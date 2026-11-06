@@ -130,9 +130,15 @@ BEGIN
       RAISE EXCEPTION 'status cannot change from % to %', OLD.status, NEW.status USING ERRCODE = 'KS409';
     END IF;
 
-    -- A task without an answer cannot be solved: such an activity does not
-    -- start. Together with challenges_live_rules (which locks this row) a
-    -- task added at the same moment either blocks the start or is refused.
+    -- An activity starts with at least one task, and a task without an
+    -- answer cannot be solved: such an activity does not start. Together with
+    -- challenges_live_rules (which locks this row) a task added or removed at
+    -- the same moment either blocks the start or is refused.
+    IF OLD.status = 'draft' AND NOT EXISTS (
+      SELECT 1 FROM public.challenges c WHERE c.game_id = NEW.id
+    ) THEN
+      RAISE EXCEPTION 'activity has no tasks' USING ERRCODE = 'KS427';
+    END IF;
     IF OLD.status = 'draft' AND EXISTS (
       SELECT 1 FROM public.challenges c WHERE c.game_id = NEW.id AND c.needs_answer
     ) THEN
@@ -162,10 +168,13 @@ CREATE TRIGGER games_status_rules BEFORE INSERT OR UPDATE ON public.games
   FOR EACH ROW EXECUTE FUNCTION public.games_status_rules();
 
 -- Participants see the tasks of a running or paused activity as they are,
--- so a task without an answer (a copy, a library task) is refused there.
--- The activity row is locked for share, so a start running at the same
--- moment either waits for this task (and then refuses to start, see above)
--- or finishes first (and this task is refused).
+-- so a task without an answer (a copy, a library task) is refused there,
+-- and a task is not removed from it (nor moved to another activity): its
+-- answers would go while the team points stay. The activity row is locked
+-- for share, so a start running at the same moment either waits for this
+-- change (and then sees it, see above) or finishes first (and the change is
+-- refused). When the activity itself is deleted its row is already gone, so
+-- the cascade removes its tasks.
 CREATE OR REPLACE FUNCTION public.challenges_live_rules()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -174,6 +183,21 @@ AS $$
 DECLARE
   v_status text;
 BEGIN
+  IF TG_OP = 'DELETE' THEN
+    SELECT g.status INTO v_status FROM public.games g WHERE g.id = OLD.game_id FOR SHARE;
+    IF v_status IN ('active', 'paused') THEN
+      RAISE EXCEPTION 'a running activity keeps its tasks' USING ERRCODE = 'KS409';
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  IF TG_OP = 'UPDATE' AND NEW.game_id IS DISTINCT FROM OLD.game_id THEN
+    SELECT g.status INTO v_status FROM public.games g WHERE g.id = OLD.game_id FOR SHARE;
+    IF v_status IN ('active', 'paused') THEN
+      RAISE EXCEPTION 'a running activity keeps its tasks' USING ERRCODE = 'KS409';
+    END IF;
+  END IF;
+
   IF NEW.needs_answer THEN
     SELECT g.status INTO v_status FROM public.games g WHERE g.id = NEW.game_id FOR SHARE;
     IF v_status IN ('active', 'paused') THEN
@@ -185,7 +209,7 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS challenges_live_rules ON public.challenges;
-CREATE TRIGGER challenges_live_rules BEFORE INSERT OR UPDATE OF needs_answer, game_id ON public.challenges
+CREATE TRIGGER challenges_live_rules BEFORE INSERT OR UPDATE OF needs_answer, game_id OR DELETE ON public.challenges
   FOR EACH ROW EXECUTE FUNCTION public.challenges_live_rules();
 
 CREATE OR REPLACE FUNCTION public.set_game_status(p_game_id uuid, p_status text)
