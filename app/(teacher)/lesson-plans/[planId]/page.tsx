@@ -5,9 +5,11 @@ import { LessonPlanDetail } from "@/components/teacher/lesson-plan-detail"
 export default async function LessonPlanDetailPage(
   props: {
     params: Promise<{ planId: string }>
+    searchParams: Promise<{ convert?: string }>
   }
 ) {
   const params = await props.params;
+  const { convert } = await props.searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -22,5 +24,7 @@ export default async function LessonPlanDetailPage(
     notFound()
   }
 
-  return <LessonPlanDetail plan={plan} />
+  // "?convert=1" comes from the generator's "Sukurti veiklą dalyviams":
+  // the plan is saved, and the facilitator picks the stages here.
+  return <LessonPlanDetail plan={plan} openConvert={convert === "1"} />
 }

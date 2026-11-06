@@ -261,9 +261,9 @@ export function LessonPlanGenerator() {
         }),
       })
 
-      if (!res.ok) throw new Error("Nepavyko išsaugoti")
+      const data = (await res.json().catch(() => ({}))) as { lesson_plan?: { id: string }; error?: string }
+      if (!res.ok || !data.lesson_plan) throw new Error(data.error || "Nepavyko išsaugoti")
 
-      const data = await res.json()
       toast({
         title: "Pamokos planas išsaugotas!",
         description: "Galite jį rasti pamokų planų sąraše.",
@@ -285,7 +285,7 @@ export function LessonPlanGenerator() {
 
     setConverting(true)
     try {
-      // First save
+      // Save first; the stages that become tasks are chosen on the plan page.
       const saveRes = await fetch("/api/lesson-plans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -306,32 +306,16 @@ export function LessonPlanGenerator() {
         }),
       })
 
-      if (!saveRes.ok) throw new Error("Nepavyko išsaugoti")
+      const saveData = (await saveRes.json().catch(() => ({}))) as { lesson_plan?: { id: string }; error?: string }
+      if (!saveRes.ok || !saveData.lesson_plan) throw new Error(saveData.error || "Nepavyko išsaugoti")
 
-      const saveData = await saveRes.json()
-      const planId = saveData.lesson_plan.id
-
-      // Then convert
-      const convertRes = await fetch(`/api/lesson-plans/${planId}/convert`, {
-        method: "POST",
-      })
-
-      if (!convertRes.ok) throw new Error("Nepavyko konvertuoti")
-
-      const convertData = await convertRes.json()
-      toast({
-        title: "Veikla sukurta!",
-        description: `${convertData.challenges_created} užduočių sukurta. Kodas: ${convertData.game_code}`,
-      })
-      router.push(`/games/${convertData.game_id}`)
-      router.refresh()
+      router.push(`/lesson-plans/${saveData.lesson_plan.id}?convert=1`)
     } catch (err) {
       toast({
         title: "Klaida",
         description: err instanceof Error ? err.message : "Nepavyko",
         variant: "destructive",
       })
-    } finally {
       setConverting(false)
     }
   }
@@ -674,6 +658,7 @@ export function LessonPlanGenerator() {
               <Input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
+                maxLength={200}
                 className="text-lg font-bold border-dashed"
               />
             </div>
@@ -843,7 +828,7 @@ export function LessonPlanGenerator() {
           {converting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Kuriama veikla...
+              Išsaugoma...
             </>
           ) : (
             <>

@@ -3,24 +3,12 @@ import { checkAiAllowance, enterAiContext } from "@/lib/ai/usage"
 import { friendlyAiError } from "@/lib/ai/error-message"
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import Anthropic from "@anthropic-ai/sdk"
 import { buildSystemPrompt, buildUserMessage } from "@/lib/ai/prompt"
-import {
-  buildVerificationSystemPrompt,
-  buildVerificationUserMessage,
-} from "@/lib/ai/verify-prompt"
-import { validateDeterministic } from "@/lib/ai/deterministic-validator"
-import {
-  aiSuggestResponseSchema,
-  verificationResultSchema,
-} from "@/lib/ai/schemas"
-import type {
-  AiSuggestion,
-  VerificationResult,
-} from "@/lib/ai/types"
+import { aiSuggestResponseSchema } from "@/lib/ai/schemas"
 import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
 import { createWithSchemaRetry } from "@/lib/ai/retry"
-import { checkAiRateLimitAsync, parseAiJson } from "@/lib/ai/rate-limit"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
+import { verifySuggestion } from "@/lib/ai/verify-suggestion"
 
 const generateSchema = z.object({
   game_id: z.string().uuid(),
@@ -41,58 +29,6 @@ const generateSchema = z.object({
   scenario: z.enum(["quick_check", "investigation", "escape_room", "discussion"]).optional(),
 })
 
-async function verifySuggestion(
-  anthropic: Anthropic,
-  suggestion: AiSuggestion
-): Promise<VerificationResult> {
-  // Step 1: Try deterministic validation first
-  const deterministicResult = validateDeterministic(suggestion)
-  if (deterministicResult !== null) {
-    return deterministicResult
-  }
-
-  // Step 2: Fall back to LLM verification (cheap haiku model)
-  try {
-    const message = await anthropic.messages.create({
-      model: MODELS.verify,
-      max_tokens: 1024,
-      system: cachedSystem(buildVerificationSystemPrompt()),
-      messages: [
-        {
-          role: "user",
-          content: buildVerificationUserMessage(suggestion),
-        },
-      ],
-    })
-
-    const textBlock = message.content.find((b) => b.type === "text")
-    if (!textBlock || textBlock.type !== "text") {
-      return {
-        verdict: "uncertain",
-        issues: ["Patikros atsakymas negautas"],
-        confidence: 0,
-      }
-    }
-
-    const rawParsed = parseAiJson(textBlock.text)
-    const validated = verificationResultSchema.safeParse(rawParsed)
-    if (!validated.success) {
-      return {
-        verdict: "uncertain" as const,
-        issues: ["Netikėtas patikros formatas"],
-        confidence: 0,
-      }
-    }
-
-    return validated.data
-  } catch {
-    return {
-      verdict: "uncertain",
-      issues: ["Patikra nepavyko"],
-      confidence: 0,
-    }
-  }
-}
 
 export async function POST(request: Request) {
   const supabase = await createClient()

@@ -2,18 +2,12 @@ import { createClient } from "@/lib/supabase/server"
 import { checkAiAllowance, enterAiContext } from "@/lib/ai/usage"
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import Anthropic from "@anthropic-ai/sdk"
 import { buildSystemPrompt } from "@/lib/ai/prompt"
-import { aiSuggestResponseSchema, verificationResultSchema } from "@/lib/ai/schemas"
-import {
-  buildVerificationSystemPrompt,
-  buildVerificationUserMessage,
-} from "@/lib/ai/verify-prompt"
-import { validateDeterministic } from "@/lib/ai/deterministic-validator"
-import type { AiSuggestion, VerificationResult } from "@/lib/ai/types"
+import { aiSuggestResponseSchema } from "@/lib/ai/schemas"
 import { getAnthropicClient, MODELS, cachedSystem } from "@/lib/ai/client"
 import { createWithSchemaRetry } from "@/lib/ai/retry"
-import { checkAiRateLimitAsync, parseAiJson } from "@/lib/ai/rate-limit"
+import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
+import { verifySuggestion } from "@/lib/ai/verify-suggestion"
 
 const processSchema = z.object({
   storage_path: z.string().min(1),
@@ -182,35 +176,3 @@ async function extractText(blob: Blob, path: string): Promise<string> {
   return ""
 }
 
-async function verifySuggestion(
-  anthropic: Anthropic,
-  suggestion: AiSuggestion
-): Promise<VerificationResult> {
-  const deterministicResult = validateDeterministic(suggestion)
-  if (deterministicResult !== null) return deterministicResult
-
-  try {
-    const message = await anthropic.messages.create({
-      model: MODELS.verify,
-      max_tokens: 1024,
-      system: cachedSystem(buildVerificationSystemPrompt()),
-      messages: [
-        { role: "user", content: buildVerificationUserMessage(suggestion) },
-      ],
-    })
-
-    const textBlock = message.content.find((b) => b.type === "text")
-    if (!textBlock || textBlock.type !== "text") {
-      return { verdict: "uncertain", issues: ["Patikra negauta"], confidence: 0 }
-    }
-
-    const rawParsed = parseAiJson(textBlock.text)
-    const validated = verificationResultSchema.safeParse(rawParsed)
-    if (!validated.success) {
-      return { verdict: "uncertain", issues: ["Netikėtas formatas"], confidence: 0 }
-    }
-    return validated.data
-  } catch {
-    return { verdict: "uncertain", issues: ["Patikra nepavyko"], confidence: 0 }
-  }
-}

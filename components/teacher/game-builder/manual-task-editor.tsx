@@ -155,6 +155,14 @@ export function ManualTaskEditor({
     }
   }, [challenge, prefillData])
 
+  // A DI-made task whose answer the check doubted or rejected: saving it is
+  // the facilitator's review, which clears the mark.
+  const flaggedByDi =
+    !!challenge &&
+    challenge.generated_by_di &&
+    (challenge.verification_verdict === "uncertain" || challenge.verification_verdict === "fail")
+  const diIssues = flaggedByDi && Array.isArray(challenge.verification_issues) ? challenge.verification_issues : []
+
   async function handleSave() {
     if (!title.trim()) {
       toast({
@@ -261,6 +269,7 @@ export function ManualTaskEditor({
         if (showPrerequisites) {
           payload.prerequisites = prerequisites
         }
+        if (flaggedByDi) payload.mark_reviewed = true
       }
 
       const res = await fetch(
@@ -317,6 +326,31 @@ export function ManualTaskEditor({
             Ši užduotis dar neturi teisingo atsakymo. Įveskite jį žemiau, kad
             galėtumėte pradėti veiklą.
           </span>
+        </div>
+      )}
+
+      {/* DI check notes on a saved DI task */}
+      {flaggedByDi && (
+        <div className="rounded-lg border border-highlight/40 bg-highlight/10 p-3 text-sm text-steam-dark">
+          <p className="flex items-center gap-2 font-medium">
+            <Sparkles className="h-4 w-4 shrink-0 text-highlight-ink" aria-hidden="true" />
+            Reikia peržiūros
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {challenge?.needs_answer
+              ? "DI patikra rado klaidą, todėl atsakymas neišsaugotas."
+              : challenge?.verification_verdict === "fail"
+                ? "DI patikra rado galimą klaidą."
+                : "DI patikra abejoja šia užduotimi."}{" "}
+            Peržiūrėkite ją ir išsaugokite: tada žyma dings.
+          </p>
+          {diIssues.length > 0 && (
+            <ul className="mt-2 list-disc space-y-0.5 pl-5 text-xs">
+              {diIssues.map((issue, i) => (
+                <li key={i}>{issue}</li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

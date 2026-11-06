@@ -33,12 +33,17 @@ const updateChallengeSchema = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
   hint_penalty: z.number().min(0).max(100).optional(),
   prerequisites: z.array(z.string().uuid()).optional(),
+  // The facilitator has looked at a task the DI check flagged and keeps it.
+  mark_reviewed: z.literal(true).optional(),
 }).strict()
 
-type ChallengeUpdatePayload = z.infer<typeof updateChallengeSchema> & {
+type ChallengeUpdatePayload = Omit<z.infer<typeof updateChallengeSchema>, "mark_reviewed"> & {
   answer_hash?: string
   needs_answer?: boolean
   correct_answer?: never
+  verification_verdict?: null
+  verification_issues?: string[]
+  verification_confidence?: null
 }
 
 async function verifyChallengeOwnership(
@@ -123,7 +128,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
     return NextResponse.json({ error: LIVE_EDIT_BLOCKED.prerequisites, code: "live" }, { status: 409 })
   }
 
-  const { correct_answer, ...rest } = parsed.data
+  const { correct_answer, mark_reviewed, ...rest } = parsed.data
   const updateData: ChallengeUpdatePayload = { ...rest }
   // A repeated id would make the task need more solves than there are tasks
   // (is_challenge_unlocked compares with the list length): store each once.
@@ -136,6 +141,14 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
     // type being saved, or the task's current one when it is unchanged
     updateData.answer_hash = await hashAnswer(correct_answer, parsed.data.type ?? owned.type)
     updateData.needs_answer = false
+  }
+  // A DI verdict is about the answer it checked: a new answer, or the
+  // facilitator's review, ends it. Its notes may quote an answer and are
+  // readable while the activity runs, so they go too.
+  if (correct_answer || mark_reviewed) {
+    updateData.verification_verdict = null
+    updateData.verification_issues = []
+    updateData.verification_confidence = null
   }
 
   let { data, error } = await supabase
