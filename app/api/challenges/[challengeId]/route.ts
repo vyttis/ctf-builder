@@ -200,6 +200,11 @@ export async function DELETE(_request: Request, props: { params: Promise<{ chall
     .eq("id", params.challengeId)
 
   if (error) {
+    // The database refuses it too when the activity started meanwhile
+    // (challenges_live_rules, 20261106150000).
+    if (error.code === "KS409") {
+      return NextResponse.json({ error: LIVE_EDIT_BLOCKED.delete, code: "live" }, { status: 409 })
+    }
     console.error("Challenge DELETE error:", error)
     return NextResponse.json({ error: "Nepavyko ištrinti užduoties." }, { status: 500 })
   }
