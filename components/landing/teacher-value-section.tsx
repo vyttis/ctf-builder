@@ -1,8 +1,4 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const stats = [
   {
@@ -28,8 +24,6 @@ const stats = [
 ] as const
 
 export function TeacherValueSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="muted">
       {/* Editorial header */}
@@ -53,12 +47,8 @@ export function TeacherValueSection() {
       {/* Stats grid — editorial numeric */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-12 lg:gap-x-8 max-w-6xl">
         {stats.map((stat, index) => (
-          <motion.div
+          <div
             key={index}
-            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.1, duration: 0.5 }}
             className="relative pl-6 border-l-2 border-steam-dark/15"
           >
             <div className="numeral-display font-medium text-5xl lg:text-6xl text-steam-dark leading-none tabular-nums">
@@ -70,7 +60,7 @@ export function TeacherValueSection() {
             <p className="text-sm text-muted-foreground leading-relaxed mt-2 max-w-xs text-pretty">
               {stat.detail}
             </p>
-          </motion.div>
+          </div>
         ))}
       </div>
     </SectionWrapper>

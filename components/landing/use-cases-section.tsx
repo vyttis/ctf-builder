@@ -1,8 +1,4 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import Image from "next/image"
 
 const useCases = [
@@ -34,17 +30,11 @@ const useCases = [
 ] as const
 
 export function UseCasesSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="white">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-14 lg:gap-x-12 items-start">
         {/* Left — image with caption */}
-        <motion.figure
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.97 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <figure
           className="lg:col-span-5 lg:sticky lg:top-24"
         >
           <div className="relative rounded-xl overflow-hidden shadow-xl shadow-steam-dark/10 border border-border/30 aspect-[4/5]">
@@ -64,7 +54,7 @@ export function UseCasesSection() {
               Mokiniai sprendžia užduotis komandose pamokoje.
             </span>
           </figcaption>
-        </motion.figure>
+        </figure>
 
         {/* Right — narrative use cases */}
         <div className="lg:col-span-7">
@@ -85,12 +75,8 @@ export function UseCasesSection() {
 
           <div className="space-y-px bg-border/60 border-y border-border/60">
             {useCases.map((item, index) => (
-              <motion.article
+              <article
                 key={index}
-                initial={prefersReduced ? { opacity: 1 } : { opacity: 0, x: 16 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.07, duration: 0.45 }}
                 className="grid grid-cols-[auto_1fr] gap-6 bg-white p-6 transition-colors hover:bg-muted/30"
               >
                 <div className="text-right shrink-0">
@@ -109,7 +95,7 @@ export function UseCasesSection() {
                     {item.body}
                   </p>
                 </div>
-              </motion.article>
+              </article>
             ))}
           </div>
         </div>

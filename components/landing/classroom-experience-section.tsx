@@ -1,5 +1,3 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
 import {
   Settings,
@@ -12,8 +10,6 @@ import {
   Smartphone,
   Monitor,
 } from "lucide-react"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 function TeacherViewMock() {
   return (
@@ -147,8 +143,6 @@ function StudentViewMock() {
 }
 
 export function ClassroomExperienceSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="paper">
       {/* Editorial header */}
@@ -173,11 +167,7 @@ export function ClassroomExperienceSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
         {/* Teacher view */}
-        <motion.div
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+        <div
         >
           <div className="mb-4 flex items-center gap-2">
             <Monitor className="h-4 w-4 text-primary-ink" />
@@ -206,14 +196,10 @@ export function ClassroomExperienceSection() {
           <p className="text-xs text-muted-foreground mt-4 text-center font-medium">
             Realiu laiku matote komandų progresą ir rezultatus
           </p>
-        </motion.div>
+        </div>
 
         {/* Student view */}
-        <motion.div
-          initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.15, duration: 0.5 }}
+        <div
         >
           <div className="mb-4 flex items-center gap-2">
             <Smartphone className="h-4 w-4 text-secondary-ink" />
@@ -242,7 +228,7 @@ export function ClassroomExperienceSection() {
           <p className="text-xs text-muted-foreground mt-4 text-center font-medium">
             Mokiniai sprendžia užduotis ir stebi savo progresą
           </p>
-        </motion.div>
+        </div>
       </div>
     </SectionWrapper>
   )

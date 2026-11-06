@@ -1,8 +1,4 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const capabilities = [
   {
@@ -51,8 +47,6 @@ const ACCENT: Record<string, { num: string; bar: string; tag: string }> = {
 }
 
 export function WhatYouCanDoSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="muted">
       {/* Editorial header */}
@@ -79,12 +73,8 @@ export function WhatYouCanDoSection() {
         {capabilities.map((item, index) => {
           const colors = ACCENT[item.accent]
           return (
-            <motion.article
+            <article
               key={index}
-              initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.06, duration: 0.5 }}
               className="group relative bg-white p-7 lg:p-8 transition-colors hover:bg-muted/30"
             >
               <div className="flex items-center gap-2 mb-5">
@@ -106,7 +96,7 @@ export function WhatYouCanDoSection() {
                   </p>
                 </div>
               </div>
-            </motion.article>
+            </article>
           )
         })}
       </div>

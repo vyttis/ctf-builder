@@ -1,8 +1,4 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const steps = [
   {
@@ -66,8 +62,6 @@ const ACCENT_COLOR: Record<string, { numeral: string; line: string; tick: string
 }
 
 export function HowItWorksSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="white" id="how-it-works">
       {/* Editorial header */}
@@ -96,12 +90,8 @@ export function HowItWorksSection() {
           const isEven = index % 2 === 0
 
           return (
-            <motion.li
+            <li
               key={step.number}
-              initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="relative grid grid-cols-1 md:grid-cols-12 gap-y-3 md:gap-x-8 items-start"
             >
               {/* Big numeral — display serif, takes 4 cols on md+ */}
@@ -130,7 +120,7 @@ export function HowItWorksSection() {
                   {step.description}
                 </p>
               </div>
-            </motion.li>
+            </li>
           )
         })}
       </ol>

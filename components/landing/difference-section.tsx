@@ -1,9 +1,5 @@
-"use client"
-
 import { SectionWrapper } from "./section-wrapper"
 import { Check, X } from "lucide-react"
-import { motion } from "framer-motion"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 const rows = [
   {
@@ -39,8 +35,6 @@ const rows = [
 ] as const
 
 export function DifferenceSection() {
-  const prefersReduced = useReducedMotion()
-
   return (
     <SectionWrapper background="white">
       {/* Editorial header */}
@@ -63,11 +57,7 @@ export function DifferenceSection() {
       </div>
 
       {/* Comparison table — editorial, two-column with vs. */}
-      <motion.div
-        initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
+      <div
         className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60 max-w-5xl"
       >
         {/* Quiz column */}
@@ -122,7 +112,7 @@ export function DifferenceSection() {
             ))}
           </dl>
         </div>
-      </motion.div>
+      </div>
     </SectionWrapper>
   )
 }
