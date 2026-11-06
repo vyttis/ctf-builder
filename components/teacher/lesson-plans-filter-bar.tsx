@@ -110,7 +110,7 @@ export function LessonPlansFilterBar({
           updateUrl({ status: v })
         }}
       >
-        <SelectTrigger className="w-full lg:w-44">
+        <SelectTrigger className="w-full lg:w-44" aria-label="Būsena">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -129,7 +129,7 @@ export function LessonPlansFilterBar({
           updateUrl({ sort: v })
         }}
       >
-        <SelectTrigger className="w-full lg:w-52">
+        <SelectTrigger className="w-full lg:w-52" aria-label="Rikiavimas">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -110,12 +110,13 @@ export default function LibraryPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Ieškoti šablonų..."
+              aria-label="Ieškoti šablonų"
               className="pl-10"
             />
           </div>
         </form>
         <Select value={subject} onValueChange={setSubject}>
-          <SelectTrigger className="w-full sm:w-[160px]">
+          <SelectTrigger className="w-full sm:w-[160px]" aria-label="Dalykas">
             <SelectValue placeholder="Dalykas" />
           </SelectTrigger>
           <SelectContent>
@@ -127,7 +128,7 @@ export default function LibraryPage() {
           </SelectContent>
         </Select>
         <Select value={gradeLevel} onValueChange={setGradeLevel}>
-          <SelectTrigger className="w-full sm:w-[160px]">
+          <SelectTrigger className="w-full sm:w-[160px]" aria-label="Klasė">
             <SelectValue placeholder="Klasė" />
           </SelectTrigger>
           <SelectContent>

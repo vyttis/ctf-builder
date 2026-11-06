@@ -1325,7 +1325,7 @@ export default function PlayPage() {
             <span>Užduotis {currentIndex + 1} iš {challenges.length}</span>
             <span>{solvedIds.size} išspręsta</span>
           </div>
-          <Progress value={progressValue} className="h-2" />
+          <Progress value={Math.round(progressValue)} className="h-2" aria-label="Išspręstos užduotys" />
         </div>
 
         {/* Challenge card */}

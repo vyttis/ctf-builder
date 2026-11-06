@@ -108,7 +108,7 @@ export default async function LessonPlansPage({
           </p>
         </div>
         <Link href="/lesson-plans/new">
-          <Button className="bg-secondary hover:bg-secondary/90 text-white shadow-md shadow-secondary/20 gap-2">
+          <Button className="bg-secondary-ink hover:bg-secondary-ink/90 text-white shadow-md shadow-secondary/20 gap-2">
             <Plus className="h-4 w-4" />
             Naujas planas
           </Button>
@@ -212,7 +212,7 @@ export default async function LessonPlansPage({
             Sukurkite savo pirmąjį pamokos planą su DI pagalba ir pritaikykite jį savo klasei
           </p>
           <Link href="/lesson-plans/new">
-            <Button className="bg-secondary hover:bg-secondary/90 text-white shadow-lg shadow-secondary/25 gap-2">
+            <Button className="bg-secondary-ink hover:bg-secondary-ink/90 text-white shadow-lg shadow-secondary/25 gap-2">
               <Plus className="h-4 w-4" />
               Sukurti pirmąjį planą
             </Button>

@@ -110,7 +110,7 @@ export function BuilderHeader({
             />
             <Button
               size="sm"
-              className="bg-accent hover:bg-accent/90 text-white gap-1.5 h-8"
+              className="bg-accent-ink hover:bg-accent-ink/90 text-white gap-1.5 h-8"
               onClick={() => setLaunchOpen(true)}
             >
               <Rocket className="h-3.5 w-3.5" aria-hidden="true" />

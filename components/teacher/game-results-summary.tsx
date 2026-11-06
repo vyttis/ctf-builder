@@ -201,7 +201,7 @@ function KpiCard({
       </div>
       <div className="text-xl font-bold text-steam-dark tabular-nums leading-none">{value}</div>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1">{label}</div>
-      {hint && <div className="text-[10px] text-muted-foreground/70 mt-0.5">{hint}</div>}
+      {hint && <div className="text-[10px] text-muted-foreground mt-0.5">{hint}</div>}
     </div>
   )
 }

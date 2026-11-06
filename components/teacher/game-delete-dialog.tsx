@@ -90,7 +90,7 @@ export function GameDeleteDialog({
           <Button
             onClick={handleDelete}
             disabled={deleting}
-            className="bg-accent hover:bg-accent/90 text-white gap-2"
+            className="bg-accent-ink hover:bg-accent-ink/90 text-white gap-2"
           >
             {deleting ? (
               <Loader2 className="h-4 w-4 animate-spin" />

@@ -22,7 +22,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -235,7 +235,7 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
         </p>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as LibraryItemStatus)} className="mb-6">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as LibraryItemStatus)}>
         <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
           {TABS.map((t) => (
             <TabsTrigger key={t.status} value={t.status} className="gap-1.5">
@@ -248,53 +248,55 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
             </TabsTrigger>
           ))}
         </TabsList>
-      </Tabs>
 
-      {current.error ? (
-        <div role="alert" className="rounded-lg border border-accent/30 bg-accent/5 p-6 text-center">
-          <p className="text-sm text-steam-dark mb-3">{current.error}</p>
-          <Button variant="outline" size="sm" onClick={() => void load(tab, 1)}>
-            Bandyti dar kartą
-          </Button>
-        </div>
-      ) : current.loading && current.items.length === 0 ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary-ink" aria-label="Kraunama" />
-        </div>
-      ) : current.items.length === 0 ? (
-        <div className="text-center py-20">
-          <CheckCircle className="h-12 w-12 mx-auto text-primary-ink/30 mb-3" aria-hidden="true" />
-          <p className="text-muted-foreground text-sm">{currentTab.empty}</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {current.items.map((item) => (
-            <TemplateCard
-              key={item.id}
-              item={item}
-              busy={busyId === item.id}
-              locked={busyId !== null}
-              canDelete={canDelete}
-              onApprove={() => void review(item, "approved")}
-              onReject={() => {
-                setNote("")
-                setNoteError(null)
-                setPending({ kind: "reject", item })
-              }}
-              onReturn={() => void review(item, "pending_review")}
-              onDelete={() => setPending({ kind: "delete", item })}
-            />
-          ))}
-          {current.items.length < current.total && (
-            <div className="flex justify-center pt-2">
-              <Button variant="outline" onClick={() => void load(tab, current.page + 1)} disabled={current.loading}>
-                {current.loading && <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />}
-                Rodyti daugiau ({current.total - current.items.length})
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+        <TabsContent value={tab} className="mt-6">
+        {current.error ? (
+          <div role="alert" className="rounded-lg border border-accent/30 bg-accent/5 p-6 text-center">
+            <p className="text-sm text-steam-dark mb-3">{current.error}</p>
+            <Button variant="outline" size="sm" onClick={() => void load(tab, 1)}>
+              Bandyti dar kartą
+            </Button>
+          </div>
+        ) : current.loading && current.items.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary-ink" aria-label="Kraunama" />
+          </div>
+        ) : current.items.length === 0 ? (
+          <div className="text-center py-20">
+            <CheckCircle className="h-12 w-12 mx-auto text-primary-ink/30 mb-3" aria-hidden="true" />
+            <p className="text-muted-foreground text-sm">{currentTab.empty}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {current.items.map((item) => (
+              <TemplateCard
+                key={item.id}
+                item={item}
+                busy={busyId === item.id}
+                locked={busyId !== null}
+                canDelete={canDelete}
+                onApprove={() => void review(item, "approved")}
+                onReject={() => {
+                  setNote("")
+                  setNoteError(null)
+                  setPending({ kind: "reject", item })
+                }}
+                onReturn={() => void review(item, "pending_review")}
+                onDelete={() => setPending({ kind: "delete", item })}
+              />
+            ))}
+            {current.items.length < current.total && (
+              <div className="flex justify-center pt-2">
+                <Button variant="outline" onClick={() => void load(tab, current.page + 1)} disabled={current.loading}>
+                  {current.loading && <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />}
+                  Rodyti daugiau ({current.total - current.items.length})
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={pending !== null} onOpenChange={(open) => !open && busyId === null && setPending(null)}>
         <DialogContent>

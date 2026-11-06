@@ -343,7 +343,7 @@ export function SuggestionsPanel({
               Atšaukti
             </Button>
             <Button
-              className="bg-accent hover:bg-accent/90 text-white"
+              className="bg-accent-ink hover:bg-accent-ink/90 text-white"
               onClick={() => {
                 setRegenerateConfirmOpen(false)
                 onGenerate()
