@@ -286,6 +286,8 @@ select
 
 Tikimasi: `auth_fn` `true`, `anon_fn` `false`, `definer` `true`.
 
+Pritaikyta produkcijoje 2026-11-06 16:35 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai funkcijos nebuvo, 0 vykstančių veiklų). Patikra po taikymo: `auth_fn` `true`, `anon_fn` `false`, `definer` `true`, `search_path=public, pg_temp`. Kodas (PR #54) sujungtas po to.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir
