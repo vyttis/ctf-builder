@@ -18,6 +18,7 @@ interface UserUsage {
   userId: string
   name: string
   email: string | null
+  role: string | null
   actions: number
   calls: number
   costUsd: number
@@ -207,11 +208,11 @@ export function AiUsagePanel() {
 
       <section aria-labelledby="users-title" className="space-y-4">
         <h2 id="users-title" className="text-lg font-semibold text-steam-dark">
-          Kas naudojo šį mėnesį
+          Vedėjai šį mėnesį
         </h2>
         {data.users.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border bg-white px-4 py-8 text-center text-sm text-muted-foreground">
-            Šį mėnesį DI dar niekas nenaudojo.
+            Aktyvių vedėjų dar nėra.
           </p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-border/60 bg-white">
@@ -226,6 +227,7 @@ export function AiUsagePanel() {
               </thead>
               <tbody>
                 {data.users.map((u) => {
+                  const unlimited = u.role === "super_admin"
                   const effective = u.limit ?? data.settings.ai_user_monthly_limit
                   return (
                     <tr key={u.userId} className="border-b border-border/40 last:border-0">
@@ -234,30 +236,34 @@ export function AiUsagePanel() {
                         {u.email && <p className="text-xs text-muted-foreground">{u.email}</p>}
                       </td>
                       <td className="px-4 py-3 tabular-nums">
-                        {u.actions} iš {effective}
+                        {unlimited ? u.actions : `${u.actions} iš ${effective}`}
                       </td>
                       <td className="px-4 py-3 tabular-nums">{usd.format(u.costUsd)} USD</td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Input
-                            aria-label={`Asmeninis limitas: ${u.name}`}
-                            type="number"
-                            min={0}
-                            inputMode="numeric"
-                            placeholder={`Numatytasis (${data.settings.ai_user_monthly_limit})`}
-                            value={limitDrafts[u.userId] ?? ""}
-                            onChange={(e) => setLimitDrafts((d) => ({ ...d, [u.userId]: e.target.value }))}
-                            className="h-9 w-40"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => saveUserLimit(u.userId)}
-                            disabled={savingUser === u.userId}
-                          >
-                            {savingUser === u.userId ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Išsaugoti"}
-                          </Button>
-                        </div>
+                        {unlimited ? (
+                          <span className="text-sm text-muted-foreground">Be limito (super administratorius)</span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              aria-label={`Asmeninis limitas: ${u.name}`}
+                              type="number"
+                              min={0}
+                              inputMode="numeric"
+                              placeholder={`Numatytasis (${data.settings.ai_user_monthly_limit})`}
+                              value={limitDrafts[u.userId] ?? ""}
+                              onChange={(e) => setLimitDrafts((d) => ({ ...d, [u.userId]: e.target.value }))}
+                              className="h-9 w-40"
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => saveUserLimit(u.userId)}
+                              disabled={savingUser === u.userId}
+                            >
+                              {savingUser === u.userId ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Išsaugoti"}
+                            </Button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )
@@ -267,7 +273,7 @@ export function AiUsagePanel() {
           </div>
         )}
         <p className="text-xs text-muted-foreground">
-          Tuščias laukas reiškia numatytąjį limitą. Kitų vedėjų limitus galite keisti skiltyje „Vartotojai“.
+          Sąraše yra visi aktyvūs vedėjai, ir tie, kurie DI dar nenaudojo, todėl limitą galima nustatyti iš anksto. Tuščias laukas reiškia numatytąjį limitą.
         </p>
       </section>
     </div>

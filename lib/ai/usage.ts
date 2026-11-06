@@ -20,6 +20,8 @@ export interface AiContext {
   userId: string
   requestId: string
   endpoint: string
+  /** Model calls made so far; an action that made none is not counted. */
+  modelCalls?: number
 }
 
 export const aiContext = new AsyncLocalStorage<AiContext>()
@@ -110,17 +112,77 @@ export async function monthSpendUsd(admin: SupabaseClient, now = new Date(), fre
  */
 export const UNCOUNTED_ENDPOINTS = ["di/verify"]
 
-/** How many DI actions (distinct request ids) the person started this month. */
-export async function monthActionsByUser(admin: SupabaseClient, userId: string, now = new Date()): Promise<number> {
-  const { data, error } = await admin
+/** Placeholder row that holds a limit slot while the action runs. */
+export const RESERVATION_MODEL = "reservation"
+
+/**
+ * How many DI actions (distinct request ids) the person started this month.
+ * With upToId, only rows up to that id: the actions that came before a
+ * reservation, plus the reservation itself.
+ */
+export async function monthActionsByUser(
+  admin: SupabaseClient,
+  userId: string,
+  now = new Date(),
+  upToId?: number,
+): Promise<number> {
+  const ids = new Set<string>()
+  const page = 1000
+  for (let from = 0; ; from += page) {
+    let query = admin
+      .from("ai_usage")
+      .select("request_id")
+      .eq("user_id", userId)
+      .not("endpoint", "in", `(${UNCOUNTED_ENDPOINTS.join(",")})`)
+      .gte("created_at", monthStart(now).toISOString())
+    if (upToId !== undefined) query = query.lte("id", upToId)
+    const { data, error } = await query.order("id", { ascending: true }).range(from, from + page - 1)
+    if (error) throw error
+    for (const row of data ?? []) ids.add(row.request_id)
+    if (!data || data.length < page) break
+  }
+  return ids.size
+}
+
+/**
+ * Takes a limit slot for this action before any model call. The reservation
+ * row goes in first and the count is taken up to its id, so two requests
+ * started together at the last free slot cannot both pass: the later row
+ * sees the earlier one. If the action ends without a model call (bad input,
+ * the model failed), the slot is given back after the response.
+ * Returns the actions used before this one, or null when the limit is full.
+ */
+async function reserveAction(
+  admin: SupabaseClient,
+  ctx: AiContext,
+  limit: number,
+  now: Date,
+): Promise<number | null> {
+  const { data: row, error } = await admin
     .from("ai_usage")
-    .select("request_id")
-    .eq("user_id", userId)
-    .not("endpoint", "in", `(${UNCOUNTED_ENDPOINTS.join(",")})`)
-    .gte("created_at", monthStart(now).toISOString())
-    .limit(5000)
-  if (error) throw error
-  return new Set((data ?? []).map((r) => r.request_id)).size
+    .insert({ user_id: ctx.userId, request_id: ctx.requestId, endpoint: ctx.endpoint, model: RESERVATION_MODEL })
+    .select("id")
+    .single()
+  if (error || !row) throw error ?? new Error("reservation not created")
+  const release = async () => {
+    const { error: deleteError } = await admin.from("ai_usage").delete().eq("id", row.id)
+    if (deleteError) console.error("[ai-usage] reservation release failed", { code: deleteError.code })
+  }
+  let withThis: number
+  try {
+    withThis = await monthActionsByUser(admin, ctx.userId, now, row.id)
+  } catch (countError) {
+    await release()
+    throw countError
+  }
+  if (withThis > limit) {
+    await release()
+    return null
+  }
+  after(async () => {
+    if (!ctx.modelCalls) await release()
+  })
+  return withThis - 1
 }
 
 export type AiAllowance =
@@ -154,7 +216,7 @@ export async function checkAiAllowance(
     ])
     if (profile?.role === "super_admin") return { ok: true, ctx, used: 0, limit: null }
 
-    const [spent, used] = await Promise.all([monthSpendUsd(admin, now), monthActionsByUser(admin, userId, now)])
+    const spent = await monthSpendUsd(admin, now)
     if (spent >= settings.ai_monthly_budget_usd) {
       return {
         ok: false,
@@ -163,7 +225,9 @@ export async function checkAiAllowance(
       }
     }
     const limit = profile?.ai_monthly_limit ?? settings.ai_user_monthly_limit
-    if (opts.countsTowardLimit !== false && used >= limit) {
+    if (opts.countsTowardLimit === false) return { ok: true, ctx, used: 0, limit }
+    const used = await reserveAction(admin, ctx, limit, now)
+    if (used === null) {
       return {
         ok: false,
         code: "ai_user_limit",
@@ -190,6 +254,7 @@ export async function recordAiUsage(model: string, usage: TokenUsage | undefined
     console.warn("[ai-usage] model call outside an AI context", { model })
     return
   }
+  ctx.modelCalls = (ctx.modelCalls ?? 0) + 1
   const cost = costUsd(model, usage ?? {})
   try {
     const admin = createAdminClient()
@@ -213,55 +278,99 @@ export async function recordAiUsage(model: string, usage: TokenUsage | undefined
   }
 }
 
-/** Sends the 80 % and 100 % budget emails once per month each. */
+export type BudgetLevel = "alert" | "100"
+
+export function budgetLevel(spentUsd: number, settings: AiSettings): BudgetLevel | null {
+  if (settings.ai_monthly_budget_usd <= 0) return null
+  const ratio = spentUsd / settings.ai_monthly_budget_usd
+  return ratio >= 1 ? "100" : ratio >= settings.ai_budget_alert_ratio ? "alert" : null
+}
+
+const ALERT_ACTION = "ai_budget.alert"
+
+async function alertClaimIds(admin: SupabaseClient, target: string): Promise<number[]> {
+  const { data } = await admin
+    .from("admin_audit_log")
+    .select("id")
+    .eq("action", ALERT_ACTION)
+    .eq("target_id", target)
+    .order("id", { ascending: true })
+    .limit(5)
+  return (data ?? []).map((r) => Number(r.id))
+}
+
+/**
+ * Sends the 80 % and 100 % budget emails once per month each. Runs after
+ * every recorded call, so it starts from the per-instance spend (kept
+ * current by recordAiUsage) and reads the database only once a threshold
+ * may have been crossed and its email is not out yet. The audit row is the
+ * claim: the first row for a month and level sends, and the row is removed
+ * again if the email could not go out, so a later call retries.
+ */
 export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date()): Promise<void> {
   try {
     const settings = await loadAiSettings(admin)
-    if (settings.ai_monthly_budget_usd <= 0) return
-    const spent = await monthSpendUsd(admin, now, true)
-    const ratio = spent / settings.ai_monthly_budget_usd
-    const level = ratio >= 1 ? "100" : ratio >= settings.ai_budget_alert_ratio ? "alert" : null
-    if (!level) return
-
     const monthKey = monthStart(now).toISOString().slice(0, 7)
-    const target = `${monthKey}:${level}`
-    const { data: sent } = await admin
-      .from("admin_audit_log")
-      .select("id")
-      .eq("action", "ai_budget.alert")
-      .eq("target_id", target)
-      .limit(1)
-    if (sent && sent.length > 0) return
-    await admin.from("admin_audit_log").insert({
-      actor_id: null,
-      action: "ai_budget.alert",
-      target_type: "platform",
-      target_id: target,
-      details: { spent_usd: spent, budget_usd: settings.ai_monthly_budget_usd },
-    })
+    const cachedLevel = budgetLevel(await monthSpendUsd(admin, now), settings)
+    if (!cachedLevel) return
+    if ((await alertClaimIds(admin, `${monthKey}:${cachedLevel}`)).length > 0) return
 
-    const [{ superAdminEmails }, { sendEmail }, { aiBudgetEmail }, top] = await Promise.all([
-      import("@/lib/access/notify"),
-      import("@/lib/email/send"),
-      import("@/lib/email/templates"),
-      topUsers(admin, now, 3),
-    ])
-    const to = await superAdminEmails(admin)
-    if (to.length === 0) return
-    const base = `https://${process.env.CANONICAL_CLASSROOM_HOST || "pamokos.kusteam.app"}`
-    await sendEmail(
-      aiBudgetEmail(
-        to,
-        {
-          spentUsd: spent,
-          budgetUsd: settings.ai_monthly_budget_usd,
-          monthGenitive: monthGenitive(now),
-          resetsOn: resetsOnText(now),
-          top: top.map((t) => ({ name: t.name, requests: t.actions, costUsd: t.costUsd })),
-        },
-        `${base}/admin/di`,
-      ),
-    )
+    const spent = await monthSpendUsd(admin, now, true)
+    const level = budgetLevel(spent, settings)
+    if (!level) return
+    const target = `${monthKey}:${level}`
+    if (level !== cachedLevel && (await alertClaimIds(admin, target)).length > 0) return
+
+    const { data: claim } = await admin
+      .from("admin_audit_log")
+      .insert({
+        actor_id: null,
+        action: ALERT_ACTION,
+        target_type: "platform",
+        target_id: target,
+        details: { spent_usd: spent, budget_usd: settings.ai_monthly_budget_usd },
+      })
+      .select("id")
+      .single()
+    if (!claim) return
+    const claimId = Number(claim.id)
+    const release = async () => {
+      await admin.from("admin_audit_log").delete().eq("id", claimId)
+    }
+    if ((await alertClaimIds(admin, target))[0] !== claimId) {
+      await release()
+      return
+    }
+
+    let delivered = false
+    try {
+      const [{ superAdminEmails }, { sendEmail }, { aiBudgetEmail }, top] = await Promise.all([
+        import("@/lib/access/notify"),
+        import("@/lib/email/send"),
+        import("@/lib/email/templates"),
+        topUsers(admin, now, 3),
+      ])
+      const to = await superAdminEmails(admin)
+      if (to.length > 0) {
+        const base = `https://${process.env.CANONICAL_CLASSROOM_HOST || "pamokos.kusteam.app"}`
+        const result = await sendEmail(
+          aiBudgetEmail(
+            to,
+            {
+              spentUsd: spent,
+              budgetUsd: settings.ai_monthly_budget_usd,
+              monthGenitive: monthGenitive(now),
+              resetsOn: resetsOnText(now),
+              top: top.map((t) => ({ name: t.name, requests: t.actions, costUsd: t.costUsd })),
+            },
+            `${base}/admin/di`,
+          ),
+        )
+        delivered = result.ok
+      }
+    } finally {
+      if (!delivered) await release()
+    }
   } catch (error) {
     console.error("[ai-usage] budget alert failed", { error: error instanceof Error ? error.message : "unknown" })
   }
@@ -271,20 +380,27 @@ export interface UserUsage {
   userId: string
   name: string
   email: string | null
+  role: string | null
   actions: number
   calls: number
   costUsd: number
   limit: number | null
 }
 
-/** This month's usage per person, most expensive first. */
+type ProfileInfo = { id: string; full_name: string | null; email: string | null; role: string | null; ai_monthly_limit: number | null }
+
+/**
+ * This month's usage per person, most expensive first. Every active account
+ * is listed, also those who have not used DI yet, so the super admin can
+ * set a personal limit before the first use.
+ */
 export async function usageByUser(admin: SupabaseClient, now = new Date()): Promise<UserUsage[]> {
-  const rows: { user_id: string | null; request_id: string; endpoint: string; cost_usd: number }[] = []
+  const rows: { user_id: string | null; request_id: string; endpoint: string; model: string; cost_usd: number }[] = []
   const page = 1000
   for (let from = 0; ; from += page) {
     const { data, error } = await admin
       .from("ai_usage")
-      .select("user_id, request_id, endpoint, cost_usd")
+      .select("user_id, request_id, endpoint, model, cost_usd")
       .gte("created_at", monthStart(now).toISOString())
       .order("id", { ascending: true })
       .range(from, from + page - 1)
@@ -297,32 +413,40 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
     if (!r.user_id) continue
     const u = byUser.get(r.user_id) ?? { requests: new Set<string>(), calls: 0, cost: 0 }
     if (!UNCOUNTED_ENDPOINTS.includes(r.endpoint)) u.requests.add(r.request_id)
-    u.calls += 1
+    if (r.model !== RESERVATION_MODEL) u.calls += 1
     u.cost += Number(r.cost_usd)
     byUser.set(r.user_id, u)
   }
-  const ids = Array.from(byUser.keys())
-  const { data: profiles } = ids.length
-    ? await admin.from("profiles").select("id, full_name, email, ai_monthly_limit").in("id", ids)
-    : { data: [] as { id: string; full_name: string | null; email: string | null; ai_monthly_limit: number | null }[] }
-  const info = new Map((profiles ?? []).map((p) => [p.id, p]))
-  return ids
+
+  const columns = "id, full_name, email, role, ai_monthly_limit"
+  const { data: active, error: activeError } = await admin.from("profiles").select(columns).eq("status", "active")
+  if (activeError) throw activeError
+  const info = new Map(((active ?? []) as ProfileInfo[]).map((p) => [p.id, p]))
+  const missing = Array.from(byUser.keys()).filter((id) => !info.has(id))
+  if (missing.length > 0) {
+    const { data: others } = await admin.from("profiles").select(columns).in("id", missing)
+    for (const p of (others ?? []) as ProfileInfo[]) info.set(p.id, p)
+  }
+
+  const ids = new Set<string>([...info.keys(), ...byUser.keys()])
+  return Array.from(ids)
     .map((id) => {
-      const u = byUser.get(id)!
+      const u = byUser.get(id) ?? { requests: new Set<string>(), calls: 0, cost: 0 }
       const p = info.get(id)
       return {
         userId: id,
         name: p?.full_name || p?.email || "Nežinomas",
         email: p?.email ?? null,
+        role: p?.role ?? null,
         actions: u.requests.size,
         calls: u.calls,
         costUsd: Math.round(u.cost * 100000) / 100000,
         limit: p?.ai_monthly_limit ?? null,
       }
     })
-    .sort((a, b) => b.costUsd - a.costUsd)
+    .sort((a, b) => b.costUsd - a.costUsd || b.actions - a.actions || a.name.localeCompare(b.name, "lt"))
 }
 
 async function topUsers(admin: SupabaseClient, now: Date, n: number): Promise<UserUsage[]> {
-  return (await usageByUser(admin, now)).slice(0, n)
+  return (await usageByUser(admin, now)).filter((u) => u.calls > 0).slice(0, n)
 }

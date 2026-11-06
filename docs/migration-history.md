@@ -180,6 +180,8 @@ select
 
 Tikimasi: `role_checks_status` `true`, `profile_policy` 1, `admin_policies` 4.
 
+Pritaikyta produkcijoje 2026-11-06 apie 13:57 (SQL Editor, visas failas). Patikra po taikymo: `true`, 1, 4; neaktyvių paskyrų 0.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir
