@@ -12,4 +12,16 @@ export const LIVE_EDIT_BLOCKED = {
   delete: "Vykstančios veiklos užduočių negalima ištrinti. Tai galėsite padaryti, kai veikla baigsis.",
   reorder: "Vykstančios veiklos užduočių tvarkos keisti negalima.",
   needsAnswer: "Vykstančiai veiklai negalima pridėti užduoties be atsakymo. Įrašykite teisingą atsakymą.",
+  prerequisites: "Vykstančios veiklos užduočių atrakinimo sąlygų keisti negalima.",
+  finishedWithAnswers:
+    "Šios užduoties atsakymai yra baigtos veiklos ataskaitoje, todėl jos ištrinti negalima. Norėdami keisti užduotis, nukopijuokite veiklą.",
 } as const
+
+/** Two prerequisite lists name the same tasks (order does not matter). */
+export function samePrerequisites(a: readonly string[] | null | undefined, b: readonly string[] | null | undefined): boolean {
+  const left = new Set(a ?? [])
+  const right = new Set(b ?? [])
+  if (left.size !== right.size) return false
+  for (const id of left) if (!right.has(id)) return false
+  return true
+}

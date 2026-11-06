@@ -555,7 +555,8 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
           <p>
             <span className="font-semibold">Veikla vyksta.</span> Pakeistą atsakymą ir taškus sistema taiko
             iš karto naujiems bandymams, o pakeistą užduoties tekstą dalyviai pamatys tik atnaujinę puslapį.
-            Užduočių ištrinti, kopijuoti ir pertvarkyti negalima, kol veikla nebaigta.
+            Užduočių ištrinti, kopijuoti, pertvarkyti ir keisti jų atrakinimo sąlygų negalima, kol veikla
+            nebaigta.
           </p>
         </div>
       )}
