@@ -68,7 +68,7 @@ be `_` ir aprašymo). Po 1 žingsnio galutinis sąrašas:
 for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
          00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
          00021 00022 00023 00024 00025 00026 \
-         20261106120000 20261106130000 20261106140000; do
+         20261106120000 20261106130000 20261106140000 20261106145000; do
   supabase migration repair --status applied "$v"
 done
 ```
@@ -179,6 +179,34 @@ select
 ```
 
 Tikimasi: `role_checks_status` `true`, `profile_policy` 1, `admin_policies` 4.
+
+Pritaikyta produkcijoje 2026-11-06 apie 13:57 (SQL Editor, visas failas). Patikra po taikymo: `true`, 1, 4; neaktyvių paskyrų 0.
+
+## 2026-11-06: DI rezervacijos ir biudžeto įspėjimų užraktas
+
+Failas `supabase/migrations/20261106145000_ai_reservations_and_alert_claims.sql`,
+grąžinimas `supabase/rollback/20261106145000_ai_reservations_and_alert_claims.sql`.
+`reserve_ai_action()` suskaičiuoja mėnesio veiksmus ir įrašo rezervaciją
+vienu kvietimu, laikydama asmens užraktą (`pg_advisory_xact_lock`), todėl
+paskutinės laisvos vietos negali užimti dvi užklausos. Mėnuo (UTC) ir
+vykdomų veiksmų langas skaičiuojami nuo to paties laiko, kurį gauna
+rezervacijos eilutė. Unikalus indeksas
+leidžia vieną biudžeto įspėjimą per mėnesį ir lygį. Indeksas `ai_usage(request_id)`
+pagreitina skaičiavimą. Duomenys nekeičiami; funkciją gali kviesti tik
+`service_role`.
+
+Taikymo tvarka: pirma migracija, tada kodas (PR #50).
+
+Patikra po taikymo:
+
+```sql
+select
+  has_function_privilege('service_role', 'public.reserve_ai_action(uuid,uuid,text,integer,integer)', 'EXECUTE') as service_fn,
+  has_function_privilege('authenticated', 'public.reserve_ai_action(uuid,uuid,text,integer,integer)', 'EXECUTE') as auth_fn,
+  (select count(*) from pg_indexes where indexname in ('ai_usage_request', 'admin_audit_log_ai_budget_alert_once')) as indexes;
+```
+
+Tikimasi: `service_fn` `true`, `auth_fn` `false`, `indexes` 2.
 
 ## Konvencija toliau
 

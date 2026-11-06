@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
+import { AiQuotaNote } from "@/components/teacher/ai-quota-note"
 import { useRouter, useSearchParams } from "next/navigation"
 import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject, getSubjectLabel } from "@/lib/curriculum/subjects"
 import { getTopicsForSubjectAndGrade, getCurriculumContext } from "@/lib/curriculum/topics"
@@ -629,6 +630,7 @@ export function LessonPlanGenerator() {
                 </>
               )}
             </Button>
+            <AiQuotaNote className="text-center" refreshKey={loading} />
           </CardContent>
         </Card>
 

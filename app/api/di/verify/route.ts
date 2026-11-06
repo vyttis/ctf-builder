@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { checkAiAllowance, enterAiContext } from "@/lib/ai/usage"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import {
@@ -39,6 +40,14 @@ export async function POST(request: Request) {
       { status: 429 }
     )
   }
+  // Monthly DI limits (personal and platform budget); every model call
+  // from here on is recorded for this action. di/generate already verifies
+  // its own suggestions, so a call here is a separate action and counts.
+  const allowance = await checkAiAllowance(user.id, "di/verify")
+  if (!allowance.ok) {
+    return NextResponse.json({ error: allowance.message, code: allowance.code }, { status: 429 })
+  }
+  enterAiContext(allowance.ctx)
 
   let body
   try {
