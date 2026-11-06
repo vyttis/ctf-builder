@@ -1,7 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { clockFromRow, pauseOffsetAtStart } from "@/lib/game/clock"
 
 // POST /api/play/start — stamp the team's timed-run start, once.
 //
@@ -46,26 +45,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ started_at: team.started_at, pause_offset_ms: Number(team.pause_offset_ms ?? 0) })
     }
 
-    // The team gets back only pauses that happen after it starts: remember
-    // how much pause time had passed by now.
-    const { data: game, error: gameError } = await supabase
-      .from("games")
-      .select("paused_ms, paused_at")
-      .eq("id", team.game_id)
-      .maybeSingle()
-    // Without the game's pause time the offset would be wrong for good:
-    // stamp nothing, the client retries on its next load.
-    if (gameError || !game) {
-      console.error("play/start game lookup failed:", gameError?.message ?? "no game")
-      return NextResponse.json({ error: "Serverio klaida" }, { status: 503 })
-    }
-    const now = Date.now()
-    const offset = pauseOffsetAtStart(clockFromRow(game), now)
-
-    // Only stamp while NULL: a second device or a reload never resets the clock.
+    // Only stamp while NULL: a second device or a reload never resets the
+    // clock. The database stamps the pause offset in the same update
+    // (trigger teams_pause_offset), so a team only gets back pauses that
+    // happen after it starts.
     const { data: updated, error } = await supabase
       .from("teams")
-      .update({ started_at: new Date(now).toISOString(), pause_offset_ms: offset })
+      .update({ started_at: new Date().toISOString() })
       .eq("id", team.id)
       .is("started_at", null)
       .select("started_at, pause_offset_ms")

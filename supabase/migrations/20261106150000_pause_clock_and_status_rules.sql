@@ -21,9 +21,11 @@
 -- builder save cannot undo an extension made meanwhile; while the activity
 -- runs, the time limit changes only through extend_game_time().
 --
--- No existing rows are changed. The functions run as the caller, so the
--- existing RLS rules (owner, active account) still decide who may change an
--- activity.
+-- Existing rows: activities paused at the time of the migration get
+-- paused_at = now(), so their pause counts from then; nothing else changes.
+-- teams_pause_offset stamps a team's pause offset when it starts. The
+-- functions run as the caller, so the existing RLS rules (owner, active
+-- account) still decide who may change an activity.
 --
 -- Rollback: supabase/rollback/20261106150000_pause_clock_and_status_rules.sql
 
@@ -41,6 +43,49 @@ ALTER TABLE public.teams
 
 ALTER TABLE public.teams
   ADD CONSTRAINT teams_pause_offset_ms_check CHECK (pause_offset_ms >= 0);
+
+-- Activities paused right now: their pause counts from this moment (the
+-- time before is not known). Done before the trigger below, which owns
+-- these columns from then on.
+UPDATE public.games SET paused_at = now() WHERE status = 'paused' AND paused_at IS NULL;
+
+-- A team's pause offset is stamped by the database when it starts, from the
+-- game's pause time at that moment, whichever code sets started_at (also an
+-- older app version still running while this migration is applied).
+CREATE OR REPLACE FUNCTION public.teams_pause_offset()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_paused_ms bigint;
+  v_paused_at timestamptz;
+BEGIN
+  IF TG_OP = 'UPDATE' THEN
+    -- Kept as it was unless the team is starting now.
+    NEW.pause_offset_ms := OLD.pause_offset_ms;
+    IF NOT (OLD.started_at IS NULL AND NEW.started_at IS NOT NULL) THEN
+      RETURN NEW;
+    END IF;
+  ELSIF NEW.started_at IS NULL THEN
+    NEW.pause_offset_ms := 0;
+    RETURN NEW;
+  END IF;
+
+  SELECT paused_ms, paused_at INTO v_paused_ms, v_paused_at
+  FROM public.games WHERE id = NEW.game_id;
+  NEW.pause_offset_ms := coalesce(v_paused_ms, 0) + CASE
+    WHEN v_paused_at IS NOT NULL
+      THEN greatest(0, floor(extract(epoch FROM (now() - v_paused_at)) * 1000))::bigint
+    ELSE 0
+  END;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS teams_pause_offset ON public.teams;
+CREATE TRIGGER teams_pause_offset BEFORE INSERT OR UPDATE ON public.teams
+  FOR EACH ROW EXECUTE FUNCTION public.teams_pause_offset();
 
 CREATE OR REPLACE FUNCTION public.games_status_rules()
 RETURNS trigger
@@ -181,7 +226,7 @@ BEGIN
     RAISE EXCEPTION 'activity has no time limit' USING ERRCODE = 'KS422';
   END IF;
   IF v_limit + p_minutes > 1440 THEN
-    RAISE EXCEPTION 'time limit cannot exceed 24 hours' USING ERRCODE = 'KS422';
+    RAISE EXCEPTION 'time limit cannot exceed 24 hours' USING ERRCODE = 'KS423';
   END IF;
 
   UPDATE public.games
@@ -194,6 +239,7 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.games_status_rules() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.teams_pause_offset() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.set_game_status(uuid, text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.extend_game_time(uuid, integer) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.update_game_settings(uuid, jsonb) FROM PUBLIC, anon;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
+import { rpcRow } from "@/lib/supabase/rpc-row"
 
 const extendSchema = z.object({ minutes: z.number().int().min(1).max(180) })
 
@@ -31,6 +32,9 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
         { status: 400 }
       )
     }
+    if (error.code === "KS423") {
+      return NextResponse.json({ error: "Laiko limitas negali viršyti 24 valandų." }, { status: 400 })
+    }
     if (error.code === "KS409") {
       return NextResponse.json({ error: "Pratęsti galima tik vykstančią veiklą." }, { status: 409 })
     }
@@ -38,6 +42,6 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
     return NextResponse.json({ error: "Nepavyko pratęsti laiko." }, { status: 500 })
   }
 
-  const settings = (data as { settings?: { time_limit_minutes?: number } } | null)?.settings
+  const settings = rpcRow<{ settings?: { time_limit_minutes?: number } }>(data)?.settings
   return NextResponse.json({ time_limit_minutes: settings?.time_limit_minutes ?? null })
 }

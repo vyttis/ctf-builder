@@ -350,6 +350,24 @@ BEGIN
 END $$;
 RESET ROLE;
 
+-- A team that starts after a pause gets the pause offset from the database,
+-- whatever the caller wrote.
+INSERT INTO public.teams (id, game_id, name, session_token) VALUES
+  ('30000000-0000-0000-0000-0000000000c1', '10000000-0000-0000-0000-0000000000c1', 'Vėlyva', 'token-late');
+UPDATE public.teams SET started_at = now(), pause_offset_ms = 0 WHERE id = '30000000-0000-0000-0000-0000000000c1';
+DO $$
+DECLARE offset_ms bigint;
+BEGIN
+  SELECT pause_offset_ms INTO offset_ms FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000c1';
+  IF offset_ms < 119000 THEN
+    RAISE EXCEPTION 'a late team must start with the earlier pause as its offset, got %', offset_ms;
+  END IF;
+  UPDATE public.teams SET pause_offset_ms = 0, name = 'Vėlyva 2' WHERE id = '30000000-0000-0000-0000-0000000000c1';
+  IF (SELECT pause_offset_ms FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000c1') <> offset_ms THEN
+    RAISE EXCEPTION 'the pause offset must not change after the start';
+  END IF;
+END $$;
+
 -- A blocked account cannot change its activity through the functions either.
 UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-00000000000a';
 SET ROLE authenticated;

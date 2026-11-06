@@ -9,6 +9,8 @@ DROP FUNCTION IF EXISTS public.extend_game_time(uuid, integer);
 DROP FUNCTION IF EXISTS public.set_game_status(uuid, text);
 DROP TRIGGER IF EXISTS games_status_rules ON public.games;
 DROP FUNCTION IF EXISTS public.games_status_rules();
+DROP TRIGGER IF EXISTS teams_pause_offset ON public.teams;
+DROP FUNCTION IF EXISTS public.teams_pause_offset();
 
 ALTER TABLE public.teams DROP CONSTRAINT IF EXISTS teams_pause_offset_ms_check;
 ALTER TABLE public.teams DROP COLUMN IF EXISTS pause_offset_ms;

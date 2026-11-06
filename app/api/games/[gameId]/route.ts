@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { rpcRow } from "@/lib/supabase/rpc-row"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -157,7 +158,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
       if (error.code === "P0002") return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
       return NextResponse.json({ error: "Nepavyko išsaugoti nustatymų." }, { status: 500 })
     }
-    data = updated
+    data = rpcRow(updated)
   }
 
   // Status moves only forward (draft -> active <-> paused -> finished); the
@@ -185,7 +186,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
       }
       return NextResponse.json({ error: "Nepavyko pakeisti būsenos." }, { status: 500 })
     }
-    data = updated
+    data = rpcRow(updated)
   }
 
   return NextResponse.json(data)
