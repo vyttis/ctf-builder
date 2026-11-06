@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   normalizeAnswer,
+  normalizeAnswerLegacy,
   hashAnswer,
   verifyAnswer,
 } from "@/lib/game/answer-hasher"
@@ -10,8 +11,14 @@ describe("normalizeAnswer", () => {
     expect(normalizeAnswer("  Nemunas  ")).toBe("nemunas")
   })
 
-  it("keeps Lithuanian diacritics intact", () => {
-    expect(normalizeAnswer("Ąžuolas")).toBe("ąžuolas")
+  it("folds Lithuanian diacritics and collapses inner whitespace", () => {
+    expect(normalizeAnswer("Ąžuolas")).toBe("azuolas")
+    expect(normalizeAnswer("  Šaltinį  ")).toBe("saltini")
+    expect(normalizeAnswer("Kuršių   marios")).toBe("kursiu marios")
+  })
+
+  it("keeps the legacy form for old hashes", () => {
+    expect(normalizeAnswerLegacy(" Ąžuolas ")).toBe("ąžuolas")
   })
 })
 
@@ -36,6 +43,20 @@ describe("hashAnswer + verifyAnswer (bcrypt path)", () => {
   it("rejects the empty string against a real hash", async () => {
     const hash = await hashAnswer("42")
     await expect(verifyAnswer("", hash)).resolves.toBe(false)
+  })
+
+  it("accepts answers typed without Lithuanian letters", async () => {
+    const hash = await hashAnswer("Šaltinį")
+    await expect(verifyAnswer("saltini", hash)).resolves.toBe(true)
+    await expect(verifyAnswer("ŠALTINĮ", hash)).resolves.toBe(true)
+    await expect(verifyAnswer("šaltinis", hash)).resolves.toBe(false)
+  })
+
+  it("still verifies hashes created with the legacy accented form", async () => {
+    const bcrypt = (await import("bcryptjs")).default
+    const oldHash = await bcrypt.hash("šaltinį", 4)
+    await expect(verifyAnswer("Šaltinį", oldHash)).resolves.toBe(true)
+    await expect(verifyAnswer("tiltas", oldHash)).resolves.toBe(false)
   })
 
   it("handles Lithuanian characters end to end", async () => {
