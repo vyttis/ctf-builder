@@ -18,6 +18,7 @@ import {
 interface ActivityEvent {
   id: string
   type: "submission_correct" | "submission_wrong" | "team_joined"
+  team_id: string
   team_name: string
   challenge_title?: string
   points?: number
@@ -97,6 +98,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
         const recentEvents: ActivityEvent[] = subs.map(s => ({
           id: s.id,
           type: s.is_correct ? "submission_correct" : "submission_wrong",
+          team_id: s.team_id,
           team_name: teamMap.get(s.team_id) || "—",
           challenge_title: challengeMap.get(s.challenge_id) || "—",
           points: s.points_awarded,
@@ -184,6 +186,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
           const event: ActivityEvent = {
             id: sub.id,
             type: sub.is_correct ? "submission_correct" : "submission_wrong",
+            team_id: sub.team_id,
             team_name: team.name,
             challenge_title: challenge?.title || "—",
             points: sub.points_awarded,
@@ -207,12 +210,42 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
           const event: ActivityEvent = {
             id: `join_${team.id}`,
             type: "team_joined",
+            team_id: team.id,
             team_name: team.name,
             timestamp: team.joined_at,
           }
 
           setEvents(prev => [event, ...prev].slice(0, maxEvents))
           setTeamCount(prev => prev + 1)
+        }
+      )
+      // A renamed team: its earlier rows show the new name too, so a name
+      // the facilitator replaced does not stay on the class screen.
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "teams", filter: `game_id=eq.${gameId}` },
+        (payload) => {
+          const team = payload.new as { id: string; name: string }
+          setEvents((prev) =>
+            prev.some((e) => e.team_id === team.id && e.team_name !== team.name)
+              ? prev.map((e) => (e.team_id === team.id ? { ...e, team_name: team.name } : e))
+              : prev
+          )
+        }
+      )
+      // A removed team: DELETE events carry only the id and cannot be
+      // filtered by game, so drop its rows and count this game's teams again.
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "teams" },
+        async (payload) => {
+          const removedId = (payload.old as { id?: string }).id
+          if (removedId) setEvents((prev) => prev.filter((e) => e.team_id !== removedId))
+          const { count } = await supabase
+            .from("teams")
+            .select("id", { count: "exact", head: true })
+            .eq("game_id", gameId)
+          if (!cancelled && typeof count === "number") setTeamCount(count)
         }
       )
       .subscribe(handleChannelStatus("teams"))

@@ -26,7 +26,7 @@ import {
   ChevronRight,
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
-import { getPlayerSession, clearPlayerSession } from "@/lib/game/session"
+import { getPlayerSession, clearPlayerSession, savePlayerSession } from "@/lib/game/session"
 import { AnswerInput } from "@/components/player/answer-input"
 import { type GameClock, secondsLeft } from "@/lib/game/clock"
 import { pluralizeLt } from "@/lib/utils"
@@ -281,6 +281,17 @@ export default function PlayPage() {
       clearPlayerSession(gameCode)
       router.replace(`/play/${gameCode}`)
       return
+    }
+
+    // The facilitator may have renamed the team: show the current name.
+    if (state.team && state.team.name && state.team.name !== s.team_name) {
+      const renamed = { ...s, team_name: state.team.name }
+      setSession(renamed)
+      try {
+        savePlayerSession(gameCode, renamed)
+      } catch {
+        // Storage blocked: the name still shows for this visit.
+      }
     }
 
     setGameId(state.game.id)

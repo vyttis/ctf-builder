@@ -258,6 +258,36 @@ select
 
 Tikimasi: `game_cols` 3, `team_cols` 1, `auth_status_fn` `true`, `anon_status_fn` `false`, `anon_extend_fn` `false`, `auth_settings_fn` `true`, `triggers` 3, `paused_without_clock` 0.
 
+Pritaikyta produkcijoje 2026-11-06 14:13 UTC (SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai 0 vykstančių veiklų, atsarginės kopijos `backup_20261106.games_before_150000`, `teams_before_150000`, `challenges_before_150000`). Patikra po taikymo: 3, 1, `true`, `false`, `false`, `true`, 3, 0; veiklų, komandų ir užduočių skaičius nepasikeitė (27, 30, 111). Kodas (PR #52) įdiegtas 14:45 UTC.
+
+## 2026-11-06: komandų tvarkymas viena užklausa
+
+Failas `supabase/migrations/20261106160000_team_moderation.sql`,
+grąžinimas `supabase/rollback/20261106160000_team_moderation.sql`.
+Funkcija `moderate_team()` pervadina arba pašalina savos vykstančios
+(ar pristabdytos) veiklos komandą vienoje transakcijoje su patikromis:
+paskyra aktyvi (be programos 30 s talpyklos), veikla priklauso kviečiančiajam
+ir dar vyksta (veiklos eilutė užrakinama, todėl tuo pat metu baigiama veikla
+pakeitimo nepraleidžia). Baigta veikla savo komandas ir atsakymus išlaiko.
+Funkcija vykdoma savininko teisėmis po šių patikrų, kviesti gali tik
+prisijungę vartotojai. Duomenys nekeičiami.
+
+Taikymo tvarka: kodas gali būti pirmas (be funkcijos jis tikrina tą patį
+pats, tik ne vienoje transakcijoje), migracija bet kada po to.
+
+Patikra po taikymo:
+
+```sql
+select
+  has_function_privilege('authenticated', 'public.moderate_team(uuid,uuid,text,boolean)', 'EXECUTE') as auth_fn,
+  has_function_privilege('anon', 'public.moderate_team(uuid,uuid,text,boolean)', 'EXECUTE') as anon_fn,
+  (select prosecdef from pg_proc where proname = 'moderate_team') as definer;
+```
+
+Tikimasi: `auth_fn` `true`, `anon_fn` `false`, `definer` `true`.
+
+Pritaikyta produkcijoje 2026-11-06 16:35 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai funkcijos nebuvo, 0 vykstančių veiklų). Patikra po taikymo: `auth_fn` `true`, `anon_fn` `false`, `definer` `true`, `search_path=public, pg_temp`. Kodas (PR #54) sujungtas po to.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir
