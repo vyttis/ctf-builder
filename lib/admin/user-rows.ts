@@ -23,7 +23,8 @@ export interface AdminUserRow {
   approved_at: string | null
   last_sign_in_at: string | null
   activities: number
-  ai_actions: number
+  /** null when the viewer may not see DI use (only super administrators do). */
+  ai_actions: number | null
   ai_limit: number | null
 }
 
@@ -114,6 +115,16 @@ export function userCsvRow(r: AdminUserRow): (string | number)[] {
     dateOnly(r.approved_at),
     dateOnly(r.last_sign_in_at),
     r.activities,
-    r.ai_actions,
+    r.ai_actions ?? "",
   ]
+}
+
+/**
+ * One key per school for counting: older profiles keep only the school name,
+ * newer ones the registry code and the same name, so the name (case and
+ * spacing ignored) is the shared identity; the code only when no name is set.
+ */
+export function schoolKey(r: Pick<AdminUserRow, "school" | "school_code">): string {
+  const name = (r.school ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase("lt")
+  return name || (r.school_code ?? "").trim()
 }

@@ -38,10 +38,12 @@ async function lastSignIns(admin: SupabaseClient): Promise<Map<string, string | 
 
 /**
  * Everything the user list shows, read with the service role: profiles,
- * activity counts, last sign-in from Auth and this month's DI use. A part
- * that cannot be read (Auth API down, say) shows as empty, not as an error.
+ * activity counts, last sign-in from Auth and, for super administrators
+ * only (withAi), this month's DI use and personal limits, as on /admin/di.
+ * A part that cannot be read (Auth API down, say) shows as empty, not as an
+ * error.
  */
-export async function loadAdminUsers(admin: SupabaseClient): Promise<AdminUserRow[]> {
+export async function loadAdminUsers(admin: SupabaseClient, { withAi }: { withAi: boolean }): Promise<AdminUserRow[]> {
   const { data: profiles, error } = await admin
     .from("profiles")
     .select(PROFILE_COLUMNS)
@@ -51,7 +53,7 @@ export async function loadAdminUsers(admin: SupabaseClient): Promise<AdminUserRo
   const [activities, signIns, usage] = await Promise.all([
     activitiesByTeacher(admin).catch(() => new Map<string, number>()),
     lastSignIns(admin).catch(() => new Map<string, string | null>()),
-    usageByUser(admin).catch(() => []),
+    withAi ? usageByUser(admin).catch(() => []) : Promise.resolve([]),
   ])
   const actions = new Map(usage.map((u) => [u.userId, u.actions]))
 
@@ -77,8 +79,8 @@ export async function loadAdminUsers(admin: SupabaseClient): Promise<AdminUserRo
       approved_at: p.approved_at ?? null,
       last_sign_in_at: signIns.get(p.id) ?? null,
       activities: activities.get(p.id) ?? 0,
-      ai_actions: actions.get(p.id) ?? 0,
-      ai_limit: p.ai_monthly_limit ?? null,
+      ai_actions: withAi ? (actions.get(p.id) ?? 0) : null,
+      ai_limit: withAi ? (p.ai_monthly_limit ?? null) : null,
     }
   })
 }

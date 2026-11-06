@@ -21,6 +21,7 @@ import { exportCsv } from "@/lib/csv"
 import { cn } from "@/lib/utils"
 import {
   type AdminUserRow,
+  schoolKey,
   type Breakdown,
   breakdown,
   matchesSearch,
@@ -95,7 +96,7 @@ export function UsersManager({ users, currentUserId, currentUserRole, defaultAiL
     { label: "Laukia patvirtinimo", value: rows.filter((r) => r.status === "pending").length },
     { label: "Užblokuotos", value: rows.filter((r) => r.status === "blocked").length },
     { label: "Prisijungė per 30 d.", value: rows.filter((r) => recentlyActive(r)).length },
-    { label: "Mokyklų", value: new Set(active.map((r) => r.school_code || r.school).filter(Boolean)).size },
+    { label: "Mokyklų", value: new Set(active.map(schoolKey).filter(Boolean)).size },
     { label: "Savivaldybių", value: new Set(active.map((r) => r.municipality).filter(Boolean)).size },
   ]
 
@@ -247,7 +248,7 @@ export function UsersManager({ users, currentUserId, currentUserRole, defaultAiL
                   <th scope="col" className="px-4 py-3 font-medium">Mokykla</th>
                   <th scope="col" className="px-4 py-3 font-medium">Paskyra</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">Veiklos</th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">DI šį mėn.</th>
+                  {canManage && <th scope="col" className="px-4 py-3 text-right font-medium">DI šį mėn.</th>}
                   <th scope="col" className="px-4 py-3 font-medium">Paskutinį kartą</th>
                   {canManage && (
                     <th scope="col" className="px-4 py-3 font-medium">
@@ -285,9 +286,11 @@ export function UsersManager({ users, currentUserId, currentUserRole, defaultAiL
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">{u.activities}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">
-                        {unlimited ? u.ai_actions : `${u.ai_actions} iš ${limit}`}
-                      </td>
+                      {canManage && (
+                        <td className="px-4 py-3 text-right tabular-nums">
+                          {unlimited ? (u.ai_actions ?? 0) : `${u.ai_actions ?? 0} iš ${limit}`}
+                        </td>
+                      )}
                       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                         {formatDate(u.last_sign_in_at) ?? "Neprisijungė"}
                       </td>
@@ -480,6 +483,11 @@ function ManageUserDialog({
                     Užblokuotas vedėjas nebegalės kurti ir keisti veiklų, naudoti DI ir administravimo. Jo veiklos, rezultatai ir
                     duomenys lieka, paskyrą galėsite atblokuoti bet kada.
                   </p>
+                ) : user.status === "pending" ? (
+                  <p>
+                    Paskyra bus patvirtinta: vedėjas galės kurti ir vesti veiklas, jo prašymas bus pažymėtas patvirtintu, o jam
+                    išsiųsime laišką, kad gali prisijungti.
+                  </p>
                 ) : (
                   <p>Paskyra vėl veiks: vedėjas galės kurti ir vesti veiklas.</p>
                 )}
@@ -586,7 +594,7 @@ function ManageUserDialog({
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Šį mėnesį panaudota {user.ai_actions}. Tuščias laukas reiškia numatytąjį limitą.
+                      Šį mėnesį panaudota {user.ai_actions ?? 0}. Tuščias laukas reiškia numatytąjį limitą.
                     </p>
                   </div>
                 )}

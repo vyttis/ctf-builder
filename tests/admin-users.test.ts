@@ -77,3 +77,21 @@ describe("user list helpers", () => {
     expect(helpers).not.toMatch(/^import (?!type)/m)
   })
 })
+
+describe("schoolKey", () => {
+  it("counts a school once whether a profile has the code or only the name", async () => {
+    const { schoolKey } = await import("@/lib/admin/user-rows")
+    const legacy = schoolKey({ school: "Klaipėdos  Ąžuolyno gimnazija ", school_code: null })
+    const onboarded = schoolKey({ school: "Klaipėdos Ąžuolyno gimnazija", school_code: "190000001" })
+    expect(legacy).toBe(onboarded)
+    expect(schoolKey({ school: null, school_code: "190000002" })).toBe("190000002")
+    expect(schoolKey({ school: "  ", school_code: null })).toBe("")
+  })
+})
+
+describe("userCsvRow without DI data", () => {
+  it("leaves the DI cell empty for viewers who may not see it", () => {
+    const cells = userCsvRow(row({ ai_actions: null }))
+    expect(cells[cells.length - 1]).toBe("")
+  })
+})

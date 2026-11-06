@@ -22,8 +22,13 @@ export default async function AdminUsersPage() {
 
   // Read with the service role after the role check above: last sign-in
   // comes from Auth, activity counts from every facilitator's games.
+  // DI use and limits are for super administrators only (as on /admin/di).
   const admin = createAdminClient()
-  const [users, settings] = await Promise.all([loadAdminUsers(admin), loadAiSettings(admin)])
+  const withAi = profile?.role === "super_admin"
+  const [users, settings] = await Promise.all([
+    loadAdminUsers(admin, { withAi }),
+    withAi ? loadAiSettings(admin) : Promise.resolve(null),
+  ])
 
   return (
     <div>
@@ -37,7 +42,7 @@ export default async function AdminUsersPage() {
         users={users}
         currentUserId={profile?.id ?? ""}
         currentUserRole={profile?.role ?? "teacher"}
-        defaultAiLimit={settings.ai_user_monthly_limit}
+        defaultAiLimit={settings?.ai_user_monthly_limit ?? 0}
       />
     </div>
   )
