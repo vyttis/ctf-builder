@@ -381,6 +381,7 @@ export default function PlayPage() {
       if (inFlight) return
       inFlight = true
       const startedAt = statusVersionRef.current
+      const sentAt = Date.now()
       try {
         const res = await fetch(
           `/api/play/status?game_code=${encodeURIComponent(gameCode)}`,
@@ -400,7 +401,14 @@ export default function PlayPage() {
           now?: string
         }
         if (disposed || !data.status) return
-        if (data.now) skewMsRef.current = Date.parse(data.now) - Date.now()
+        // Clock correction: the server's time is compared with the middle of
+        // the round trip, and only from a quick one, so network delay or a
+        // suspended tab is not mistaken for this device's clock being off.
+        const receivedAt = Date.now()
+        const serverNow = data.now ? Date.parse(data.now) : NaN
+        if (Number.isFinite(serverNow) && receivedAt - sentAt < 2000) {
+          skewMsRef.current = serverNow - (sentAt + receivedAt) / 2
+        }
         if (statusVersionRef.current !== startedAt) return
         applyClock(data)
         setGameStatus(data.status)
