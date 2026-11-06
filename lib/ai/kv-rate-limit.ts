@@ -17,8 +17,13 @@ type KvClient = {
 }
 
 let cachedClient: KvClient | null | undefined
+// After a failed call the store is skipped for a while, so an unreachable
+// store costs one quick failure per instance, not one per request.
+const SKIP_AFTER_FAILURE_MS = 5 * 60_000
+let skipUntil = 0
 
 async function getKv(): Promise<KvClient | null> {
+  if (Date.now() < skipUntil) return null
   if (cachedClient !== undefined) return cachedClient
   if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
     cachedClient = null
@@ -29,6 +34,11 @@ async function getKv(): Promise<KvClient | null> {
     cachedClient = new Redis({
       url: process.env.KV_REST_API_URL,
       token: process.env.KV_REST_API_TOKEN,
+      // A rate limit must never slow the request it guards. The default
+      // retries back off for ~4.5 s when the store is unreachable, which made
+      // every team join take ~5 s. One attempt, cut off after 1.5 s.
+      retry: false,
+      signal: () => AbortSignal.timeout(1500),
     }) as unknown as KvClient
     return cachedClient
   } catch (err) {
@@ -55,7 +65,8 @@ export async function incrAtomic(
     }
     return next
   } catch (err) {
-    console.warn("[rate-limit] KV INCR failed, falling back:", err)
+    skipUntil = Date.now() + SKIP_AFTER_FAILURE_MS
+    console.warn("[rate-limit] KV INCR failed, using in-memory limits for 5 min:", err)
     return null
   }
 }
