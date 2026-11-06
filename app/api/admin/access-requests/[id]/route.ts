@@ -33,12 +33,17 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
   const now = new Date().toISOString()
 
   if (parsed.data.action === "reject") {
-    const { error } = await guard.admin
+    const { data: rejected, error } = await guard.admin
       .from("access_requests")
       .update({ status: "rejected", review_note: parsed.data.note || null, reviewed_by: guard.userId, reviewed_at: now })
       .eq("id", id)
       .eq("status", "pending")
+      .select("id")
     if (error) return NextResponse.json({ error: "Nepavyko atmesti prašymo." }, { status: 500 })
+    // Someone decided it a moment earlier: no audit line, no email.
+    if (!rejected || rejected.length === 0) {
+      return NextResponse.json({ error: "Šis prašymas jau išspręstas." }, { status: 409 })
+    }
     await logAdminAction(guard.admin, guard.userId, "access_request.reject", "access_request", id, {
       email: req.email,
     })

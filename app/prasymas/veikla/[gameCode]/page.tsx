@@ -26,7 +26,7 @@ export default async function ActivityRequestPage(props: {
   const admin = createAdminClient()
   const { data: game } = await admin
     .from("games")
-    .select("id, title, status, updated_at, settings")
+    .select("id, title, status, updated_at, finished_at, settings")
     .eq("game_code", code)
     .maybeSingle()
   if (!game || !isValidActivityRequestToken(game.id, t)) notFound()

@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   if (!source.ok) return NextResponse.json({ error: source.error }, { status: source.status })
 
   const saved = await saveAccessRequest(admin, parsed.data, source)
-  if (!saved.ok) return NextResponse.json({ error: saved.error }, { status: 500 })
+  if (!saved.ok) return NextResponse.json({ error: saved.error }, { status: saved.status })
 
   if (saved.created) {
     const d = parsed.data

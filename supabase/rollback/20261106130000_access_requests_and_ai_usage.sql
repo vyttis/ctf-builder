@@ -17,7 +17,17 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+DROP POLICY IF EXISTS "Only active accounts upload" ON storage.objects;
+DROP POLICY IF EXISTS "Only active accounts change uploads" ON storage.objects;
+DROP POLICY IF EXISTS "Only active accounts delete uploads" ON storage.objects;
 DROP FUNCTION IF EXISTS public.is_active_account();
+
+DROP TRIGGER IF EXISTS games_finished_at ON public.games;
+DROP FUNCTION IF EXISTS public.set_game_finished_at();
+ALTER TABLE public.games DROP COLUMN IF EXISTS finished_at;
+
+DROP TRIGGER IF EXISTS access_requests_link_open ON public.access_requests;
+DROP FUNCTION IF EXISTS public.check_request_link_open();
 
 DROP TABLE IF EXISTS public.platform_settings;
 DROP TABLE IF EXISTS public.ai_usage;

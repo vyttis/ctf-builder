@@ -20,6 +20,8 @@ interface GameRow {
   id: string
   status: string
   updated_at: string
+  /** Set by a trigger when the status becomes finished (20261106130000). */
+  finished_at?: string | null
   settings: Record<string, unknown> | null
 }
 
@@ -29,7 +31,7 @@ export function activityAcceptsRequests(game: GameRow, now = Date.now()): boolea
   if (game.settings?.allow_access_requests !== true) return false
   if (game.status === "active" || game.status === "paused") return true
   if (game.status === "finished") {
-    return now - new Date(game.updated_at).getTime() < FINISHED_GRACE_MS
+    return now - new Date(game.finished_at ?? game.updated_at).getTime() < FINISHED_GRACE_MS
   }
   return false
 }
@@ -76,7 +78,7 @@ export async function resolveRequestSource(
 
   const { data: game } = await admin
     .from("games")
-    .select("id, status, updated_at, settings")
+    .select("id, status, updated_at, finished_at, settings")
     .eq("game_code", input.game_code)
     .maybeSingle()
   if (!game) return { ok: false, status: 404, error: "Veikla nerasta." }
@@ -108,7 +110,7 @@ export async function saveAccessRequest(
   admin: SupabaseClient,
   input: AccessRequestInput,
   source: Extract<RequestSource, { ok: true }>,
-): Promise<{ ok: true; created: boolean } | { ok: false; error: string }> {
+): Promise<{ ok: true; created: boolean } | { ok: false; status: number; error: string }> {
   const school = input.school_code ? findSchoolByCode(input.school_code) : null
   const { error } = await admin.from("access_requests").insert({
     email: input.email,
@@ -121,9 +123,13 @@ export async function saveAccessRequest(
     source_game_id: source.gameId,
     source_link_id: source.linkId,
   })
+  if (error?.code === "KS410") {
+    // The database trigger found the link closed or full (checked under a lock).
+    return { ok: false, status: 410, error: "Ši nuoroda nebegalioja. Paprašykite naujos." }
+  }
   if (error && error.code !== "23505") {
     console.error("[access-request] insert failed", { code: error.code })
-    return { ok: false, error: "Nepavyko išsaugoti prašymo. Bandykite dar kartą." }
+    return { ok: false, status: 500, error: "Nepavyko išsaugoti prašymo. Bandykite dar kartą." }
   }
   // 23505: this email already waits; same answer, but no second round of email.
   return { ok: true, created: !error }

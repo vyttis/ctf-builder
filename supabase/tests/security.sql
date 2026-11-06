@@ -134,6 +134,9 @@ BEGIN
   END IF;
 END $$;
 
+INSERT INTO storage.buckets (id, name, public) VALUES ('challenge-images', 'challenge-images', true)
+  ON CONFLICT DO NOTHING;
+
 -- A pending account cannot write facilitator data through the REST API;
 -- an active one can.
 SET ROLE authenticated;
@@ -141,7 +144,9 @@ SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000ee
 SELECT set_config('request.jwt.claim.role', 'authenticated', false);
 SELECT public.t_denied($q$INSERT INTO public.games (teacher_id, title, game_code) VALUES (auth.uid(), 'Laukia', 'PPPPPP')$q$);
 SELECT public.t_denied($q$INSERT INTO public.library_items (title, published_by, status) VALUES ('Šablonas', auth.uid(), 'pending_review')$q$);
+SELECT public.t_denied($q$INSERT INTO storage.objects (bucket_id, name, owner) VALUES ('challenge-images', '00000000-0000-0000-0000-0000000000ee/x.png', auth.uid())$q$);
 SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+SELECT public.t_ok($q$INSERT INTO storage.objects (bucket_id, name, owner) VALUES ('challenge-images', '00000000-0000-0000-0000-00000000000a/x.png', auth.uid())$q$);
 SELECT public.t_ok($q$INSERT INTO public.games (teacher_id, title, game_code) VALUES (auth.uid(), 'Aktyvus', 'QQQQQQ')$q$);
 SELECT public.t_ok($q$UPDATE public.games SET title = 'A2' WHERE id = '10000000-0000-0000-0000-00000000000a'$q$);
 RESET ROLE;
@@ -158,6 +163,49 @@ BEGIN
   END IF;
 END $$;
 UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a';
+
+-- finished_at follows the status and cannot be moved by hand.
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+UPDATE public.games SET status = 'finished' WHERE id = '10000000-0000-0000-0000-00000000000a';
+UPDATE public.games SET finished_at = now() + interval '30 days', title = 'A3' WHERE id = '10000000-0000-0000-0000-00000000000a';
+RESET ROLE;
+DO $$
+DECLARE f timestamptz;
+BEGIN
+  SELECT finished_at INTO f FROM public.games WHERE id = '10000000-0000-0000-0000-00000000000a';
+  IF f IS NULL OR f > now() + interval '1 minute' THEN
+    RAISE EXCEPTION 'finished_at must be set by the trigger, got %', f;
+  END IF;
+  UPDATE public.games SET status = 'active' WHERE id = '10000000-0000-0000-0000-00000000000a';
+  IF (SELECT finished_at FROM public.games WHERE id = '10000000-0000-0000-0000-00000000000a') IS NOT NULL THEN
+    RAISE EXCEPTION 'reopening must clear finished_at';
+  END IF;
+END $$;
+
+-- A request link stops at its limit.
+DO $$
+DECLARE link uuid;
+BEGIN
+  INSERT INTO public.request_links (token, label, max_uses) VALUES ('test-token-aaaaaaaaaaaaaa', 'Seminaras', 1) RETURNING id INTO link;
+  INSERT INTO public.access_requests (email, first_name, last_name, school_name, source, source_link_id)
+    VALUES ('l1@example.lt', 'A', 'B', 'Mokykla', 'link', link);
+  BEGIN
+    INSERT INTO public.access_requests (email, first_name, last_name, school_name, source, source_link_id)
+      VALUES ('l2@example.lt', 'A', 'B', 'Mokykla', 'link', link);
+    RAISE EXCEPTION 'a second request over the limit must fail';
+  EXCEPTION WHEN SQLSTATE 'KS410' THEN
+    NULL;
+  END;
+  UPDATE public.request_links SET max_uses = NULL, revoked_at = now() WHERE id = link;
+  BEGIN
+    INSERT INTO public.access_requests (email, first_name, last_name, school_name, source, source_link_id)
+      VALUES ('l3@example.lt', 'A', 'B', 'Mokykla', 'link', link);
+    RAISE EXCEPTION 'a revoked link must not take requests';
+  EXCEPTION WHEN SQLSTATE 'KS410' THEN
+    NULL;
+  END;
+END $$;
 
 -- Service role (server API): everything it uses today.
 SET ROLE service_role;

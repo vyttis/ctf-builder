@@ -159,4 +159,67 @@ BEGIN
   END LOOP;
 END $$;
 
+-- 8. Storage: the same rule for uploads (documents, challenge images).
+CREATE POLICY "Only active accounts upload" ON storage.objects AS RESTRICTIVE FOR INSERT TO authenticated
+  WITH CHECK ((SELECT public.is_active_account()));
+CREATE POLICY "Only active accounts change uploads" ON storage.objects AS RESTRICTIVE FOR UPDATE TO authenticated
+  USING ((SELECT public.is_active_account()));
+CREATE POLICY "Only active accounts delete uploads" ON storage.objects AS RESTRICTIVE FOR DELETE TO authenticated
+  USING ((SELECT public.is_active_account()));
+
+-- 9. When an activity really ended. updated_at moves with every later edit,
+--    so the 48 h request window after the end is measured from finished_at.
+--    The trigger owns the column: a facilitator cannot move it by hand.
+ALTER TABLE public.games ADD COLUMN IF NOT EXISTS finished_at timestamptz;
+UPDATE public.games SET finished_at = updated_at WHERE status = 'finished' AND finished_at IS NULL;
+
+CREATE FUNCTION public.set_game_finished_at()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    NEW.finished_at := CASE WHEN NEW.status = 'finished' THEN now() END;
+  ELSIF NEW.status = 'finished' AND OLD.status IS DISTINCT FROM 'finished' THEN
+    NEW.finished_at := now();
+  ELSIF NEW.status IS DISTINCT FROM 'finished' THEN
+    NEW.finished_at := NULL;
+  ELSE
+    NEW.finished_at := OLD.finished_at;
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE TRIGGER games_finished_at BEFORE INSERT OR UPDATE ON public.games
+  FOR EACH ROW EXECUTE FUNCTION public.set_game_finished_at();
+
+-- 10. A request link's limit holds under concurrent submissions: the link
+--     row is locked while the request is counted and inserted.
+CREATE FUNCTION public.check_request_link_open()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+  l public.request_links%ROWTYPE;
+  used integer;
+BEGIN
+  IF NEW.source_link_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  SELECT * INTO l FROM public.request_links WHERE id = NEW.source_link_id FOR UPDATE;
+  IF NOT FOUND OR l.revoked_at IS NOT NULL OR (l.expires_at IS NOT NULL AND l.expires_at <= now()) THEN
+    RAISE EXCEPTION 'request link closed' USING ERRCODE = 'KS410';
+  END IF;
+  IF l.max_uses IS NOT NULL THEN
+    SELECT count(*) INTO used FROM public.access_requests WHERE source_link_id = l.id;
+    IF used >= l.max_uses THEN
+      RAISE EXCEPTION 'request link closed' USING ERRCODE = 'KS410';
+    END IF;
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE TRIGGER access_requests_link_open BEFORE INSERT ON public.access_requests
+  FOR EACH ROW EXECUTE FUNCTION public.check_request_link_open();
+
 COMMIT;

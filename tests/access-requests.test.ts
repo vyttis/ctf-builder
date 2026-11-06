@@ -63,6 +63,10 @@ describe("activityAcceptsRequests", () => {
     expect(activityAcceptsRequests({ ...base, status: "finished", settings: on }, now)).toBe(true)
     const old = new Date(now - FINISHED_GRACE_MS - 1000).toISOString()
     expect(activityAcceptsRequests({ ...base, updated_at: old, status: "finished", settings: on }, now)).toBe(false)
+    // An edit long after the end moves updated_at but not finished_at.
+    expect(
+      activityAcceptsRequests({ ...base, finished_at: old, status: "finished", settings: on }, now),
+    ).toBe(false)
   })
 })
 

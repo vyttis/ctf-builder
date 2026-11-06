@@ -131,9 +131,10 @@ grąžinimas `supabase/rollback/20261106130000_access_requests_and_ai_usage.sql`
 Tik prideda: `profiles` stulpelius (`status`, vardas, pavardė, mokyklos
 kodas, savivaldybė, dalykai, klasės, sutikimas, patvirtinimas, DI limitas),
 lenteles `request_links`, `access_requests`, `admin_audit_log`, `ai_usage`,
-`platform_settings` (tik serveriui) ir griežtinančias politikas: rašyti
-veiklas, užduotis, pranešimus, pamokų planus ir bibliotekos įrašus gali tik
-`status = 'active'` paskyros. Esamos paskyros gauna `active`, naujos
+`platform_settings` (tik serveriui), griežtinančias politikas (rašyti
+veiklas, užduotis, pranešimus, pamokų planus, bibliotekos įrašus ir failus
+saugykloje gali tik `status = 'active'` paskyros), `games.finished_at` su
+trigeriu ir nuorodų limito trigerį (`KS410`). Esamos paskyros gauna `active`, naujos
 `pending`.
 
 Patikra po taikymo:
@@ -144,11 +145,14 @@ select
   (select count(*) from public.platform_settings) as settings_rows,
   has_table_privilege('authenticated','public.access_requests','SELECT') as auth_requests,
   has_column_privilege('authenticated','public.profiles','status','UPDATE') as auth_status,
-  (select count(*) from pg_policies where policyname like 'Only active accounts%') as active_policies;
+  (select count(*) from pg_policies where policyname like 'Only active accounts%') as active_policies,
+  (select count(*) from pg_trigger where tgname in ('games_finished_at', 'access_requests_link_open')) as triggers,
+  (select count(*) from public.games where status = 'finished' and finished_at is null) as finished_without_time;
 ```
 
 Tikimasi: `not_active` 0, `settings_rows` 1, abu leidimai `false`,
-`active_policies` 15.
+`active_policies` 18 (15 lentelėms, 3 `storage.objects`), `triggers` 2,
+`finished_without_time` 0.
 
 ## Konvencija toliau
 
