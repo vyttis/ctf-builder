@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   if (sessionToken) {
     const { data: stamps } = await supabase
       .from("games")
-      .select("status, challenges(updated_at)")
+      .select("status, challenges(id, updated_at)")
       .eq("game_code", gameCode)
       .maybeSingle()
     if (stamps && stamps.status !== "draft") tasks_version = tasksVersion(stamps.challenges)

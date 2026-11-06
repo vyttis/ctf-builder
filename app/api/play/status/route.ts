@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const supabase = createAdminClient()
     const { data: game } = await supabase
       .from("games")
-      .select("status, settings, paused_ms, paused_at, challenges(updated_at)")
+      .select("status, settings, paused_ms, paused_at, challenges(id, updated_at)")
       .eq("game_code", gameCode)
       .maybeSingle()
 

@@ -2,15 +2,22 @@ import { describe, expect, it } from "vitest"
 import { remapTaskIndex, tasksVersion } from "@/lib/game/tasks-version"
 
 describe("tasksVersion", () => {
-  const a = { updated_at: "2026-11-06T10:00:00.000+00:00" }
-  const b = { updated_at: "2026-11-06T10:05:00.000+00:00" }
+  const a = { id: "a", updated_at: "2026-11-06T10:00:00.000+00:00" }
+  const b = { id: "b", updated_at: "2026-11-06T10:05:00.000+00:00" }
 
   it("changes when a task is saved", () => {
-    expect(tasksVersion([a, a])).not.toBe(tasksVersion([a, b]))
+    expect(tasksVersion([a, b])).not.toBe(tasksVersion([{ ...a, updated_at: "2026-11-06T10:01:00.000+00:00" }, b]))
+  })
+
+  it("changes when a save commits with an earlier time than the latest", () => {
+    // a saved at 10:03 commits after b's 10:05: the latest time stays 10:05.
+    const before = tasksVersion([a, b])
+    const after = tasksVersion([{ ...a, updated_at: "2026-11-06T10:03:00.000+00:00" }, b])
+    expect(after).not.toBe(before)
   })
 
   it("changes when a task is added or removed", () => {
-    expect(tasksVersion([a, b])).not.toBe(tasksVersion([a, b, a]))
+    expect(tasksVersion([a, b])).not.toBe(tasksVersion([a, b, { id: "c", updated_at: a.updated_at }]))
     expect(tasksVersion([a, b])).not.toBe(tasksVersion([b]))
   })
 
@@ -19,8 +26,8 @@ describe("tasksVersion", () => {
   })
 
   it("handles no tasks", () => {
-    expect(tasksVersion(null)).toBe("0:")
-    expect(tasksVersion([])).toBe("0:")
+    expect(tasksVersion(null)).toBe(tasksVersion([]))
+    expect(tasksVersion([]).startsWith("0:")).toBe(true)
   })
 })
 
