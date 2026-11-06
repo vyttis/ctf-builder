@@ -38,7 +38,9 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 163 100% 41%;
+    /* Focus ring: dark, so it shows on the green buttons and on white;
+       the white ring offset keeps it visible on dark sections too. */
+    --ring: 189 100% 12%;
 
     --radius: 0.75rem;
 

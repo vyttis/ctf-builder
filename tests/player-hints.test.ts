@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { forParticipant, hideUnopenedHints } from "@/lib/game/player-hints"
+import { forParticipant, hideUnopenedHints, orderForTeam } from "@/lib/game/player-hints"
 
 const task = (id: string, hints: unknown) => ({ id, title: id, hints })
 
@@ -52,5 +52,31 @@ describe("forParticipant", () => {
 
   it("passes other answers through", () => {
     expect(forParticipant(null, [], null)).toBeNull()
+  })
+})
+
+describe("orderForTeam and shuffling", () => {
+  const tasks = Array.from({ length: 8 }, (_, i) => ({ id: `00000000-0000-4000-8000-00000000000${i}`, hints: [] as string[] }))
+
+  it("gives each team its own stable order", () => {
+    const a1 = orderForTeam(tasks, "team-a").map((t) => t.id)
+    const a2 = orderForTeam([...tasks].reverse(), "team-a").map((t) => t.id)
+    const b = orderForTeam(tasks, "team-b").map((t) => t.id)
+    expect(a1).toEqual(a2)
+    expect(a1).not.toEqual(b)
+    expect([...a1].sort()).toEqual(tasks.map((t) => t.id).sort())
+  })
+
+  it("adds a new task without moving the others", () => {
+    const before = orderForTeam(tasks.slice(0, 7), "team-a").map((t) => t.id)
+    const after = orderForTeam(tasks, "team-a").map((t) => t.id).filter((id) => id !== tasks[7].id)
+    expect(after).toEqual(before)
+  })
+
+  it("shuffles only when the activity asks for it", () => {
+    const state = (shuffle: boolean) => ({ game: { settings: { shuffle_challenges: shuffle } }, team: { id: "team-a" }, challenges: tasks })
+    const ids = (s: unknown) => (s as { challenges: { id: string }[] }).challenges.map((c) => c.id)
+    expect(ids(forParticipant(state(false), [], null))).toEqual(tasks.map((t) => t.id))
+    expect(ids(forParticipant(state(true), [], null))).toEqual(orderForTeam(tasks, "team-a").map((t) => t.id))
   })
 })
