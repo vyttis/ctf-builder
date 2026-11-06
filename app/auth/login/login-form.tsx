@@ -25,6 +25,9 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
+const OTP_MIN = 6
+const OTP_MAX = 10
+
 const NO_ACCOUNT =
   "Šiuo el. paštu vedėjo paskyros nėra. Paskyros prašymą galite pateikti veiklos pabaigoje arba per nuorodą, kurią gausite iš KU STEAM centro (steam@ku.lt)."
 
@@ -267,11 +270,13 @@ export function LoginForm() {
                         id="otp"
                         type="text"
                         inputMode="numeric"
-                        placeholder="123456"
+                        autoComplete="one-time-code"
+                        placeholder="12345678"
                         value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className="pl-10 h-12 text-center text-2xl tracking-[0.5em] font-mono bg-white border-border/50 focus:border-primary focus:ring-primary/20"
-                        maxLength={6}
+                        // Supabase sends 6 to 10 digits (the project uses 8).
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, OTP_MAX))}
+                        className="pl-10 h-12 text-center text-2xl tracking-[0.35em] font-mono bg-white border-border/50 focus:border-primary focus:ring-primary/20"
+                        maxLength={OTP_MAX}
                         required
                         autoFocus
                       />
@@ -280,7 +285,7 @@ export function LoginForm() {
 
                   <Button
                     type="submit"
-                    disabled={loading || otp.length !== 6}
+                    disabled={loading || otp.length < OTP_MIN}
                     className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
                   >
                     {loading ? (
