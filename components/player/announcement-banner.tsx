@@ -13,6 +13,8 @@ interface AnnouncementItem {
 
 interface AnnouncementBannerProps {
   gameId: string
+  /** "projector": large text for the class screen. */
+  variant?: "default" | "projector"
 }
 
 const AUTO_DISMISS_MS = 15000
@@ -21,7 +23,8 @@ const AUTO_DISMISS_MS = 15000
 // INSERTs that happen while subscribed).
 const RECENT_WINDOW_MS = 2 * 60 * 1000
 
-export function AnnouncementBanner({ gameId }: AnnouncementBannerProps) {
+export function AnnouncementBanner({ gameId, variant = "default" }: AnnouncementBannerProps) {
+  const large = variant === "projector"
   const [activeAnnouncement, setActiveAnnouncement] =
     useState<AnnouncementItem | null>(null)
 
@@ -121,9 +124,9 @@ export function AnnouncementBanner({ gameId }: AnnouncementBannerProps) {
               header row — game code, points and the countdown timer — for the
               whole 15s on mobile */}
           <div className="bg-steam-blue text-white shadow-lg rounded-xl">
-            <div className="max-w-2xl mx-auto px-4 py-3 flex items-start gap-3">
-              <Megaphone className="h-5 w-5 shrink-0 mt-0.5" />
-              <p className="flex-1 text-sm font-medium leading-snug">
+            <div className={large ? "flex items-start gap-4 px-6 py-5" : "max-w-2xl mx-auto px-4 py-3 flex items-start gap-3"}>
+              <Megaphone className={large ? "h-8 w-8 shrink-0" : "h-5 w-5 shrink-0 mt-0.5"} aria-hidden="true" />
+              <p className={large ? "flex-1 text-2xl font-semibold leading-snug" : "flex-1 text-sm font-medium leading-snug"}>
                 {activeAnnouncement.message}
               </p>
               <button

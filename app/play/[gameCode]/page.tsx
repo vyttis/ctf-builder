@@ -56,7 +56,12 @@ export default function JoinGamePage() {
         return
       }
       const data = await res.json()
-      const game = data?.game as { title: string; description: string | null; status: string } | null
+      const game = data?.game as {
+        title: string
+        description: string | null
+        status: string
+        settings?: { joining_closed?: boolean } | null
+      } | null
 
       if (!game) {
         setGameState({ status: "not_found" })
@@ -65,6 +70,11 @@ export default function JoinGamePage() {
 
       if (game.status !== "active") {
         setGameState({ status: "inactive", gameStatus: game.status })
+        return
+      }
+      // The facilitator closed joining: say so before a name is typed.
+      if (game.settings?.joining_closed === true) {
+        setGameState({ status: "inactive", gameStatus: "closed" })
         return
       }
 
@@ -83,7 +93,7 @@ export default function JoinGamePage() {
   // the finished screen when it ends without resuming.
   const waitingFor = gameState.status === "inactive" ? gameState.gameStatus : null
   useEffect(() => {
-    if (waitingFor !== "draft" && waitingFor !== "paused") return
+    if (waitingFor !== "draft" && waitingFor !== "paused" && waitingFor !== "closed") return
     let disposed = false
     const check = async () => {
       try {
@@ -91,7 +101,8 @@ export default function JoinGamePage() {
         if (!res.ok) return
         const data = (await res.json()) as { status: string | null }
         // null: the activity was deleted; validateGame shows "not found".
-        if (!disposed && data.status !== waitingFor) void validateGame()
+        // Closed joining is checked again each round: it may reopen.
+        if (!disposed && (data.status !== waitingFor || waitingFor === "closed")) void validateGame()
       } catch {
         // The next round retries.
       }
@@ -225,6 +236,8 @@ export default function JoinGamePage() {
       draft: "Veikla dar neprasidėjo. Šis langas atsinaujins pats, kai vedėjas ją pradės.",
       paused: "Veikla pristabdyta. Šis langas atsinaujins pats, kai vedėjas ją tęs.",
       finished: "Ši veikla jau baigta.",
+      closed:
+        "Vedėjas uždarė prisijungimą prie šios veiklos. Jei jūsų komanda dar neprisijungė, kreipkitės į vedėją. Šis langas atsinaujins pats, jei prisijungimas vėl atsidarys.",
     }
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -237,13 +250,17 @@ export default function JoinGamePage() {
             <AlertCircle className="h-10 w-10 text-highlight" />
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
-            {gameState.gameStatus === "finished" ? "Veikla baigta" : "Palaukite"}
+            {gameState.gameStatus === "finished"
+              ? "Veikla baigta"
+              : gameState.gameStatus === "closed"
+                ? "Prisijungimas uždarytas"
+                : "Palaukite"}
           </h1>
           <p className="text-muted-foreground mb-6">
             {messages[gameState.gameStatus] || "Veikla šiuo metu nepasiekiama."}
           </p>
           <div className="flex flex-col gap-2 items-center">
-            {(gameState.gameStatus === "draft" || gameState.gameStatus === "paused") && (
+            {(gameState.gameStatus === "draft" || gameState.gameStatus === "paused" || gameState.gameStatus === "closed") && (
               <Button
                 onClick={() => {
                   setGameState({ status: "loading" })

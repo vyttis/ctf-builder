@@ -594,3 +594,85 @@ BEGIN
   END IF;
 END $$;
 UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a';
+
+-- Team moderation (20261106160000): only the owner, only an active account,
+-- only while the activity runs.
+INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
+  ('10000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-00000000000a', 'Moderavimas', 'MODER1', 'active'),
+  ('10000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-00000000000a', 'Baigta veikla', 'MODER2', 'finished');
+INSERT INTO public.teams (id, game_id, name, session_token) VALUES
+  ('30000000-0000-0000-0000-0000000000d1', '10000000-0000-0000-0000-0000000000d1', 'Netinkamas', 'token-d1'),
+  ('30000000-0000-0000-0000-0000000000d2', '10000000-0000-0000-0000-0000000000d1', 'Bandomoji', 'token-d2'),
+  ('30000000-0000-0000-0000-0000000000d3', '10000000-0000-0000-0000-0000000000d2', 'Baigusi', 'token-d3');
+
+SET ROLE anon;
+SELECT set_config('request.jwt.claim.sub', '', false);
+SELECT public.t_denied($q$SELECT public.moderate_team('10000000-0000-0000-0000-0000000000d1', '30000000-0000-0000-0000-0000000000d1', 'X')$q$);
+RESET ROLE;
+
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.role', 'authenticated', false);
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+DO $$
+BEGIN
+  PERFORM public.moderate_team('10000000-0000-0000-0000-0000000000d1', '30000000-0000-0000-0000-0000000000d1', 'Svetima');
+  RAISE EXCEPTION 'another facilitator must not rename a team';
+EXCEPTION WHEN SQLSTATE 'P0002' THEN
+  NULL;
+END $$;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+DO $$
+DECLARE
+  r text;
+BEGIN
+  -- The result is checked in a later statement, which sees the change.
+  r := public.moderate_team('10000000-0000-0000-0000-0000000000d1', '30000000-0000-0000-0000-0000000000d1', '  Delfinai  ');
+  IF r <> 'renamed' OR (SELECT name FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000d1') <> 'Delfinai' THEN
+    RAISE EXCEPTION 'the owner must rename a team of a running activity';
+  END IF;
+  BEGIN
+    PERFORM public.moderate_team('10000000-0000-0000-0000-0000000000d1', '30000000-0000-0000-0000-0000000000d1', 'Bandomoji');
+    RAISE EXCEPTION 'a name taken in the activity must be refused';
+  EXCEPTION WHEN unique_violation THEN
+    NULL;
+  END;
+  BEGIN
+    PERFORM public.moderate_team('10000000-0000-0000-0000-0000000000d1', '30000000-0000-0000-0000-0000000000d1', '   ');
+    RAISE EXCEPTION 'an empty name must be refused';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+  -- A team of another activity is not found through this one.
+  BEGIN
+    PERFORM public.moderate_team('10000000-0000-0000-0000-0000000000d1', '30000000-0000-0000-0000-0000000000d3', NULL, true);
+    RAISE EXCEPTION 'a team of another activity must not be removed';
+  EXCEPTION WHEN SQLSTATE 'P0002' THEN
+    NULL;
+  END;
+  -- A finished activity keeps its teams.
+  BEGIN
+    PERFORM public.moderate_team('10000000-0000-0000-0000-0000000000d2', '30000000-0000-0000-0000-0000000000d3', NULL, true);
+    RAISE EXCEPTION 'a team of a finished activity must not be removed';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  r := public.moderate_team('10000000-0000-0000-0000-0000000000d1', '30000000-0000-0000-0000-0000000000d2', NULL, true);
+  IF r <> 'removed' OR EXISTS (SELECT 1 FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000d2') THEN
+    RAISE EXCEPTION 'the owner must remove a team of a running activity';
+  END IF;
+END $$;
+RESET ROLE;
+
+-- A blocked account cannot moderate, whatever the app's session cache says.
+UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-00000000000a';
+SET ROLE authenticated;
+SELECT public.t_denied($q$SELECT public.moderate_team('10000000-0000-0000-0000-0000000000d1', '30000000-0000-0000-0000-0000000000d1', 'Užblokuotas')$q$);
+RESET ROLE;
+UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a';
+DO $$
+BEGIN
+  IF (SELECT name FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000d1') <> 'Delfinai'
+     OR NOT EXISTS (SELECT 1 FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000d3') THEN
+    RAISE EXCEPTION 'refused moderation must leave the teams as they were';
+  END IF;
+END $$;

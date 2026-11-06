@@ -53,6 +53,7 @@ export default async function LiveViewPage(
         time_limit_minutes: settings?.time_limit_minutes ?? null,
         paused_ms: Number(game.paused_ms ?? 0),
         paused_at: game.paused_at ?? null,
+        show_leaderboard: settings?.show_leaderboard !== false,
       }}
       challengeCount={challengeCount}
     />
