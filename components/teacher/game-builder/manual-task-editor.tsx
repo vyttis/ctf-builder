@@ -431,7 +431,7 @@ export function ManualTaskEditor({
             }`}
           />
           <p className="text-[10px] text-muted-foreground">
-            Atsakymas bus normalizuotas (be didžiųjų raidžių, be tarpų)
+            Tikrinant nesvarbu didžiosios raidės, lietuviškos raidės (š = s) ir tarpai pradžioje ar pabaigoje. Žodžio forma turi sutapti.
           </p>
         </div>
       )}
