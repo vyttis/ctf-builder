@@ -554,7 +554,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-highlight-ink" aria-hidden="true" />
           <p>
             <span className="font-semibold">Veikla vyksta.</span> Pakeistą atsakymą ir taškus sistema taiko
-            iš karto naujiems bandymams, o pakeistą užduoties tekstą dalyviai pamatys tik atnaujinę puslapį.
+            iš karto naujiems bandymams, o pakeistą ar naują užduotį dalyviai pamatys per kelias sekundes.
             Užduočių ištrinti, kopijuoti, pertvarkyti ir keisti jų atrakinimo sąlygų negalima, kol veikla
             nebaigta.
           </p>

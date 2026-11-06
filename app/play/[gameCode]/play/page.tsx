@@ -29,6 +29,7 @@ import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, Achi
 import { getPlayerSession, clearPlayerSession, savePlayerSession } from "@/lib/game/session"
 import { AnswerInput } from "@/components/player/answer-input"
 import { type GameClock, secondsLeft } from "@/lib/game/clock"
+import { remapTaskIndex } from "@/lib/game/tasks-version"
 import { pluralizeLt } from "@/lib/utils"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ReflectionForm } from "@/components/player/reflection-form"
@@ -57,6 +58,12 @@ interface PlayerChallenge {
 
 interface ExtendedSubmissionResult extends SubmissionResult {
   explanation?: string | null
+}
+
+// The free-mode sheet starts clean for another task, and when the open task
+// changes what an answer looks like (type or choices).
+function sheetKey(challenge: { id: string; type: string; options: string[] | null } | undefined): string {
+  return challenge ? `${challenge.id}:${challenge.type}:${JSON.stringify(challenge.options)}` : "none"
 }
 
 function formatTime(seconds: number): string {
@@ -142,6 +149,18 @@ export default function PlayPage() {
   // Bumped on every realtime status event, so a status poll that started
   // earlier can tell its answer is older and must not overwrite it.
   const statusVersionRef = useRef(0)
+  // Marker of the tasks on screen (lib/game/tasks-version.ts): when the
+  // status poll reports another one, the facilitator changed a task and the
+  // tasks reload in place.
+  const tasksVersionRef = useRef<string | null>(null)
+  const challengesRef = useRef<PlayerChallenge[]>([])
+  const reloadingTasksRef = useRef(false)
+  // Latest solved tasks and open task, read by timers and the reload.
+  const solvedIdsRef = useRef<Set<string>>(new Set())
+  const currentIndexRef = useRef(0)
+  const showExplanationRef = useRef(false)
+  // The first load finished: only then may a poll start a reload.
+  const tasksLoadedRef = useRef(false)
   const [endedByTeacher, setEndedByTeacher] = useState(false)
   const [loadError, setLoadError] = useState(false)
   // Distinguishes "still loading" from "loaded, but the game has no challenges"
@@ -157,6 +176,13 @@ export default function PlayPage() {
   const [achievementQueue, setAchievementQueue] = useState<{ type: AchievementType; metadata?: Record<string, unknown> }[]>([])
   const pendingAchievement = achievementQueue.length > 0 ? achievementQueue[0] : null
   const dismissAchievement = () => setAchievementQueue((q) => q.slice(1))
+
+  useEffect(() => {
+    challengesRef.current = challenges
+    solvedIdsRef.current = solvedIds
+    currentIndexRef.current = currentIndex
+    showExplanationRef.current = showExplanation
+  }, [challenges, solvedIds, currentIndex, showExplanation])
 
   // Check if reflection already done
   useEffect(() => {
@@ -255,6 +281,7 @@ export default function PlayPage() {
       challenges: PlayerChallenge[]
       team: { id: string; name: string } | null
       solved: { challenge_id: string; points_awarded: number }[]
+      tasks_version?: string | null
     }
     try {
       const res = await fetch(
@@ -327,9 +354,12 @@ export default function PlayPage() {
     }
 
     setChallenges(state.challenges)
+    challengesRef.current = state.challenges
+    tasksVersionRef.current = state.tasks_version ?? null
 
     const solved = new Set(state.solved.map((sub) => sub.challenge_id))
     setSolvedIds(solved)
+    solvedIdsRef.current = solved
     const points = state.solved.reduce((sum, sub) => sum + sub.points_awarded, 0)
     setTotalPoints(points)
 
@@ -337,7 +367,116 @@ export default function PlayPage() {
     setCurrentIndex(firstUnsolved >= 0 ? firstUnsolved : state.challenges.length)
     if (state.challenges.length > 0 && firstUnsolved < 0) setGameFinished(true)
     setStateLoaded(true)
+    tasksLoadedRef.current = true
   }
+
+  // Reload the tasks after the facilitator changed one. Only the tasks are
+  // replaced: answers already counted, the timer and the team stay. The open
+  // task stays open (found by its id); if it was removed, the team goes to
+  // its first unsolved task with an empty answer. A task added after the
+  // team finished brings it back to the tasks.
+  const reloadTasks = useCallback(async (polledVersion: string) => {
+    const s = getPlayerSession(gameCode)
+    if (!s || reloadingTasksRef.current) return
+    reloadingTasksRef.current = true
+    try {
+      const res = await fetch(`/api/play/state?game_code=${encodeURIComponent(gameCode)}`, {
+        headers: { "x-session-token": s.session_token },
+        cache: "no-store",
+      })
+      if (!res.ok) return
+      const state = (await res.json()) as {
+        challenges?: PlayerChallenge[]
+        solved?: { challenge_id: string; points_awarded?: number }[]
+        team?: { total_points?: number } | null
+        tasks_version?: string | null
+      }
+      if (!Array.isArray(state.challenges)) return
+      // Without a marker in the answer (its read failed), keep the polled
+      // one: the tasks are now at least that new, and change detection goes on.
+      tasksVersionRef.current = state.tasks_version ?? polledVersion
+      const prev = challengesRef.current
+      const next = state.challenges
+      if (JSON.stringify(prev) === JSON.stringify(next)) return
+
+      // Solved: what the server counted plus what this page solved meanwhile,
+      // only for tasks that still exist.
+      const ids = new Set(next.map((c) => c.id))
+      const solved = new Set<string>()
+      for (const sub of state.solved ?? []) if (ids.has(sub.challenge_id)) solved.add(sub.challenge_id)
+      solvedIdsRef.current.forEach((id) => {
+        if (ids.has(id)) solved.add(id)
+      })
+      const firstUnsolved = next.findIndex((c) => !solved.has(c.id))
+      const kept = remapTaskIndex(prev, next, currentIndexRef.current)
+
+      challengesRef.current = next
+      solvedIdsRef.current = solved
+      setChallenges(next)
+      setSolvedIds(solved)
+      // Answers counted elsewhere (the same team on another device) bring
+      // their points; the score never goes down here, so an answer this page
+      // is still sending keeps its points too.
+      const serverPoints =
+        typeof state.team?.total_points === "number"
+          ? state.team.total_points
+          : (state.solved ?? []).reduce((sum, sub) => sum + (sub.points_awarded ?? 0), 0)
+      setTotalPoints((points) => Math.max(points, serverPoints))
+      // The open task changed what an answer looks like (type or choices):
+      // a typed or selected answer no longer fits, so it is cleared.
+      const before = prev[currentIndexRef.current]
+      const after = kept !== null ? next[kept] : undefined
+      const shapeChanged =
+        before !== undefined &&
+        after !== undefined &&
+        (before.type !== after.type || JSON.stringify(before.options) !== JSON.stringify(after.options))
+      // The open task was solved elsewhere (the same team on another device)
+      // and nothing here is showing its result: move on like after a solve.
+      const keptSolvedElsewhere =
+        kept !== null && solved.has(next[kept].id) && !showExplanationRef.current && firstUnsolved >= 0
+      if (kept !== null && !keptSolvedElsewhere) {
+        setCurrentIndex(kept)
+        currentIndexRef.current = kept
+        if (shapeChanged) {
+          setAnswer("")
+          setFeedback(null)
+        }
+      } else {
+        const index = firstUnsolved >= 0 ? firstUnsolved : next.length
+        setCurrentIndex(index)
+        currentIndexRef.current = index
+        setAnswer("")
+        setFeedback(null)
+        setShowExplanation(false)
+        setCurrentExplanation(null)
+        setRevealedHintCount(0)
+      }
+      setSelectedChallengeIndex((i) => remapTaskIndex(prev, next, i))
+      // Every task solved (perhaps on another device, or an answer whose
+      // reply was lost): finish, unless the team is reading an explanation,
+      // whose "Toliau" finishes it.
+      if (firstUnsolved >= 0) setGameFinished(false)
+      else if (next.length > 0 && (kept === null || !showExplanationRef.current)) setGameFinished(true)
+      toast({ title: "Vedėjas atnaujino užduotis", description: "Matote naujausią jų versiją." })
+    } catch {
+      // The next poll that still sees a new marker tries again.
+    } finally {
+      reloadingTasksRef.current = false
+    }
+  }, [gameCode, toast])
+
+  // Linear mode moves on to the first task not solved yet, so a task added
+  // during the activity is reached wherever it sits in the list.
+  const goToNextTask = useCallback(() => {
+    const list = challengesRef.current
+    const next = list.findIndex((c) => !solvedIdsRef.current.has(c.id))
+    if (next >= 0) {
+      setCurrentIndex(next)
+    } else {
+      setCurrentIndex(list.length)
+      setGameFinished(true)
+    }
+  }, [])
 
   // Subscribe to game setting changes (time extensions, status changes)
   useEffect(() => {
@@ -381,7 +520,9 @@ export default function PlayPage() {
   // the request is a tiny status read, and it also re-runs when the tab
   // becomes visible again (phones suspend timers in the background).
   useEffect(() => {
-    if (gameFinished) return
+    // A team that solved everything keeps polling, so a task added later
+    // reaches it; once the facilitator ends the activity, polling stops.
+    if (endedByTeacher) return
 
     // One request at a time: overlapping polls could finish out of order and
     // an older "active" would hide the pause overlay. A hung request is cut
@@ -410,6 +551,7 @@ export default function PlayPage() {
           paused_ms?: number
           paused_at?: string | null
           now?: string
+          tasks_version?: string | null
         }
         if (disposed || !data.status) return
         // Clock correction: the server's time is compared with the middle of
@@ -427,6 +569,14 @@ export default function PlayPage() {
         if (data.status === "finished") {
           setEndedByTeacher(true)
           setGameFinished(true)
+        } else if (
+          data.tasks_version &&
+          tasksLoadedRef.current &&
+          data.tasks_version !== tasksVersionRef.current
+        ) {
+          // Also when the page has no marker yet (its read failed): the
+          // reload brings the tasks and the marker.
+          void reloadTasks(data.tasks_version)
         }
       } catch {
         // Network hiccup or timeout: the next poll retries
@@ -447,7 +597,7 @@ export default function PlayPage() {
       clearInterval(interval)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [gameCode, gameFinished, applyClock])
+  }, [gameCode, endedByTeacher, applyClock, reloadTasks])
 
   function handleStart() {
     const storageKey = `ctf_start_${gameCode}`
@@ -519,9 +669,13 @@ export default function PlayPage() {
           const earned = result.achievements
           setAchievementQueue((q) => [...q, ...earned])
         }
-        // Check if all solved
-        if (solvedIds.size + 1 >= challenges.length) {
+        // Check if all solved (tasks as they are now, this one included)
+        const solvedNow = new Set(solvedIdsRef.current)
+        solvedNow.add(challenge.id)
+        if (challengesRef.current.every((c) => solvedNow.has(c.id))) {
           setTimeout(() => {
+            // A task added in these two seconds keeps the team playing.
+            if (!challengesRef.current.every((c) => solvedIdsRef.current.has(c.id))) return
             setSelectedChallengeIndex(null)
             setGameFinished(true)
           }, 2000)
@@ -542,6 +696,7 @@ export default function PlayPage() {
 
     setLoading(true)
     setFeedback(null)
+    const task = challenges[currentIndex]
 
     try {
       const res = await fetch("/api/submissions", {
@@ -549,9 +704,9 @@ export default function PlayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_token: session.session_token,
-          challenge_id: challenges[currentIndex].id,
+          challenge_id: task.id,
           answer:
-            challenges[currentIndex].type === "number"
+            task.type === "number"
               ? normalizeNumericAnswer(answer)
               : answer.trim(),
           hints_used: revealedHintCount,
@@ -589,6 +744,19 @@ export default function PlayPage() {
       const result: ExtendedSubmissionResult & {
         achievements?: { type: AchievementType; metadata?: Record<string, unknown> }[]
       } = await res.json()
+
+      // A reload may have replaced the open task while the answer was on its
+      // way: the points still count, but the result belongs to that task,
+      // not to the one now on screen.
+      if (challengesRef.current[currentIndexRef.current]?.id !== task.id) {
+        if (result.is_correct) {
+          setTotalPoints((points) => Math.max(points, result.total_points ?? points + result.points_awarded))
+          if (challengesRef.current.some((c) => c.id === task.id)) {
+            setSolvedIds((prev) => new Set(prev).add(task.id))
+          }
+        }
+        return
+      }
       setFeedback(result)
 
       // Show achievement toast if earned
@@ -601,7 +769,7 @@ export default function PlayPage() {
         setTotalPoints(result.total_points || totalPoints + result.points_awarded)
         setSolvedIds((prev) => {
           const next = new Set(Array.from(prev))
-          next.add(challenges[currentIndex].id)
+          next.add(task.id)
           return next
         })
         setAnswer("")
@@ -615,11 +783,7 @@ export default function PlayPage() {
           setTimeout(() => {
             setFeedback(null)
             setRevealedHintCount(0)
-            if (currentIndex + 1 < challenges.length) {
-              setCurrentIndex(currentIndex + 1)
-            } else {
-              setGameFinished(true)
-            }
+            goToNextTask()
           }, 2000)
         }
       }
@@ -990,6 +1154,7 @@ export default function PlayPage() {
           />
 
           <ChallengeDetailModal
+            key={sheetKey(selectedChallengeIndex !== null ? challenges[selectedChallengeIndex] : undefined)}
             challenge={selectedChallengeIndex !== null ? challenges[selectedChallengeIndex] : null}
             open={selectedChallengeIndex !== null}
             onOpenChange={(open) => { if (!open) setSelectedChallengeIndex(null) }}
@@ -1275,11 +1440,7 @@ export default function PlayPage() {
                               setShowExplanation(false)
                               setCurrentExplanation(null)
                               setRevealedHintCount(0)
-                              if (currentIndex + 1 < challenges.length) {
-                                setCurrentIndex(currentIndex + 1)
-                              } else {
-                                setGameFinished(true)
-                              }
+                              goToNextTask()
                             }}
                             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
                           >
