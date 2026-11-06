@@ -433,7 +433,7 @@ export function ManualTaskEditor({
           <p className="text-[10px] text-muted-foreground">
             {type === "number"
               ? "Dalyvis turi įvesti tą patį skaičių."
-              : "Tikrinant nesvarbu didžiosios raidės, lietuviškos raidės (š = s) ir tarpai. Žodžio forma turi sutapti."}
+              : "Tikrinant nesvarbu didžiosios raidės, lietuviškos raidės (š = s) ir nereikalingi tarpai. Žodžio forma ir tarpai tarp žodžių turi sutapti."}
           </p>
         </div>
       )}
