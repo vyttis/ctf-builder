@@ -8,7 +8,8 @@ BEGIN;
 
 GRANT SELECT (hints) ON public.challenges TO anon;
 
-GRANT EXECUTE ON FUNCTION public.get_player_game_state(text, text) TO anon, authenticated, service_role;
+-- Production ACL before: {=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}
+GRANT EXECUTE ON FUNCTION public.get_player_game_state(text, text) TO PUBLIC, anon, authenticated, service_role;
 
 COMMENT ON COLUMN public.challenges.hints IS NULL;
 

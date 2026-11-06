@@ -321,8 +321,10 @@ Tikimasi: `anon_hints` `false`, `anon_notes` `false`, `anon_title` `true`,
 
 Produkcijoje prieš taikymą (2026-11-06, tik skaitymo užklausa): `anon_hints`
 `true`, `anon_notes` jau `false`, `anon_title` `true`, `auth_hints` `true`,
-`anon_state` `true`, `auth_state` `true`, 0 vykstančių veiklų. Todėl
-grąžinimas atkuria tik `hints` ir funkcijos teises.
+`anon_state` `true`, `auth_state` `true`, 0 vykstančių veiklų; funkcijos
+teisės `{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}`
+(vykdyti galėjo ir PUBLIC). Grąžinimas atkuria būtent tai: `hints` ir
+funkcijos teises, įskaitant PUBLIC.
 
 Dar nepritaikyta produkcijoje.
 
