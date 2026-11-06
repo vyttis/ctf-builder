@@ -1,25 +1,29 @@
 -- 20261106150000_pause_clock_and_status_rules
 --
 -- Pausing an activity stops its clock. games.paused_ms keeps the time
--- spent in finished pauses and games.paused_at marks a pause in progress;
+-- spent in finished pauses, games.paused_at marks a pause in progress and
+-- games.resumed_at is when the last pause ended;
 -- teams.pause_offset_ms is how much pause time had already passed when the
 -- team started, so a team only gets back the pauses that fell inside its
 -- own run. The server deadline, the participant countdown and the class
 -- screen all use the same rule (lib/game/clock.ts).
 --
--- A BEFORE UPDATE trigger on games owns the status rules and the pause
--- bookkeeping for every writer (the API, PostgREST, SQL): the activity only
--- moves forward (draft -> active <-> paused -> finished), so a stale tab
--- cannot reopen a finished activity; leaving a pause adds its length to
--- paused_ms; the first start sets starts_at; values for paused_at or
--- paused_ms sent by a client are ignored.
+-- A BEFORE INSERT OR UPDATE trigger on games owns the status rules and the
+-- pause bookkeeping for every writer (the API, PostgREST, SQL): a client
+-- creates activities as drafts only; the activity only moves forward
+-- (draft -> active <-> paused -> finished), so a stale tab cannot reopen a
+-- finished activity; leaving a pause adds its length to paused_ms; the
+-- first start sets starts_at; values for paused_at, paused_ms or
+-- resumed_at sent by a client are ignored.
 --
 -- set_game_status() changes the status under a row lock for the owner.
 -- extend_game_time() adds minutes in one statement, so two devices adding 5
 -- minutes give 10, and it refuses activities without a time limit.
--- update_game_settings() merges a settings patch in one statement, so a
--- builder save cannot undo an extension made meanwhile; while the activity
--- runs, the time limit changes only through extend_game_time().
+-- update_game_settings() merges a settings patch, together with a new title
+-- or description from the same save, in one statement, so a builder save
+-- cannot undo an extension made meanwhile and is saved whole or not at all;
+-- while the activity runs, the time limit changes only through
+-- extend_game_time().
 --
 -- Existing rows: activities paused at the time of the migration get
 -- paused_at = now(), so their pause counts from then; nothing else changes.
@@ -33,7 +37,8 @@ BEGIN;
 
 ALTER TABLE public.games
   ADD COLUMN IF NOT EXISTS paused_at timestamptz,
-  ADD COLUMN IF NOT EXISTS paused_ms bigint NOT NULL DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS paused_ms bigint NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS resumed_at timestamptz;
 
 ALTER TABLE public.games
   ADD CONSTRAINT games_paused_ms_check CHECK (paused_ms >= 0);
@@ -93,9 +98,26 @@ LANGUAGE plpgsql
 SET search_path = public, pg_temp
 AS $$
 BEGIN
+  IF TG_OP = 'INSERT' THEN
+    -- Signed-in clients create drafts; an activity starts through the
+    -- status rules below. Server-side writers (service role, SQL) may
+    -- insert any status, and the clock fields start consistent with it.
+    IF NEW.status IS DISTINCT FROM 'draft' AND current_user IN ('anon', 'authenticated') THEN
+      RAISE EXCEPTION 'a new activity starts as a draft' USING ERRCODE = 'KS409';
+    END IF;
+    NEW.paused_ms := 0;
+    NEW.paused_at := CASE WHEN NEW.status = 'paused' THEN now() ELSE NULL END;
+    NEW.resumed_at := NULL;
+    IF NEW.status IN ('active', 'paused') AND NEW.starts_at IS NULL THEN
+      NEW.starts_at := now();
+    END IF;
+    RETURN NEW;
+  END IF;
+
   -- The pause clock is kept here only.
   NEW.paused_ms := OLD.paused_ms;
   NEW.paused_at := OLD.paused_at;
+  NEW.resumed_at := OLD.resumed_at;
 
   IF NEW.status IS DISTINCT FROM OLD.status THEN
     IF NOT (
@@ -111,6 +133,9 @@ BEGIN
         + greatest(0, floor(extract(epoch FROM (now() - OLD.paused_at)) * 1000))::bigint;
     END IF;
     NEW.paused_at := CASE WHEN NEW.status = 'paused' THEN now() ELSE NULL END;
+    IF OLD.status = 'paused' AND NEW.status = 'active' THEN
+      NEW.resumed_at := now();
+    END IF;
 
     IF NEW.status = 'active' AND NEW.starts_at IS NULL THEN
       NEW.starts_at := now();
@@ -122,7 +147,7 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS games_status_rules ON public.games;
-CREATE TRIGGER games_status_rules BEFORE UPDATE ON public.games
+CREATE TRIGGER games_status_rules BEFORE INSERT OR UPDATE ON public.games
   FOR EACH ROW EXECUTE FUNCTION public.games_status_rules();
 
 CREATE OR REPLACE FUNCTION public.set_game_status(p_game_id uuid, p_status text)
@@ -159,7 +184,11 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.update_game_settings(p_game_id uuid, p_patch jsonb)
+CREATE OR REPLACE FUNCTION public.update_game_settings(
+  p_game_id uuid,
+  p_patch jsonb,
+  p_details jsonb DEFAULT '{}'::jsonb
+)
 RETURNS public.games
 LANGUAGE plpgsql
 SECURITY INVOKER
@@ -168,9 +197,10 @@ AS $$
 DECLARE
   g public.games;
   v_patch jsonb := coalesce(p_patch, '{}'::jsonb);
+  v_details jsonb := coalesce(p_details, '{}'::jsonb);
 BEGIN
-  IF jsonb_typeof(v_patch) <> 'object' THEN
-    RAISE EXCEPTION 'settings patch must be an object' USING ERRCODE = '22023';
+  IF jsonb_typeof(v_patch) <> 'object' OR jsonb_typeof(v_details) <> 'object' THEN
+    RAISE EXCEPTION 'settings patch and details must be objects' USING ERRCODE = '22023';
   END IF;
 
   SELECT * INTO g FROM public.games
@@ -185,7 +215,9 @@ BEGIN
   END IF;
 
   UPDATE public.games
-  SET settings = coalesce(settings, '{}'::jsonb) || v_patch
+  SET settings = coalesce(settings, '{}'::jsonb) || v_patch,
+      title = CASE WHEN v_details ? 'title' THEN v_details ->> 'title' ELSE title END,
+      description = CASE WHEN v_details ? 'description' THEN v_details ->> 'description' ELSE description END
   WHERE id = p_game_id
   RETURNING * INTO g;
 
@@ -242,9 +274,9 @@ REVOKE ALL ON FUNCTION public.games_status_rules() FROM PUBLIC, anon, authentica
 REVOKE ALL ON FUNCTION public.teams_pause_offset() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.set_game_status(uuid, text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.extend_game_time(uuid, integer) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.update_game_settings(uuid, jsonb) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.update_game_settings(uuid, jsonb, jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.set_game_status(uuid, text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.extend_game_time(uuid, integer) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.update_game_settings(uuid, jsonb) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.update_game_settings(uuid, jsonb, jsonb) TO authenticated, service_role;
 
 COMMIT;

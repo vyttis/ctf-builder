@@ -298,6 +298,19 @@ BEGIN
   IF g.paused_at IS NOT NULL OR g.paused_ms NOT BETWEEN 119000 AND 125000 THEN
     RAISE EXCEPTION 'resuming must add the pause to paused_ms, got % %', g.paused_at, g.paused_ms;
   END IF;
+  IF g.resumed_at IS NULL OR g.resumed_at < now() - interval '1 minute' THEN
+    RAISE EXCEPTION 'resuming must record resumed_at, got %', g.resumed_at;
+  END IF;
+
+  -- A client creates drafts only, so a paused activity cannot appear
+  -- without a running pause clock.
+  BEGIN
+    INSERT INTO public.games (teacher_id, title, game_code, status)
+      VALUES (auth.uid(), 'Iš karto pristabdyta', 'PAUSE1', 'paused');
+    RAISE EXCEPTION 'a client must not insert a paused activity';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
 
   -- A client cannot set the clock fields directly.
   UPDATE public.games SET paused_ms = 0, paused_at = now() WHERE id = '10000000-0000-0000-0000-0000000000c1';
@@ -310,6 +323,12 @@ BEGIN
   g := public.update_game_settings('10000000-0000-0000-0000-0000000000c1', '{"time_limit_minutes": 1, "show_leaderboard": false}');
   IF (g.settings ->> 'time_limit_minutes')::numeric <> 30 OR (g.settings ->> 'show_leaderboard')::boolean IS DISTINCT FROM false THEN
     RAISE EXCEPTION 'a running settings save must keep the limit and merge the rest, got %', g.settings;
+  END IF;
+  -- The title and description of the same save go in the same statement.
+  g := public.update_game_settings('10000000-0000-0000-0000-0000000000c1', '{"show_leaderboard": true}',
+    '{"title": "Pervadinta", "description": null}');
+  IF g.title <> 'Pervadinta' OR g.description IS NOT NULL OR (g.settings ->> 'show_leaderboard')::boolean IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'details must be saved with the settings, got % % %', g.title, g.description, g.settings;
   END IF;
 
   g := public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
@@ -349,6 +368,19 @@ BEGIN
   END;
 END $$;
 RESET ROLE;
+
+-- A server-side insert of a running or paused activity gets a consistent clock.
+INSERT INTO public.games (id, teacher_id, title, game_code, status, paused_ms, paused_at, resumed_at) VALUES
+  ('10000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-00000000000a', 'Serverio', 'SRVPSE', 'paused', 999, NULL, now());
+DO $$
+DECLARE g public.games;
+BEGIN
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c3';
+  IF g.paused_at IS NULL OR g.paused_ms <> 0 OR g.resumed_at IS NOT NULL OR g.starts_at IS NULL THEN
+    RAISE EXCEPTION 'an inserted paused activity must start its pause clock, got % % % %',
+      g.paused_at, g.paused_ms, g.resumed_at, g.starts_at;
+  END IF;
+END $$;
 
 -- A team that starts after a pause gets the pause offset from the database,
 -- whatever the caller wrote.

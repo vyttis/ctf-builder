@@ -8,7 +8,7 @@ const SAFE_CHALLENGE_SELECT = "id, game_id, title, description, type, points, hi
 
 const updateGameSchema = z.object({
   title: z.string().min(3).optional(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   status: z.enum(["draft", "active", "paused", "finished"]).optional(),
   settings: z
     .object({
@@ -123,19 +123,42 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
     }
   }
 
-  const updateData: Record<string, unknown> = {}
-  if (parsed.data.title !== undefined) updateData.title = parsed.data.title
-  if (parsed.data.description !== undefined) updateData.description = parsed.data.description
+  const details: Record<string, unknown> = {}
+  if (parsed.data.title !== undefined) details.title = parsed.data.title
+  if (parsed.data.description !== undefined) details.description = parsed.data.description
+  const hasDetails = Object.keys(details).length > 0
+  const hasStatus = parsed.data.status !== undefined
 
-  if (Object.keys(updateData).length === 0 && !parsed.data.settings && parsed.data.status === undefined) {
+  if (!hasDetails && !parsed.data.settings && !hasStatus) {
     return NextResponse.json({ error: "Nėra ką atnaujinti" }, { status: 400 })
+  }
+  // A status change is its own request, so it is never half applied
+  // together with other fields.
+  if (hasStatus && (hasDetails || parsed.data.settings)) {
+    return NextResponse.json({ error: "Būsena keičiama atskirai nuo kitų laukų." }, { status: 400 })
   }
 
   let data: unknown = null
-  if (Object.keys(updateData).length > 0) {
+
+  // Settings merge in the database in one statement, with the title and
+  // description of the same save, so a save from an older tab cannot undo an
+  // extension made meanwhile and nothing is half saved; while the activity
+  // runs, the time limit changes only through "Pratęsti" (/extend).
+  if (parsed.data.settings) {
+    const { data: updated, error } = await supabase.rpc("update_game_settings", {
+      p_game_id: params.gameId,
+      p_patch: parsed.data.settings,
+      p_details: details,
+    })
+    if (error) {
+      if (error.code === "P0002") return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
+      return NextResponse.json({ error: "Nepavyko išsaugoti nustatymų." }, { status: 500 })
+    }
+    data = rpcRow(updated)
+  } else if (hasDetails) {
     const { data: updated, error } = await supabase
       .from("games")
-      .update(updateData)
+      .update(details)
       .eq("id", params.gameId)
       .eq("teacher_id", user.id)
       .select()
@@ -144,21 +167,6 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
       return NextResponse.json({ error: "Nepavyko išsaugoti veiklos." }, { status: 500 })
     }
     data = updated
-  }
-
-  // Settings merge in the database in one statement, so a save from an
-  // older tab cannot undo an extension made meanwhile; while the activity
-  // runs, the time limit changes only through "Pratęsti" (/extend).
-  if (parsed.data.settings) {
-    const { data: updated, error } = await supabase.rpc("update_game_settings", {
-      p_game_id: params.gameId,
-      p_patch: parsed.data.settings,
-    })
-    if (error) {
-      if (error.code === "P0002") return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
-      return NextResponse.json({ error: "Nepavyko išsaugoti nustatymų." }, { status: 500 })
-    }
-    data = rpcRow(updated)
   }
 
   // Status moves only forward (draft -> active <-> paused -> finished); the

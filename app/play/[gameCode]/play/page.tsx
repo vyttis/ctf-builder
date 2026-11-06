@@ -76,8 +76,8 @@ function normalizeNumericAnswer(value: string): string {
 
 // Stamp the team's server-side start (idempotent) and return it with the
 // pause offset, so the countdown runs on the same deadline the server
-// enforces. null when the request fails: the countdown then runs from the
-// start stored on this device.
+// enforces. null when the request fails; the page keeps asking (see the
+// effect that confirms the run).
 async function stampGameStart(token: string): Promise<{ startedAtMs: number; offsetMs: number } | null> {
   try {
     const res = await fetch("/api/play/start", {
@@ -169,7 +169,9 @@ export default function PlayPage() {
   // the run), corrected for this device's clock.
   const [clock, setClock] = useState<GameClock>({ limitMinutes: null, pausedMs: 0, pausedAt: null })
   const timeLimitMinutes = clock.limitMinutes
-  const [run, setRun] = useState<{ startedAtMs: number; offsetMs: number } | null>(null)
+  // confirmed: the start and pause offset came from the server. Until then
+  // the countdown runs from this device's start and keeps asking.
+  const [run, setRun] = useState<{ startedAtMs: number; offsetMs: number; confirmed: boolean } | null>(null)
   const skewMsRef = useRef(0)
   const [gameStarted, setGameStarted] = useState(false)
   const [timeExpired, setTimeExpired] = useState(false)
@@ -207,6 +209,31 @@ export default function PlayPage() {
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
   }, [gameStarted, timeLimitMinutes, run, clock, gameFinished])
+
+  // Anchor the countdown on the server's start and pause offset. A failed
+  // request is retried every few seconds; otherwise a late team that
+  // reloaded could keep a countdown that credits pauses from before its
+  // start, while the server rejects its answers.
+  const sessionToken = session?.session_token
+  const runConfirmed = run?.confirmed ?? true
+  useEffect(() => {
+    if (runConfirmed || !sessionToken || gameFinished) return
+    let cancelled = false
+    let inFlight = false
+    const confirm = async () => {
+      if (inFlight) return
+      inFlight = true
+      const server = await stampGameStart(sessionToken)
+      inFlight = false
+      if (!cancelled && server) setRun({ ...server, confirmed: true })
+    }
+    void confirm()
+    const interval = setInterval(confirm, 5000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [runConfirmed, sessionToken, gameFinished])
 
   useEffect(() => {
     const s = getPlayerSession(gameCode)
@@ -284,10 +311,7 @@ export default function PlayPage() {
       if (timeLimit && existingStart) {
         // Already started on this device: run from the local start until the
         // server answers with the real one (idempotent stamp).
-        setRun((r) => r ?? { startedAtMs: parseInt(existingStart!, 10), offsetMs: 0 })
-        void stampGameStart(s.session_token).then((server) => {
-          if (server) setRun(server)
-        })
+        setRun((r) => r ?? { startedAtMs: parseInt(existingStart!, 10), offsetMs: 0, confirmed: false })
       }
     }
 
@@ -414,14 +438,9 @@ export default function PlayPage() {
     } catch {
       // Storage blocked: the server start still anchors the deadline.
     }
-    setRun({ startedAtMs: now + skewMsRef.current, offsetMs: clock.pausedMs })
+    // The server-side start is stamped by the effect that confirms the run.
+    setRun({ startedAtMs: now + skewMsRef.current, offsetMs: clock.pausedMs, confirmed: false })
     setGameStarted(true)
-    // Anchor the server-side deadline on the moment the student taps start.
-    if (session) {
-      void stampGameStart(session.session_token).then((server) => {
-        if (server) setRun(server)
-      })
-    }
   }
 
   // Free mode: handle submission from challenge detail modal

@@ -184,12 +184,13 @@ Tikimasi: `role_checks_status` `true`, `profile_policy` 1, `admin_policies` 4.
 
 Failas `supabase/migrations/20261106150000_pause_clock_and_status_rules.sql`,
 grąžinimas `supabase/rollback/20261106150000_pause_clock_and_status_rules.sql`.
-Prideda `games.paused_at`, `games.paused_ms`, `teams.pause_offset_ms`,
-trigerį `games_status_rules` (būsena keičiasi tik pirmyn bet kuriam rašytojui,
+Prideda `games.paused_at`, `games.paused_ms`, `games.resumed_at`,
+`teams.pause_offset_ms`, trigerį `games_status_rules` (prisijungę klientai
+kuria tik juodraščius, būsena keičiasi tik pirmyn bet kuriam rašytojui,
 pauzės laiką skaičiuoja tik jis) ir funkcijas `set_game_status()`,
 `extend_game_time()` (minutės pridedamos vienu sakiniu; veiklai be laiko
-limito atsisakoma) ir `update_game_settings()` (nustatymai sujungiami vienu
-sakiniu; vykstančios veiklos limitas keičiamas tik pratęsiant).
+limito atsisakoma) ir `update_game_settings()` (nustatymai kartu su pavadinimu ir aprašymu
+išsaugomi vienu sakiniu; vykstančios veiklos limitas keičiamas tik pratęsiant).
 Baigtos veiklos atnaujinti nebegalima ir tiesiai SQL. Trigeris
 `teams_pause_offset` komandos pauzės poslinkį įrašo pats, kai komanda
 pradeda (ir tada, kai dar veikia senas kodas). Taikymo metu pristabdytoms
@@ -205,18 +206,18 @@ Patikra po taikymo:
 ```sql
 select
   (select count(*) from information_schema.columns where table_schema = 'public'
-     and table_name = 'games' and column_name in ('paused_at', 'paused_ms')) as game_cols,
+     and table_name = 'games' and column_name in ('paused_at', 'paused_ms', 'resumed_at')) as game_cols,
   (select count(*) from information_schema.columns where table_schema = 'public'
      and table_name = 'teams' and column_name = 'pause_offset_ms') as team_cols,
   has_function_privilege('authenticated', 'public.set_game_status(uuid,text)', 'EXECUTE') as auth_status_fn,
   has_function_privilege('anon', 'public.set_game_status(uuid,text)', 'EXECUTE') as anon_status_fn,
   has_function_privilege('anon', 'public.extend_game_time(uuid,integer)', 'EXECUTE') as anon_extend_fn,
-  has_function_privilege('authenticated', 'public.update_game_settings(uuid,jsonb)', 'EXECUTE') as auth_settings_fn,
+  has_function_privilege('authenticated', 'public.update_game_settings(uuid,jsonb,jsonb)', 'EXECUTE') as auth_settings_fn,
   (select count(*) from pg_trigger where tgname in ('games_status_rules', 'teams_pause_offset')) as triggers,
   (select count(*) from public.games where status = 'paused' and paused_at is null) as paused_without_clock;
 ```
 
-Tikimasi: `game_cols` 2, `team_cols` 1, `auth_status_fn` `true`, `anon_status_fn` `false`, `anon_extend_fn` `false`, `auth_settings_fn` `true`, `triggers` 2, `paused_without_clock` 0.
+Tikimasi: `game_cols` 3, `team_cols` 1, `auth_status_fn` `true`, `anon_status_fn` `false`, `anon_extend_fn` `false`, `auth_settings_fn` `true`, `triggers` 2, `paused_without_clock` 0.
 
 ## Konvencija toliau
 
