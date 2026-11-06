@@ -20,6 +20,32 @@ class FakeDb {
   from(table: string) {
     return new FakeQuery(this, table)
   }
+  /** reserve_ai_action, same rule as the SQL function (the fake runs one call at a time). */
+  rpc(name: string, args: Record<string, unknown>) {
+    return Promise.resolve().then(() => {
+      if (name !== "reserve_ai_action") return { data: null, error: { code: "PGRST202", message: "unknown function" } }
+      const rows = this.rows("ai_usage")
+      const used = rows.filter(
+        (r) =>
+          r.user_id === args.p_user_id &&
+          r.model === "reservation" &&
+          String(r.created_at) >= String(args.p_month_start) &&
+          (String(r.created_at) >= String(args.p_in_flight_since) ||
+            rows.some((c) => c.request_id === r.request_id && c.model !== "reservation")),
+      ).length
+      if (used >= Number(args.p_limit)) return { data: -1, error: null }
+      rows.push({
+        id: this.nextId("ai_usage"),
+        user_id: args.p_user_id,
+        request_id: args.p_request_id,
+        endpoint: args.p_endpoint,
+        model: "reservation",
+        cost_usd: 0,
+        created_at: new Date().toISOString(),
+      })
+      return { data: used, error: null }
+    })
+  }
 }
 
 class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
@@ -92,6 +118,14 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
   }
   private run(): unknown {
     const rows = this.db.rows(this.table)
+    if (this.op === "insert" && this.table === "admin_audit_log") {
+      // Unique index admin_audit_log_ai_budget_alert_once
+      for (const p of this.payload) {
+        if (p.action === "ai_budget.alert" && rows.some((r) => r.action === p.action && r.target_id === p.target_id)) {
+          throw Object.assign(new Error("duplicate key"), { code: "23505" })
+        }
+      }
+    }
     if (this.op === "insert") {
       const inserted = this.payload.map((p) => ({
         id: this.db.nextId(this.table),
@@ -116,11 +150,14 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
     onRejected?: ((e: unknown) => B | PromiseLike<B>) | null,
   ): PromiseLike<A | B> {
     return Promise.resolve()
-      .then(() =>
-        this.db.failing.has(this.table)
-          ? ({ data: null, error: { message: "unavailable", code: "XX000" } } as never)
-          : { data: this.run(), error: null as null },
-      )
+      .then(() => {
+        if (this.db.failing.has(this.table)) return { data: null, error: { message: "unavailable", code: "XX000" } } as never
+        try {
+          return { data: this.run(), error: null as null }
+        } catch (e) {
+          return { data: null, error: { message: String(e), code: (e as { code?: string }).code ?? "XX000" } } as never
+        }
+      })
       .then(onFulfilled, onRejected)
   }
 }
@@ -129,6 +166,7 @@ const h = vi.hoisted(() => ({
   db: null as unknown,
   afterQueue: [] as (() => unknown)[],
   sendResults: [] as { ok: boolean }[],
+  sent: 0,
 }))
 
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => h.db }))
@@ -137,7 +175,12 @@ vi.mock("@/lib/access/notify", () => ({ superAdminEmails: async () => ["admin@ex
 vi.mock("@/lib/email/templates", () => ({
   aiBudgetEmail: (to: string[]) => ({ to, subject: "DI biudžetas", html: "", text: "" }),
 }))
-vi.mock("@/lib/email/send", () => ({ sendEmail: async () => h.sendResults.shift() ?? { ok: true } }))
+vi.mock("@/lib/email/send", () => ({
+  sendEmail: async () => {
+    h.sent += 1
+    return h.sendResults.shift() ?? { ok: true }
+  },
+}))
 
 import {
   budgetLevel,
@@ -169,6 +212,7 @@ function setup(): FakeDb {
   h.db = db
   h.afterQueue.length = 0
   h.sendResults.length = 0
+  h.sent = 0
   return db
 }
 
@@ -291,6 +335,15 @@ describe("personal monthly limit", () => {
     expect(allowance.ok).toBe(false)
   })
 
+  it("fails open when the profile cannot be read", async () => {
+    const db = setup()
+    db.rows("platform_settings")[0].ai_user_monthly_limit = 1
+    addActions(db, 5)
+    db.failing.add("profiles")
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    expect(allowance.ok).toBe(true)
+  })
+
   it("fails open instead of applying defaults when settings cannot be read", async () => {
     const db = setup()
     // Configured above the built-in default of 40.
@@ -318,6 +371,25 @@ describe("budget alerts", () => {
     const claims = db.rows("admin_audit_log")
     expect(claims).toHaveLength(1)
     expect(String(claims[0].target_id)).toMatch(/:alert$/)
+  })
+
+  it("sends one email when two servers claim the same alert", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    await Promise.all([maybeSendBudgetAlert(db as never), maybeSendBudgetAlert(db as never)])
+    expect(db.rows("admin_audit_log")).toHaveLength(1)
+    expect(h.sent).toBe(1)
+  })
+
+  it("sends the alert from an allowance check when another server crossed the threshold", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 45 })
+    await monthSpendUsd(db as never, new Date(), true)
+    await checkAiAllowance(USER, "di/generate")
+    await flushAfter()
+    expect(h.sent).toBe(1)
+    expect(String(db.rows("admin_audit_log")[0]?.target_id)).toMatch(/:alert$/)
   })
 
   it("does not read the database below the threshold", async () => {
