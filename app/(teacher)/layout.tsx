@@ -26,14 +26,14 @@ export default async function TeacherLayout({
       .select("id, title, status")
       .eq("teacher_id", user.id)
       .in("status", ["active", "paused"])
+      // "active" sorts before "paused": a running game wins over any number
+      // of more recently updated paused ones
+      .order("status", { ascending: true })
       .order("updated_at", { ascending: false })
-      .limit(5),
+      .limit(1),
   ])
 
-  // A running game wins over a paused one, so the shortcut never points at a
-  // paused game while another is live
-  const liveGame =
-    liveGames?.find((g) => g.status === "active") ?? liveGames?.[0] ?? null
+  const liveGame = liveGames?.[0] ?? null
 
   return (
     <div className="min-h-screen bg-muted">
