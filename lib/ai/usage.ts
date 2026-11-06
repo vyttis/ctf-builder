@@ -180,11 +180,12 @@ export async function monthActionsByUser(
 }
 
 /**
- * Takes a limit slot for this action before any model call. The reservation
- * row goes in first and the count is taken up to its id, so two requests
- * started together at the last free slot cannot both pass: the later row
- * sees the earlier one. If the action ends without a model call (bad input,
- * the model failed), the slot is given back after the response.
+ * Takes a limit slot for this action before any model call. The database
+ * counts and inserts under a per-person lock (reserve_ai_action, migration
+ * 20261106145000), so two requests at the last free slot cannot both pass.
+ * If the action ends without a model call (bad input, the model failed), the
+ * slot is given back after the response; a request killed before that stops
+ * counting after RESERVATION_TTL_MS.
  * Returns the actions used before this one, or null when the limit is full.
  */
 async function reserveAction(
@@ -193,31 +194,27 @@ async function reserveAction(
   limit: number,
   now: Date,
 ): Promise<number | null> {
-  const { data: row, error } = await admin
-    .from("ai_usage")
-    .insert({ user_id: ctx.userId, request_id: ctx.requestId, endpoint: ctx.endpoint, model: RESERVATION_MODEL })
-    .select("id")
-    .single()
-  if (error || !row) throw error ?? new Error("reservation not created")
-  const release = async () => {
-    const { error: deleteError } = await admin.from("ai_usage").delete().eq("id", row.id)
-    if (deleteError) console.error("[ai-usage] reservation release failed", { code: deleteError.code })
-  }
-  let withThis: number
-  try {
-    withThis = await monthActionsByUser(admin, ctx.userId, now, row.id)
-  } catch (countError) {
-    await release()
-    throw countError
-  }
-  if (withThis > limit) {
-    await release()
-    return null
-  }
-  after(async () => {
-    if (!ctx.modelCalls) await release()
+  const { data, error } = await admin.rpc("reserve_ai_action", {
+    p_user_id: ctx.userId,
+    p_request_id: ctx.requestId,
+    p_endpoint: ctx.endpoint,
+    p_limit: limit,
+    p_month_start: monthStart(now).toISOString(),
+    p_in_flight_since: new Date(now.getTime() - RESERVATION_TTL_MS).toISOString(),
   })
-  return withThis - 1
+  if (error) throw error
+  const used = Number(data)
+  if (!Number.isFinite(used) || used < 0) return null
+  after(async () => {
+    if (ctx.modelCalls) return
+    const { error: deleteError } = await admin
+      .from("ai_usage")
+      .delete()
+      .eq("request_id", ctx.requestId)
+      .eq("model", RESERVATION_MODEL)
+    if (deleteError) console.error("[ai-usage] reservation release failed", { code: deleteError.code })
+  })
+  return used
 }
 
 export type AiAllowance =
@@ -244,13 +241,20 @@ export async function checkAiAllowance(
   const ctx: AiContext = { userId, endpoint, requestId: randomUUID() }
   try {
     const admin = createAdminClient()
-    const [{ data: profile }, settings] = await Promise.all([
+    const [profileRes, settings] = await Promise.all([
       admin.from("profiles").select("role, ai_monthly_limit").eq("id", userId).maybeSingle(),
       loadAiSettings(admin),
     ])
+    // A failed read must reach the fail-open path below, not look like a
+    // profile without a personal limit.
+    if (profileRes.error) throw profileRes.error
+    const profile = profileRes.data
     if (profile?.role === "super_admin") return { ok: true, ctx, used: 0, limit: null }
 
     const spent = await monthSpendUsd(admin, now)
+    // Another server may have pushed the month over a threshold; this read
+    // (at most a minute old, from the database) makes sure the email goes.
+    if (budgetLevel(spent, settings)) after(() => maybeSendBudgetAlert(admin, now))
     if (spent >= settings.ai_monthly_budget_usd) {
       return {
         ok: false,
@@ -337,8 +341,8 @@ async function alertClaimIds(admin: SupabaseClient, target: string): Promise<num
  * every recorded call, so it starts from the per-instance spend (kept
  * current by recordAiUsage) and reads the database only once a threshold
  * may have been crossed and its email is not out yet. The audit row is the
- * claim: the first row for a month and level sends, and the row is removed
- * again if the email could not go out, so a later call retries.
+ * claim (unique per month and level, migration 20261106145000), and it is
+ * removed again if the email could not go out, so a later call retries.
  */
 export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date()): Promise<void> {
   try {
@@ -354,7 +358,9 @@ export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date
     const target = `${monthKey}:${level}`
     if (level !== cachedLevel && (await alertClaimIds(admin, target)).length > 0) return
 
-    const { data: claim } = await admin
+    // The unique index (one row per month and level) is the claim: the
+    // insert that wins sends, a second one fails with 23505.
+    const { data: claim, error: claimError } = await admin
       .from("admin_audit_log")
       .insert({
         actor_id: null,
@@ -365,14 +371,10 @@ export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date
       })
       .select("id")
       .single()
-    if (!claim) return
+    if (claimError || !claim) return
     const claimId = Number(claim.id)
     const release = async () => {
       await admin.from("admin_audit_log").delete().eq("id", claimId)
-    }
-    if ((await alertClaimIds(admin, target))[0] !== claimId) {
-      await release()
-      return
     }
 
     let delivered = false
