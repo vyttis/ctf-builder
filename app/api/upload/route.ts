@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { UPLOAD_LIMIT_BYTES, UPLOAD_LIMIT_TEXT } from "@/lib/upload-limits"
 
 const ALLOWED_TYPES = [
   "image/jpeg",
@@ -13,7 +14,7 @@ const MIME_TO_EXT: Record<string, string> = {
   "image/gif": "gif",
   "image/webp": "webp",
 }
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_SIZE = UPLOAD_LIMIT_BYTES
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
 
   if (file.size > MAX_SIZE) {
     return NextResponse.json(
-      { error: "Failas per didelis. Maksimalus dydis: 5MB" },
+      { error: `Failas per didelis. Didžiausias dydis ${UPLOAD_LIMIT_TEXT}.` },
       { status: 400 }
     )
   }

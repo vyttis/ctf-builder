@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { UPLOAD_LIMIT_BYTES, UPLOAD_LIMIT_TEXT } from "@/lib/upload-limits"
 import { nanoid } from "nanoid"
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = UPLOAD_LIMIT_BYTES
 const ALLOWED_TYPES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "Failas per didelis (maks. 10MB)" },
+        { error: `Failas per didelis. Didžiausias dydis ${UPLOAD_LIMIT_TEXT}.` },
         { status: 400 }
       )
     }

@@ -13,6 +13,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import { readJson } from "@/lib/http/read-json"
+import { IMPORT_TEXT_LIMIT, UPLOAD_LIMIT_BYTES, UPLOAD_LIMIT_TEXT } from "@/lib/upload-limits"
 import {
   Upload,
   FileText,
@@ -46,8 +48,13 @@ export function ImportDialog({
     if (!file) return
 
     setFileName(file.name)
-    setStep("processing")
     setErrorMessage("")
+    if (file.size > UPLOAD_LIMIT_BYTES) {
+      setStep("error")
+      setErrorMessage(`Failas per didelis. Didžiausias dydis ${UPLOAD_LIMIT_TEXT}.`)
+      return
+    }
+    setStep("processing")
 
     try {
       // Step 1: Upload
@@ -59,12 +66,9 @@ export function ImportDialog({
         body: formData,
       })
 
-      if (!uploadRes.ok) {
-        const err = await uploadRes.json()
-        throw new Error(err.error || "Nepavyko įkelti failo")
-      }
-
-      const { storage_path } = await uploadRes.json()
+      const uploaded = await readJson<{ storage_path?: string }>(uploadRes)
+      if (!uploadRes.ok || !uploaded.storage_path) throw new Error(uploaded.error || "Nepavyko įkelti failo")
+      const storage_path = uploaded.storage_path
 
       // Step 2: Process
       const processRes = await fetch("/api/import/process", {
@@ -78,15 +82,19 @@ export function ImportDialog({
         }),
       })
 
-      if (!processRes.ok) {
-        const err = await processRes.json()
-        throw new Error(err.error || "Nepavyko apdoroti dokumento")
+      const processed = await readJson<{ suggestions?: AiSuggestion[]; truncated?: boolean }>(processRes)
+      if (!processRes.ok || !Array.isArray(processed.suggestions)) {
+        throw new Error(processed.error || "Nepavyko apdoroti dokumento")
       }
-
-      const { suggestions } = await processRes.json()
+      const suggestions = processed.suggestions
       setStep("done")
 
-      toast({ title: `Sugeneruota užduočių: ${suggestions.length}` })
+      toast({
+        title: `Sugeneruota užduočių: ${suggestions.length}`,
+        description: processed.truncated
+          ? `Dokumentas ilgas: DI perskaitė tik pirmus ${IMPORT_TEXT_LIMIT} ženklų. Likusiai daliai įkelkite ją atskiru failu.`
+          : undefined,
+      })
       onImported(suggestions)
 
       setTimeout(() => {
@@ -129,7 +137,7 @@ export function ImportDialog({
               Pasirinkite failą
             </p>
             <p className="text-xs text-muted-foreground">
-              PDF, DOCX arba TXT (maks. 10MB)
+              PDF, DOCX arba TXT, iki {UPLOAD_LIMIT_TEXT}
             </p>
             <input
               ref={fileRef}

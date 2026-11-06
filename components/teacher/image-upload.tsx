@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import { readJson } from "@/lib/http/read-json"
+import { UPLOAD_LIMIT_BYTES, UPLOAD_LIMIT_TEXT } from "@/lib/upload-limits"
 import { ImagePlus, X, Upload, Loader2, Link as LinkIcon } from "lucide-react"
 import Image from "next/image"
 
@@ -32,10 +34,10 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
         return
       }
 
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > UPLOAD_LIMIT_BYTES) {
         toast({
           title: "Per didelis failas",
-          description: "Didžiausias dydis 5 MB",
+          description: `Didžiausias dydis ${UPLOAD_LIMIT_TEXT}. Sumažinkite paveikslėlį ir bandykite dar kartą.`,
           variant: "destructive",
         })
         return
@@ -51,13 +53,9 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
           body: formData,
         })
 
-        if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error || "Nepavyko įkelti")
-        }
-
-        const { url } = await res.json()
-        onChange(url)
+        const data = await readJson<{ url?: string }>(res)
+        if (!res.ok || !data.url) throw new Error(data.error || "Nepavyko įkelti")
+        onChange(data.url)
         toast({ title: "Paveiksliukas įkeltas!" })
       } catch (error: unknown) {
         toast({
@@ -188,7 +186,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
               </span>
             </div>
             <span className="text-xs text-muted-foreground">
-              JPEG, PNG, GIF, WebP, iki 5 MB
+              JPEG, PNG, GIF, WebP, iki {UPLOAD_LIMIT_TEXT}
             </span>
           </div>
         )}

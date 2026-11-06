@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useId } from "react"
 import { Challenge, ChallengeType } from "@/types/game"
+import { readJson } from "@/lib/http/read-json"
 import { AiSuggestion } from "@/lib/ai/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -312,7 +313,7 @@ export function ManualTaskEditor({
       )
 
       if (!res.ok) {
-        const err = await res.json()
+        const err = await readJson<{ error?: unknown }>(res)
         throw new Error(
           typeof err.error === "string"
             ? err.error
