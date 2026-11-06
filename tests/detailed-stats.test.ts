@@ -3,16 +3,35 @@ import { computeDetailedStats } from "@/lib/game/detailed-stats"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 // Minimal chainable mock of the supabase query builder: from(table) returns a
-// thenable that resolves to { data } for that table regardless of filters.
-function mockSupabase(tables: Record<string, unknown[]>): SupabaseClient {
+// thenable that resolves to { data } for that table regardless of filters,
+// except the keyset paging calls on id (order, gt, limit) behave like
+// PostgREST. Rows without an id get one in their listed order.
+function mockSupabase(tables: Record<string, unknown[]>, failing: string[] = []): SupabaseClient {
   function builder(table: string) {
-    const result = { data: tables[table] ?? [], error: null }
+    let rows = (tables[table] ?? []).map((r, i) => ({
+      id: `row-${String(i).padStart(6, "0")}`,
+      ...(r as Record<string, unknown>),
+    }))
     const chain: Record<string, unknown> = {}
-    for (const method of ["select", "eq", "in", "order"]) {
+    for (const method of ["select", "eq", "in"]) {
       chain[method] = () => chain
     }
-    chain.then = (resolve: (value: typeof result) => unknown) =>
-      Promise.resolve(result).then(resolve)
+    chain.order = (column: string) => {
+      if (column === "id") rows = [...rows].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+      return chain
+    }
+    chain.gt = (column: string, value: string) => {
+      if (column === "id") rows = rows.filter((r) => r.id > value)
+      return chain
+    }
+    chain.limit = (n: number) => {
+      rows = rows.slice(0, n)
+      return chain
+    }
+    chain.then = (resolve: (value: { data: unknown[] | null; error: unknown }) => unknown) =>
+      Promise.resolve(
+        failing.includes(table) ? { data: null, error: { message: "unavailable" } } : { data: rows, error: null }
+      ).then(resolve)
     return chain
   }
   return { from: builder } as unknown as SupabaseClient
@@ -121,5 +140,25 @@ describe("computeDetailedStats", () => {
     })
     const stats = await computeDetailedStats(supabase, "game-1")
     expect(stats.challenge_stats[0].auto_difficulty).toBe("hard")
+  })
+
+  it("counts every answer when a session has more than 1000", async () => {
+    const many = Array.from({ length: 2500 }, (_, i) => ({
+      challenge_id: CHALLENGE_A,
+      is_correct: false,
+      points_awarded: 0,
+      team_id: TEAM_2,
+      hints_used: 0,
+      attempted_at: new Date(Date.UTC(2026, 6, 7, 9, 0, i)).toISOString(),
+    }))
+    const supabase = mockSupabase({ challenges, teams, submissions: many })
+    const stats = await computeDetailedStats(supabase, "game-1")
+    const a = stats.challenge_stats.find((c) => c.challenge_id === CHALLENGE_A)!
+    expect(a.total_attempts).toBe(2500)
+  })
+
+  it("fails instead of counting part of the answers", async () => {
+    const supabase = mockSupabase({ challenges, teams, submissions: [] }, ["submissions"])
+    await expect(computeDetailedStats(supabase, "game-1")).rejects.toBeTruthy()
   })
 })

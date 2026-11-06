@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { hashAnswer } from "@/lib/game/answer-hasher"
+import { hashAnswer, MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { isLiveStatus, LIVE_EDIT_BLOCKED } from "@/lib/game/live-edit"
@@ -20,7 +20,11 @@ const createChallengeSchema = z.object({
   description: z.string().max(5000).default(""),
   type: z.enum(["text", "number", "multiple_choice"]).default("text"),
   points: z.coerce.number().min(1).max(1000).default(100),
-  correct_answer: z.coerce.string().min(1, "Atsakymas privalomas").optional(),
+  correct_answer: z.coerce
+    .string()
+    .min(1, "Atsakymas privalomas")
+    .max(MAX_ANSWER_LENGTH, `Atsakymas gali būti iki ${MAX_ANSWER_LENGTH} ženklų`)
+    .optional(),
   // Duplicated/cloned challenges arrive without an answer: they get an
   // unguessable random answer_hash and are flagged until the teacher sets one.
   needs_answer: z.boolean().default(false),

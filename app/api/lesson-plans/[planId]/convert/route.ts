@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { generateGameCode } from "@/lib/game/code-generator"
-import { hashAnswer } from "@/lib/game/answer-hasher"
+import { hashAnswer, MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
 
 /**
  * Convert a saved lesson plan into a student activity (game).
@@ -70,7 +70,12 @@ export async function POST(request: Request, props: { params: Promise<{ planId: 
     let successCount = 0
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i]
-      const answerHash = await hashAnswer(String(stage.correct_answer), stage.type)
+      // An answer no participant could submit (longer than the limit, or
+      // missing) is not stored: the task is marked as needing an answer,
+      // which the builder flags and which blocks the start until it is set.
+      const answer = String(stage.correct_answer ?? "").trim()
+      const needsAnswer = answer.length === 0 || answer.length > MAX_ANSWER_LENGTH
+      const answerHash = await hashAnswer(needsAnswer ? crypto.randomUUID() : answer, stage.type)
 
       const { error: challengeError } = await supabase
         .from("challenges")
@@ -87,6 +92,7 @@ export async function POST(request: Request, props: { params: Promise<{ planId: 
           difficulty: stage.difficulty || null,
           order_index: i,
           generated_by_di: true,
+          needs_answer: needsAnswer,
         })
 
       if (!challengeError) successCount++

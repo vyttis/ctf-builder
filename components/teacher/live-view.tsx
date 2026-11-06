@@ -11,6 +11,7 @@ import { LiveConnectionBanner } from "./live-connection-banner"
 import { GameStatusActions } from "./game-status-actions"
 import { TimeControls } from "./time-controls"
 import { getPlayUrl, getPublicUrl } from "@/lib/game/play-url"
+import { secondsLeft, secondsRunning, type GameClock } from "@/lib/game/clock"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
@@ -46,6 +47,8 @@ interface LiveViewProps {
     status: GameStatus
     starts_at: string | null
     time_limit_minutes: number | null
+    paused_ms: number
+    paused_at: string | null
   }
   challengeCount: number
   /** Path of the teacher access request page, when the activity accepts requests. */
@@ -72,6 +75,8 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
   const [status, setStatus] = useState<GameStatus>(game.status)
   const [startsAt, setStartsAt] = useState<string | null>(game.starts_at)
   const [timeLimit, setTimeLimit] = useState<number | null>(game.time_limit_minutes)
+  const [pausedMs, setPausedMs] = useState<number>(game.paused_ms)
+  const [pausedAt, setPausedAt] = useState<string | null>(game.paused_at)
   const [nowTick, setNowTick] = useState(() => Date.now())
 
   // Sync from props: GameStatusActions finishes with router.refresh(), which
@@ -81,7 +86,9 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
     setStatus(game.status)
     setStartsAt(game.starts_at)
     setTimeLimit(game.time_limit_minutes)
-  }, [game.status, game.starts_at, game.time_limit_minutes])
+    setPausedMs(game.paused_ms)
+    setPausedAt(game.paused_at)
+  }, [game.status, game.starts_at, game.time_limit_minutes, game.paused_ms, game.paused_at])
 
   // Presentation mode hides the control bar (projector shows only the board)
   const [presentationMode, setPresentationMode] = useState(false)
@@ -103,12 +110,16 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
             status?: GameStatus
             starts_at?: string | null
             settings?: { time_limit_minutes?: number | null }
+            paused_ms?: number | string | null
+            paused_at?: string | null
           }
           if (updated.status) setStatus(updated.status)
           if (updated.starts_at !== undefined) setStartsAt(updated.starts_at)
           if (updated.settings?.time_limit_minutes !== undefined) {
             setTimeLimit(updated.settings.time_limit_minutes)
           }
+          if (updated.paused_ms !== undefined && updated.paused_ms !== null) setPausedMs(Number(updated.paused_ms) || 0)
+          if (updated.paused_at !== undefined) setPausedAt(updated.paused_at)
         }
       )
       .subscribe()
@@ -117,6 +128,37 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
       supabase.removeChannel(channel)
     }
   }, [game.id])
+
+  // Polling safety net: another device (the facilitator's laptop) may pause,
+  // resume, extend or finish while this screen's realtime channel is down.
+  useEffect(() => {
+    if (status === "finished") return
+    let disposed = false
+    const sync = async () => {
+      try {
+        const res = await fetch(`/api/play/status?game_code=${encodeURIComponent(game.game_code)}`, { cache: "no-store" })
+        if (!res.ok) return
+        const data = (await res.json()) as {
+          status: GameStatus | null
+          time_limit_minutes?: number | null
+          paused_ms?: number
+          paused_at?: string | null
+        }
+        if (disposed || !data.status) return
+        setStatus(data.status)
+        if (data.time_limit_minutes !== undefined) setTimeLimit(data.time_limit_minutes)
+        if (typeof data.paused_ms === "number") setPausedMs(data.paused_ms)
+        if (data.paused_at !== undefined) setPausedAt(data.paused_at)
+      } catch {
+        // The next round retries.
+      }
+    }
+    const interval = setInterval(sync, 10_000)
+    return () => {
+      disposed = true
+      clearInterval(interval)
+    }
+  }, [game.game_code, status])
 
   // Clock tick
   useEffect(() => {
@@ -149,17 +191,18 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
         ? { kind: "join" as const, url: playUrl }
         : null
 
-  // Class-wide clock anchored on starts_at (per-team timers may differ —
-  // this is the shared classroom time)
+  // Class-wide clock anchored on starts_at, without the pauses (teams that
+  // joined later have their own deadline; this is the shared classroom time)
   const clock = useMemo(() => {
     if (!startsAt) return null
     const startMs = new Date(startsAt).getTime()
-    const elapsedSec = Math.floor((nowTick - startMs) / 1000)
-    if (timeLimit) {
-      return { label: "Liko laiko", value: timeLimit * 60 - elapsedSec, countdown: true }
+    const state: GameClock = { limitMinutes: timeLimit && timeLimit > 0 ? timeLimit : null, pausedMs, pausedAt }
+    const left = secondsLeft(state, startMs, 0, nowTick)
+    if (left !== null) {
+      return { label: status === "paused" ? "Liko laiko (pauzė)" : "Liko laiko", value: left, countdown: true }
     }
-    return { label: "Bendras laikas", value: elapsedSec, countdown: false }
-  }, [startsAt, timeLimit, nowTick])
+    return { label: "Bendras laikas", value: secondsRunning(state, startMs, nowTick), countdown: false }
+  }, [startsAt, timeLimit, pausedMs, pausedAt, nowTick, status])
 
   const handleFullscreen = useCallback(() => {
     if (document.fullscreenElement) {
@@ -356,9 +399,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
             )}
             {(status === "active" || status === "paused") && (
               <>
-                <div className="[&_button]:border-white/20 [&_button]:text-white/80">
-                  <TimeControls gameId={game.id} currentTimeLimit={timeLimit} />
-                </div>
+                <TimeControls gameId={game.id} currentTimeLimit={timeLimit} variant="bar" onExtended={setTimeLimit} />
                 <div className="flex items-center gap-2 flex-1 min-w-[240px]">
                   <Megaphone className="h-4 w-4 text-white/40 shrink-0" />
                   <Input

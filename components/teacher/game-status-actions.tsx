@@ -59,7 +59,9 @@ export function GameStatusActions({
       })
 
       if (!res.ok) {
-        const err = await res.json()
+        const err = (await res.json().catch(() => ({}))) as { error?: string }
+        // Another device already changed the status: show the current one.
+        if (res.status === 409) router.refresh()
         throw new Error(err.error || "Nepavyko atnaujinti būsenos")
       }
 

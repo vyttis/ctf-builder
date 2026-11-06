@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { hashAnswer } from "@/lib/game/answer-hasher"
+import { hashAnswer, MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
 import { isLiveStatus, LIVE_EDIT_BLOCKED, samePrerequisites } from "@/lib/game/live-edit"
 import { NextResponse } from "next/server"
 import { z } from "zod"
@@ -13,7 +13,11 @@ const updateChallengeSchema = z.object({
   description: z.string().optional(),
   type: z.enum(["text", "number", "multiple_choice"]).optional(),
   points: z.number().min(1).max(1000).optional(),
-  correct_answer: z.string().min(1).optional(),
+  correct_answer: z
+    .string()
+    .min(1)
+    .max(MAX_ANSWER_LENGTH, `Atsakymas gali būti iki ${MAX_ANSWER_LENGTH} ženklų`)
+    .optional(),
   hints: z.array(z.string()).optional(),
   options: z.array(z.string()).nullable().optional(),
   order_index: z.number().optional(),

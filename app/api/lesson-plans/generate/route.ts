@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { checkAiAllowance, enterAiContext } from "@/lib/ai/usage"
 import { friendlyAiError } from "@/lib/ai/error-message"
 import { NextResponse } from "next/server"
 import { buildLessonPlanSystemPrompt, buildLessonPlanUserMessage } from "@/lib/ai/lesson-plan-prompt"
@@ -83,6 +84,13 @@ export async function POST(request: Request) {
         { status: 429, headers: { "Retry-After": "60" } }
       )
     }
+    // Monthly DI limits (personal and platform budget); every model call
+    // from here on is recorded for this action.
+    const allowance = await checkAiAllowance(user.id, "lesson-plans/generate")
+    if (!allowance.ok) {
+      return NextResponse.json({ error: allowance.message, code: allowance.code }, { status: 429 })
+    }
+    enterAiContext(allowance.ctx)
 
     let body
     try {
