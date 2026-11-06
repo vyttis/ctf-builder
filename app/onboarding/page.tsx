@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { SteamLogo } from "@/components/steam-logo"
 import { OnboardingForm } from "./onboarding-form"
 
-export const metadata: Metadata = { title: "Užbaikite registraciją | KU STEAM pamokos" }
+export const metadata: Metadata = { title: "Užbaikite registraciją" }
 export const dynamic = "force-dynamic"
 
 // First sign-in after approval: the facilitator checks the details from the

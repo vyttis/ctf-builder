@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { StatsCards } from "@/components/admin/stats-cards"
@@ -17,6 +18,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+
+export const metadata: Metadata = { title: "Administravimas" }
 
 interface PendingLibraryItem {
   id: string
@@ -164,7 +167,7 @@ export default async function AdminDashboardPage() {
                         {user.full_name || user.email}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(user.created_at).toLocaleDateString("lt-LT")}
+                        {new Date(user.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}
                       </p>
                     </div>
                   </div>
@@ -218,7 +221,7 @@ export default async function AdminDashboardPage() {
                       <Clock className="h-3 w-3" />
                       {item.profiles?.full_name || item.profiles?.email || "-"}
                       {" · "}
-                      {new Date(item.created_at).toLocaleDateString("lt-LT")}
+                      {new Date(item.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}
                     </p>
                   </div>
                   <Badge

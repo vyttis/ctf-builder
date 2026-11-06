@@ -281,7 +281,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
 
   function formatTimestamp(ts: string) {
     const date = new Date(ts)
-    return date.toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    return date.toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Europe/Vilnius" })
   }
 
   function getIcon(type: ActivityEvent["type"]) {

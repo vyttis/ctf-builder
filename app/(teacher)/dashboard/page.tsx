@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { withChallengeCount } from "@/lib/game/challenge-count"
 import { GamesGrid } from "@/components/teacher/games-grid"
@@ -9,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Gamepad2, GraduationCap, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+
+export const metadata: Metadata = { title: "Mano veiklos" }
 
 export default async function DashboardPage() {
   const supabase = await createClient()

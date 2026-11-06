@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { GameStatus, GameSettings, Challenge, LibraryItemStatus } from "@/types/game"
@@ -30,6 +31,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+
+export const metadata: Metadata = { title: "Veikla" }
 
 const LIBRARY_STATUS_BADGES: Record<
   LibraryItemStatus,
@@ -242,7 +245,7 @@ export default async function GameDetailPage(
         <div className="flex justify-between">
           <span className="text-muted-foreground">Sukurtas</span>
           <span className="text-steam-dark font-medium">
-            {new Date(game.created_at).toLocaleDateString("lt-LT")}
+            {new Date(game.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}
           </span>
         </div>
         <div className="flex justify-between">
@@ -422,6 +425,15 @@ export default async function GameDetailPage(
             <DraftReadinessChecklist
               challengeCount={challenges.length}
               tasksNeedingAnswer={tasksNeedingAnswer.length}
+              tasksWithoutText={(challenges || []).filter((c) => !(c.description ?? "").trim()).length}
+              tasksNeedingReview={
+                (challenges || []).filter(
+                  (c) =>
+                    c.generated_by_di &&
+                    !c.needs_answer &&
+                    (c.verification_verdict === "uncertain" || c.verification_verdict === "fail")
+                ).length
+              }
               hasDescription={!!game.description}
               hasTimeLimit={!!settings?.time_limit_minutes}
             />

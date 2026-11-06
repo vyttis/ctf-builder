@@ -29,7 +29,7 @@ function VerdictBadge({ verdict }: { verdict?: VerificationVerdict }) {
   if (!verdict) return null
   const config = {
     pass: {
-      label: "Patikrinta",
+      label: "DI patikrino",
       className: "bg-primary/10 text-primary-ink border-primary/20",
       Icon: ShieldCheck,
     },

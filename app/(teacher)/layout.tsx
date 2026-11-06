@@ -49,6 +49,12 @@ export default async function TeacherLayout({
 
   return (
     <div className="min-h-screen bg-muted">
+      <a
+        href="#turinys"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-steam-dark focus:shadow-lg focus:ring-2 focus:ring-ring"
+      >
+        Praleisti į turinį
+      </a>
       <TeacherNav
         email={user.email || ""}
         fullName={profile?.full_name || ""}
@@ -61,7 +67,7 @@ export default async function TeacherLayout({
             : null
         }
       />
-      <main className="container mx-auto px-4 py-6 max-w-6xl">
+      <main id="turinys" tabIndex={-1} className="container mx-auto px-4 py-6 max-w-6xl focus:outline-none">
         <TeacherErrorBoundary>{children}</TeacherErrorBoundary>
       </main>
     </div>

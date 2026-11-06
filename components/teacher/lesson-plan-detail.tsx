@@ -214,7 +214,7 @@ export function LessonPlanDetail({ plan: initialPlan, openConvert = false }: Les
           <div className="flex items-center gap-2 mb-2">
             <Badge variant={status.variant}>{status.label}</Badge>
             <span className="text-xs text-muted-foreground">
-              {new Date(plan.created_at).toLocaleDateString("lt-LT")}
+              {new Date(plan.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}
             </span>
           </div>
           {editing ? (

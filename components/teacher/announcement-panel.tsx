@@ -30,7 +30,7 @@ function formatRelativeTime(timestamp: string): string {
   if (diffSec < 60) return "ką tik"
   if (diffMin < 60) return `prieš ${diffMin} min.`
   if (diffHours < 24) return `prieš ${diffHours} val.`
-  return new Date(timestamp).toLocaleDateString("lt-LT")
+  return new Date(timestamp).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })
 }
 
 export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {

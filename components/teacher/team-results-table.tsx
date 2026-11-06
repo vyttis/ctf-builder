@@ -40,8 +40,8 @@ export function TeamResultsTable({
         `${t.solved} / ${totalChallenges}`,
         t.attempts,
         t.hints_used,
-        new Date(t.joined_at).toLocaleString("lt-LT"),
-        t.last_activity ? new Date(t.last_activity).toLocaleString("lt-LT") : "-",
+        new Date(t.joined_at).toLocaleString("lt-LT", { timeZone: "Europe/Vilnius" }),
+        t.last_activity ? new Date(t.last_activity).toLocaleString("lt-LT", { timeZone: "Europe/Vilnius" }) : "-",
       ])
     )
   }
@@ -129,6 +129,7 @@ export function TeamResultsTable({
                           day: "2-digit",
                           hour: "2-digit",
                           minute: "2-digit",
+                          timeZone: "Europe/Vilnius",
                         })
                       : "-"}
                   </td>

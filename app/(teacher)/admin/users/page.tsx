@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
@@ -8,6 +9,8 @@ import { loadAiSettings } from "@/lib/ai/usage"
 import { UsersManager } from "@/components/admin/users-manager"
 import { Button } from "@/components/ui/button"
 import { redirect } from "next/navigation"
+
+export const metadata: Metadata = { title: "Vartotojai" }
 
 export const dynamic = "force-dynamic"
 

@@ -150,7 +150,7 @@ export default function AdminLibraryPage() {
                   )}
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {new Date(item.created_at).toLocaleDateString("lt-LT")}
+                    {new Date(item.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}
                   </span>
                 </div>
 

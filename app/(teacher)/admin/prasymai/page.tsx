@@ -8,7 +8,7 @@ import { AccessRequestsPanel } from "@/components/admin/access-requests-panel"
 import { RequestLinksPanel } from "@/components/admin/request-links-panel"
 import { ArrowLeft } from "lucide-react"
 
-export const metadata: Metadata = { title: "Paskyrų prašymai | KU STEAM pamokos" }
+export const metadata: Metadata = { title: "Paskyrų prašymai" }
 
 // Only the super admin decides on accounts.
 export default async function AccessRequestsPage() {

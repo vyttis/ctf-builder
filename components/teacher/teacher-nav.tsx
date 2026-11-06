@@ -6,7 +6,7 @@ import { SteamLogo } from "@/components/steam-logo"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { LogOut, Gamepad2, GraduationCap, BookOpen, Shield, Menu } from "lucide-react"
 import Link from "next/link"
 import { UserRole } from "@/types/game"
@@ -56,44 +56,51 @@ export function TeacherNav({
     router.refresh()
   }
 
+  const pathname = usePathname()
+  const links = [
+    { href: "/lesson-plans", label: "Pamokų planai", icon: GraduationCap },
+    { href: "/dashboard", label: "Mano veiklos", icon: Gamepad2 },
+    { href: "/library", label: "Biblioteka", icon: BookOpen },
+    ...(canViewAdminDashboard(role)
+      ? [{ href: "/admin", label: "Administravimas", icon: Shield, badge: pendingRequests }]
+      : []),
+  ] as { href: string; label: string; icon: typeof Shield; badge?: number }[]
+  // Activities (/games/...) belong to "Mano veiklos".
+  const isCurrent = (href: string) =>
+    pathname === href ||
+    pathname.startsWith(`${href}/`) ||
+    (href === "/dashboard" && pathname.startsWith("/games"))
+
   return (
-    <nav className="bg-white border-b border-border/50 sticky top-0 z-50 backdrop-blur-xl bg-white/80 print:hidden">
+    <nav aria-label="Pagrindinis meniu" className="bg-white border-b border-border/50 sticky top-0 z-50 backdrop-blur-xl bg-white/80 print:hidden">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex items-center justify-between h-16">
           {/* Left side */}
           <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center shrink-0">
+            <Link href="/dashboard" className="flex items-center shrink-0" aria-label="Mano veiklos, pradžia">
               <SteamLogo size="small" />
             </Link>
 
             <div className="hidden lg:flex items-center gap-1">
-              <Link href="/lesson-plans">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
-                  <GraduationCap className="h-4 w-4" />
-                  Pamokų planai
+              {links.map((link) => (
+                <Button
+                  key={link.href}
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className={`gap-2 ${
+                    isCurrent(link.href)
+                      ? "bg-muted text-steam-dark"
+                      : "text-muted-foreground hover:text-steam-dark"
+                  }`}
+                >
+                  <Link href={link.href} aria-current={isCurrent(link.href) ? "page" : undefined}>
+                    <link.icon className="h-4 w-4" aria-hidden="true" />
+                    {link.label}
+                    {link.badge !== undefined && <PendingBadge count={link.badge} />}
+                  </Link>
                 </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
-                  <Gamepad2 className="h-4 w-4" />
-                  Mano veiklos
-                </Button>
-              </Link>
-              <Link href="/library">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Biblioteka
-                </Button>
-              </Link>
-              {canViewAdminDashboard(role) && (
-                <Link href="/admin">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
-                    <Shield className="h-4 w-4" />
-                    Administravimas
-                    <PendingBadge count={pendingRequests} />
-                  </Button>
-                </Link>
-              )}
+              ))}
             </div>
           </div>
 
@@ -101,20 +108,17 @@ export function TeacherNav({
               running under the logout button when the LIVE badge is shown. */}
           <div className="flex min-w-0 items-center gap-3">
             {activeGame && (
-              <Link
-                href={`/games/${activeGame.id}/live`}
-                className="hidden sm:block min-w-0"
-                title={activeGame.title}
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="hidden sm:inline-flex max-w-full min-w-0 gap-2 border-accent/40 text-accent-ink hover:bg-accent/5 font-semibold"
               >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="max-w-full min-w-0 gap-2 border-accent/40 text-accent-ink hover:bg-accent/5 font-semibold"
-                >
+                <Link href={`/games/${activeGame.id}/live`} title={activeGame.title}>
                   <LiveDot paused={activeGame.paused} />
                   <span className="truncate">{liveLabel(activeGame)}</span>
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
             <div className="hidden xl:flex min-w-0 items-center gap-3">
               {avatarUrl ? (
@@ -176,45 +180,37 @@ export function TeacherNav({
 
             {/* Live game shortcut */}
             {activeGame && (
-              <Link href={`/games/${activeGame.id}/live`} onClick={() => setMobileMenuOpen(false)}>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-3 h-11 border-accent/40 text-accent-ink font-semibold"
-                >
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start gap-3 h-11 border-accent/40 text-accent-ink font-semibold"
+              >
+                <Link href={`/games/${activeGame.id}/live`} onClick={() => setMobileMenuOpen(false)}>
                   <LiveDot paused={activeGame.paused} />
                   {liveLabel(activeGame)}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
 
             {/* Nav links */}
-            <Link href="/lesson-plans" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-11 text-steam-dark">
-                <GraduationCap className="h-4 w-4" />
-                Pamokų planai
+            {links.map((link) => (
+              <Button
+                key={link.href}
+                asChild
+                variant="ghost"
+                className={`w-full justify-start gap-3 h-11 text-steam-dark ${isCurrent(link.href) ? "bg-muted" : ""}`}
+              >
+                <Link
+                  href={link.href}
+                  aria-current={isCurrent(link.href) ? "page" : undefined}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <link.icon className="h-4 w-4" aria-hidden="true" />
+                  {link.label}
+                  {link.badge !== undefined && <PendingBadge count={link.badge} />}
+                </Link>
               </Button>
-            </Link>
-            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-11 text-steam-dark">
-                <Gamepad2 className="h-4 w-4" />
-                Mano veiklos
-              </Button>
-            </Link>
-            <Link href="/library" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-11 text-steam-dark">
-                <BookOpen className="h-4 w-4" />
-                Biblioteka
-              </Button>
-            </Link>
-            {canViewAdminDashboard(role) && (
-              <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-3 h-11 text-steam-dark">
-                  <Shield className="h-4 w-4" />
-                  Administravimas
-                  <PendingBadge count={pendingRequests} />
-                </Button>
-              </Link>
-            )}
+            ))}
 
             <div className="pt-3 mt-3 border-t border-border/50">
               <Button
@@ -236,9 +232,9 @@ export function TeacherNav({
   )
 }
 
-/** "LIVE" only while a game runs; a paused game says so and does not pulse. */
+/** "Vyksta" only while an activity runs; a paused one says so and does not pulse. */
 function liveLabel(game: { title: string; paused?: boolean }) {
-  return `${game.paused ? "Pristabdyta" : "LIVE"}: ${game.title}`
+  return `${game.paused ? "Pristabdyta" : "Vyksta"}: ${game.title}`
 }
 
 function LiveDot({ paused }: { paused?: boolean }) {

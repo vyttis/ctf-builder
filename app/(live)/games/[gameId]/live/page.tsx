@@ -1,8 +1,11 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
 import { LiveView } from "@/components/teacher/live-view"
 import type { GameSettings, GameStatus } from "@/types/game"
 import { activityRequestToken } from "@/lib/access/tokens"
+
+export const metadata: Metadata = { title: "Vykstanti veikla" }
 
 export default async function LiveViewPage(
   props: {
