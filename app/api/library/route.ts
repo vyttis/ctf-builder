@@ -140,7 +140,7 @@ export async function POST(request: Request) {
     // Verify game ownership
     const { data: game, error: gameError } = await supabase
       .from("games")
-      .select("*, challenges(*)")
+      .select("*, challenges(title, description, type, points, hints, options, order_index, image_url, maps_url)")
       .eq("id", parsed.data.game_id)
       .eq("teacher_id", user.id)
       .single()

@@ -89,7 +89,7 @@ export async function POST(request: Request) {
       // that's correctly solving a fast streak of challenges.
       supabase
         .from("submissions")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("team_id", team.id)
         .eq("is_correct", false)
         .gte("attempted_at", oneMinuteAgo),
@@ -260,7 +260,7 @@ export async function POST(request: Request) {
       try {
         const { count: totalChallenges } = await supabase
           .from("challenges")
-          .select("*", { count: "exact", head: true })
+          .select("id", { count: "exact", head: true })
           .eq("game_id", team.game_id)
 
         const achievements = await evaluateAchievements(supabase, {
