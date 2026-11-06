@@ -486,6 +486,14 @@ describe("budget alerts", () => {
 })
 
 describe("spend cache", () => {
+  it("counts only the requested month, also when the next one has begun", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addCall(db, { cost_usd: 2, created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addCall(db, { cost_usd: 5, created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    expect(await monthSpendUsd(db as never, lastDay, true)).toBeCloseTo(2, 10)
+  })
+
   it("does not lose a cost recorded while a spend scan was running", async () => {
     const db = setup()
     addCall(db, { cost_usd: 1 })

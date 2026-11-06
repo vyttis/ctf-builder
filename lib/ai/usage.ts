@@ -106,7 +106,11 @@ export async function monthSpendUsd(admin: SupabaseClient, now = new Date(), fre
   }
   const generation = spendGeneration
   const rows = await allRowsById<{ id: number; cost_usd: number | string }>(() =>
-    admin.from("ai_usage").select("id, cost_usd").gte("created_at", new Date(month).toISOString()),
+    admin
+      .from("ai_usage")
+      .select("id, cost_usd")
+      .gte("created_at", new Date(month).toISOString())
+      .lt("created_at", nextMonthStart(now).toISOString()),
   )
   let total = 0
   for (const row of rows) total += Number(row.cost_usd)

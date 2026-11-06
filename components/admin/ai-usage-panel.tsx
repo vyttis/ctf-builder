@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -47,16 +47,39 @@ export function AiUsagePanel() {
   const [limitDrafts, setLimitDrafts] = useState<Record<string, string>>({})
   const [savingUser, setSavingUser] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
+  // The last values read from the server. A field whose draft still equals
+  // its server value is not being edited and follows a reload; a field that
+  // was changed keeps the unsaved edit, except the one that was just saved.
+  const serverRef = useRef<UsageResponse | null>(null)
+
+  const load = useCallback(async (saved?: { userId?: string; settings?: boolean }) => {
     try {
       const res = await fetch("/api/admin/ai-usage", { cache: "no-store" })
       const body = (await res.json()) as UsageResponse & { error?: string }
       if (!res.ok) throw new Error(body.error ?? "Nepavyko gauti duomenų.")
+      const prev = serverRef.current
+      serverRef.current = body
       setData(body)
-      setBudget(String(body.settings.ai_monthly_budget_usd))
-      setUserLimit(String(body.settings.ai_user_monthly_limit))
-      setAlertPct(String(Math.round(body.settings.ai_budget_alert_ratio * 100)))
-      setLimitDrafts(Object.fromEntries(body.users.map((u) => [u.userId, u.limit === null ? "" : String(u.limit)])))
+
+      const follow = (current: string, before: string | undefined, next: string, justSaved: boolean) =>
+        justSaved || before === undefined || current === before ? next : current
+      const s = body.settings
+      const ps = prev?.settings
+      const pct = (r: number) => String(Math.round(r * 100))
+      setBudget((cur) => follow(cur, ps && String(ps.ai_monthly_budget_usd), String(s.ai_monthly_budget_usd), !!saved?.settings))
+      setUserLimit((cur) => follow(cur, ps && String(ps.ai_user_monthly_limit), String(s.ai_user_monthly_limit), !!saved?.settings))
+      setAlertPct((cur) => follow(cur, ps && pct(ps.ai_budget_alert_ratio), pct(s.ai_budget_alert_ratio), !!saved?.settings))
+
+      const limitText = (limit: number | null) => (limit === null ? "" : String(limit))
+      const before = new Map((prev?.users ?? []).map((u) => [u.userId, limitText(u.limit)]))
+      setLimitDrafts((drafts) =>
+        Object.fromEntries(
+          body.users.map((u) => [
+            u.userId,
+            follow(drafts[u.userId] ?? "", before.get(u.userId), limitText(u.limit), saved?.userId === u.userId),
+          ])
+        )
+      )
     } catch (e) {
       setError(e instanceof Error ? e.message : "Nepavyko gauti duomenų.")
     }
@@ -82,7 +105,7 @@ export function AiUsagePanel() {
       const body = (await res.json().catch(() => ({}))) as { error?: string }
       if (!res.ok) throw new Error(body.error ?? "Nepavyko išsaugoti.")
       toast({ title: "Nustatymai išsaugoti" })
-      await load()
+      await load({ settings: true })
     } catch (err) {
       toast({ title: "Klaida", description: err instanceof Error ? err.message : "Nepavyko.", variant: "destructive" })
     } finally {
@@ -102,7 +125,7 @@ export function AiUsagePanel() {
       const body = (await res.json().catch(() => ({}))) as { error?: string }
       if (!res.ok) throw new Error(body.error ?? "Nepavyko išsaugoti.")
       toast({ title: "Limitas išsaugotas" })
-      await load()
+      await load({ userId })
     } catch (err) {
       toast({ title: "Klaida", description: err instanceof Error ? err.message : "Nepavyko.", variant: "destructive" })
     } finally {
