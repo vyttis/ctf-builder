@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { hashAnswer } from "@/lib/game/answer-hasher"
+import { isLiveStatus, LIVE_EDIT_BLOCKED } from "@/lib/game/live-edit"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -51,12 +52,12 @@ async function verifyChallengeOwnership(
 
   const { data: game } = await supabase
     .from("games")
-    .select("id")
+    .select("id, status")
     .eq("id", challenge.game_id)
     .eq("teacher_id", userId)
     .single()
 
-  return game ? { type: challenge.type as string | null } : null
+  return game ? { type: challenge.type as string | null, gameStatus: game.status as string } : null
 }
 
 export async function PATCH(request: Request, props: { params: Promise<{ challengeId: string }> }) {
@@ -152,6 +153,9 @@ export async function DELETE(_request: Request, props: { params: Promise<{ chall
       { error: "Užduotis nerasta arba neturite teisės" },
       { status: 404 }
     )
+  }
+  if (isLiveStatus(owned.gameStatus)) {
+    return NextResponse.json({ error: LIVE_EDIT_BLOCKED.delete, code: "live" }, { status: 409 })
   }
 
   const { error } = await supabase

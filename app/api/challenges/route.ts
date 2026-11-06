@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { hashAnswer } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { isLiveStatus, LIVE_EDIT_BLOCKED } from "@/lib/game/live-edit"
 
 // Safe columns to return (never include answer_hash)
 const MINIMAL_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
@@ -86,16 +87,20 @@ export async function POST(request: Request) {
   // Verify game ownership
   const { data: game } = await supabase
     .from("games")
-    .select("id")
+    .select("id, status")
     .eq("id", parsed.data.game_id)
     .eq("teacher_id", user.id)
     .single()
 
   if (!game) {
     return NextResponse.json(
-      { error: "Žaidimas nerastas" },
+      { error: "Veikla nerasta" },
       { status: 404 }
     )
+  }
+  // Participants would see a task nobody can solve.
+  if (parsed.data.needs_answer && isLiveStatus(game.status)) {
+    return NextResponse.json({ error: LIVE_EDIT_BLOCKED.needsAnswer, code: "live" }, { status: 409 })
   }
 
   // Get next order_index from max(order_index)+1 — a row count collides with
