@@ -681,6 +681,7 @@ export default function PlayPage() {
 
     setLoading(true)
     setFeedback(null)
+    const task = challenges[currentIndex]
 
     try {
       const res = await fetch("/api/submissions", {
@@ -688,9 +689,9 @@ export default function PlayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_token: session.session_token,
-          challenge_id: challenges[currentIndex].id,
+          challenge_id: task.id,
           answer:
-            challenges[currentIndex].type === "number"
+            task.type === "number"
               ? normalizeNumericAnswer(answer)
               : answer.trim(),
           hints_used: revealedHintCount,
@@ -728,6 +729,19 @@ export default function PlayPage() {
       const result: ExtendedSubmissionResult & {
         achievements?: { type: AchievementType; metadata?: Record<string, unknown> }[]
       } = await res.json()
+
+      // A reload may have replaced the open task while the answer was on its
+      // way: the points still count, but the result belongs to that task,
+      // not to the one now on screen.
+      if (challengesRef.current[currentIndexRef.current]?.id !== task.id) {
+        if (result.is_correct) {
+          setTotalPoints((points) => Math.max(points, result.total_points ?? points + result.points_awarded))
+          if (challengesRef.current.some((c) => c.id === task.id)) {
+            setSolvedIds((prev) => new Set(prev).add(task.id))
+          }
+        }
+        return
+      }
       setFeedback(result)
 
       // Show achievement toast if earned
@@ -740,7 +754,7 @@ export default function PlayPage() {
         setTotalPoints(result.total_points || totalPoints + result.points_awarded)
         setSolvedIds((prev) => {
           const next = new Set(Array.from(prev))
-          next.add(challenges[currentIndex].id)
+          next.add(task.id)
           return next
         })
         setAnswer("")
