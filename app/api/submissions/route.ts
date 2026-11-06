@@ -3,6 +3,7 @@ import { verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { pluralizeLt } from "@/lib/utils"
 import { NextResponse } from "next/server"
+import { clockFromRow, deadlineMs } from "@/lib/game/clock"
 import { z } from "zod"
 
 const submitAnswerSchema = z.object({
@@ -34,31 +35,22 @@ export async function POST(request: Request) {
     const supabase = createAdminClient()
 
     // Validate team via session_token first — every other query depends on team.id/game_id.
-    // started_at drives the server-side time-limit check below; tolerate its
-    // absence (migration 00023 not applied yet) with a column-less retry.
-    let team: {
-      id: string
-      game_id: string
-      total_points: number
-      current_challenge_index: number
-      started_at?: string | null
-    } | null = null
-    {
-      const withStart = await supabase
-        .from("teams")
-        .select("id, game_id, total_points, current_challenge_index, started_at")
-        .eq("session_token", parsed.data.session_token)
-        .maybeSingle()
-      if (withStart.error?.code === "42703") {
-        const legacy = await supabase
-          .from("teams")
-          .select("id, game_id, total_points, current_challenge_index")
-          .eq("session_token", parsed.data.session_token)
-          .maybeSingle()
-        team = legacy.data
-      } else {
-        team = withStart.data
-      }
+    // "*" (server only) so the clock columns are read when they exist:
+    // started_at (00023) and pause_offset_ms (20261106150000) drive the
+    // deadline check below, which is skipped on a database without them.
+    const { data: team } = (await supabase
+      .from("teams")
+      .select("*")
+      .eq("session_token", parsed.data.session_token)
+      .maybeSingle()) as {
+      data: {
+        id: string
+        game_id: string
+        total_points: number
+        current_challenge_index: number
+        started_at?: string | null
+        pause_offset_ms?: number | string | null
+      } | null
     }
 
     if (!team) {
@@ -75,7 +67,7 @@ export async function POST(request: Request) {
     const [gameRes, existingSolveRes, recentAttemptsRes, challengeRes, hintRevealsRes] = await Promise.all([
       supabase
         .from("games")
-        .select("id, status, settings")
+        .select("*")
         .eq("id", team.game_id)
         .single(),
       supabase
@@ -114,12 +106,12 @@ export async function POST(request: Request) {
 
     if (!game || game.status !== "active") {
       const statusMessages: Record<string, string> = {
-        draft: "Žaidimas dar neprasidėjo.",
-        paused: "Žaidimas pristabdytas. Palaukite, kol mokytojas tęs.",
-        finished: "Žaidimas baigtas!",
+        draft: "Veikla dar neprasidėjo.",
+        paused: "Veikla pristabdyta. Palaukite, kol vedėjas tęs.",
+        finished: "Veikla baigta.",
       }
       return NextResponse.json(
-        { error: statusMessages[game?.status ?? ""] || "Žaidimas nepasiekiamas" },
+        { error: statusMessages[game?.status ?? ""] || "Veikla nepasiekiama." },
         { status: 403 }
       )
     }
@@ -145,16 +137,18 @@ export async function POST(request: Request) {
     // Server-side time limit: reject submissions past the team's deadline.
     // Anchored on teams.started_at (stamped by /api/play/start), not a
     // client clock, so clearing localStorage / switching devices can't buy
-    // extra time. Skipped when there's no limit or the team hasn't started
-    // (started_at NULL, or column absent on an unmigrated DB).
-    const timeLimitMinutes =
-      typeof gameSettings.time_limit_minutes === "number"
-        ? gameSettings.time_limit_minutes
-        : null
-    if (timeLimitMinutes && team.started_at) {
-      const deadlineMs =
-        new Date(team.started_at).getTime() + timeLimitMinutes * 60_000
-      if (Date.now() > deadlineMs) {
+    // extra time. Pauses that fell inside the team's run are added back
+    // (lib/game/clock.ts). Skipped when there's no limit or the team hasn't
+    // started.
+    if (team.started_at) {
+      const now = Date.now()
+      const deadline = deadlineMs(
+        clockFromRow(game as Parameters<typeof clockFromRow>[0]),
+        new Date(team.started_at).getTime(),
+        Number(team.pause_offset_ms ?? 0),
+        now
+      )
+      if (deadline !== null && now > deadline) {
         return NextResponse.json(
           { error: "Laikas baigėsi. Rezultatai išsaugoti." },
           { status: 403 }

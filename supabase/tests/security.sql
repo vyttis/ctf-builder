@@ -239,3 +239,104 @@ SELECT public.t_ok($q$INSERT INTO public.ai_usage (user_id, request_id, endpoint
 SELECT public.t_rows('SELECT * FROM public.platform_settings', 1);
 RESET ROLE;
 
+
+-- Pause clock, status rules and time extensions (20261106150000).
+INSERT INTO public.games (id, teacher_id, title, game_code, status, settings) VALUES
+  ('10000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-00000000000a', 'Laikas', 'CLOCK1', 'draft', '{"time_limit_minutes": 30}'),
+  ('10000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-00000000000a', 'Be laiko', 'CLOCK2', 'active', '{}');
+
+SET ROLE anon;
+SELECT set_config('request.jwt.claim.sub', '', false);
+SELECT public.t_denied($q$SELECT public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active')$q$);
+SELECT public.t_denied($q$SELECT public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5)$q$);
+RESET ROLE;
+
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.role', 'authenticated', false);
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+DO $$
+BEGIN
+  PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+  RAISE EXCEPTION 'another teacher must not change this activity';
+EXCEPTION WHEN SQLSTATE 'P0002' THEN
+  NULL;
+END $$;
+
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+DO $$
+DECLARE g public.games;
+BEGIN
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+  IF g.status <> 'active' OR g.starts_at IS NULL THEN
+    RAISE EXCEPTION 'starting must set the status and starts_at, got % %', g.status, g.starts_at;
+  END IF;
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'paused');
+  IF g.paused_at IS NULL OR g.paused_ms <> 0 THEN
+    RAISE EXCEPTION 'pausing must mark paused_at, got % %', g.paused_at, g.paused_ms;
+  END IF;
+  -- The same status again changes nothing.
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'paused');
+  IF g.paused_at IS NULL THEN
+    RAISE EXCEPTION 'a repeated pause must keep the pause running';
+  END IF;
+END $$;
+RESET ROLE;
+
+-- Two minutes of pause pass.
+UPDATE public.games SET paused_at = now() - interval '2 minutes' WHERE id = '10000000-0000-0000-0000-0000000000c1';
+
+SET ROLE authenticated;
+DO $$
+DECLARE g public.games;
+BEGIN
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+  IF g.paused_at IS NOT NULL OR g.paused_ms NOT BETWEEN 119000 AND 125000 THEN
+    RAISE EXCEPTION 'resuming must add the pause to paused_ms, got % %', g.paused_at, g.paused_ms;
+  END IF;
+
+  g := public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
+  g := public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 THEN
+    RAISE EXCEPTION 'two extensions of 5 must give 40, got %', g.settings ->> 'time_limit_minutes';
+  END IF;
+
+  BEGIN
+    PERFORM public.extend_game_time('10000000-0000-0000-0000-0000000000c2', 5);
+    RAISE EXCEPTION 'an activity without a limit must not get one by extending';
+  EXCEPTION WHEN SQLSTATE 'KS422' THEN
+    NULL;
+  END;
+
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'finished');
+  IF g.status <> 'finished' OR g.finished_at IS NULL THEN
+    RAISE EXCEPTION 'finishing must set finished_at';
+  END IF;
+  BEGIN
+    PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+    RAISE EXCEPTION 'a finished activity must not be reopened';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  BEGIN
+    PERFORM public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
+    RAISE EXCEPTION 'a finished activity must not get more time';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+END $$;
+RESET ROLE;
+
+-- A blocked account cannot change its activity through the functions either.
+UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-00000000000a';
+SET ROLE authenticated;
+DO $$
+BEGIN
+  PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c2', 'paused');
+  IF (SELECT status FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c2') = 'paused' THEN
+    RAISE EXCEPTION 'a blocked account must not pause its activity';
+  END IF;
+EXCEPTION WHEN SQLSTATE 'P0002' OR insufficient_privilege THEN
+  NULL;
+END $$;
+RESET ROLE;
+UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a';

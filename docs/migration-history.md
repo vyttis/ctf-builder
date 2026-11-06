@@ -68,7 +68,7 @@ be `_` ir aprašymo). Po 1 žingsnio galutinis sąrašas:
 for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
          00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
          00021 00022 00023 00024 00025 00026 \
-         20261106120000 20261106130000 20261106140000; do
+         20261106120000 20261106130000 20261106140000 20261106150000; do
   supabase migration repair --status applied "$v"
 done
 ```
@@ -179,6 +179,35 @@ select
 ```
 
 Tikimasi: `role_checks_status` `true`, `profile_policy` 1, `admin_policies` 4.
+
+## 2026-11-06: pauzė sustabdo laiką, būsenų taisyklės
+
+Failas `supabase/migrations/20261106150000_pause_clock_and_status_rules.sql`,
+grąžinimas `supabase/rollback/20261106150000_pause_clock_and_status_rules.sql`.
+Prideda `games.paused_at`, `games.paused_ms`, `teams.pause_offset_ms` ir dvi
+funkcijas: `set_game_status()` (būsena keičiasi tik pirmyn, pauzės laikas
+skaičiuojamas toje pačioje eilutės užraktoje) ir `extend_game_time()`
+(minutės pridedamos vienu sakiniu; veiklai be laiko limito atsisakoma).
+Esami duomenys nekeičiami. Abi funkcijos vykdomos kviečiančiojo teisėmis,
+todėl RLS taisyklės (savininkas, aktyvi paskyra) galioja kaip anksčiau.
+
+Taikymo tvarka: pirma migracija, tada kodas. Senas kodas su nauja schema
+veikia (nauji stulpeliai turi numatytąsias reikšmes, funkcijų jis nekviečia).
+
+Patikra po taikymo:
+
+```sql
+select
+  (select count(*) from information_schema.columns where table_schema = 'public'
+     and table_name = 'games' and column_name in ('paused_at', 'paused_ms')) as game_cols,
+  (select count(*) from information_schema.columns where table_schema = 'public'
+     and table_name = 'teams' and column_name = 'pause_offset_ms') as team_cols,
+  has_function_privilege('authenticated', 'public.set_game_status(uuid,text)', 'EXECUTE') as auth_status_fn,
+  has_function_privilege('anon', 'public.set_game_status(uuid,text)', 'EXECUTE') as anon_status_fn,
+  has_function_privilege('anon', 'public.extend_game_time(uuid,integer)', 'EXECUTE') as anon_extend_fn;
+```
+
+Tikimasi: `game_cols` 2, `team_cols` 1, `auth_status_fn` `true`, `anon_status_fn` `false`, `anon_extend_fn` `false`.
 
 ## Konvencija toliau
 

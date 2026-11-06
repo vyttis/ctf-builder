@@ -4,6 +4,7 @@ import { GameStatus, GameSettings, Challenge, LibraryItemStatus } from "@/types/
 import { computeDetailedStats } from "@/lib/game/detailed-stats"
 import { QRDisplay } from "@/components/teacher/qr-display"
 import { GameStatusActions } from "@/components/teacher/game-status-actions"
+import { GameStatusWatcher } from "@/components/teacher/game-status-watcher"
 import { GameDetailClient } from "@/components/teacher/game-detail-client"
 import { DraftReadinessChecklist } from "@/components/teacher/draft-readiness-checklist"
 import { TeamResultsTable } from "@/components/teacher/team-results-table"
@@ -289,6 +290,7 @@ export default async function GameDetailPage(
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <GameStatusWatcher gameCode={game.game_code} status={status} />
           <GameStatusActions
             gameId={game.id}
             status={status}

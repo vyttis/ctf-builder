@@ -77,8 +77,20 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
     )
   }
 
-  // If activating, check that at least 1 challenge exists
-  if (parsed.data.status === "active") {
+  const { data: current } = await supabase
+    .from("games")
+    .select("status, settings")
+    .eq("id", params.gameId)
+    .eq("teacher_id", user.id)
+    .maybeSingle()
+  if (!current) {
+    return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
+  }
+  const running = current.status === "active" || current.status === "paused"
+
+  // Readiness is checked when the activity starts, not when it resumes: a
+  // task added during a pause must not leave the activity stuck paused.
+  if (parsed.data.status === "active" && current.status === "draft") {
     const { count } = await supabase
       .from("challenges")
       .select("id", { count: "exact", head: true })
@@ -86,7 +98,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
 
     if (!count || count === 0) {
       return NextResponse.json(
-        { error: "Žaidimas turi turėti bent 1 užduotį" },
+        { error: "Veikla turi turėti bent 1 užduotį" },
         { status: 400 }
       )
     }
@@ -104,7 +116,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
       const titles = pendingTasks.map((t) => `„${t.title}“`).join(", ")
       return NextResponse.json(
         {
-          error: `Šios užduotys neturi nustatyto atsakymo: ${titles}. Nustatykite atsakymus prieš pradėdami žaidimą.`,
+          error: `Šios užduotys neturi nustatyto atsakymo: ${titles}. Nustatykite atsakymus prieš pradėdami veiklą.`,
           tasks_needing_answer: pendingTasks,
         },
         { status: 400 }
@@ -112,60 +124,66 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
     }
   }
 
-  // Build update payload carefully
   const updateData: Record<string, unknown> = {}
   if (parsed.data.title !== undefined) updateData.title = parsed.data.title
   if (parsed.data.description !== undefined) updateData.description = parsed.data.description
-  if (parsed.data.status !== undefined) updateData.status = parsed.data.status
 
-  // Anchor the class-wide clock on first activation (projector countdown)
-  if (parsed.data.status === "active") {
-    const { data: current } = await supabase
-      .from("games")
-      .select("starts_at")
-      .eq("id", params.gameId)
-      .eq("teacher_id", user.id)
-      .single()
-
-    if (current && !current.starts_at) {
-      updateData.starts_at = new Date().toISOString()
-    }
-  }
-
-  // Deep merge settings to avoid destroying unmentioned fields
+  // Deep merge settings to avoid destroying unmentioned fields. While the
+  // activity runs, the time limit changes only through "Pratęsti"
+  // (/extend): a builder tab saved with an older value must not undo an
+  // extension made meanwhile.
   if (parsed.data.settings) {
-    const { data: currentGame } = await supabase
-      .from("games")
-      .select("settings")
-      .eq("id", params.gameId)
-      .eq("teacher_id", user.id)
-      .single()
-
-    if (!currentGame) {
-      return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
-    }
-
-    const currentSettings = (currentGame.settings as Record<string, unknown>) || {}
-    updateData.settings = {
-      ...currentSettings,
-      ...parsed.data.settings,
-    }
+    const currentSettings = (current.settings as Record<string, unknown>) || {}
+    const incoming: Record<string, unknown> = { ...parsed.data.settings }
+    if (running) delete incoming.time_limit_minutes
+    updateData.settings = { ...currentSettings, ...incoming }
   }
 
-  if (Object.keys(updateData).length === 0) {
+  if (Object.keys(updateData).length === 0 && parsed.data.status === undefined) {
     return NextResponse.json({ error: "Nėra ką atnaujinti" }, { status: 400 })
   }
 
-  const { data, error } = await supabase
-    .from("games")
-    .update(updateData)
-    .eq("id", params.gameId)
-    .eq("teacher_id", user.id)
-    .select()
-    .single()
+  let data: unknown = null
+  if (Object.keys(updateData).length > 0) {
+    const { data: updated, error } = await supabase
+      .from("games")
+      .update(updateData)
+      .eq("id", params.gameId)
+      .eq("teacher_id", user.id)
+      .select()
+      .single()
+    if (error) {
+      return NextResponse.json({ error: "Nepavyko išsaugoti veiklos." }, { status: 500 })
+    }
+    data = updated
+  }
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  // Status moves only forward (draft -> active <-> paused -> finished); the
+  // database function also keeps the pause time and the class start.
+  if (parsed.data.status !== undefined) {
+    const { data: updated, error } = await supabase.rpc("set_game_status", {
+      p_game_id: params.gameId,
+      p_status: parsed.data.status,
+    })
+    if (error) {
+      if (error.code === "KS409") {
+        return NextResponse.json(
+          {
+            error:
+              current.status === "finished"
+                ? "Veikla jau baigta, jos atnaujinti negalima."
+                : "Šios būsenos pakeisti negalima. Atnaujinkite puslapį.",
+            code: "status_conflict",
+          },
+          { status: 409 }
+        )
+      }
+      if (error.code === "P0002") {
+        return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
+      }
+      return NextResponse.json({ error: "Nepavyko pakeisti būsenos." }, { status: 500 })
+    }
+    data = updated
   }
 
   return NextResponse.json(data)

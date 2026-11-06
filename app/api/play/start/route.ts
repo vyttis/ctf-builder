@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { clockFromRow, pauseOffsetAtStart } from "@/lib/game/clock"
 
 // POST /api/play/start — stamp the team's timed-run start, once.
 //
@@ -8,7 +9,8 @@ import { z } from "zod"
 // (/api/submissions). The client calls this when the team taps "Pradėti" (and
 // on reload of an already-started timed game) so the deadline is anchored on a
 // server timestamp the student can't tamper with. Idempotent: started_at is
-// only set while NULL, so repeated calls never reset the clock.
+// only set while NULL, so repeated calls never reset the clock. Returns the
+// start and the pause offset the participant countdown needs.
 const startSchema = z.object({
   session_token: z.string().min(1),
 })
@@ -29,39 +31,57 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient()
 
-    // Only stamp while NULL — never reset an already-running clock.
+    const { data: team, error: teamError } = await supabase
+      .from("teams")
+      .select("id, game_id, started_at, pause_offset_ms")
+      .eq("session_token", parsed.data.session_token)
+      .maybeSingle()
+    if (teamError) {
+      console.error("play/start error:", teamError.message)
+      return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
+    }
+    if (!team) return NextResponse.json({ error: "Komanda nerasta" }, { status: 404 })
+
+    if (team.started_at) {
+      return NextResponse.json({ started_at: team.started_at, pause_offset_ms: Number(team.pause_offset_ms ?? 0) })
+    }
+
+    // The team gets back only pauses that happen after it starts: remember
+    // how much pause time had passed by now.
+    const { data: game } = await supabase
+      .from("games")
+      .select("paused_ms, paused_at")
+      .eq("id", team.game_id)
+      .maybeSingle()
+    const now = Date.now()
+    const offset = game ? pauseOffsetAtStart(clockFromRow(game), now) : 0
+
+    // Only stamp while NULL: a second device or a reload never resets the clock.
     const { data: updated, error } = await supabase
       .from("teams")
-      .update({ started_at: new Date().toISOString() })
-      .eq("session_token", parsed.data.session_token)
+      .update({ started_at: new Date(now).toISOString(), pause_offset_ms: offset })
+      .eq("id", team.id)
       .is("started_at", null)
-      .select("started_at")
+      .select("started_at, pause_offset_ms")
       .maybeSingle()
-
     if (error) {
-      // Column missing (migration 00023 not applied yet) — degrade gracefully
-      // so the client falls back to its localStorage clock.
-      if (error.code === "42703") {
-        return NextResponse.json({ started_at: null })
-      }
       console.error("play/start error:", error.message)
       return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
     }
-
-    // updated is null when started_at was already set (the .is filter matched
-    // no row) — read the existing value so the client gets the authoritative
-    // start either way.
     if (updated?.started_at) {
-      return NextResponse.json({ started_at: updated.started_at })
+      return NextResponse.json({ started_at: updated.started_at, pause_offset_ms: Number(updated.pause_offset_ms ?? 0) })
     }
 
+    // Another request stamped it first: return that start.
     const { data: existing } = await supabase
       .from("teams")
-      .select("started_at")
-      .eq("session_token", parsed.data.session_token)
+      .select("started_at, pause_offset_ms")
+      .eq("id", team.id)
       .maybeSingle()
-
-    return NextResponse.json({ started_at: existing?.started_at ?? null })
+    return NextResponse.json({
+      started_at: existing?.started_at ?? null,
+      pause_offset_ms: Number(existing?.pause_offset_ms ?? 0),
+    })
   } catch (err) {
     console.error("play/start exception:", err)
     return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
