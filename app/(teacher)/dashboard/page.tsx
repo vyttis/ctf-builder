@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { withChallengeCount } from "@/lib/game/challenge-count"
 import { GamesGrid } from "@/components/teacher/games-grid"
 import { OnboardingChecklist } from "@/components/teacher/onboarding-checklist"
 import { CreateSampleGameButton } from "@/components/teacher/create-sample-game-button"
@@ -15,12 +16,12 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // teams has column-level grants only (00022 hides session_token), so a
-  // `teams(count)` embed is rejected with "permission denied for table teams".
-  // Embed the granted `id` column instead and count rows here.
+  // teams, challenges and submissions have column-level grants only, so a
+  // `teams(count)` or `challenges(count)` embed is rejected with
+  // "permission denied". Embed the granted `id` column and count here.
   const { data: games, error: gamesError } = await supabase
     .from("games")
-    .select("*, challenges(count), teams(id)")
+    .select("*, challenges(id), teams(id)")
     .eq("teacher_id", user!.id)
     .order("created_at", { ascending: false })
 
@@ -35,7 +36,7 @@ export default async function DashboardPage() {
 
   // First-success checklist state, derived from the teacher's actual data
   type GameRow = GameWithChallengeCount & { teams?: { id: string }[] }
-  const gameRows = (games || []) as GameRow[]
+  const gameRows = (games || []).map(withChallengeCount) as GameRow[]
   const hasGame = gameRows.length > 0
   const gameWithTasks = gameRows.find((g) => (g.challenges?.[0]?.count || 0) > 0)
   const startedGame = gameRows.find((g) => g.status !== "draft")
