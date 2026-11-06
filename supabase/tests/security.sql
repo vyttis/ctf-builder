@@ -350,6 +350,24 @@ BEGIN
   IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 THEN
     RAISE EXCEPTION 'two extensions of 5 must give 40, got %', g.settings ->> 'time_limit_minutes';
   END IF;
+  -- A direct write of the whole settings (an older client, the REST API)
+  -- keeps the running limit, and cannot remove it either.
+  UPDATE public.games SET settings = '{"time_limit_minutes": 5, "show_leaderboard": false}'
+    WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 OR (g.settings ->> 'show_leaderboard')::boolean IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'a direct settings write must keep the running limit, got %', g.settings;
+  END IF;
+  UPDATE public.games SET settings = '{"show_leaderboard": true}' WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 THEN
+    RAISE EXCEPTION 'a direct settings write must not remove the running limit, got %', g.settings;
+  END IF;
+  -- An activity without a limit does not get one that way either.
+  UPDATE public.games SET settings = '{"time_limit_minutes": 5}' WHERE id = '10000000-0000-0000-0000-0000000000c2';
+  IF (SELECT settings ? 'time_limit_minutes' FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c2') THEN
+    RAISE EXCEPTION 'a running activity without a limit must not get one by a direct write';
+  END IF;
 
   BEGIN
     PERFORM public.extend_game_time('10000000-0000-0000-0000-0000000000c2', 5);

@@ -195,7 +195,7 @@ užduočių nepradedama) ir funkcijas `set_game_status()`,
 `extend_game_time()` (minutės pridedamos vienu sakiniu; veiklai be laiko
 limito atsisakoma) ir `update_game_settings()` (nustatymai kartu su pavadinimu ir aprašymu
 išsaugomi vienu sakiniu; vykstančios veiklos limitas keičiamas tik pratęsiant).
-Baigtos veiklos atnaujinti nebegalima ir tiesiai SQL. Trigeris
+Baigtos veiklos atnaujinti nebegalima ir tiesiai SQL. Vykstančios veiklos laiko limitą keičia tik `extend_game_time()`: kitas nustatymų įrašas (senas skirtukas, tiesioginė API užklausa) limitą palieka. Trigeris
 `teams_pause_offset` komandos pauzės poslinkį įrašo pats, kai komanda
 pradeda (ir tada, kai dar veikia senas kodas). Taikymo metu pristabdytoms
 veikloms nustatomas `paused_at = now()`: jų pauzė skaičiuojama nuo taikymo.

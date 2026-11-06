@@ -121,6 +121,20 @@ BEGIN
   NEW.paused_at := OLD.paused_at;
   NEW.resumed_at := OLD.resumed_at;
 
+  -- While the activity runs, its time limit changes only through
+  -- extend_game_time() (which marks its own update): any other write of the
+  -- settings, from an older tab or straight through the API, keeps the
+  -- running limit, so an extension is never undone and its cap holds.
+  IF OLD.status IN ('active', 'paused')
+     AND coalesce(current_setting('kusteam.extend_time', true), '') <> 'on'
+     AND (NEW.settings -> 'time_limit_minutes') IS DISTINCT FROM (OLD.settings -> 'time_limit_minutes') THEN
+    IF OLD.settings ? 'time_limit_minutes' THEN
+      NEW.settings := jsonb_set(coalesce(NEW.settings, '{}'::jsonb), '{time_limit_minutes}', OLD.settings -> 'time_limit_minutes');
+    ELSE
+      NEW.settings := coalesce(NEW.settings, '{}'::jsonb) - 'time_limit_minutes';
+    END IF;
+  END IF;
+
   IF NEW.status IS DISTINCT FROM OLD.status THEN
     IF NOT (
       (OLD.status = 'draft' AND NEW.status = 'active')
@@ -349,10 +363,13 @@ BEGIN
     RAISE EXCEPTION 'time limit cannot exceed 24 hours' USING ERRCODE = 'KS423';
   END IF;
 
+  -- games_status_rules lets only this update change a running limit.
+  PERFORM set_config('kusteam.extend_time', 'on', true);
   UPDATE public.games
   SET settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{time_limit_minutes}', to_jsonb(v_limit + p_minutes))
   WHERE id = p_game_id
   RETURNING * INTO g;
+  PERFORM set_config('kusteam.extend_time', 'off', true);
   IF NOT FOUND THEN
     -- Row security filtered the change out: never report it as a success.
     RAISE EXCEPTION 'this account cannot change the activity' USING ERRCODE = '42501';
