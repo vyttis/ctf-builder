@@ -399,7 +399,10 @@ async function markAlertDelivered(admin: SupabaseClient, claimId: number, spent:
 }
 
 /**
- * Sends the 80 % and 100 % budget emails once per month each. Runs after
+ * Sends the 80 % and 100 % budget emails once per month each. When one call
+ * moves spending from below the warning straight past the budget, only the
+ * 100 % email goes: it already reports the spend, and a warning arriving
+ * after it would say less. Runs after
  * every recorded call, starting from the per-instance spend cache, and reads
  * the claims only once a threshold may have been crossed. The audit row is the
  * claim (unique per month and level, migration 20261106145000): it is
