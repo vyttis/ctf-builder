@@ -9,6 +9,7 @@ Usage: python scripts/update-schools.py <warehouse.db> <output.json>
 """
 import datetime
 import json
+import os
 import sys
 
 import duckdb
@@ -39,6 +40,7 @@ schools = [
     }
     for r in rows
 ]
+os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
 with open(out, "w", encoding="utf-8") as f:
     json.dump(
         {
