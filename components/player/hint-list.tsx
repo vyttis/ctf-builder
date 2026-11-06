@@ -4,6 +4,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { Lightbulb, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { nextHintCost } from "@/lib/game/scoring"
 
 // Hints of one task. The server sends only the hints this team has opened
 // (others are null), so a hint's text arrives when the team asks for it and
@@ -11,10 +12,13 @@ import { Button } from "@/components/ui/button"
 export function HintList({
   hints,
   penalty,
+  points,
   onReveal,
 }: {
   hints: (string | null)[]
   penalty: number
+  /** The task's points: hints never take more than half of them. */
+  points: number
   onReveal: (index: number) => Promise<boolean>
 }) {
   const [opening, setOpening] = useState(false)
@@ -24,6 +28,7 @@ export function HintList({
 
   const shown = hints.filter((hint): hint is string => hint !== null)
   const nextIndex = hints.findIndex((hint) => hint === null)
+  const cost = nextHintCost(points, shown.length, penalty)
 
   async function reveal() {
     if (opening || nextIndex < 0) return
@@ -63,7 +68,7 @@ export function HintList({
             <Lightbulb className="h-3.5 w-3.5" aria-hidden />
           )}
           {shown.length === 0 ? "Reikia užuominos?" : `Kita užuomina (${shown.length}/${hints.length})`}
-          {penalty > 0 && <span className="text-xs font-semibold">(-{penalty} tšk.)</span>}
+          {cost > 0 && <span className="text-xs font-semibold">(-{cost} tšk.)</span>}
         </Button>
       )}
       {failed && (

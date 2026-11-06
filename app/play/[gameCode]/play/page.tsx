@@ -1377,6 +1377,7 @@ export default function PlayPage() {
                   key={currentChallenge.id}
                   hints={currentChallenge.hints ?? []}
                   penalty={currentChallenge.hint_penalty}
+                  points={currentChallenge.points}
                   onReveal={(index) => revealHint(currentChallenge.id, index)}
                 />
 

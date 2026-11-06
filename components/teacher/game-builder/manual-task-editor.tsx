@@ -655,7 +655,11 @@ export function ManualTaskEditor({
               value={hintPenalty}
               onChange={(e) => setHintPenalty(parseInt(e.target.value) || 0)}
               className="bg-white w-32"
+              aria-describedby={`${fieldId}-hint-penalty-note`}
             />
+            <p id={`${fieldId}-hint-penalty-note`} className="text-xs text-muted-foreground">
+              Už kiekvieną atidarytą užuominą, bet kartu ne daugiau nei pusė užduoties taškų.
+            </p>
           </div>
 
           {/* Image */}
