@@ -149,6 +149,9 @@ export default function PlayPage() {
   const tasksVersionRef = useRef<string | null>(null)
   const challengesRef = useRef<PlayerChallenge[]>([])
   const reloadingTasksRef = useRef(false)
+  // Latest solved tasks and open task, read by timers and the reload.
+  const solvedIdsRef = useRef<Set<string>>(new Set())
+  const currentIndexRef = useRef(0)
   const [endedByTeacher, setEndedByTeacher] = useState(false)
   const [loadError, setLoadError] = useState(false)
   // Distinguishes "still loading" from "loaded, but the game has no challenges"
@@ -164,6 +167,12 @@ export default function PlayPage() {
   const [achievementQueue, setAchievementQueue] = useState<{ type: AchievementType; metadata?: Record<string, unknown> }[]>([])
   const pendingAchievement = achievementQueue.length > 0 ? achievementQueue[0] : null
   const dismissAchievement = () => setAchievementQueue((q) => q.slice(1))
+
+  useEffect(() => {
+    challengesRef.current = challenges
+    solvedIdsRef.current = solvedIds
+    currentIndexRef.current = currentIndex
+  }, [challenges, solvedIds, currentIndex])
 
   // Check if reflection already done
   useEffect(() => {
@@ -329,6 +338,7 @@ export default function PlayPage() {
 
     const solved = new Set(state.solved.map((sub) => sub.challenge_id))
     setSolvedIds(solved)
+    solvedIdsRef.current = solved
     const points = state.solved.reduce((sum, sub) => sum + sub.points_awarded, 0)
     setTotalPoints(points)
 
@@ -339,8 +349,10 @@ export default function PlayPage() {
   }
 
   // Reload the tasks after the facilitator changed one. Only the tasks are
-  // replaced: answers already counted, the timer and the team stay as they
-  // are, and the task on screen stays open (found by its id).
+  // replaced: answers already counted, the timer and the team stay. The open
+  // task stays open (found by its id); if it was removed, the team goes to
+  // its first unsolved task with an empty answer. A task added after the
+  // team finished brings it back to the tasks.
   const reloadTasks = useCallback(async () => {
     const s = getPlayerSession(gameCode)
     if (!s || reloadingTasksRef.current) return
@@ -351,16 +363,48 @@ export default function PlayPage() {
         cache: "no-store",
       })
       if (!res.ok) return
-      const state = (await res.json()) as { challenges?: PlayerChallenge[]; tasks_version?: string | null }
+      const state = (await res.json()) as {
+        challenges?: PlayerChallenge[]
+        solved?: { challenge_id: string }[]
+        tasks_version?: string | null
+      }
       if (!Array.isArray(state.challenges)) return
       tasksVersionRef.current = state.tasks_version ?? null
       const prev = challengesRef.current
       const next = state.challenges
-      if (next.length === 0 || JSON.stringify(prev) === JSON.stringify(next)) return
+      if (JSON.stringify(prev) === JSON.stringify(next)) return
+
+      // Solved: what the server counted plus what this page solved meanwhile,
+      // only for tasks that still exist.
+      const ids = new Set(next.map((c) => c.id))
+      const solved = new Set<string>()
+      for (const sub of state.solved ?? []) if (ids.has(sub.challenge_id)) solved.add(sub.challenge_id)
+      solvedIdsRef.current.forEach((id) => {
+        if (ids.has(id)) solved.add(id)
+      })
+      const firstUnsolved = next.findIndex((c) => !solved.has(c.id))
+      const kept = remapTaskIndex(prev, next, currentIndexRef.current)
+
       challengesRef.current = next
+      solvedIdsRef.current = solved
       setChallenges(next)
-      setCurrentIndex((i) => remapTaskIndex(prev, next, i) ?? Math.min(i, next.length))
+      setSolvedIds(solved)
+      if (kept !== null) {
+        setCurrentIndex(kept)
+        currentIndexRef.current = kept
+      } else {
+        const index = firstUnsolved >= 0 ? firstUnsolved : next.length
+        setCurrentIndex(index)
+        currentIndexRef.current = index
+        setAnswer("")
+        setFeedback(null)
+        setShowExplanation(false)
+        setCurrentExplanation(null)
+        setRevealedHintCount(0)
+      }
       setSelectedChallengeIndex((i) => remapTaskIndex(prev, next, i))
+      if (firstUnsolved >= 0) setGameFinished(false)
+      else if (next.length > 0 && kept === null) setGameFinished(true)
       toast({ title: "Vedėjas atnaujino užduotis", description: "Matote naujausią jų versiją." })
     } catch {
       // The next poll that still sees a new marker tries again.
@@ -368,6 +412,19 @@ export default function PlayPage() {
       reloadingTasksRef.current = false
     }
   }, [gameCode, toast])
+
+  // Linear mode moves on to the first task not solved yet, so a task added
+  // during the activity is reached wherever it sits in the list.
+  const goToNextTask = useCallback(() => {
+    const list = challengesRef.current
+    const next = list.findIndex((c) => !solvedIdsRef.current.has(c.id))
+    if (next >= 0) {
+      setCurrentIndex(next)
+    } else {
+      setCurrentIndex(list.length)
+      setGameFinished(true)
+    }
+  }, [])
 
   // Subscribe to game setting changes (time extensions, status changes)
   useEffect(() => {
@@ -411,7 +468,9 @@ export default function PlayPage() {
   // the request is a tiny status read, and it also re-runs when the tab
   // becomes visible again (phones suspend timers in the background).
   useEffect(() => {
-    if (gameFinished) return
+    // A team that solved everything keeps polling, so a task added later
+    // reaches it; once the facilitator ends the activity, polling stops.
+    if (endedByTeacher) return
 
     // One request at a time: overlapping polls could finish out of order and
     // an older "active" would hide the pause overlay. A hung request is cut
@@ -476,7 +535,7 @@ export default function PlayPage() {
       clearInterval(interval)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [gameCode, gameFinished, applyClock, reloadTasks])
+  }, [gameCode, endedByTeacher, applyClock, reloadTasks])
 
   function handleStart() {
     const storageKey = `ctf_start_${gameCode}`
@@ -548,8 +607,10 @@ export default function PlayPage() {
           const earned = result.achievements
           setAchievementQueue((q) => [...q, ...earned])
         }
-        // Check if all solved
-        if (solvedIds.size + 1 >= challenges.length) {
+        // Check if all solved (tasks as they are now, this one included)
+        const solvedNow = new Set(solvedIdsRef.current)
+        solvedNow.add(challenge.id)
+        if (challengesRef.current.every((c) => solvedNow.has(c.id))) {
           setTimeout(() => {
             setSelectedChallengeIndex(null)
             setGameFinished(true)
@@ -642,11 +703,7 @@ export default function PlayPage() {
           setTimeout(() => {
             setFeedback(null)
             setRevealedHintCount(0)
-            if (currentIndex + 1 < challenges.length) {
-              setCurrentIndex(currentIndex + 1)
-            } else {
-              setGameFinished(true)
-            }
+            goToNextTask()
           }, 2000)
         }
       }
@@ -1015,6 +1072,7 @@ export default function PlayPage() {
           />
 
           <ChallengeDetailModal
+            key={selectedChallengeIndex !== null ? challenges[selectedChallengeIndex]?.id : "none"}
             challenge={selectedChallengeIndex !== null ? challenges[selectedChallengeIndex] : null}
             open={selectedChallengeIndex !== null}
             onOpenChange={(open) => { if (!open) setSelectedChallengeIndex(null) }}
@@ -1308,11 +1366,7 @@ export default function PlayPage() {
                               setShowExplanation(false)
                               setCurrentExplanation(null)
                               setRevealedHintCount(0)
-                              if (currentIndex + 1 < challenges.length) {
-                                setCurrentIndex(currentIndex + 1)
-                              } else {
-                                setGameFinished(true)
-                              }
+                              goToNextTask()
                             }}
                             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
                           >
