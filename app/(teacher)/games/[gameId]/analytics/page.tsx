@@ -25,7 +25,7 @@ interface Reflection {
 export default function GameAnalyticsPage() {
   const params = useParams()
   const gameId = params.gameId as string
-  const [stats, setStats] = useState<GameStats | null>(null)
+  const [stats, setStats] = useState<(GameStats & { game_title?: string }) | null>(null)
   const [detailed, setDetailed] = useState<DetailedStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -188,6 +188,7 @@ export default function GameAnalyticsPage() {
                     stats.challenge_stats?.length ||
                     0
                   }
+                  fileLabel={stats.game_title}
                 />
               )}
               <ChallengeStatsTable
@@ -207,7 +208,7 @@ export default function GameAnalyticsPage() {
           {reflectionsError && (
             <div className="text-center py-12">
               <p className="text-accent text-sm">{reflectionsError}</p>
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => void loadReflections()}>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => void loadReflections(true)}>
                 Bandyti dar kartą
               </Button>
             </div>
