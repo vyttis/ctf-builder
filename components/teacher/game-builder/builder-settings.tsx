@@ -43,7 +43,8 @@ export function BuilderSettings({
   const [loading, setLoading] = useState(false)
   const [formTitle, setFormTitle] = useState(title)
   const [formDescription, setFormDescription] = useState(description || "")
-  const [maxTeams, setMaxTeams] = useState(settings.max_teams)
+  // Kept as typed, so the field can be cleared and retyped; checked on save.
+  const [maxTeamsText, setMaxTeamsText] = useState(String(settings.max_teams))
   const [timeLimit, setTimeLimit] = useState<number | null>(
     settings.time_limit_minutes
   )
@@ -61,6 +62,17 @@ export function BuilderSettings({
   )
 
   async function handleSave() {
+    const maxTeams = Number(maxTeamsText)
+    const problem =
+      !Number.isInteger(maxTeams) || maxTeams < 2 || maxTeams > 100
+        ? "Komandų skaičius turi būti nuo 2 iki 100."
+        : !live && timeLimit !== null && (!Number.isInteger(timeLimit) || timeLimit < 5 || timeLimit > 300)
+          ? "Laiko limitas turi būti nuo 5 iki 300 min. arba tuščias, jei veikla be limito."
+          : null
+    if (problem) {
+      toast({ title: "Patikrinkite nustatymus", description: problem, variant: "destructive" })
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch(`/api/games/${gameId}`, {
@@ -117,8 +129,9 @@ export function BuilderSettings({
 
         <div className="space-y-5 mt-6">
           <div className="space-y-2">
-            <Label>Pavadinimas *</Label>
+            <Label htmlFor="builder-title">Pavadinimas *</Label>
             <Input
+              id="builder-title"
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
               className="bg-white"
@@ -126,8 +139,9 @@ export function BuilderSettings({
           </div>
 
           <div className="space-y-2">
-            <Label>Aprašymas</Label>
+            <Label htmlFor="builder-description">Aprašymas</Label>
             <Textarea
+              id="builder-description"
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
               className="resize-none bg-white"
@@ -137,13 +151,15 @@ export function BuilderSettings({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Maks. komandų</Label>
+              <Label htmlFor="builder-max-teams">Maks. komandų</Label>
               <Input
+                id="builder-max-teams"
                 type="number"
+                inputMode="numeric"
                 min={2}
                 max={100}
-                value={maxTeams}
-                onChange={(e) => setMaxTeams(parseInt(e.target.value) || 50)}
+                value={maxTeamsText}
+                onChange={(e) => setMaxTeamsText(e.target.value)}
                 className="bg-white"
               />
             </div>
@@ -175,43 +191,49 @@ export function BuilderSettings({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm font-medium">
+                <Label htmlFor="builder-leaderboard" className="text-sm font-medium">
                   Rezultatų lentelė
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p id="builder-leaderboard-note" className="text-xs text-muted-foreground">
                   Dalyviai matys kitų komandų rezultatus
                 </p>
               </div>
               <Switch
+                id="builder-leaderboard"
+                aria-describedby="builder-leaderboard-note"
                 checked={showLeaderboard}
                 onCheckedChange={setShowLeaderboard}
               />
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm font-medium">
+                <Label htmlFor="builder-shuffle" className="text-sm font-medium">
                   Maišyti užduočių tvarką
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p id="builder-shuffle-note" className="text-xs text-muted-foreground">
                   Kiekviena komanda gaus kitokią tvarką
                 </p>
               </div>
               <Switch
+                id="builder-shuffle"
+                aria-describedby="builder-shuffle-note"
                 checked={shuffleChallenges}
                 onCheckedChange={setShuffleChallenges}
               />
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm font-medium flex items-center gap-1.5">
-                  <GitBranch className="h-3.5 w-3.5" />
+                <Label htmlFor="builder-free-path" className="text-sm font-medium flex items-center gap-1.5">
+                  <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
                   Laisvas kelias
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p id="builder-free-path-note" className="text-xs text-muted-foreground">
                   Komandos gali pasirinkti užduotis laisvai, ne eilės tvarka
                 </p>
               </div>
               <Switch
+                id="builder-free-path"
+                aria-describedby="builder-free-path-note"
                 checked={challengePathMode === "free"}
                 onCheckedChange={(checked) =>
                   setChallengePathMode(checked ? "free" : "linear")

@@ -72,7 +72,8 @@ export function ManualTaskEditor({
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [type, setType] = useState<ChallengeType>("text")
-  const [points, setPoints] = useState(100)
+  // Kept as typed, so the field can be cleared and retyped; checked on save.
+  const [pointsText, setPointsText] = useState("100")
   const [correctAnswer, setCorrectAnswer] = useState("")
   const [hints, setHints] = useState<string[]>([])
   const [options, setOptions] = useState<string[]>([])
@@ -97,7 +98,7 @@ export function ManualTaskEditor({
       setTitle(challenge.title)
       setDescription(challenge.description || "")
       setType(challenge.type)
-      setPoints(challenge.points)
+      setPointsText(String(challenge.points))
       setCorrectAnswer("")
       setHints(challenge.hints || [])
       setOptions(challenge.options || [])
@@ -121,7 +122,7 @@ export function ManualTaskEditor({
       setTitle(prefillData.title)
       setDescription(prefillData.description)
       setType(prefillData.type)
-      setPoints(prefillData.points)
+      setPointsText(String(prefillData.points))
       setCorrectAnswer(prefillData.correct_answer)
       setHints(prefillData.hints || [])
       setOptions(
@@ -134,6 +135,23 @@ export function ManualTaskEditor({
       if (prefillData.explanation || prefillData.difficulty) {
         setShowExtras(true)
       }
+    } else {
+      // A new empty task: nothing carries over from the task edited before.
+      setTitle("")
+      setDescription("")
+      setType("text")
+      setPointsText("100")
+      setCorrectAnswer("")
+      setHints([])
+      setOptions([])
+      setInitialOptions(null)
+      setImageUrl(null)
+      setMapsUrl("")
+      setExplanation("")
+      setDifficulty(null)
+      setHintPenalty(20)
+      setPrerequisites([])
+      setShowExtras(false)
     }
   }, [challenge, prefillData])
 
@@ -151,6 +169,15 @@ export function ManualTaskEditor({
     if ((!challenge || challenge.needs_answer) && !correctAnswer.trim()) {
       toast({
         title: "Atsakymas privalomas",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const points = Number(pointsText)
+    if (!Number.isInteger(points) || points < 1 || points > 1000) {
+      toast({
+        title: "Taškai turi būti sveikasis skaičius nuo 1 iki 1000",
         variant: "destructive",
       })
       return
@@ -346,8 +373,9 @@ export function ManualTaskEditor({
             type="number"
             min={1}
             max={1000}
-            value={points}
-            onChange={(e) => setPoints(parseInt(e.target.value) || 100)}
+            inputMode="numeric"
+            value={pointsText}
+            onChange={(e) => setPointsText(e.target.value)}
             className="bg-white"
           />
         </div>

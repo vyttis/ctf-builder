@@ -16,7 +16,7 @@ const updateGameSchema = z.object({
   settings: z
     .object({
       max_teams: z.number().min(2).max(100).optional(),
-      time_limit_minutes: z.number().nullable().optional(),
+      time_limit_minutes: z.number().int().min(1).max(1440).nullable().optional(),
       show_leaderboard: z.boolean().optional(),
       shuffle_challenges: z.boolean().optional(),
       challenge_path_mode: z.enum(["linear", "free"]).optional(),

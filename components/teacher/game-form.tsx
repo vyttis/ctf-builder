@@ -25,7 +25,8 @@ const gameFormSchema = z.object({
     .max(100, "Daugiausiai 100 komandų"),
   time_limit_minutes: z
     .number({ message: "Įveskite laiką minutėmis" })
-    .min(10, "Mažiausiai 10 min.")
+    .int("Įveskite sveikąjį minučių skaičių")
+    .min(5, "Mažiausiai 5 min.")
     .max(300, "Daugiausiai 300 min.")
     .nullable(),
   show_leaderboard: z.boolean(),
