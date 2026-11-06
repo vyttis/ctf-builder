@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -53,6 +53,17 @@ export function LiveTeamProgress({ gameId, paused = false, challengeCount }: Liv
     useLiveGame(gameId)
   const [, setTick] = useState(0)
   const { toast } = useToast()
+  // When the activity was last resumed: nobody could answer during the
+  // pause, so the 5 minutes count from here at the earliest.
+  const [resumedAt, setResumedAt] = useState<number | null>(null)
+  const wasPaused = useRef(paused)
+  useEffect(() => {
+    const resumed = wasPaused.current && !paused
+    wasPaused.current = paused
+    if (!resumed) return
+    const t = window.setTimeout(() => setResumedAt(Date.now()), 0)
+    return () => window.clearTimeout(t)
+  }, [paused])
   // Moderation: rename an unsuitable name, remove a test or duplicate team.
   const [editing, setEditing] = useState<{ id: string; name: string; mode: "rename" | "remove" } | null>(null)
   const [nameDraft, setNameDraft] = useState("")
@@ -86,15 +97,17 @@ export function LiveTeamProgress({ gameId, paused = false, challengeCount }: Liv
   }, [])
 
   // No answer for 5 minutes, counted from the last answer or, for a team
-  // that has not answered yet, from joining. Not while paused, and not for
-  // a team that has solved every task.
+  // that has not answered yet, from joining, and never from before the last
+  // resume. Not while paused, and not for a team that has solved every task.
   function isStuck(team: { id: string; joined_at: string }): boolean {
     if (paused) return false
     if (challengeCount && (solvedCounts.get(team.id) ?? 0) >= challengeCount) return false
-    const since = lastSubmissions.get(team.id) ?? team.joined_at
+    const since = Math.max(
+      new Date(lastSubmissions.get(team.id) ?? team.joined_at).getTime() || 0,
+      resumedAt ?? 0
+    )
     if (!since) return false
-    const diffMs = Date.now() - new Date(since).getTime()
-    return diffMs > 5 * 60 * 1000
+    return Date.now() - since > 5 * 60 * 1000
   }
 
   if (teams.length === 0) {

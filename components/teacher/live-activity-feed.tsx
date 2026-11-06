@@ -213,6 +213,19 @@ export function LiveActivityFeed({ gameId, variant = "default" }: LiveActivityFe
           setTeamCount(prev => prev + 1)
         }
       )
+      // A removed team: DELETE events carry only the id and cannot be
+      // filtered by game, so count this game's teams again.
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "teams" },
+        async () => {
+          const { count } = await supabase
+            .from("teams")
+            .select("id", { count: "exact", head: true })
+            .eq("game_id", gameId)
+          if (!cancelled && typeof count === "number") setTeamCount(count)
+        }
+      )
       .subscribe(handleChannelStatus("teams"))
 
     return () => {
