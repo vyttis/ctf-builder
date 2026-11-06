@@ -258,6 +258,8 @@ select
 
 Tikimasi: `game_cols` 3, `team_cols` 1, `auth_status_fn` `true`, `anon_status_fn` `false`, `anon_extend_fn` `false`, `auth_settings_fn` `true`, `triggers` 3, `paused_without_clock` 0.
 
+Pritaikyta produkcijoje 2026-11-06 14:13 UTC (SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai 0 vykstančių veiklų, atsarginės kopijos `backup_20261106.games_before_150000`, `teams_before_150000`, `challenges_before_150000`). Patikra po taikymo: 3, 1, `true`, `false`, `false`, `true`, 3, 0; veiklų, komandų ir užduočių skaičius nepasikeitė (27, 30, 111). Kodas (PR #52) įdiegtas 14:45 UTC.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir
