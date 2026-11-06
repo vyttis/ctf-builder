@@ -33,6 +33,7 @@ import { pluralizeLt } from "@/lib/utils"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ReflectionForm } from "@/components/player/reflection-form"
 import { FinishRequestCard } from "@/components/access/finish-request-card"
+import { TaskImage } from "@/components/player/task-image"
 import { AnnouncementBanner } from "@/components/player/announcement-banner"
 import { AchievementToast } from "@/components/player/achievement-toast"
 import { ChallengeGrid } from "@/components/player/challenge-grid"
@@ -1360,9 +1361,7 @@ export default function PlayPage() {
 
                 {/* Paveiksliukas */}
                 {currentChallenge.image_url && (
-                  <div className="mb-4 rounded-xl overflow-hidden border border-border/30">
-                    <Image src={currentChallenge.image_url} alt={currentChallenge.title} width={800} height={256} className="w-full max-h-64 object-cover" unoptimized />
-                  </div>
+                  <TaskImage src={currentChallenge.image_url} title={currentChallenge.title} />
                 )}
 
                 {/* Google Maps */}

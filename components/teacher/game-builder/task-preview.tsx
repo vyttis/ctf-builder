@@ -1,6 +1,7 @@
 "use client"
 
 import { Challenge } from "@/types/game"
+import { TaskImage } from "@/components/player/task-image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,12 +9,10 @@ import {
   Eye,
   Lightbulb,
   MapPin,
-  Image as ImageIcon,
   ChevronRight,
   X,
 } from "lucide-react"
 import { useState } from "react"
-import Image from "next/image"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 
 interface TaskPreviewProps {
@@ -99,16 +98,8 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
           )}
 
           {/* Image */}
-          {challenge.image_url && (
-            <div className="rounded-lg overflow-hidden border border-border/30">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 text-xs text-muted-foreground">
-                <ImageIcon className="h-3 w-3" />
-                Paveiksliukas
-              </div>
-              
-              <Image src={challenge.image_url} alt={challenge.title} width={800} height={192} className="w-full max-h-48 object-contain bg-white" unoptimized />
-            </div>
-          )}
+          {/* As participants see it: whole, with "Padidinti". */}
+          {challenge.image_url && <TaskImage src={challenge.image_url} title={challenge.title} />}
 
           {/* Maps */}
           {challenge.maps_url && (
