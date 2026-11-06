@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { motion } from "framer-motion"
 import { Users, ArrowRight, Loader2, Gamepad2, AlertCircle, ArrowLeft } from "lucide-react"
 import type { PlayerSession } from "@/types/game"
 import { getPlayerSession, savePlayerSession } from "@/lib/game/session"
@@ -202,11 +201,7 @@ export default function JoinGamePage() {
   if (gameState.status === "not_found") {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm text-center"
-        >
+        <div className="rise-in w-full max-w-sm text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center">
             <AlertCircle className="h-10 w-10 text-accent-ink" />
           </div>
@@ -225,7 +220,7 @@ export default function JoinGamePage() {
               Įvesti kitą kodą
             </Button>
           </Link>
-        </motion.div>
+        </div>
       </div>
     )
   }
@@ -241,11 +236,7 @@ export default function JoinGamePage() {
     }
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm text-center"
-        >
+        <div className="rise-in w-full max-w-sm text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-highlight/10 flex items-center justify-center">
             <AlertCircle className="h-10 w-10 text-highlight-ink" />
           </div>
@@ -278,7 +269,7 @@ export default function JoinGamePage() {
               </Button>
             </Link>
           </div>
-        </motion.div>
+        </div>
       </div>
     )
   }
@@ -291,11 +282,7 @@ export default function JoinGamePage() {
         <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-secondary/5 rounded-full blur-3xl" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm relative z-10"
-      >
+      <div className="rise-in w-full max-w-sm relative z-10">
         <div className="flex justify-center mb-6">
           <Image src="/illustrations/adventure-start.svg" alt="" width={192} height={192} />
         </div>
@@ -362,7 +349,7 @@ export default function JoinGamePage() {
         <p className="text-center text-xs text-muted-foreground mt-4">
           STEAM LT Klaipėda &middot; Klaipėdos universitetas
         </p>
-      </motion.div>
+      </div>
     </div>
   )
 }
