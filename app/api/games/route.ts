@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { withChallengeCount } from "@/lib/game/challenge-count"
 import { generateGameCode } from "@/lib/game/code-generator"
 import { NextResponse } from "next/server"
 import { z } from "zod"
@@ -82,7 +83,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("games")
-    .select("*, challenges(count)")
+    .select("*, challenges(id)")
     .eq("teacher_id", user.id)
     .order("created_at", { ascending: false })
 
@@ -91,5 +92,6 @@ export async function GET() {
     return NextResponse.json({ error: "Nepavyko gauti žaidimų sąrašo." }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  // challenges(count) is rejected under column grants; see challenge-count.ts
+  return NextResponse.json((data ?? []).map(withChallengeCount))
 }

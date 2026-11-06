@@ -8,7 +8,9 @@ import path from "path"
 // "permission denied for table teams", which silently emptied the teacher
 // dashboard. This guard keeps those embeds out of the codebase.
 const ROOTS = ["app", "components", "lib"]
-const FORBIDDEN = [/teams\(\s*count\s*\)/, /teams\(\s*\*\s*\)/]
+// 20261106120000 did the same for challenges (answer_hash, answer) and
+// submissions, so their count and star embeds fail the same way.
+const FORBIDDEN = [/\b(teams|challenges|submissions)\(\s*(count|\*)\s*\)/]
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -18,12 +20,12 @@ function walk(dir: string): string[] {
   })
 }
 
-describe("teams column grants", () => {
-  it("no query embeds teams(count) or teams(*)", () => {
+describe("column grants", () => {
+  it("no query embeds teams, challenges or submissions with (count) or (*)", () => {
     const offenders = ROOTS.flatMap(walk).filter((file) => {
       const source = readFileSync(file, "utf8")
         .split("\n")
-        .filter((line) => !line.trim().startsWith("//"))
+        .filter((line) => !/^(\/\/|\*|\/\*)/.test(line.trim()))
         .join("\n")
       return FORBIDDEN.some((re) => re.test(source))
     })
