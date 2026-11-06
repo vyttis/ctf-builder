@@ -41,7 +41,7 @@ export function TeamResultsTable({
         t.attempts,
         t.hints_used,
         new Date(t.joined_at).toLocaleString("lt-LT"),
-        t.last_activity ? new Date(t.last_activity).toLocaleString("lt-LT") : "—",
+        t.last_activity ? new Date(t.last_activity).toLocaleString("lt-LT") : "-",
       ])
     )
   }
@@ -51,7 +51,7 @@ export function TeamResultsTable({
       <Card className="border-border/50 bg-white">
         <CardContent className="py-10 text-center text-muted-foreground">
           <Users className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Žaidime nedalyvavo nė viena komanda</p>
+          <p className="text-sm">Veikloje nedalyvavo nė viena komanda</p>
         </CardContent>
       </Card>
     )
@@ -130,7 +130,7 @@ export function TeamResultsTable({
                           hour: "2-digit",
                           minute: "2-digit",
                         })
-                      : "—"}
+                      : "-"}
                   </td>
                 </tr>
               ))}

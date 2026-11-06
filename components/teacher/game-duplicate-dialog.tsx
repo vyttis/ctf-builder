@@ -48,13 +48,13 @@ export function GameDuplicateDialog({
         throw new Error(
           typeof err.error === "string"
             ? err.error
-            : "Nepavyko dubliuoti žaidimo"
+            : "Nepavyko dubliuoti veiklos"
         )
       }
 
       const data = await res.json()
 
-      toast({ title: "Žaidimas sėkmingai dubliuotas" })
+      toast({ title: "Veikla dubliuota" })
 
       onOpenChange(false)
       router.push(`/games/${data.game_id}`)
@@ -65,7 +65,7 @@ export function GameDuplicateDialog({
         description:
           error instanceof Error
             ? error.message
-            : "Nepavyko dubliuoti žaidimo",
+            : "Nepavyko dubliuoti veiklos",
         variant: "destructive",
       })
     } finally {
@@ -79,7 +79,7 @@ export function GameDuplicateDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Copy className="h-5 w-5 text-primary" />
-            Dubliuoti žaidimą
+            Dubliuoti veiklą
           </DialogTitle>
           <DialogDescription>
             Bus nukopijuoti visi nustatymai ir užduotys su atsakymais. Komandos
@@ -88,7 +88,7 @@ export function GameDuplicateDialog({
         </DialogHeader>
 
         <div className="space-y-2 py-2">
-          <Label htmlFor="duplicate-title">Naujo žaidimo pavadinimas</Label>
+          <Label htmlFor="duplicate-title">Naujos veiklos pavadinimas</Label>
           <Input
             id="duplicate-title"
             value={title}

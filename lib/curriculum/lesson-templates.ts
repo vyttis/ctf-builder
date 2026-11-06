@@ -56,7 +56,7 @@ export const LESSON_TEMPLATES: LessonTemplate[] = [
     learning_goal:
       "Paaiškinti, kaip geografinės sąlygos lėmė LDK plėtrą ir gyvenimo būdą.",
     title: "Istorija × Geografija",
-    description: "Kodėl LDK augo būtent šia kryptimi — geografijos lemtis.",
+    description: "Kodėl LDK augo būtent šia kryptimi: geografijos lemtis.",
     emoji: "🗺️",
   },
 ]

@@ -100,15 +100,15 @@ export function GameEditDialog({
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(typeof err.error === "string" ? err.error : "Nepavyko atnaujinti žaidimo")
+        throw new Error(typeof err.error === "string" ? err.error : "Nepavyko atnaujinti veiklos")
       }
 
-      toast({ title: "Žaidimas atnaujintas!" })
+      toast({ title: "Veikla atnaujinta!" })
       onSuccess()
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Nepavyko atnaujinti žaidimo",
+        description: error instanceof Error ? error.message : "Nepavyko atnaujinti veiklos",
         variant: "destructive",
       })
     } finally {
@@ -120,9 +120,9 @@ export function GameEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Redaguoti žaidimą</DialogTitle>
+          <DialogTitle>Redaguoti veiklą</DialogTitle>
           <DialogDescription>
-            Pakeiskite žaidimo pavadinimą, aprašymą ar nustatymus
+            Pakeiskite veiklos pavadinimą, aprašymą ar nustatymus
           </DialogDescription>
         </DialogHeader>
 
@@ -194,7 +194,7 @@ export function GameEditDialog({
               <div>
                 <Label className="text-sm font-medium">Rodyti rezultatų lentelę</Label>
                 <p className="text-xs text-muted-foreground">
-                  Žaidėjai matys kitų komandų rezultatus
+                  Dalyviai matys kitų komandų rezultatus
                 </p>
               </div>
               <Switch

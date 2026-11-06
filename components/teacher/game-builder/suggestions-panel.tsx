@@ -278,7 +278,7 @@ export function SuggestionsPanel({
       {!loading && suggestions.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground font-medium">
-            Pasiūlymai ({suggestions.length}) — vilkite į kairę arba spauskite &bdquo;Pridėti&ldquo;
+            Pasiūlymai ({suggestions.length}). Vilkite į kairę arba spauskite &bdquo;Pridėti&ldquo;
           </p>
           <AnimatePresence>
             {suggestions.map((suggestion, index) => (
@@ -361,7 +361,7 @@ export function SuggestionsPanel({
           <Sparkles className="h-8 w-8 text-highlight/30 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
             Paspauskite mygtuką arba pasirinkite greitą veiksmą, kad DI
-            sugeneruotų užduočių pasiūlymus pagal jūsų žaidimo temą.
+            sugeneruotų užduočių pasiūlymus pagal jūsų veiklos temą.
           </p>
         </div>
       )}

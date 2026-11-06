@@ -287,8 +287,8 @@ export function ManualTaskEditor({
         <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20 text-sm text-steam-dark">
           <AlertTriangle className="h-4 w-4 text-accent shrink-0" />
           <span>
-            Ši užduotis dar neturi teisingo atsakymo — įveskite jį žemiau, kad
-            galėtumėte pradėti žaidimą.
+            Ši užduotis dar neturi teisingo atsakymo. Įveskite jį žemiau, kad
+            galėtumėte pradėti veiklą.
           </span>
         </div>
       )}

@@ -17,14 +17,14 @@ interface StatsCardsProps {
 export function StatsCards({ stats }: StatsCardsProps) {
   const cards = [
     {
-      label: "Viso žaidimų",
+      label: "Iš viso veiklų",
       value: stats.total_games,
       icon: Gamepad2,
       color: "text-primary-ink",
       bg: "bg-primary/10",
     },
     {
-      label: "Aktyvūs žaidimai",
+      label: "Vykstančios veiklos",
       value: stats.active_games,
       icon: Zap,
       color: "text-highlight",

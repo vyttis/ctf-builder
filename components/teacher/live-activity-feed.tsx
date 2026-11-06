@@ -99,8 +99,8 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
           id: s.id,
           type: s.is_correct ? "submission_correct" : "submission_wrong",
           team_id: s.team_id,
-          team_name: teamMap.get(s.team_id) || "—",
-          challenge_title: challengeMap.get(s.challenge_id) || "—",
+          team_name: teamMap.get(s.team_id) || "-",
+          challenge_title: challengeMap.get(s.challenge_id) || "-",
           points: s.points_awarded,
           timestamp: s.attempted_at,
         }))
@@ -188,7 +188,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
             type: sub.is_correct ? "submission_correct" : "submission_wrong",
             team_id: sub.team_id,
             team_name: team.name,
-            challenge_title: challenge?.title || "—",
+            challenge_title: challenge?.title || "-",
             points: sub.points_awarded,
             timestamp: sub.attempted_at,
           }

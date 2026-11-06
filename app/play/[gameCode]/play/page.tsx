@@ -814,10 +814,10 @@ export default function PlayPage() {
             <AlertTriangle className="h-8 w-8 text-accent" />
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
-            Nepavyko įkelti žaidimo
+            Nepavyko įkelti veiklos
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Patikrinkite interneto ryšį arba paklauskite vedėjo, ar žaidimas
+            Patikrinkite interneto ryšį arba paklauskite vedėjo, ar veikla
             vis dar vyksta.
           </p>
           <Button
@@ -862,13 +862,13 @@ export default function PlayPage() {
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
             {gameStatus === "draft"
-              ? "Žaidimas dar neprasidėjo"
-              : "Žaidime dar nėra užduočių"}
+              ? "Veikla dar neprasidėjo"
+              : "Veikloje dar nėra užduočių"}
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
             {gameStatus === "draft"
-              ? "Palaukite, kol vedėjas paleis žaidimą, ir bandykite dar kartą."
-              : "Paklauskite vedėjo, ar žaidimas paruoštas, ir bandykite dar kartą."}
+              ? "Palaukite, kol vedėjas pradės veiklą, ir bandykite dar kartą."
+              : "Paklauskite vedėjo, ar veikla paruošta, ir bandykite dar kartą."}
           </p>
           <Button
             onClick={() => session && loadChallenges(session)}
@@ -932,7 +932,7 @@ export default function PlayPage() {
             Laikas baigėsi!
           </h1>
           <p className="text-muted-foreground mb-6">
-            Žaidimui skirtas laikas pasibaigė. Jūsų rezultatai buvo išsaugoti.
+            Veiklai skirtas laikas baigėsi. Jūsų rezultatai buvo išsaugoti.
           </p>
 
           <div className="bg-primary/5 rounded-2xl p-6 mb-6">
@@ -992,7 +992,7 @@ export default function PlayPage() {
             Pasiruošę?
           </h1>
           <p className="text-muted-foreground mb-2">
-            Šis žaidimas turi laiko limitą.
+            Ši veikla turi laiko limitą.
           </p>
 
           <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 mb-6">
@@ -1011,7 +1011,7 @@ export default function PlayPage() {
             </div>
             <div className="flex items-start gap-2">
               <span className="text-primary-ink font-bold mt-0.5">•</span>
-              <span>Pasibaigus laikui, žaidimas bus automatiškai sustabdytas</span>
+              <span>Pasibaigus laikui, atsakymai nebebus priimami</span>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-primary-ink font-bold mt-0.5">•</span>
@@ -1025,7 +1025,7 @@ export default function PlayPage() {
             className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg shadow-lg shadow-primary/25 gap-3"
           >
             <Play className="h-6 w-6" />
-            Pradėti žaidimą
+            Pradėti
           </Button>
 
           <p className="text-center text-xs text-muted-foreground mt-4">
@@ -1048,12 +1048,12 @@ export default function PlayPage() {
           <Image src="/illustrations/celebration.svg" alt="" width={192} height={192} className="mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-steam-dark mb-2">
             {endedByTeacher && solvedIds.size < challenges.length
-              ? "Žaidimas baigtas!"
+              ? "Veikla baigta!"
               : "Sveikiname! 🎉"}
           </h1>
           <p className="text-muted-foreground mb-4">
             {endedByTeacher && solvedIds.size < challenges.length
-              ? `Vedėjas užbaigė žaidimą. Išsprendėte ${solvedIds.size} iš ${challenges.length} užduočių.`
+              ? `Vedėjas užbaigė veiklą. Išsprendėte ${solvedIds.size} iš ${challenges.length} užduočių.`
               : "Jūs išsprendėte visas užduotis!"}
           </p>
 

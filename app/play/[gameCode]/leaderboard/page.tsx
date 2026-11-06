@@ -161,17 +161,17 @@ export default function LeaderboardPage() {
         <div className="w-full max-w-sm text-center">
           <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
           <h1 className="text-xl font-bold text-steam-dark mb-2">
-            {notFound ? "Žaidimas nerastas" : "Rezultatų lentelė išjungta"}
+            {notFound ? "Veikla nerasta" : "Rezultatų lentelė išjungta"}
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
             {notFound
-              ? `Kodas ${gameCode} neatitinka jokio žaidimo.`
-              : "Vedėjas išjungė rezultatų lentelę šiame žaidime."}
+              ? `Kodas ${gameCode} neatitinka jokios veiklos.`
+              : "Vedėjas išjungė rezultatų lentelę šioje veikloje."}
           </p>
           <Link href={notFound ? "/play" : `/play/${gameCode}/play`}>
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              {notFound ? "Įvesti kitą kodą" : "Grįžti į žaidimą"}
+              {notFound ? "Įvesti kitą kodą" : "Grįžti į veiklą"}
             </Button>
           </Link>
         </div>
@@ -186,7 +186,7 @@ export default function LeaderboardPage() {
           <Link href={`/play/${gameCode}/play`}>
             <Button variant="ghost" size="sm" className="gap-1">
               <ArrowLeft className="h-4 w-4" />
-              Žaidimas
+              Veikla
             </Button>
           </Link>
           <Badge variant="outline" className="font-mono tracking-wider">{gameCode}</Badge>

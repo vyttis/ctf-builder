@@ -46,7 +46,7 @@ export async function GET(_request: Request, props: { params: Promise<{ gameId: 
 
   if (error || !data) {
     return NextResponse.json(
-      { error: "Žaidimas nerastas" },
+      { error: "Veikla nerasta" },
       { status: 404 }
     )
   }

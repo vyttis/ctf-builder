@@ -96,7 +96,7 @@ export function QRDisplay({ gameCode, size = 200 }: QRDisplayProps) {
 
           {/* Game code */}
           <div className="mt-4 text-center">
-            <p className="text-sm text-muted-foreground mb-1">Žaidimo kodas</p>
+            <p className="text-sm text-muted-foreground mb-1">Veiklos kodas</p>
             <p className="text-2xl font-mono font-bold text-steam-dark tracking-widest">
               {gameCode}
             </p>

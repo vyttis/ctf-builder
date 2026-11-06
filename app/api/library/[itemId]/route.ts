@@ -28,7 +28,7 @@ export async function GET(_request: Request, props: { params: Promise<{ itemId: 
 
     return NextResponse.json({
       ...data,
-      publisher_name: data.profiles?.full_name || data.profiles?.email || "—",
+      publisher_name: data.profiles?.full_name || data.profiles?.email || "-",
       challenge_count: Array.isArray(data.challenge_data)
         ? data.challenge_data.length
         : 0,

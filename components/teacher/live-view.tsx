@@ -84,7 +84,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
 
   // Sync from props: GameStatusActions finishes with router.refresh(), which
   // updates props but not this local state. Without this, when the games
-  // realtime channel is down, "Baigti žaidimą" appears to do nothing.
+  // realtime channel is down, "Baigti veiklą" appears to do nothing.
   useEffect(() => {
     setStatus(game.status)
     setStartsAt(game.starts_at)

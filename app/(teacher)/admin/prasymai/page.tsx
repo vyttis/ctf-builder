@@ -26,7 +26,7 @@ export default async function AccessRequestsPage() {
         </Link>
         <h1 className="text-2xl font-bold text-steam-dark">Paskyrų prašymai</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Vedėjo paskyrą gauna tik jūsų patvirtinti mokytojai. Viešos registracijos nėra.
+          Vedėjo paskyrą gauna tik tie, kurių prašymą patvirtinote. Viešos registracijos nėra.
         </p>
       </div>
       <AccessRequestsPanel />

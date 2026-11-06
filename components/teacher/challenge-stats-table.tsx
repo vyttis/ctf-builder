@@ -61,10 +61,10 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
           s.solves,
           s.accuracy,
           s.completion_rate,
-          s.avg_attempts_to_solve || "—",
+          s.avg_attempts_to_solve || "-",
           s.auto_difficulty === "unknown"
-            ? "—"
-            : difficultyLabels[s.auto_difficulty]?.label || "—",
+            ? "-"
+            : difficultyLabels[s.auto_difficulty]?.label || "-",
         ])
       )
     } else {
@@ -77,7 +77,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
           s.points,
           s.attempts,
           s.solves,
-          s.avg_attempts_to_solve || "—",
+          s.avg_attempts_to_solve || "-",
         ])
       )
     }
@@ -172,7 +172,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
                         <ProgressCell percent={stat.completion_rate} />
                       </td>
                       <td className="py-3 px-2 text-center text-sm text-muted-foreground">
-                        {stat.avg_attempts_to_solve || "—"}
+                        {stat.avg_attempts_to_solve || "-"}
                       </td>
                       <td className="py-3 px-2 text-center">
                         {autoDiff ? (
@@ -183,7 +183,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
                             {autoDiff.label}
                           </Badge>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-xs text-muted-foreground">-</span>
                         )}
                       </td>
                     </tr>
@@ -242,7 +242,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
                         <ProgressCell percent={successRate} />
                       </td>
                       <td className="py-3 px-2 text-center text-sm text-muted-foreground">
-                        {stat.avg_attempts_to_solve || "—"}
+                        {stat.avg_attempts_to_solve || "-"}
                       </td>
                     </tr>
                   )

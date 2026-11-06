@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     request.headers.get("x-session-token") || searchParams.get("session_token")
 
   if (!gameCode || gameCode.length < 6) {
-    return NextResponse.json({ error: "Netinkamas žaidimo kodas" }, { status: 400 })
+    return NextResponse.json({ error: "Netinkamas veiklos kodas" }, { status: 400 })
   }
 
   const supabase = createAdminClient()

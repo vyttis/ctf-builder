@@ -47,7 +47,7 @@ export function FinalCtaSection() {
           </h2>
 
           <p className="text-base md:text-lg text-white/70 max-w-2xl leading-relaxed text-pretty mb-10">
-            Parašykite STEAM metodiniam centrui — aptarsime partnerystę ir mokymus.
+            Parašykite STEAM metodiniam centrui, aptarsime partnerystę ir mokymus.
             Po jų gausite asmeninę prieigą prie platformos.
           </p>
 

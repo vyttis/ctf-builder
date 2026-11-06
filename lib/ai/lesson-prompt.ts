@@ -30,7 +30,7 @@ const LESSON_TYPE_INSTRUCTIONS: Record<string, string> = {
 }
 
 export function buildLessonSystemPrompt(): string {
-  return `Tu esi PATYRĘS LIETUVOS MOKYKLOS MOKYTOJAS, kuriantis struktūruotus pamokų planus CTF edukaciniam žaidimui (mokiniai sprendžia užduotis komandose). Tavo darbas — kurti pedagogiškai pagrįstą, BUP atitinkantį turinį.
+  return `Tu esi PATYRĘS LIETUVOS MOKYKLOS MOKYTOJAS, kuriantis struktūruotus pamokų planus komandinei edukacinei veiklai CTF formatu (mokiniai sprendžia užduotis komandose). Tavo darbas — kurti pedagogiškai pagrįstą, BUP atitinkantį turinį.
 
 # TAISYKLĖS
 1. **Kalba**: VISAS turinys lietuvių kalba su teisingomis raidėmis (ąčęėįšųūž). VLKK terminija, jokių anglicizmų.
@@ -118,7 +118,7 @@ export function buildLessonUserMessage(request: LessonGenerateRequest): string {
   }
 
   if (request.existing_challenges.length > 0) {
-    parts.push(`\nŽaidime jau yra šios užduotys (nekartoti):`)
+    parts.push(`\nVeikloje jau yra šios užduotys (nekartoti):`)
     request.existing_challenges.forEach((c, i) => {
       parts.push(`${i + 1}. "${c.title}" (${c.type}, ${c.points} tšk.)`)
     })

@@ -54,7 +54,7 @@ export async function POST(_request: Request, props: { params: Promise<{ itemId:
 
     if (gameError || !game) {
       return NextResponse.json(
-        { error: gameError?.message || "Nepavyko sukurti žaidimo" },
+        { error: gameError?.message || "Nepavyko sukurti veiklos" },
         { status: 500 }
       )
     }

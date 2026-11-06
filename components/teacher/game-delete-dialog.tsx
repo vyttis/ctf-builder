@@ -42,10 +42,10 @@ export function GameDeleteDialog({
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(typeof err.error === "string" ? err.error : "Nepavyko ištrinti žaidimo")
+        throw new Error(typeof err.error === "string" ? err.error : "Nepavyko ištrinti veiklos")
       }
 
-      toast({ title: "Žaidimas ištrintas" })
+      toast({ title: "Veikla ištrinta" })
 
       if (onSuccess) {
         onSuccess()
@@ -55,7 +55,7 @@ export function GameDeleteDialog({
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Nepavyko ištrinti žaidimo",
+        description: error instanceof Error ? error.message : "Nepavyko ištrinti veiklos",
         variant: "destructive",
       })
     } finally {
@@ -70,10 +70,10 @@ export function GameDeleteDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-accent" />
-            Ištrinti žaidimą?
+            Ištrinti veiklą?
           </DialogTitle>
           <DialogDescription>
-            Ar tikrai norite ištrinti žaidimą &ldquo;{gameTitle}&rdquo;?
+            Ar tikrai norite ištrinti veiklą &ldquo;{gameTitle}&rdquo;?
             Bus ištrintos visos užduotys, komandos ir pateikimai.
             Šis veiksmas negrįžtamas.
           </DialogDescription>

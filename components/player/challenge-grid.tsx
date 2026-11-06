@@ -166,9 +166,9 @@ function ChallengeCard({
         }
         aria-label={
           isLocked
-            ? `${challenge.title} — pirmiausia išspręskite reikalingas užduotis`
+            ? `${challenge.title}: pirmiausia išspręskite reikalingas užduotis`
             : isSolved
-            ? `${challenge.title} — išspręsta`
+            ? `${challenge.title}: išspręsta`
             : challenge.title
         }
       >

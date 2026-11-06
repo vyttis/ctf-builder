@@ -50,7 +50,7 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
 
     if (gameError || !sourceGame) {
       return NextResponse.json(
-        { error: "Žaidimas nerastas arba neturite teisės jį dubliuoti" },
+        { error: "Veikla nerasta arba neturite teisės jos dubliuoti" },
         { status: 404 }
       )
     }
@@ -90,7 +90,7 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
 
     if (newGameError || !newGame) {
       return NextResponse.json(
-        { error: newGameError?.message || "Nepavyko sukurti žaidimo kopijos" },
+        { error: newGameError?.message || "Nepavyko sukurti veiklos kopijos" },
         { status: 500 }
       )
     }
@@ -145,7 +145,7 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
       if (insertError) {
         console.error("Challenge duplication error:", insertError)
         return NextResponse.json(
-          { error: "Žaidimas sukurtas, bet nepavyko nukopijuoti užduočių: " + insertError.message, game_id: newGame.id },
+          { error: "Veikla sukurta, bet nepavyko nukopijuoti užduočių: " + insertError.message, game_id: newGame.id },
           { status: 207 }
         )
       } else if (newChallenges) {

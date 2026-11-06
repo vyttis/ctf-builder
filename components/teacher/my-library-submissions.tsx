@@ -78,8 +78,8 @@ export function MyLibrarySubmissions() {
       <div className="text-center py-20">
         <Send className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
         <p className="text-muted-foreground text-sm">
-          Dar nepateikėte šablonų bibliotekai. Pasidalinkite savo žaidimu iš
-          veiklos puslapio.
+          Dar nepateikėte šablonų bibliotekai. Pasidalinkite savo veikla iš
+          jos puslapio.
         </p>
       </div>
     )

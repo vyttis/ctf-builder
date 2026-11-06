@@ -16,7 +16,7 @@ export function AnalyticsCards({ stats }: AnalyticsCardsProps) {
     ? stats.avg_completion_time_seconds < 60
       ? `${Math.round(stats.avg_completion_time_seconds)}s`
       : `${Math.round(stats.avg_completion_time_seconds / 60)}min`
-    : "—"
+    : "-"
 
   const cards = [
     {

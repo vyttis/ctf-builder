@@ -9,7 +9,7 @@ const steps = [
     number: "01",
     title: "Pasirinkite temą",
     description:
-      "Dalykas, klasė, pamokos tipas — pagal Lietuvos bendrojo ugdymo programą. Sistema pritaiko užduočių sudėtingumą amžiui.",
+      "Dalykas, klasė, pamokos tipas pagal Lietuvos bendrojo ugdymo programą. Sistema pritaiko užduočių sudėtingumą amžiui.",
     accent: "primary",
   },
   {
@@ -23,14 +23,14 @@ const steps = [
     number: "03",
     title: "Sudėliokite pamokos eigą",
     description:
-      "Įvadas, veiklos, diskusija, refleksija — vienoje vietoje. Užduotis perdėliokite, redaguokite ar pašalinkite, kol pamokos struktūra atitinka jūsų planą.",
+      "Įvadas, veiklos, diskusija, refleksija vienoje vietoje. Užduotis perdėliokite, redaguokite ar pašalinkite, kol pamokos struktūra atitinka jūsų planą.",
     accent: "secondary",
   },
   {
     number: "04",
     title: "Mokiniai prisijungia",
     description:
-      "Per QR kodą arba 6 simbolių prisijungimo kodą. Mokiniams nereikia paskyrų ar elektroninio pašto — prisijungimas trunka kelias sekundes.",
+      "Per QR kodą arba 6 simbolių prisijungimo kodą. Mokiniams nereikia paskyrų ar elektroninio pašto, prisijungimas trunka kelias sekundes.",
     accent: "accent",
   },
   {

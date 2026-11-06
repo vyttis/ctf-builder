@@ -34,7 +34,7 @@ export function LibraryCard({ item }: LibraryCardProps) {
 
       toast({
         title: "Sėkmingai klonuota!",
-        description: "Žaidimas sukurtas kaip juodraštis. Pridėkite atsakymus.",
+        description: "Veikla sukurta kaip juodraštis. Pridėkite atsakymus.",
       })
 
       router.push(`/games/${game_id}`)

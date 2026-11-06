@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       href: latestGame ? `/games/${latestGame.id}/builder` : "/games/new",
     },
     {
-      label: "Paleiskite žaidimą su QR kodu",
+      label: "Pradėkite veiklą su QR kodu",
       done: !!startedGame,
       href: gameWithTasks ? `/games/${gameWithTasks.id}` : "/games/new",
     },
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
             Mano veiklos
           </h1>
           <p className="text-muted-foreground mt-1">
-            Interaktyvios veiklos ir žaidimai jūsų klasei
+            Interaktyvios komandinės veiklos jūsų grupei
           </p>
         </div>
         <Link href="/games/new">

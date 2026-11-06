@@ -138,7 +138,7 @@ export function ReflectionForm({
             </h3>
           </div>
           <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-            Skirkite minutę apmąstyti žaidimą – tai padės geriau įsivertinti,
+            Skirkite minutę apmąstyti veiklą. Tai padės geriau įsivertinti,
             kaip sekėsi.
           </p>
 

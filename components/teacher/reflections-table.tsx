@@ -100,9 +100,9 @@ export function ReflectionsTable({ reflections, totalTeams }: ReflectionsTablePr
       ],
       reflections.map((r) => [
         r.team_name,
-        r.hardest_challenge_title || "—",
+        r.hardest_challenge_title || "-",
         r.improvement_text,
-        r.liked_text || "—",
+        r.liked_text || "-",
         new Date(r.created_at).toLocaleString("lt-LT"),
       ])
     )
@@ -114,7 +114,7 @@ export function ReflectionsTable({ reflections, totalTeams }: ReflectionsTablePr
         <CardContent className="py-12 text-center">
           <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground text-sm">
-            Dar nėra refleksijų. Dalyviai gali užpildyti refleksiją baigę žaidimą.
+            Dar nėra refleksijų. Dalyviai gali užpildyti refleksiją baigę veiklą.
           </p>
         </CardContent>
       </Card>
@@ -200,7 +200,7 @@ export function ReflectionsTable({ reflections, totalTeams }: ReflectionsTablePr
                     {r.team_name}
                   </td>
                   <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
-                    {r.hardest_challenge_title || "—"}
+                    {r.hardest_challenge_title || "-"}
                   </td>
                   <td className="py-2.5 px-3 text-steam-dark max-w-[250px]">
                     <TruncatedText text={r.improvement_text} />
@@ -209,7 +209,7 @@ export function ReflectionsTable({ reflections, totalTeams }: ReflectionsTablePr
                     {r.liked_text ? (
                       <TruncatedText text={r.liked_text} />
                     ) : (
-                      "—"
+                      "-"
                     )}
                   </td>
                 </tr>

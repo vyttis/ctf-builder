@@ -216,7 +216,7 @@ export default async function AdminDashboardPage() {
                     </p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {item.profiles?.full_name || item.profiles?.email || "—"}
+                      {item.profiles?.full_name || item.profiles?.email || "-"}
                       {" · "}
                       {new Date(item.created_at).toLocaleDateString("lt-LT")}
                     </p>

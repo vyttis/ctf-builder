@@ -3,9 +3,9 @@
 // in a couple of minutes. Answers are real (unlike library clones).
 
 export const SAMPLE_GAME = {
-  title: "Pavyzdinė veikla — išbandykite!",
+  title: "Pavyzdinė veikla: išbandykite!",
   description:
-    "Trumpa demonstracinė veikla su trimis skirtingų tipų užduotimis. Paleiskite žaidimą, nuskaitykite QR kodą telefonu ir išbandykite mokinio patirtį.",
+    "Trumpa demonstracinė veikla su trimis skirtingų tipų užduotimis. Pradėkite veiklą, nuskaitykite QR kodą telefonu ir išbandykite, ką mato dalyvis.",
   settings: {
     max_teams: 50,
     time_limit_minutes: null,
@@ -36,18 +36,18 @@ export const SAMPLE_CHALLENGES: SampleChallenge[] = [
     correct_answer: "Nemunas",
     hints: [
       "Ji teka pro Kauną.",
-      "Jos žiotys — Kuršių mariose.",
+      "Ji įteka į Kuršių marias.",
     ],
     options: null,
     explanation:
-      "Nemunas — ilgiausia Lietuvos upė (937 km, iš jų 359 km Lietuvoje). Jis įteka į Kuršių marias.",
+      "Nemunas yra ilgiausia Lietuvos upė (937 km, iš jų 359 km Lietuvoje). Jis įteka į Kuršių marias.",
     difficulty: "easy",
     order_index: 0,
   },
   {
     title: "Matematikos iššūkis",
     description:
-      "Kiek kojų iš viso turi trys vorai ir dvi skruzdėlės? (Voras turi 8 kojas, skruzdėlė — 6.)",
+      "Kiek kojų iš viso turi trys vorai ir dvi skruzdėlės? (Voras turi 8 kojas, skruzdėlė 6.)",
     type: "number",
     points: 150,
     correct_answer: "36",
@@ -66,7 +66,7 @@ export const SAMPLE_CHALLENGES: SampleChallenge[] = [
     hints: ["Šios dujos būtinos žmonėms kvėpuoti."],
     options: ["Deguonį", "Anglies dioksidą", "Azotą", "Vandenilį"],
     explanation:
-      "Fotosintezės metu augalai naudoja anglies dioksidą ir vandenį, o išskiria deguonį — dujas, kuriomis kvėpuojame.",
+      "Fotosintezės metu augalai naudoja anglies dioksidą ir vandenį, o išskiria deguonį. Juo mes kvėpuojame.",
     difficulty: "easy",
     order_index: 2,
   },

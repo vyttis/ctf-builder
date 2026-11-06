@@ -22,7 +22,7 @@ export async function GET(_request: Request, props: { params: Promise<{ gameId: 
       .maybeSingle()
 
     if (!game) {
-      return NextResponse.json({ error: "Žaidimas nerastas" }, { status: 404 })
+      return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
     }
 
     // Check if user is owner or admin

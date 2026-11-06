@@ -24,7 +24,7 @@ export async function GET(_request: Request, props: { params: Promise<{ gameId: 
       .maybeSingle()
 
     if (!game) {
-      return notFound("Žaidimas nerastas")
+      return notFound("Veikla nerasta")
     }
 
     if (game.teacher_id !== user.id) {

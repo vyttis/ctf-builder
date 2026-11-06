@@ -99,7 +99,7 @@ export default function AdminLibraryPage() {
             Bibliotekos moderavimas
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Peržiūrėkite ir patvirtinkite mokytojų veiklų šablonus
+            Peržiūrėkite ir patvirtinkite vedėjų veiklų šablonus
           </p>
         </div>
       </div>
