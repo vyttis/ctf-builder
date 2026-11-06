@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { motion } from "framer-motion"
 import { ArrowRight, Gamepad2 } from "lucide-react"
 import { QRScanner } from "@/components/player/qr-scanner"
 import Image from "next/image"
@@ -31,11 +30,7 @@ export function JoinScreen() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm text-center"
-      >
+      <div className="rise-in w-full max-w-sm text-center">
         <Image src="/illustrations/adventure-start.svg" alt="" width={192} height={192} className="mx-auto mb-6" priority />
 
         <h1 className="text-2xl font-bold text-steam-dark mb-2">
@@ -93,7 +88,7 @@ export function JoinScreen() {
         <p className="text-xs text-muted-foreground mt-6">
           STEAM LT Klaipėda &middot; Klaipėdos universitetas
         </p>
-      </motion.div>
+      </div>
     </div>
   )
 }

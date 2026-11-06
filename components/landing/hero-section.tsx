@@ -8,19 +8,6 @@ import Link from "next/link"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { useRef, useState } from "react"
 
-const reveal = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.08,
-      duration: 0.7,
-      ease: [0.22, 1, 0.36, 1] as const,
-    },
-  }),
-}
-
 // Interactive demo: a single question that lets the visitor experience the
 // flow before clicking any CTA. Demonstrates product feel in <3 clicks.
 // Interactive demo: a single question that lets the visitor experience the
@@ -102,26 +89,19 @@ export function HeroSection() {
             {/* Left — text (7 cols) */}
             <div className="lg:col-span-7 lg:pt-6">
               {/* Eyebrow */}
-              <motion.div
-                custom={0}
-                initial="hidden"
-                animate="visible"
-                variants={reveal}
-                className="flex items-center gap-3 mb-7"
+              <div
+                className="rise-in flex items-center gap-3 mb-7"
               >
                 <span className="inline-flex h-px w-10 bg-primary/60" />
                 <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-semibold">
                   Klaipėdos universiteto STEAM centras
                 </span>
-              </motion.div>
+              </div>
 
               {/* Editorial headline — display serif + sans mix */}
-              <motion.h1
-                custom={1}
-                initial="hidden"
-                animate="visible"
-                variants={reveal}
-                className="text-display-md md:text-display-lg text-white leading-[0.95] tracking-tight"
+              <h1
+                className="rise-in text-display-md md:text-display-lg text-white leading-[0.95] tracking-tight"
+                style={{ animationDelay: "80ms" }}
               >
                 <span className="font-extrabold">Pamoka,</span>{" "}
                 <span className="font-display italic text-white/90">kuri</span>{" "}
@@ -136,28 +116,22 @@ export function HeroSection() {
                   />
                 </span>
                 <span className="text-white/40">.</span>
-              </motion.h1>
+              </h1>
 
-              <motion.p
-                custom={2}
-                initial="hidden"
-                animate="visible"
-                variants={reveal}
-                className="text-base md:text-lg text-white/75 mt-7 leading-relaxed max-w-[580px] text-pretty"
+              <p
+                className="rise-in text-base md:text-lg text-white/75 mt-7 leading-relaxed max-w-[580px] text-pretty"
+                style={{ animationDelay: "160ms" }}
               >
                 Vedėjas sukuria komandinę veiklą su užduotimis, dalyviai prisijungia
                 su kodu, o jų atsakymai matomi realiu laiku. Pritaikyta{" "}
                 <span className="text-white font-medium">Lietuvos bendrojo ugdymo programai</span>,
                 24 dalykams nuo 1 iki 12 klasės.
-              </motion.p>
+              </p>
 
               {/* CTAs */}
-              <motion.div
-                custom={3}
-                initial="hidden"
-                animate="visible"
-                variants={reveal}
-                className="flex flex-col sm:flex-row gap-3 mt-9"
+              <div
+                className="rise-in flex flex-col sm:flex-row gap-3 mt-9"
+                style={{ animationDelay: "240ms" }}
               >
                 {/* Role choice: the two ways into the platform */}
                 <Link href="/vedejui">
@@ -179,15 +153,12 @@ export function HeroSection() {
                     <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </Link>
-              </motion.div>
+              </div>
 
               {/* Numerical proof strip — typographic over icons */}
-              <motion.div
-                custom={4}
-                initial="hidden"
-                animate="visible"
-                variants={reveal}
-                className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/10 max-w-[560px]"
+              <div
+                className="rise-in grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/10 max-w-[560px]"
+                style={{ animationDelay: "320ms" }}
               >
                 {[
                   { num: "24", label: "BUP dalykai" },
@@ -203,16 +174,11 @@ export function HeroSection() {
                     </div>
                   </div>
                 ))}
-              </motion.div>
+              </div>
             </div>
 
             {/* Right — interactive mini-demo (5 cols) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:col-span-5 lg:pt-4"
-            >
+            <div className="rise-in lg:col-span-5 lg:pt-4" style={{ animationDelay: "400ms" }}>
               <div className="relative">
                 {/* Glow behind card */}
                 <div className="absolute -inset-8 bg-gradient-to-br from-primary/20 via-secondary/10 to-highlight/15 rounded-3xl blur-3xl opacity-40" />
@@ -326,27 +292,20 @@ export function HeroSection() {
                 </motion.div>
 
                 {/* Floating editorial tag — "try it" hint */}
-                <motion.div
-                  initial={{ opacity: 0, rotate: -6, scale: 0.9 }}
-                  animate={{ opacity: 1, rotate: -6, scale: 1 }}
-                  transition={{ delay: 1.1, duration: 0.5 }}
-                  className="absolute -top-5 -left-6 bg-highlight text-steam-dark rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider shadow-lg shadow-highlight/30 flex items-center gap-1.5"
+                <div
+                  style={{ animationDelay: "900ms" }}
+                  className="fade-in-css -rotate-6 absolute -top-5 -left-6 bg-highlight text-steam-dark rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider shadow-lg shadow-highlight/30 flex items-center gap-1.5"
                 >
                   <Sparkles className="h-3 w-3" />
                   Spauskite
-                </motion.div>
+                </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </motion.div>
 
         {/* Marquee credentials strip — bottom of hero */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 1 }}
-          className="border-t border-white/10 overflow-hidden"
-        >
+        <div className="fade-in-css border-t border-white/10 overflow-hidden" style={{ animationDelay: "1000ms" }}>
           <div className="flex animate-marquee whitespace-nowrap py-4 text-[12px] text-white/40 [animation-play-state:running] hover:[animation-play-state:paused]">
             {[...Array(2)].map((_, dup) => (
               <div key={dup} className="flex items-center shrink-0">
@@ -368,7 +327,7 @@ export function HeroSection() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   )
