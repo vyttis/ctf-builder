@@ -46,7 +46,9 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
           .maybeSingle()
       : { data: null }
 
-  if (approving && pendingRequest) {
+  // grantAccount finds the profile by the lower-case email; with any other
+  // spelling it would invite a new account, so it is used only when they match.
+  if (approving && pendingRequest && before.email === before.email.toLowerCase()) {
     const account = await grantAccount(
       guard.admin,
       {
