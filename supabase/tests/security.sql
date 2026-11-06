@@ -164,6 +164,26 @@ BEGIN
 END $$;
 UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a';
 
+-- A blocked admin keeps a session but loses admin powers and profile edits.
+UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-0000000000ad';
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000ad', false);
+SELECT public.t_denied($q$SELECT public.get_platform_stats()$q$);
+SELECT public.t_denied($q$SELECT public.get_game_stats('10000000-0000-0000-0000-00000000000b')$q$);
+SELECT public.t_rows('SELECT id FROM public.profiles', 1);
+UPDATE public.profiles SET full_name = 'Pakeista' WHERE id = auth.uid();
+RESET ROLE;
+DO $$
+BEGIN
+  IF (SELECT full_name FROM public.profiles WHERE id = '00000000-0000-0000-0000-0000000000ad') IS NOT DISTINCT FROM 'Pakeista' THEN
+    RAISE EXCEPTION 'a blocked account must not update its profile';
+  END IF;
+END $$;
+UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-0000000000ad';
+SET ROLE authenticated;
+SELECT public.t_ok($q$SELECT public.get_platform_stats()$q$);
+RESET ROLE;
+
 -- finished_at follows the status and cannot be moved by hand.
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);

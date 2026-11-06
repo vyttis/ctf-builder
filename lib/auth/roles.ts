@@ -54,6 +54,19 @@ export async function requireRole(
   if (!allowedRoles.includes(role)) {
     throw new Error(`Prieiga uždrausta. Reikalinga rolė: ${allowedRoles.join(" arba ")}`)
   }
+  // Admin powers need an active account, checked fresh (not from the proxy
+  // cache): a blocked admin keeps the role until someone changes it.
+  if (role !== "teacher") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const { data: profile } = user
+      ? await supabase.from("profiles").select("status").eq("id", user.id).maybeSingle()
+      : { data: null }
+    if (profile?.status !== "active") {
+      throw new Error("Prieiga uždrausta: paskyra neaktyvi.")
+    }
+  }
   return role
 }
 

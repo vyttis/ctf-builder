@@ -31,6 +31,11 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
   }
 
   const now = new Date().toISOString()
+  // A decision in progress holds reviewed_at while the row stays pending, so
+  // the one-pending-request-per-email rule keeps covering it. A claim older
+  // than two minutes (a crashed attempt) can be taken over.
+  const staleClaim = new Date(Date.now() - 2 * 60_000).toISOString()
+  const unclaimed = `reviewed_at.is.null,reviewed_at.lt."${staleClaim}"`
 
   if (parsed.data.action === "reject") {
     const { data: rejected, error } = await guard.admin
@@ -38,6 +43,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       .update({ status: "rejected", review_note: parsed.data.note || null, reviewed_by: guard.userId, reviewed_at: now })
       .eq("id", id)
       .eq("status", "pending")
+      .or(unclaimed)
       .select("id")
     if (error) return NextResponse.json({ error: "Nepavyko atmesti prašymo." }, { status: 500 })
     // Someone decided it a moment earlier: no audit line, no email.
@@ -54,9 +60,10 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
   // Claim the request first, so a double click cannot invite twice.
   const { data: claimed } = await guard.admin
     .from("access_requests")
-    .update({ status: "approved", reviewed_by: guard.userId, reviewed_at: now })
+    .update({ reviewed_by: guard.userId, reviewed_at: now })
     .eq("id", id)
     .eq("status", "pending")
+    .or(unclaimed)
     .select("id")
   if (!claimed || claimed.length === 0) {
     return NextResponse.json({ error: "Šis prašymas jau išspręstas." }, { status: 409 })
@@ -76,14 +83,15 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     new URL(request.url).origin,
   )
   if (!account.ok) {
-    await guard.admin
-      .from("access_requests")
-      .update({ status: "pending", reviewed_by: null, reviewed_at: null })
-      .eq("id", id)
+    await guard.admin.from("access_requests").update({ reviewed_by: null, reviewed_at: null }).eq("id", id)
     return NextResponse.json({ error: account.error }, { status: account.status })
   }
 
-  await guard.admin.from("access_requests").update({ user_id: account.userId }).eq("id", id)
+  const { error: doneError } = await guard.admin
+    .from("access_requests")
+    .update({ status: "approved", user_id: account.userId })
+    .eq("id", id)
+  if (doneError) console.error("[access-request] approved but not marked", { code: doneError.code })
   await logAdminAction(guard.admin, guard.userId, "access_request.approve", "access_request", id, {
     email: req.email,
     existing_account: account.existing,

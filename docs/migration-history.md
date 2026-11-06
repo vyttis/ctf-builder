@@ -68,14 +68,14 @@ be `_` ir aprašymo). Po 1 žingsnio galutinis sąrašas:
 for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
          00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
          00021 00022 00023 00024 00025 00026 \
-         20261106120000 20261106130000; do
+         20261106120000 20261106130000 20261106140000; do
   supabase migration repair --status applied "$v"
 done
 ```
 
 > `00007` čia = `00007_di_verification_columns` (vienintelis likęs `00007`).
 > `00026` = pervadintas bcrypt. `20261106120000` = atsakymų ir rolių
-> spragos, `20261106130000` = uždara registracija, abi pritaikytos ranka 2026-11-06 (žr. žemiau). `00023`/`00024` = šio darbo migracijos
+> spragos, `20261106130000` = uždara registracija, `20261106140000` = neaktyvios paskyros be teisių; visos pritaikytos ranka 2026-11-06 (žr. žemiau). `00023`/`00024` = šio darbo migracijos
 > (`team_started_at`, `hint_reveals`) — pažymimos kaip pritaikytos tik jei jos
 > jau suvestos ranka produkcijoje (žr. PR deploy žingsnį).
 
@@ -153,6 +153,32 @@ select
 Tikimasi: `not_active` 0, `settings_rows` 1, abu leidimai `false`,
 `active_policies` 18 (15 lentelėms, 3 `storage.objects`), `triggers` 2,
 `finished_without_time` 0.
+
+Pritaikyta produkcijoje 2026-11-06 apie 13:35 (patvirtino Vytis, prieš tai
+atsarginė kopija `backup_20261106.profiles_before_0613`). Po taikymo patikra:
+`not_active` 0, `settings_rows` 1, abu leidimai `false`, `active_policies` 18,
+`triggers` 2, `finished_without_time` 0, `profiles.status` numatytasis
+`pending`.
+
+## 2026-11-06: neaktyvios paskyros be administratoriaus teisių
+
+Failas `supabase/migrations/20261106140000_inactive_accounts_lose_privileges.sql`,
+grąžinimas `supabase/rollback/20261106140000_inactive_accounts_lose_privileges.sql`.
+`get_my_role()` grąžina `teacher`, jei paskyra ne `active`; pamokų planų ir
+refleksijų administratorių politikos naudoja `get_my_role()`; neaktyvi
+paskyra negali keisti `profiles`. Duomenys nekeičiami.
+
+Patikra po taikymo:
+
+```sql
+select
+  pg_get_functiondef('public.get_my_role()'::regprocedure) like '%status = ''active''%' as role_checks_status,
+  (select count(*) from pg_policies where policyname = 'Only active accounts update profiles') as profile_policy,
+  (select count(*) from pg_policies where tablename in ('lesson_plans', 'reflections')
+     and policyname like 'Admins%' and qual like '%get_my_role%') as admin_policies;
+```
+
+Tikimasi: `role_checks_status` `true`, `profile_policy` 1, `admin_policies` 4.
 
 ## Konvencija toliau
 

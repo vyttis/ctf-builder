@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getUserRole } from "@/lib/auth/roles"
 
 /**
  * Access requests, request links and account decisions belong to the super
@@ -19,14 +18,18 @@ export async function requireSuperAdmin(): Promise<
   if (!user) {
     return { ok: false, response: NextResponse.json({ error: "Prisijunkite." }, { status: 401 }) }
   }
-  const role = await getUserRole(supabase)
-  if (role !== "super_admin") {
+  // Role and status read fresh with the service role: the proxy caches
+  // active accounts for a short time, and a blocked super admin keeps the
+  // role, so neither is enough for service-role actions.
+  const admin = createAdminClient()
+  const { data: profile } = await admin.from("profiles").select("role, status").eq("id", user.id).maybeSingle()
+  if (profile?.role !== "super_admin" || profile.status !== "active") {
     return {
       ok: false,
       response: NextResponse.json({ error: "Tik super administratorius gali tai daryti." }, { status: 403 }),
     }
   }
-  return { ok: true, userId: user.id, admin: createAdminClient() }
+  return { ok: true, userId: user.id, admin }
 }
 
 export function clientIp(request: Request): string {

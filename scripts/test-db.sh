@@ -41,11 +41,16 @@ psql "$DATABASE_URL" "${PSQL_OPTS[@]}" -f "$ROOT/supabase/tests/security.sql" >/
 echo "security checks passed"
 
 if [[ "${TEST_ROLLBACK:-1}" == "1" ]]; then
-  # The rollback must apply cleanly and the migration must apply again on top.
-  for f in "$ROOT"/supabase/rollback/*.sql; do
+  # Every rollback must apply cleanly newest first (later migrations may
+  # depend on earlier ones), and the migrations must apply again on top.
+  mapfile -t ROLLBACKS < <(ls "$ROOT"/supabase/rollback/*.sql | sort -r)
+  for f in "${ROLLBACKS[@]}"; do
     echo "rollback $(basename "$f")"
     psql "$DATABASE_URL" "${PSQL_OPTS[@]}" -f "$f" >/dev/null
-    psql "$DATABASE_URL" "${PSQL_OPTS[@]}" -f "$ROOT/supabase/migrations/$(basename "$f")" >/dev/null
+  done
+  for (( i=${#ROLLBACKS[@]}-1; i>=0; i-- )); do
+    echo "re-apply $(basename "${ROLLBACKS[$i]}")"
+    psql "$DATABASE_URL" "${PSQL_OPTS[@]}" -f "$ROOT/supabase/migrations/$(basename "${ROLLBACKS[$i]}")" >/dev/null
   done
   echo "rollback and re-apply passed"
 fi
