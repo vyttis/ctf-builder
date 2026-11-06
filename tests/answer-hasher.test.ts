@@ -241,6 +241,10 @@ describe("number answers by value", () => {
     expect(await verifyAnswer("2,6", await old("2,50"), NUMBER)).toBe(false)
   })
 
+  it("reads a legacy plaintext answer ending in :num as plaintext", async () => {
+    expect(await verifyAnswer("column:num", "column:num", TEXT)).toBe(true)
+  })
+
   it("keeps answers that are not numbers as typed", async () => {
     const hash = await hashAnswer("3 m", "number")
     expect(hash.endsWith(":num")).toBe(false)

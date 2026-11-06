@@ -6,9 +6,12 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 
-// Answer checks per team per minute, right or wrong: more than any team
-// types by hand, few enough to bound the bcrypt work one team can cause.
-const VERIFY_PER_MINUTE = 20
+// Answer checks per minute, right or wrong, counted before any bcrypt work:
+// per team, above a fast streak of one-tap choices; per activity, above a
+// full class answering at once. The activity ceiling bounds the work however
+// many teams one caller creates.
+const VERIFY_PER_TEAM_PER_MINUTE = 60
+const VERIFY_PER_GAME_PER_MINUTE = 2000
 
 const submitAnswerSchema = z.object({
   session_token: z.string().min(1),
@@ -195,7 +198,10 @@ export async function POST(request: Request) {
     // try several spellings). The wrong-answer count above only sees rows
     // already written, so parallel requests could all pass it; this counter
     // is taken before the work starts.
-    if (!(await checkAiRateLimitAsync("answer-checks", team.id, VERIFY_PER_MINUTE, 60_000))) {
+    if (
+      !(await checkAiRateLimitAsync("answer-checks", team.id, VERIFY_PER_TEAM_PER_MINUTE, 60_000)) ||
+      !(await checkAiRateLimitAsync("answer-checks-game", team.game_id, VERIFY_PER_GAME_PER_MINUTE, 60_000))
+    ) {
       return NextResponse.json(
         { error: "Per daug bandymų. Palaukite minutę." },
         { status: 429 }

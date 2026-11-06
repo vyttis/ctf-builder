@@ -22,7 +22,8 @@ export function AnswerInput({ type, value, onChange, disabled }: AnswerInputProp
 
   function toggleSign() {
     const trimmed = value.trimStart()
-    onChange(trimmed.startsWith("-") || trimmed.startsWith("−") ? trimmed.slice(1) : `-${trimmed}`)
+    if (/^[-−–]/.test(trimmed)) onChange(trimmed.slice(1))
+    else onChange(`-${trimmed.replace(/^\+/, "")}`)
   }
 
   return (

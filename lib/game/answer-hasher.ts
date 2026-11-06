@@ -144,7 +144,7 @@ export async function verifyAnswer(
   storedHash: string,
   rules: AnswerRules
 ): Promise<boolean> {
-  if (storedHash.endsWith(NUMBER_VALUE_SUFFIX)) {
+  if (storedHash.startsWith("$2") && storedHash.endsWith(NUMBER_VALUE_SUFFIX)) {
     const canonical = canonicalNumber(submitted)
     if (canonical === null) return false
     return bcrypt.compare(valueDigest(canonical), storedHash.slice(0, -NUMBER_VALUE_SUFFIX.length))
