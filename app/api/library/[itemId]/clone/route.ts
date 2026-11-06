@@ -119,11 +119,13 @@ export async function POST(_request: Request, props: { params: Promise<{ itemId:
       }
     }
 
-    // Increment clone count (best effort)
-    await supabase
+    // Count the copy (best effort). A facilitator may not update someone
+    // else's approved template (RLS), so the server counts it.
+    const { error: countError } = await createAdminClient()
       .from("library_items")
       .update({ clone_count: (item.clone_count || 0) + 1 })
       .eq("id", params.itemId)
+    if (countError) console.error("Library clone count failed", { code: countError.code })
 
     return NextResponse.json(
       { game_id: game.id, game_code: game.game_code, needs_answers: needsAnswers },
