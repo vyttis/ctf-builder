@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { generateGameCode } from "@/lib/game/code-generator"
 import { NextResponse } from "next/server"
 import { z } from "zod"
@@ -54,8 +55,9 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
       )
     }
 
-    // Fetch all challenges for this game (teacher has RLS access including answer_hash)
-    const { data: sourceChallenges, error: challengesError } = await supabase
+    // Signed-in users cannot read answer_hash (20261106120000_close_answer_and_role_gaps). Ownership is checked
+    // above, so the copy reads the source tasks with the service role.
+    const { data: sourceChallenges, error: challengesError } = await createAdminClient()
       .from("challenges")
       .select("*")
       .eq("game_id", sourceGame.id)

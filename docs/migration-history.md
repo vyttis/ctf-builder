@@ -84,6 +84,34 @@ supabase migration list   # remote ir local stulpeliai turi sutapti
 supabase db push          # turi rodyti „Remote database is up to date"
 ```
 
+## 2026-11-06: atsakymų, rolių ir statistikos spragos
+
+Failas `supabase/migrations/20261106120000_close_answer_and_role_gaps.sql`
+(pavadintas pagal CLI konvenciją, todėl nesikerta su runbook'e numatytu
+`00026`). Grąžinimas: `supabase/rollback/20261106120000_close_answer_and_role_gaps.sql`.
+Abu failai tikrinami `npm run test:db` (visos migracijos tuščioje Postgres 16,
+saugumo patikros, grąžinimas ir pakartotinis pritaikymas) ir CI darbe „Database".
+
+Taikymas produkcijoje: SQL Editor, visas failas (jame yra `BEGIN; … COMMIT;`).
+Duomenys nekeičiami, keičiami tik leidimai, viena politika ir trys funkcijos.
+Prieš ir po taikymo paleisti šią patikrą:
+
+```sql
+select
+  has_column_privilege('authenticated','public.submissions','answer','SELECT') as auth_answer,
+  has_column_privilege('authenticated','public.challenges','answer_hash','SELECT') as auth_hash,
+  has_column_privilege('authenticated','public.profiles','role','UPDATE') as auth_role,
+  has_function_privilege('anon','public.get_game_reflections(uuid)','EXECUTE') as anon_reflections,
+  has_function_privilege('anon','public.get_game_stats(uuid)','EXECUTE') as anon_stats,
+  has_function_privilege('anon','public.get_platform_stats()','EXECUTE') as anon_platform;
+```
+
+Prieš taikymą (2026-11-06): visi `true`. Po taikymo visi turi būti `false`.
+
+Svarbu toliau: naujiems `challenges` ir `submissions` stulpeliams `SELECT`
+reikia suteikti atskirai abiem rolėms (`anon` ir `authenticated`), kitaip
+puslapiai jų nematys.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir

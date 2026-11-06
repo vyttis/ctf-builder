@@ -113,7 +113,7 @@ async function checkFirstSolver(
 ): Promise<EarnedAchievement | null> {
   const { count } = await supabase
     .from("submissions")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("challenge_id", ctx.challengeId)
     .eq("is_correct", true)
     .neq("team_id", ctx.teamId)

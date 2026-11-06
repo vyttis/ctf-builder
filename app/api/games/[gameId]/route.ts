@@ -80,7 +80,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
   if (parsed.data.status === "active") {
     const { count } = await supabase
       .from("challenges")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("game_id", params.gameId)
 
     if (!count || count === 0) {
