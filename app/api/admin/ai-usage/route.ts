@@ -13,7 +13,7 @@ export async function GET() {
       usageByUser(guard.admin),
     ])
     return NextResponse.json(
-      { settings, spentUsd: Math.round(spent * 100) / 100, month: monthGenitive(), resetsOn: resetsOnText(), users },
+      { settings, spentUsd: Math.round(spent * 100000) / 100000, month: monthGenitive(), resetsOn: resetsOnText(), users },
       { headers: { "Cache-Control": "no-store" } },
     )
   } catch (error) {

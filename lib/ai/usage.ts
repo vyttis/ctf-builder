@@ -66,11 +66,17 @@ export function monthGenitive(now = new Date()): string {
   return MONTHS_GENITIVE[now.getUTCMonth()]
 }
 
+/**
+ * The defaults apply only when the settings row is missing. A failed read
+ * throws, so the caller's own failure rule applies (the allowance check
+ * fails open) instead of limits that nobody configured.
+ */
 export async function loadAiSettings(admin: SupabaseClient): Promise<AiSettings> {
-  const { data } = await admin
+  const { data, error } = await admin
     .from("platform_settings")
     .select("ai_monthly_budget_usd, ai_user_monthly_limit, ai_budget_alert_ratio")
     .maybeSingle()
+  if (error) throw error
   if (!data) return DEFAULT_SETTINGS
   return {
     ai_monthly_budget_usd: Number(data.ai_monthly_budget_usd),
@@ -116,9 +122,33 @@ export const UNCOUNTED_ENDPOINTS = ["di/verify"]
 export const RESERVATION_MODEL = "reservation"
 
 /**
- * How many DI actions (distinct request ids) the person started this month.
- * With upToId, only rows up to that id: the actions that came before a
- * reservation, plus the reservation itself.
+ * A reservation with no model call counts only while its request may still
+ * be running. Longer than any DI route's maxDuration (300 s), so a request
+ * that was killed before it could give its slot back stops counting.
+ */
+export const RESERVATION_TTL_MS = 15 * 60_000
+
+async function allPages<T>(
+  build: () => { range: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }> },
+): Promise<T[]> {
+  const rows: T[] = []
+  const page = 1000
+  for (let from = 0; ; from += page) {
+    const { data, error } = await build().range(from, from + page - 1)
+    if (error) throw error
+    const batch = (data ?? []) as T[]
+    rows.push(...batch)
+    if (batch.length < page) break
+  }
+  return rows
+}
+
+/**
+ * How many DI actions count against the person's limit this month. An
+ * action is its reservation row: it belongs to the month it was reserved
+ * in, and counts once a model call was recorded for it, or while it is
+ * still in flight. With upToId, only reservations up to that id: the ones
+ * that came before a new reservation, plus the reservation itself.
  */
 export async function monthActionsByUser(
   admin: SupabaseClient,
@@ -126,22 +156,33 @@ export async function monthActionsByUser(
   now = new Date(),
   upToId?: number,
 ): Promise<number> {
-  const ids = new Set<string>()
-  const page = 1000
-  for (let from = 0; ; from += page) {
-    let query = admin
-      .from("ai_usage")
-      .select("request_id")
-      .eq("user_id", userId)
-      .not("endpoint", "in", `(${UNCOUNTED_ENDPOINTS.join(",")})`)
-      .gte("created_at", monthStart(now).toISOString())
-    if (upToId !== undefined) query = query.lte("id", upToId)
-    const { data, error } = await query.order("id", { ascending: true }).range(from, from + page - 1)
-    if (error) throw error
-    for (const row of data ?? []) ids.add(row.request_id)
-    if (!data || data.length < page) break
-  }
-  return ids.size
+  const since = monthStart(now).toISOString()
+  const [reservations, calls] = await Promise.all([
+    allPages<{ id: number; request_id: string; created_at: string }>(() => {
+      let query = admin
+        .from("ai_usage")
+        .select("id, request_id, created_at")
+        .eq("user_id", userId)
+        .eq("model", RESERVATION_MODEL)
+        .gte("created_at", since)
+      if (upToId !== undefined) query = query.lte("id", upToId)
+      return query.order("id", { ascending: true })
+    }),
+    allPages<{ request_id: string }>(() =>
+      admin
+        .from("ai_usage")
+        .select("id, request_id")
+        .eq("user_id", userId)
+        .neq("model", RESERVATION_MODEL)
+        .gte("created_at", since)
+        .order("id", { ascending: true }),
+    ),
+  ])
+  const called = new Set(calls.map((c) => c.request_id))
+  const inFlightSince = now.getTime() - RESERVATION_TTL_MS
+  return reservations.filter(
+    (r) => r.id === upToId || called.has(r.request_id) || new Date(r.created_at).getTime() >= inFlightSince,
+  ).length
 }
 
 /**
@@ -395,12 +436,12 @@ type ProfileInfo = { id: string; full_name: string | null; email: string | null;
  * set a personal limit before the first use.
  */
 export async function usageByUser(admin: SupabaseClient, now = new Date()): Promise<UserUsage[]> {
-  const rows: { user_id: string | null; request_id: string; endpoint: string; model: string; cost_usd: number }[] = []
+  const rows: { user_id: string | null; request_id: string; endpoint: string; model: string; cost_usd: number; created_at: string }[] = []
   const page = 1000
   for (let from = 0; ; from += page) {
     const { data, error } = await admin
       .from("ai_usage")
-      .select("user_id, request_id, endpoint, model, cost_usd")
+      .select("user_id, request_id, endpoint, model, cost_usd, created_at")
       .gte("created_at", monthStart(now).toISOString())
       .order("id", { ascending: true })
       .range(from, from + page - 1)
@@ -408,14 +449,29 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
     rows.push(...((data ?? []) as typeof rows))
     if (!data || data.length < page) break
   }
-  const byUser = new Map<string, { requests: Set<string>; calls: number; cost: number }>()
+  // Actions follow monthActionsByUser: a reservation that got a model call
+  // or is still in flight. Requests without a reservation (super admins, or
+  // a call made while the allowance check failed open) count by request id.
+  type Acc = { reserved: Map<string, number>; called: Set<string>; calls: number; cost: number }
+  const byUser = new Map<string, Acc>()
   for (const r of rows) {
     if (!r.user_id) continue
-    const u = byUser.get(r.user_id) ?? { requests: new Set<string>(), calls: 0, cost: 0 }
-    if (!UNCOUNTED_ENDPOINTS.includes(r.endpoint)) u.requests.add(r.request_id)
-    if (r.model !== RESERVATION_MODEL) u.calls += 1
+    const u = byUser.get(r.user_id) ?? { reserved: new Map(), called: new Set<string>(), calls: 0, cost: 0 }
+    if (r.model === RESERVATION_MODEL) {
+      u.reserved.set(r.request_id, new Date(r.created_at).getTime())
+    } else {
+      u.calls += 1
+      if (!UNCOUNTED_ENDPOINTS.includes(r.endpoint)) u.called.add(r.request_id)
+    }
     u.cost += Number(r.cost_usd)
     byUser.set(r.user_id, u)
+  }
+  const inFlightSince = now.getTime() - RESERVATION_TTL_MS
+  const actionsOf = (u: Acc) => {
+    let n = 0
+    for (const [requestId, at] of u.reserved) if (u.called.has(requestId) || at >= inFlightSince) n += 1
+    for (const requestId of u.called) if (!u.reserved.has(requestId)) n += 1
+    return n
   }
 
   const columns = "id, full_name, email, role, ai_monthly_limit"
@@ -431,14 +487,14 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
   const ids = new Set<string>([...info.keys(), ...byUser.keys()])
   return Array.from(ids)
     .map((id) => {
-      const u = byUser.get(id) ?? { requests: new Set<string>(), calls: 0, cost: 0 }
+      const u = byUser.get(id) ?? { reserved: new Map<string, number>(), called: new Set<string>(), calls: 0, cost: 0 }
       const p = info.get(id)
       return {
         userId: id,
         name: p?.full_name || p?.email || "Nežinomas",
         email: p?.email ?? null,
         role: p?.role ?? null,
-        actions: u.requests.size,
+        actions: actionsOf(u),
         calls: u.calls,
         costUsd: Math.round(u.cost * 100000) / 100000,
         limit: p?.ai_monthly_limit ?? null,

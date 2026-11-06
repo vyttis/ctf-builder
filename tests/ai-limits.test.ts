@@ -7,6 +7,7 @@ type Row = Record<string, unknown>
 
 class FakeDb {
   tables: Record<string, Row[]> = {}
+  failing = new Set<string>()
   private ids: Record<string, number> = {}
   rows(table: string): Row[] {
     this.tables[table] ??= []
@@ -61,6 +62,10 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
     this.filters.push((r) => (r[c] as string | number) >= v)
     return this
   }
+  neq(c: string, v: unknown) {
+    this.filters.push((r) => r[c] !== v)
+    return this
+  }
   lte(c: string, v: string | number) {
     this.filters.push((r) => (r[c] as string | number) <= v)
     return this
@@ -111,7 +116,11 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
     onRejected?: ((e: unknown) => B | PromiseLike<B>) | null,
   ): PromiseLike<A | B> {
     return Promise.resolve()
-      .then(() => ({ data: this.run(), error: null as null }))
+      .then(() =>
+        this.db.failing.has(this.table)
+          ? ({ data: null, error: { message: "unavailable", code: "XX000" } } as never)
+          : { data: this.run(), error: null as null },
+      )
       .then(onFulfilled, onRejected)
   }
 }
@@ -163,19 +172,38 @@ function setup(): FakeDb {
   return db
 }
 
-function addUsage(db: FakeDb, n: number, extra: Row = {}) {
+/** One finished DI action: its reservation and one model call. */
+function addActions(db: FakeDb, n: number, extra: Row = {}) {
   for (let i = 0; i < n; i++) {
-    db.rows("ai_usage").push({
-      id: db.nextId("ai_usage"),
-      user_id: USER,
-      request_id: `req-${db.rows("ai_usage").length}`,
-      endpoint: "di/generate",
-      model: "claude-sonnet-4-6",
-      cost_usd: 0.01,
-      created_at: new Date().toISOString(),
-      ...extra,
-    })
+    const requestId = `req-${db.rows("ai_usage").length}`
+    const at = (extra.created_at as string) ?? new Date().toISOString()
+    for (const model of ["reservation", "claude-sonnet-4-6"]) {
+      db.rows("ai_usage").push({
+        id: db.nextId("ai_usage"),
+        user_id: USER,
+        request_id: requestId,
+        endpoint: "di/generate",
+        model,
+        cost_usd: model === "reservation" ? 0 : 0.01,
+        created_at: at,
+        ...extra,
+      })
+    }
   }
+}
+
+/** A model call without a reservation (super admin, or the check failed open). */
+function addCall(db: FakeDb, extra: Row = {}) {
+  db.rows("ai_usage").push({
+    id: db.nextId("ai_usage"),
+    user_id: USER,
+    request_id: `req-${db.rows("ai_usage").length}`,
+    endpoint: "di/generate",
+    model: "claude-sonnet-4-6",
+    cost_usd: 0.01,
+    created_at: new Date().toISOString(),
+    ...extra,
+  })
 }
 
 async function flushAfter() {
@@ -200,20 +228,42 @@ describe("budgetLevel", () => {
 describe("personal monthly limit", () => {
   it("counts every action of the month, past the first page of rows", async () => {
     const db = setup()
-    addUsage(db, 2500)
-    addUsage(db, 3, { endpoint: "di/verify" })
-    expect(await monthActionsByUser(db as never, USER)).toBe(2500)
+    addActions(db, 1200)
+    addCall(db, { endpoint: "di/verify" })
+    expect(await monthActionsByUser(db as never, USER)).toBe(1200)
+  })
+
+  it("keeps an action in the month it was reserved in", async () => {
+    const db = setup()
+    const now = new Date()
+    const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) - 1000).toISOString()
+    db.rows("ai_usage").push(
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "late", endpoint: "di/generate", model: "reservation", cost_usd: 0, created_at: lastMonth },
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "late", endpoint: "di/generate", model: "claude-sonnet-4-6", cost_usd: 0.01, created_at: now.toISOString() },
+    )
+    expect(await monthActionsByUser(db as never, USER, now)).toBe(0)
+  })
+
+  it("stops counting a reservation whose request never finished", async () => {
+    const db = setup()
+    const now = new Date("2026-11-15T12:00:00Z")
+    const old = new Date("2026-11-15T11:40:00Z")
+    db.rows("ai_usage").push(
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "killed", endpoint: "di/generate", model: "reservation", cost_usd: 0, created_at: old.toISOString() },
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "running", endpoint: "di/generate", model: "reservation", cost_usd: 0, created_at: now.toISOString() },
+    )
+    expect(await monthActionsByUser(db as never, USER, now)).toBe(1)
   })
 
   it("lets only one of two simultaneous requests take the last slot", async () => {
     const db = setup()
-    addUsage(db, 39)
+    addActions(db, 39)
     const [a, b] = await Promise.all([checkAiAllowance(USER, "di/generate"), checkAiAllowance(USER, "di/generate")])
     expect([a.ok, b.ok].sort()).toEqual([false, true])
     const denied = (a.ok ? b : a) as Extract<typeof a, { ok: false }>
     expect(denied.code).toBe("ai_user_limit")
     // The denied request gave its slot back; the allowed one holds it.
-    expect(db.rows("ai_usage").filter((r) => r.model === RESERVATION_MODEL)).toHaveLength(1)
+    expect(db.rows("ai_usage").filter((r) => r.model === RESERVATION_MODEL)).toHaveLength(40)
     expect(await monthActionsByUser(db as never, USER)).toBe(40)
   })
 
@@ -237,17 +287,27 @@ describe("personal monthly limit", () => {
 
   it("does not reserve a slot for a re-check", async () => {
     const db = setup()
-    addUsage(db, 40)
+    addActions(db, 40)
     const allowance = await checkAiAllowance(USER, "di/verify", new Date(), { countsTowardLimit: false })
     expect(allowance.ok).toBe(true)
-    expect(db.rows("ai_usage").filter((r) => r.model === RESERVATION_MODEL)).toHaveLength(0)
+    expect(db.rows("ai_usage").filter((r) => r.model === RESERVATION_MODEL)).toHaveLength(40)
+  })
+
+  it("fails open instead of applying defaults when settings cannot be read", async () => {
+    const db = setup()
+    // Configured above the built-in default of 40.
+    db.rows("platform_settings")[0].ai_user_monthly_limit = 100
+    addActions(db, 45)
+    db.failing.add("platform_settings")
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    expect(allowance.ok).toBe(true)
   })
 })
 
 describe("budget alerts", () => {
   it("retries the email when it did not go out, then sends it once", async () => {
     const db = setup()
-    addUsage(db, 1, { cost_usd: 42 })
+    addCall(db, { cost_usd: 42 })
     await monthSpendUsd(db as never, new Date(), true)
 
     h.sendResults.push({ ok: false })
@@ -264,7 +324,7 @@ describe("budget alerts", () => {
 
   it("does not read the database below the threshold", async () => {
     const db = setup()
-    addUsage(db, 1, { cost_usd: 1 })
+    addCall(db, { cost_usd: 1 })
     await monthSpendUsd(db as never, new Date(), true)
     const spy = vi.spyOn(db, "from")
     await maybeSendBudgetAlert(db as never)
@@ -276,9 +336,11 @@ describe("budget alerts", () => {
 describe("usage per person", () => {
   it("lists active facilitators who have not used DI yet", async () => {
     const db = setup()
-    addUsage(db, 2)
+    addActions(db, 2)
+    addCall(db)
     const users = await usageByUser(db as never)
     expect(users.map((u) => u.userId)).toEqual([USER, OTHER])
+    expect(users[0]).toMatchObject({ actions: 3, calls: 3 })
     expect(users[1]).toMatchObject({ actions: 0, calls: 0, costUsd: 0 })
   })
 })

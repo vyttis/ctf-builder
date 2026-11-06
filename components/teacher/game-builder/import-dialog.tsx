@@ -117,7 +117,7 @@ export function ImportDialog({
             turinį.
           </DialogDescription>
         </DialogHeader>
-        <AiQuotaNote />
+        <AiQuotaNote refreshKey={step} />
 
         {step === "upload" && (
           <div

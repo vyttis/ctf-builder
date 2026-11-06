@@ -13,11 +13,22 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Prisijunkite." }, { status: 401 })
 
   const admin = createAdminClient()
-  const [{ data: profile }, settings] = await Promise.all([
-    admin.from("profiles").select("role, ai_monthly_limit").eq("id", user.id).maybeSingle(),
-    loadAiSettings(admin),
-  ])
-  const [used, spent] = await Promise.all([monthActionsByUser(admin, user.id), monthSpendUsd(admin)])
+  let profile: { role: string; ai_monthly_limit: number | null } | null
+  let settings: Awaited<ReturnType<typeof loadAiSettings>>
+  let used: number
+  let spent: number
+  try {
+    const [profileRes, loaded] = await Promise.all([
+      admin.from("profiles").select("role, ai_monthly_limit").eq("id", user.id).maybeSingle(),
+      loadAiSettings(admin),
+    ])
+    profile = profileRes.data
+    settings = loaded
+    ;[used, spent] = await Promise.all([monthActionsByUser(admin, user.id), monthSpendUsd(admin)])
+  } catch {
+    // The note next to the DI buttons simply stays hidden.
+    return NextResponse.json({ error: "DI likučio dabar gauti nepavyko." }, { status: 503 })
+  }
   const unlimited = profile?.role === "super_admin"
   const limit = unlimited ? null : profile?.ai_monthly_limit ?? settings.ai_user_monthly_limit
   const budgetBlocked = !unlimited && spent >= settings.ai_monthly_budget_usd
