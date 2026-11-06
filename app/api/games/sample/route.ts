@@ -42,7 +42,7 @@ export async function POST() {
         description: c.description,
         type: c.type,
         points: c.points,
-        answer_hash: await hashAnswer(c.correct_answer),
+        answer_hash: await hashAnswer(c.correct_answer, c.type),
         hints: c.hints,
         options: c.options,
         order_index: c.order_index,

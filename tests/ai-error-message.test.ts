@@ -21,3 +21,27 @@ describe("friendlyAiError", () => {
     expect(friendlyAiError(new Error("socket hang up"), "Nepavyko.")).toBe("Nepavyko.")
   })
 })
+
+describe("friendlyAiError does not match loose words", () => {
+  it("keeps the caller's message when the model answered with a bad shape", () => {
+    expect(friendlyAiError(new Error("Model returned no text block"), "Bandykite dar kartą.")).toBe("Bandykite dar kartą.")
+  })
+
+  it("does not read 'generate' as a rate limit", () => {
+    expect(friendlyAiError(new Error("Failed to generate tasks"), "Nepavyko.")).toBe("Nepavyko.")
+  })
+
+  it("does not read digits inside a request id as a status code", () => {
+    expect(friendlyAiError(new Error("500 server error request_id req_01x401y"), "Nepavyko.")).toBe("Nepavyko.")
+  })
+
+  it("maps a missing model", () => {
+    const raw = new Error('404 {"type":"error","error":{"type":"not_found_error","message":"model: claude-x"}}')
+    expect(friendlyAiError(raw, "f")).toContain("modelis")
+  })
+
+  it("maps an invalid key", () => {
+    const raw = new Error('401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}')
+    expect(friendlyAiError(raw, "f")).toContain("nepasiekiama")
+  })
+})

@@ -431,7 +431,9 @@ export function ManualTaskEditor({
             }`}
           />
           <p className="text-[10px] text-muted-foreground">
-            Tikrinant nesvarbu didžiosios raidės, lietuviškos raidės (š = s) ir tarpai pradžioje ar pabaigoje. Žodžio forma turi sutapti.
+            {type === "number"
+              ? "Dalyvis turi įvesti tą patį skaičių."
+              : "Tikrinant nesvarbu didžiosios raidės, lietuviškos raidės (š = s) ir tarpai. Žodžio forma turi sutapti."}
           </p>
         </div>
       )}

@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         .gte("attempted_at", oneMinuteAgo),
       supabase
         .from("challenges")
-        .select("id, points, game_id, explanation, hint_penalty, hints, answer_hash")
+        .select("id, type, options, points, game_id, explanation, hint_penalty, hints, answer_hash")
         .eq("id", parsed.data.challenge_id)
         .single(),
       // Authoritative hint count (00024). If the table is missing the query
@@ -187,7 +187,10 @@ export async function POST(request: Request) {
     }
 
     // Verify answer server-side with bcrypt (supports legacy plaintext hashes)
-    const isCorrect = await verifyAnswer(parsed.data.answer, challenge.answer_hash)
+    const isCorrect = await verifyAnswer(parsed.data.answer, challenge.answer_hash, {
+      type: challenge.type,
+      options: challenge.options,
+    })
 
     // Hint penalty from server-recorded reveals (00024), not the client-declared
     // count — otherwise a student could reveal hints and submit hints_used: 0.
