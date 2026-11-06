@@ -86,21 +86,31 @@ export async function loadAiSettings(admin: SupabaseClient): Promise<AiSettings>
 }
 
 // The month's spend, cached briefly per server instance: every DI action
-// reads it, and a minute of lag is fine for a monthly budget.
+// reads it, and a minute of lag is fine for a monthly budget. A usage row
+// written by this instance drops the cache, and a scan that was already
+// running when that happened does not store its total, so the cache never
+// misses or double-counts a cost this instance recorded.
 let spendCache: { month: number; usd: number; at: number } | null = null
+let spendGeneration = 0
 const SPEND_TTL_MS = 60_000
+
+function invalidateSpendCache() {
+  spendGeneration += 1
+  spendCache = null
+}
 
 export async function monthSpendUsd(admin: SupabaseClient, now = new Date(), fresh = false): Promise<number> {
   const month = monthStart(now).getTime()
   if (!fresh && spendCache && spendCache.month === month && Date.now() - spendCache.at < SPEND_TTL_MS) {
     return spendCache.usd
   }
+  const generation = spendGeneration
   const rows = await allRowsById<{ id: number; cost_usd: number | string }>(() =>
     admin.from("ai_usage").select("id, cost_usd").gte("created_at", new Date(month).toISOString()),
   )
   let total = 0
   for (const row of rows) total += Number(row.cost_usd)
-  spendCache = { month, usd: total, at: Date.now() }
+  if (generation === spendGeneration) spendCache = { month, usd: total, at: Date.now() }
   return total
 }
 
@@ -186,6 +196,7 @@ export async function monthActionsByUser(
  * Takes a limit slot for this action before any model call. The database
  * counts and inserts under a per-person lock (reserve_ai_action, migration
  * 20261106145000), so two requests at the last free slot cannot both pass.
+ * The database takes the month from the reservation's own timestamp.
  * If the action ends without a model call (bad input, the model failed), the
  * slot is given back after the response; a request killed before that stops
  * counting after RESERVATION_TTL_MS.
@@ -195,15 +206,13 @@ async function reserveAction(
   admin: SupabaseClient,
   ctx: AiContext,
   limit: number,
-  now: Date,
 ): Promise<number | null> {
   const { data, error } = await admin.rpc("reserve_ai_action", {
     p_user_id: ctx.userId,
     p_request_id: ctx.requestId,
     p_endpoint: ctx.endpoint,
     p_limit: limit,
-    p_month_start: monthStart(now).toISOString(),
-    p_in_flight_since: new Date(now.getTime() - RESERVATION_TTL_MS).toISOString(),
+    p_in_flight_seconds: RESERVATION_TTL_MS / 1000,
   })
   if (error) throw error
   const used = Number(data)
@@ -266,7 +275,7 @@ export async function checkAiAllowance(
       }
     }
     const limit = profile?.ai_monthly_limit ?? settings.ai_user_monthly_limit
-    const used = await reserveAction(admin, ctx, limit, now)
+    const used = await reserveAction(admin, ctx, limit)
     if (used === null) {
       return {
         ok: false,
@@ -311,7 +320,7 @@ export async function recordAiUsage(model: string, usage: TokenUsage | undefined
       console.error("[ai-usage] insert failed", { code: error.code })
       return
     }
-    if (spendCache && spendCache.month === monthStart().getTime()) spendCache.usd += cost
+    invalidateSpendCache()
     after(() => maybeSendBudgetAlert(admin))
   } catch (error) {
     console.error("[ai-usage] record failed", { error: error instanceof Error ? error.message : "unknown" })
@@ -354,10 +363,27 @@ async function alertClaimState(admin: SupabaseClient, target: string, now: Date)
 }
 
 /**
+ * Marks a claim delivered after its email went out. Retried, because a claim
+ * left unmarked looks abandoned after ALERT_CLAIM_TTL_MS and the email would
+ * be sent again; if every attempt fails, that one duplicate email is the
+ * accepted cost (a lost alert would be worse).
+ */
+async function markAlertDelivered(admin: SupabaseClient, claimId: number, spent: number, budget: number) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { error } = await admin
+      .from("admin_audit_log")
+      .update({ details: { spent_usd: spent, budget_usd: budget, delivered: true } })
+      .eq("id", claimId)
+    if (!error) return
+    console.error("[ai-usage] marking budget alert delivered failed", { attempt, code: error.code })
+    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 500))
+  }
+}
+
+/**
  * Sends the 80 % and 100 % budget emails once per month each. Runs after
- * every recorded call, so it starts from the per-instance spend (kept
- * current by recordAiUsage) and reads the database only once a threshold
- * may have been crossed and its email is not out yet. The audit row is the
+ * every recorded call, starting from the per-instance spend cache, and reads
+ * the claims only once a threshold may have been crossed. The audit row is the
  * claim (unique per month and level, migration 20261106145000): it is
  * marked delivered after the email goes out, removed again if it could not
  * go out, and taken over after ten minutes if its worker stopped midway.
@@ -420,12 +446,7 @@ export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date
           ),
         )
         delivered = result.ok
-        if (delivered) {
-          await admin
-            .from("admin_audit_log")
-            .update({ details: { spent_usd: spent, budget_usd: settings.ai_monthly_budget_usd, delivered: true } })
-            .eq("id", claimId)
-        }
+        if (delivered) await markAlertDelivered(admin, claimId, spent, settings.ai_monthly_budget_usd)
       }
     } finally {
       if (!delivered) await release()

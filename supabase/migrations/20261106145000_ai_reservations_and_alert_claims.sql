@@ -6,6 +6,9 @@
 -- requests started together at the last free slot cannot both pass, however
 -- their transactions commit. An action counts when a model call was recorded
 -- for it, or while it may still be running (in-flight window from the app).
+-- The month (UTC) and the in-flight window are taken from the same timestamp
+-- the reservation row gets, so a call at the turn of a month is counted in
+-- the month its row belongs to.
 --
 -- Budget alert emails are claimed with a unique index: one row per month and
 -- level, so two servers crossing a threshold together send one email.
@@ -29,14 +32,16 @@ CREATE OR REPLACE FUNCTION public.reserve_ai_action(
   p_request_id uuid,
   p_endpoint text,
   p_limit integer,
-  p_month_start timestamptz,
-  p_in_flight_since timestamptz
+  p_in_flight_seconds integer
 ) RETURNS integer
 LANGUAGE plpgsql
 SECURITY INVOKER
 SET search_path = public, pg_temp
 AS $$
 DECLARE
+  v_now constant timestamptz := now();
+  v_month_start constant timestamptz := date_trunc('month', v_now, 'UTC');
+  v_in_flight_since constant timestamptz := v_now - make_interval(secs => p_in_flight_seconds);
   v_used integer;
 BEGIN
   -- One reservation at a time per person: the count below sees every
@@ -47,9 +52,9 @@ BEGIN
   FROM public.ai_usage r
   WHERE r.user_id = p_user_id
     AND r.model = 'reservation'
-    AND r.created_at >= p_month_start
+    AND r.created_at >= v_month_start
     AND (
-      r.created_at >= p_in_flight_since
+      r.created_at >= v_in_flight_since
       OR EXISTS (
         SELECT 1 FROM public.ai_usage c
         WHERE c.request_id = r.request_id AND c.model <> 'reservation'
@@ -60,16 +65,16 @@ BEGIN
     RETURN -1;
   END IF;
 
-  INSERT INTO public.ai_usage (user_id, request_id, endpoint, model)
-  VALUES (p_user_id, p_request_id, p_endpoint, 'reservation');
+  INSERT INTO public.ai_usage (user_id, request_id, endpoint, model, created_at)
+  VALUES (p_user_id, p_request_id, p_endpoint, 'reservation', v_now);
 
   RETURN v_used;
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.reserve_ai_action(uuid, uuid, text, integer, timestamptz, timestamptz)
+REVOKE ALL ON FUNCTION public.reserve_ai_action(uuid, uuid, text, integer, integer)
   FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.reserve_ai_action(uuid, uuid, text, integer, timestamptz, timestamptz)
+GRANT EXECUTE ON FUNCTION public.reserve_ai_action(uuid, uuid, text, integer, integer)
   TO service_role;
 
 COMMIT;

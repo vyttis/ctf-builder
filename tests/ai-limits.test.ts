@@ -25,12 +25,15 @@ class FakeDb {
     return Promise.resolve().then(() => {
       if (name !== "reserve_ai_action") return { data: null, error: { code: "PGRST202", message: "unknown function" } }
       const rows = this.rows("ai_usage")
+      const now = new Date()
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString()
+      const inFlightSince = new Date(now.getTime() - Number(args.p_in_flight_seconds) * 1000).toISOString()
       const used = rows.filter(
         (r) =>
           r.user_id === args.p_user_id &&
           r.model === "reservation" &&
-          String(r.created_at) >= String(args.p_month_start) &&
-          (String(r.created_at) >= String(args.p_in_flight_since) ||
+          String(r.created_at) >= monthStart &&
+          (String(r.created_at) >= inFlightSince ||
             rows.some((c) => c.request_id === r.request_id && c.model !== "reservation")),
       ).length
       if (used >= Number(args.p_limit)) return { data: -1, error: null }
@@ -41,7 +44,7 @@ class FakeDb {
         endpoint: args.p_endpoint,
         model: "reservation",
         cost_usd: 0,
-        created_at: new Date().toISOString(),
+        created_at: now.toISOString(),
       })
       return { data: used, error: null }
     })
@@ -444,6 +447,33 @@ describe("budget alerts", () => {
     expect(h.sent).toBe(0)
   })
 
+  it("marks a sent alert delivered even when the first write fails", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    let failures = 1
+    const realFrom = db.from.bind(db)
+    vi.spyOn(db, "from").mockImplementation((table: string) => {
+      const query = realFrom(table)
+      const realUpdate = query.update.bind(query)
+      query.update = (payload: Row) => {
+        const q = realUpdate(payload)
+        if (failures-- > 0) {
+          q.then = ((onFulfilled, onRejected) =>
+            Promise.resolve({ data: null, error: { code: "XX000", message: "unavailable" } }).then(
+              onFulfilled as never,
+              onRejected,
+            )) as typeof q.then
+        }
+        return q
+      }
+      return query
+    })
+    await maybeSendBudgetAlert(db as never)
+    expect(h.sent).toBe(1)
+    expect((db.rows("admin_audit_log")[0].details as { delivered?: boolean }).delivered).toBe(true)
+  })
+
   it("does not read the database below the threshold", async () => {
     const db = setup()
     addCall(db, { cost_usd: 1 })
@@ -452,6 +482,39 @@ describe("budget alerts", () => {
     await maybeSendBudgetAlert(db as never)
     expect(spy.mock.calls.map((c) => c[0])).not.toContain("ai_usage")
     expect(spy.mock.calls.map((c) => c[0])).not.toContain("admin_audit_log")
+  })
+})
+
+describe("spend cache", () => {
+  it("does not lose a cost recorded while a spend scan was running", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 1 })
+    await monthSpendUsd(db as never, new Date(), true)
+
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const realFrom = db.from.bind(db)
+    vi.spyOn(db, "from").mockImplementationOnce((table: string) => {
+      const query = realFrom(table)
+      const deliver = query.then.bind(query)
+      // The rows are read now; the answer arrives only after the gate opens.
+      query.then = ((onFulfilled, onRejected) =>
+        deliver((v) => gate.then(() => v)).then(onFulfilled as never, onRejected)) as typeof query.then
+      return query
+    })
+    const scan = monthSpendUsd(db as never, new Date(), true)
+
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    if (!allowance.ok) throw new Error("expected allowance")
+    await aiContext.run(allowance.ctx, () => recordAiUsage("claude-sonnet-4-6", { input_tokens: 1000, output_tokens: 500 }))
+    release()
+    await scan
+
+    const total = db.rows("ai_usage").reduce((sum, r) => sum + Number(r.cost_usd), 0)
+    expect(total).toBeGreaterThan(1)
+    expect(await monthSpendUsd(db as never)).toBeCloseTo(total, 10)
   })
 })
 

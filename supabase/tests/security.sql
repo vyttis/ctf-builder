@@ -244,7 +244,7 @@ RESET ROLE;
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
 SELECT set_config('request.jwt.claim.role', 'authenticated', false);
-SELECT public.t_denied($q$SELECT public.reserve_ai_action('00000000-0000-0000-0000-00000000000a', gen_random_uuid(), 'di/generate', 99, now() - interval '1 day', now() - interval '15 minutes')$q$);
+SELECT public.t_denied($q$SELECT public.reserve_ai_action('00000000-0000-0000-0000-00000000000a', gen_random_uuid(), 'di/generate', 99, 900)$q$);
 RESET ROLE;
 
 SET ROLE service_role;
@@ -252,9 +252,7 @@ SELECT set_config('request.jwt.claim.role', 'service_role', false);
 DO $$
 DECLARE
   u constant uuid := '00000000-0000-0000-0000-00000000000b';
-  -- Fixed bounds, so the test does not depend on when in the month it runs.
-  month_start constant timestamptz := now() - interval '1 day';
-  in_flight constant timestamptz := now() - interval '15 minutes';
+  last_month_req constant uuid := gen_random_uuid();
   r1 integer;
   r2 integer;
   r3 integer;
@@ -262,13 +260,17 @@ BEGIN
   -- A reservation that never got a model call and is past the window: free.
   INSERT INTO public.ai_usage (user_id, request_id, endpoint, model, created_at)
     VALUES (u, gen_random_uuid(), 'di/generate', 'reservation', now() - interval '20 minutes');
-  r1 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, month_start, in_flight);
-  r2 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, month_start, in_flight);
-  r3 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, month_start, in_flight);
+  -- A finished action from just before this month began: not counted.
+  INSERT INTO public.ai_usage (user_id, request_id, endpoint, model, created_at)
+    VALUES (u, last_month_req, 'di/generate', 'reservation', date_trunc('month', now(), 'UTC') - interval '1 second'),
+           (u, last_month_req, 'di/generate', 'claude-test', date_trunc('month', now(), 'UTC') - interval '1 second');
+  r1 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, 900);
+  r2 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, 900);
+  r3 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, 900);
   IF r1 <> 0 OR r2 <> 1 OR r3 <> -1 THEN
     RAISE EXCEPTION 'reservations at limit 2 must give 0, 1, -1; got %, %, %', r1, r2, r3;
   END IF;
-  IF (SELECT count(*) FROM public.ai_usage WHERE user_id = u AND model = 'reservation') <> 3 THEN
+  IF (SELECT count(*) FROM public.ai_usage WHERE user_id = u AND model = 'reservation') <> 4 THEN
     RAISE EXCEPTION 'a refused reservation must not leave a row';
   END IF;
 
