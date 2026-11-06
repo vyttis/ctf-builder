@@ -78,7 +78,8 @@ export async function proxy(request: NextRequest) {
   }
 
   // Participant routes on play.*: no auth, no Supabase calls, fast first paint.
-  if (kind === "play") {
+  // Facilitator APIs on play.* still go through the account gate below.
+  if (kind === "play" && !FACILITATOR_API.test(url.pathname)) {
     // Participants who type play.kusteam.app by hand should land on the
     // code entry screen, not the facilitator-facing landing page.
     if (url.pathname === "/" || url.pathname === "/play") {

@@ -74,10 +74,12 @@ export async function grantAccount(
     ...(account.role ? { role: account.role } : {}),
   }
 
+  // Exact match: ilike would treat "_" and "%" in an address as wildcards.
+  // Supabase Auth stores emails in lower case, and so do profiles.
   const { data: existing } = await admin
     .from("profiles")
     .select("id, first_name, last_name, school")
-    .ilike("email", email)
+    .eq("email", email)
     .maybeSingle()
 
   if (existing) {

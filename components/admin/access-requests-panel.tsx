@@ -225,7 +225,7 @@ export function AccessRequestsPanel({ onPendingChange }: { onPendingChange?: (n:
                     ? confirm.row.account_status
                       ? `Paskyra ${confirm.row.email} bus aktyvuota.`
                       : `Į ${confirm.row.email} išsiųsime kvietimą. Paspaudęs nuorodą mokytojas užbaigs registraciją.`
-                    : `${confirm.row.first_name} ${confirm.row.last_name} laiško negaus. Prašymą rasite skiltyje „Atmesti“.`}
+                    : `${confirm.row.first_name} ${confirm.row.last_name} gaus trumpą laišką, kad šį kartą paskyros suteikti negalime (be priežasties). Prašymą rasite skiltyje „Atmesti“.`}
                 </DialogDescription>
               </DialogHeader>
               {confirm.action === "reject" && (
