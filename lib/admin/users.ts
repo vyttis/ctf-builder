@@ -1,10 +1,32 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { usageByUser } from "@/lib/ai/usage"
+import { allRowsById } from "@/lib/supabase/all-pages"
 import type { AccountStatus, UserRole } from "@/types/game"
 import type { AdminUserRow } from "@/lib/admin/user-rows"
 
 const PROFILE_COLUMNS =
   "id, email, full_name, first_name, last_name, avatar_url, role, status, school, school_code, municipality, school_type, subjects, grades, onboarding_completed, created_at, approved_at, ai_monthly_limit"
+
+interface ProfileRow {
+  id: string
+  email: string
+  full_name: string | null
+  first_name: string | null
+  last_name: string | null
+  avatar_url: string | null
+  role: string
+  status: string | null
+  school: string | null
+  school_code: string | null
+  municipality: string | null
+  school_type: string | null
+  subjects: string[] | null
+  grades: string[] | null
+  onboarding_completed: boolean | null
+  created_at: string
+  approved_at: string | null
+  ai_monthly_limit: number | null
+}
 
 async function activitiesByTeacher(admin: SupabaseClient): Promise<Map<string, number>> {
   const counts = new Map<string, number>()
@@ -44,11 +66,10 @@ async function lastSignIns(admin: SupabaseClient): Promise<Map<string, string | 
  * error.
  */
 export async function loadAdminUsers(admin: SupabaseClient, { withAi }: { withAi: boolean }): Promise<AdminUserRow[]> {
-  const { data: profiles, error } = await admin
-    .from("profiles")
-    .select(PROFILE_COLUMNS)
-    .order("created_at", { ascending: false })
-  if (error) throw error
+  // Every profile, past the 1000-row page limit, newest first.
+  const { data: rows, error } = await allRowsById<ProfileRow>(() => admin.from("profiles").select(PROFILE_COLUMNS))
+  if (!rows) throw error
+  const profiles = rows.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
 
   const [activities, signIns, usage] = await Promise.all([
     activitiesByTeacher(admin).catch(() => new Map<string, number>()),
@@ -57,7 +78,7 @@ export async function loadAdminUsers(admin: SupabaseClient, { withAi }: { withAi
   ])
   const actions = new Map(usage.map((u) => [u.userId, u.actions]))
 
-  return (profiles ?? []).map((p) => {
+  return profiles.map((p) => {
     const name = [p.first_name, p.last_name].filter(Boolean).join(" ") || p.full_name || p.email
     return {
       id: p.id,

@@ -105,3 +105,52 @@ describe("dateOnly", () => {
     expect(dateOnly(null)).toBe("")
   })
 })
+
+describe("loadAdminUsers", () => {
+  it("reads every profile past the 1000-row page, newest first", async () => {
+    const { loadAdminUsers } = await import("@/lib/admin/users")
+    const profiles = Array.from({ length: 2345 }, (_, i) => ({
+      id: `p${String(i).padStart(5, "0")}`,
+      email: `p${i}@example.com`,
+      created_at: new Date(Date.UTC(2026, 0, 1) + i * 60_000).toISOString(),
+      role: "teacher",
+    }))
+    let profileRequests = 0
+    const profileQuery = () => {
+      let after: string | null = null
+      const q = {
+        select: () => q,
+        order: () => q,
+        gt: (_col: string, value: string) => {
+          after = value
+          return q
+        },
+        limit: async (n: number) => {
+          profileRequests++
+          const rest = profiles.filter((p) => after === null || p.id > after)
+          // PostgREST never returns more than max_rows.
+          return { data: rest.slice(0, Math.min(n, 1000)), error: null }
+        },
+      }
+      return q
+    }
+    const gamesQuery = () => {
+      const q = {
+        select: () => q,
+        order: () => q,
+        range: async () => ({ data: [], error: null }),
+      }
+      return q
+    }
+    const admin = {
+      from: (table: string) => (table === "profiles" ? profileQuery() : gamesQuery()),
+      auth: { admin: { listUsers: async () => ({ data: { users: [] }, error: null }) } },
+    }
+    const rows = await loadAdminUsers(admin as never, { withAi: false })
+    expect(rows).toHaveLength(2345)
+    expect(profileRequests).toBe(3)
+    expect(rows[0].id).toBe("p02344")
+    expect(rows.at(-1)?.id).toBe("p00000")
+    expect(rows[0].ai_actions).toBeNull()
+  })
+})
