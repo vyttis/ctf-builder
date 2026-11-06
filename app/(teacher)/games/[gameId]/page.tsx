@@ -108,9 +108,11 @@ export default async function GameDetailPage(
     .limit(1)
     .maybeSingle()
 
-  // Finished games lead with results — computed server-side, no client fetch
+  // Finished games lead with results, computed server-side. If the answers
+  // cannot be read in full, the page shows without the results block rather
+  // than with partial numbers.
   const detailedStats = isFinished
-    ? await computeDetailedStats(supabase, game.id)
+    ? await computeDetailedStats(supabase, game.id).catch(() => null)
     : null
 
   const statsCards = (
@@ -367,6 +369,7 @@ export default async function GameDetailPage(
             <TeamResultsTable
               teamStats={detailedStats.team_stats}
               totalChallenges={challenges.length}
+              fileLabel={game.title}
             />
           )}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
