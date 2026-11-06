@@ -37,6 +37,8 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
   const [lastSubmissions, setLastSubmissions] = useState<Map<string, string>>(new Map())
   const [connectionState, setConnectionState] = useState<LiveConnectionState>("connecting")
   const [retryNonce, setRetryNonce] = useState(0)
+  // The activity whose answers the state above holds.
+  const stateGameRef = useRef<string | null>(null)
 
   const retry = useCallback(() => setRetryNonce((n) => n + 1), [])
 
@@ -86,8 +88,30 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
         solvedMap.get(sub.team_id)!.add(sub.challenge_id)
       }
     }
-    setLastSubmissions(latestMap)
-    setSolvedSets(solvedMap)
+    // Merge with what realtime delivered meanwhile instead of replacing it:
+    // an answer can arrive after the id-ordered read has passed its place.
+    // Both only grow (a solve is never taken back), so the union and the
+    // later time are always right. State held for another activity is
+    // replaced.
+    const sameGame = stateGameRef.current === gameId
+    stateGameRef.current = gameId
+    setLastSubmissions((prev) => {
+      if (!sameGame) return latestMap
+      const next = new Map(latestMap)
+      for (const [teamId, at] of prev) {
+        const snap = next.get(teamId)
+        if (!snap || Date.parse(at) > Date.parse(snap)) next.set(teamId, at)
+      }
+      return next
+    })
+    setSolvedSets((prev) => {
+      if (!sameGame) return solvedMap
+      const next = new Map(solvedMap)
+      for (const [teamId, solved] of prev) {
+        next.set(teamId, new Set([...(next.get(teamId) ?? []), ...solved]))
+      }
+      return next
+    })
   }, [gameId])
 
   useEffect(() => {
