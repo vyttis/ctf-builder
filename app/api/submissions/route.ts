@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { startTeamClock } from "@/lib/game/team-start"
 import { MAX_ANSWER_LENGTH, verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { pluralizeLt } from "@/lib/utils"
@@ -153,19 +154,10 @@ export async function POST(request: Request) {
     if (clock.limitMinutes && !startedAt && "started_at" in team) {
       // A timed activity whose team has no start (a missed stamp, or a limit
       // set while the activity ran): the first answer starts its clock, so
-      // no team answers without one. Same conditional stamp as /api/play/start.
-      const { data: stamped } = await supabase
-        .from("teams")
-        .update({ started_at: new Date().toISOString() })
-        .eq("id", team.id)
-        .is("started_at", null)
-        .select("started_at, pause_offset_ms")
-        .maybeSingle()
-      const current =
-        stamped ??
-        (await supabase.from("teams").select("started_at, pause_offset_ms").eq("id", team.id).maybeSingle()).data
-      startedAt = (current?.started_at as string | null | undefined) ?? null
-      offsetMs = Number(current?.pause_offset_ms ?? 0)
+      // no team answers without one.
+      const started = await startTeamClock(supabase, team.id)
+      startedAt = started.startedAt
+      offsetMs = started.pauseOffsetMs
     }
     if (startedAt) {
       const now = Date.now()

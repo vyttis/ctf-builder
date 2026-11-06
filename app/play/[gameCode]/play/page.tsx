@@ -267,6 +267,34 @@ export default function PlayPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingStart, run?.confirmed, session])
 
+  // On the ready screen, another device of the team may press "Pradėti":
+  // ask every few seconds, and join its clock as soon as it started.
+  useEffect(() => {
+    if (!awaitingStart || gameStarted || !session) return
+    let busy = false
+    const poll = async () => {
+      if (busy || document.visibilityState !== "visible") return
+      busy = true
+      try {
+        const res = await fetch(`/api/play/state?game_code=${encodeURIComponent(gameCode)}`, {
+          headers: { "x-session-token": session.session_token },
+          cache: "no-store",
+        })
+        if (!res.ok) return
+        const state = (await res.json()) as { team_started_at?: string | null; challenge_count?: number }
+        if (typeof state.challenge_count === "number") setTaskCount(state.challenge_count)
+        if (state.team_started_at) void loadChallenges(session)
+      } catch {
+        // Network hiccup: the next round retries.
+      } finally {
+        busy = false
+      }
+    }
+    const interval = setInterval(poll, 5000)
+    return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingStart, gameStarted, session, gameCode])
+
   async function loadChallenges(s: PlayerSession) {
     // Single round-trip via /api/play/state (game + challenges + solved submissions)
     setLoadError(false)
@@ -431,10 +459,12 @@ export default function PlayPage() {
         team?: { total_points?: number } | null
         tasks_version?: string | null
         awaiting_start?: boolean
+        challenge_count?: number
       }
-      // Tasks held back until the team's start (a limit set while the team
-      // was already working): keep what it has; its first answer starts the
-      // clock on the server.
+      if (typeof state.challenge_count === "number") setTaskCount(state.challenge_count)
+      // Tasks held back until the team's start (on the ready screen, or a
+      // limit set while the team was already working): keep what it has;
+      // its first answer starts the clock on the server.
       if (!Array.isArray(state.challenges) || state.awaiting_start) return
       // Without a marker in the answer (its read failed), keep the polled
       // one: the tasks are now at least that new, and change detection goes on.

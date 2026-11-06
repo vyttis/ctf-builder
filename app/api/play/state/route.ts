@@ -48,7 +48,10 @@ export async function GET(request: Request) {
         pauseOffsetMs: Number(startRes.data.pause_offset_ms ?? 0) || 0,
       }
     } else if (startRes.error) {
+      // Unknown start: a timed activity holds its tasks back (fail closed);
+      // the page keeps asking.
       console.error("team start read failed:", startRes.error.message)
+      start = { startedAt: null, pauseOffsetMs: 0 }
     }
     const stamps = stampsRes.data
     if (stamps && stamps.status !== "draft") tasks_version = tasksVersion(stamps.challenges)
