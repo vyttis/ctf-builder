@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   ArrowLeft,
@@ -84,7 +84,13 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
   const [note, setNote] = useState("")
   const [noteError, setNoteError] = useState<string | null>(null)
 
+  // The newest request per tab wins: an older answer arriving later (a
+  // reload after an action while "Rodyti daugiau" runs) is dropped.
+  const requestSeq = useRef<Record<LibraryItemStatus, number>>({ pending_review: 0, approved: 0, rejected: 0 })
+
   const load = useCallback(async (status: LibraryItemStatus, page: number) => {
+    const seq = ++requestSeq.current[status]
+    const stale = () => seq !== requestSeq.current[status]
     setLists((prev) => ({ ...prev, [status]: { ...prev[status], loading: true, error: null } }))
     try {
       const res = await fetch(`/api/library?status=${status}&page=${page}&limit=${PAGE_SIZE}`, { cache: "no-store" })
@@ -93,6 +99,7 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
         total?: number
         error?: string
       }
+      if (stale()) return
       if (!res.ok || !Array.isArray(data.items)) {
         throw new Error(data.error ?? "Nepavyko gauti šablonų.")
       }
@@ -108,6 +115,7 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
         },
       }))
     } catch (error) {
+      if (stale()) return
       setLists((prev) => ({
         ...prev,
         [status]: {
@@ -131,6 +139,7 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
   }
 
   async function review(item: LibraryItem, status: LibraryItemStatus, reviewNote?: string) {
+    if (busyId !== null) return false
     setBusyId(item.id)
     try {
       const res = await fetch(`/api/library/${item.id}`, {
@@ -169,6 +178,7 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
   }
 
   async function remove(item: LibraryItem) {
+    if (busyId !== null) return false
     setBusyId(item.id)
     try {
       const res = await fetch(`/api/library/${item.id}`, { method: "DELETE" })
@@ -263,6 +273,7 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
               key={item.id}
               item={item}
               busy={busyId === item.id}
+              locked={busyId !== null}
               canDelete={canDelete}
               onApprove={() => void review(item, "approved")}
               onReject={() => {
@@ -343,6 +354,7 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
 function TemplateCard({
   item,
   busy,
+  locked,
   canDelete,
   onApprove,
   onReject,
@@ -350,7 +362,10 @@ function TemplateCard({
   onDelete,
 }: {
   item: LibraryItem
+  /** This template's action is running. */
   busy: boolean
+  /** Some action is running: one decision at a time. */
+  locked: boolean
   canDelete: boolean
   onApprove: () => void
   onReject: () => void
@@ -431,7 +446,7 @@ function TemplateCard({
         <div className="flex flex-wrap items-center gap-2">
           {item.status === "pending_review" && (
             <>
-              <Button onClick={onApprove} disabled={busy} className="gap-2">
+              <Button onClick={onApprove} disabled={locked} className="gap-2">
                 {busy ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
@@ -442,7 +457,7 @@ function TemplateCard({
               <Button
                 variant="outline"
                 onClick={onReject}
-                disabled={busy}
+                disabled={locked}
                 className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
               >
                 <XCircle className="h-4 w-4" aria-hidden="true" />
@@ -451,7 +466,7 @@ function TemplateCard({
             </>
           )}
           {item.status !== "pending_review" && (
-            <Button variant="outline" onClick={onReturn} disabled={busy} className="gap-2">
+            <Button variant="outline" onClick={onReturn} disabled={locked} className="gap-2">
               {busy ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
@@ -464,7 +479,7 @@ function TemplateCard({
             <Button
               variant="ghost"
               onClick={onDelete}
-              disabled={busy}
+              disabled={locked}
               className="gap-2 text-accent-ink hover:text-accent-ink hover:bg-accent/5 sm:ml-auto"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -519,17 +534,7 @@ function TaskPreview({ task, index }: { task: ChallengeSnapshot; index: number }
           </ol>
         </div>
       )}
-      {task.image_url && (
-        <a href={task.image_url} target="_blank" rel="noopener noreferrer" className="mt-2 ml-8 inline-block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={task.image_url}
-            alt={`${index + 1} užduoties paveikslėlis`}
-            className="max-h-48 max-w-full rounded-md border border-border/60 object-contain bg-muted/30"
-            loading="lazy"
-          />
-        </a>
-      )}
+      {task.image_url && <TaskImage url={task.image_url} index={index} />}
       {task.maps_url && (
         <a
           href={task.maps_url}
@@ -542,5 +547,46 @@ function TaskPreview({ task, index }: { task: ChallengeSnapshot; index: number }
         </a>
       )}
     </li>
+  )
+}
+
+/** Images uploaded to the platform's storage. */
+function isOwnStorage(url: string): boolean {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+  return !!base && url.startsWith(`${base.replace(/\/$/, "")}/storage/`)
+}
+
+/**
+ * An image from the platform's storage shows at once; one from another site
+ * loads only on request, so opening a submission does not tell its author
+ * (or anyone else) when and from where it is being reviewed.
+ */
+function TaskImage({ url, index }: { url: string; index: number }) {
+  const own = isOwnStorage(url)
+  const [shown, setShown] = useState(own)
+  let host = ""
+  try {
+    host = new URL(url).host
+  } catch {
+    return null
+  }
+  if (!shown) {
+    return (
+      <Button variant="outline" size="sm" className="mt-2 ml-8" onClick={() => setShown(true)}>
+        Rodyti paveikslėlį iš {host}
+      </Button>
+    )
+  }
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 ml-8 inline-block">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt={`${index + 1} užduoties paveikslėlis`}
+        referrerPolicy="no-referrer"
+        className="max-h-48 max-w-full rounded-md border border-border/60 object-contain bg-muted/30"
+        loading="lazy"
+      />
+    </a>
   )
 }
