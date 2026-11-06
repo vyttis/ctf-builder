@@ -1,9 +1,16 @@
 import { LessonPlanGenerator } from "@/components/teacher/lesson-plan-generator"
+import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
-export default function NewLessonPlanPage() {
+export default async function NewLessonPlanPage() {
+  // The draft of a generated plan is kept per facilitator in this browser.
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   return (
     <div className="max-w-3xl mx-auto">
       <Link href="/lesson-plans" className="inline-block mb-6">
@@ -26,7 +33,7 @@ export default function NewLessonPlanPage() {
         </p>
       </div>
 
-      <LessonPlanGenerator />
+      <LessonPlanGenerator userId={user?.id ?? ""} />
     </div>
   )
 }

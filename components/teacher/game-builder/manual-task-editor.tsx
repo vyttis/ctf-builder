@@ -157,7 +157,8 @@ export function ManualTaskEditor({
     title, description, type, pointsText, correctAnswer, hints, options, imageUrl,
     mapsUrl, explanation, difficulty, hintPenalty, prerequisites,
   })
-  const dirty = baseline !== null && snapshot !== baseline && !loading
+  // Stays set while saving: the work is safe only once the save succeeded.
+  const dirty = baseline !== null && snapshot !== baseline
   useLeaveWarning(dirty)
 
   // Initialize from challenge or prefill. Every field is set each time, so
@@ -695,7 +696,13 @@ export function ManualTaskEditor({
           )}
           {challenge ? "Atnaujinti" : "Pridėti užduotį"}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            if (!dirty || window.confirm("Užduoties pakeitimai neišsaugoti. Atmesti juos?")) onCancel()
+          }}
+        >
           Atšaukti
         </Button>
       </div>

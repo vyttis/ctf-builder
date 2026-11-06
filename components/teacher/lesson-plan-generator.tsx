@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { AiQuotaNote } from "@/components/teacher/ai-quota-note"
 import { useRouter, useSearchParams } from "next/navigation"
 import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject, getSubjectLabel } from "@/lib/curriculum/subjects"
@@ -91,7 +91,8 @@ function GenerationProgress() {
   )
 }
 
-// The generated plan, kept in this browser until it is saved (TCH-07).
+// The generated plan, kept in this browser until it is saved (TCH-07), per
+// facilitator; signing out removes it (clearLocalWork).
 const PLAN_DRAFT_KEY = "ks-lesson-plan-draft:v1"
 const PLAN_DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -119,14 +120,14 @@ interface PlanDraft {
   }
 }
 
-function readPlanDraft(): PlanDraft | null {
+function readPlanDraft(key: string): PlanDraft | null {
   try {
-    const raw = localStorage.getItem(PLAN_DRAFT_KEY)
+    const raw = localStorage.getItem(key)
     if (!raw) return null
     const draft = JSON.parse(raw) as PlanDraft
     const fresh = typeof draft?.savedAt === "number" && Date.now() - draft.savedAt < PLAN_DRAFT_TTL_MS
     if (!fresh || !Array.isArray(draft.plan?.stages) || draft.plan.stages.length === 0 || !draft.form) {
-      localStorage.removeItem(PLAN_DRAFT_KEY)
+      localStorage.removeItem(key)
       return null
     }
     return draft
@@ -135,23 +136,24 @@ function readPlanDraft(): PlanDraft | null {
   }
 }
 
-function writePlanDraft(draft: PlanDraft) {
+function writePlanDraft(key: string, draft: PlanDraft) {
   try {
-    localStorage.setItem(PLAN_DRAFT_KEY, JSON.stringify(draft))
+    localStorage.setItem(key, JSON.stringify(draft))
   } catch {
     // Storage full or blocked: the leave warning still protects the plan.
   }
 }
 
-function clearPlanDraft() {
+function clearPlanDraft(key: string) {
   try {
-    localStorage.removeItem(PLAN_DRAFT_KEY)
+    localStorage.removeItem(key)
   } catch {
     // Nothing stored.
   }
 }
 
-export function LessonPlanGenerator() {
+export function LessonPlanGenerator({ userId }: { userId: string }) {
+  const draftKey = `${PLAN_DRAFT_KEY}:${userId}`
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -172,10 +174,8 @@ export function LessonPlanGenerator() {
   const [loading, setLoading] = useState(false)
   const [converting, setConverting] = useState(false)
 
-  // Prefill from URL template (shown via lesson-plans list "Pavyzdžiai")
-  useEffect(() => {
-    const templateId = searchParams.get("template")
-    if (!templateId) return
+  // Prefill from a template (lesson-plans list "Pavyzdžiai", ?template=)
+  const applyTemplate = useCallback((templateId: string) => {
     const t = getLessonTemplate(templateId)
     if (!t) return
     setSubject(t.subject)
@@ -188,9 +188,9 @@ export function LessonPlanGenerator() {
     setLearningGoal(t.learning_goal)
     toast({
       title: "Pavyzdys įkeltas",
-      description: 'Peržiūrėkite parametrus ir spauskite „Generuoti".',
+      description: "Peržiūrėkite parametrus ir spauskite „Generuoti“.",
     })
-  }, [searchParams, toast])
+  }, [toast])
 
   // Editable lesson plan state
   const [editTitle, setEditTitle] = useState("")
@@ -202,15 +202,22 @@ export function LessonPlanGenerator() {
   const [stages, setStages] = useState<LessonStage[]>([])
   // When the plan on screen was restored from this browser (not saved yet).
   const [restoredAt, setRestoredAt] = useState<number | null>(null)
+  // A template asked for while an unsaved plan was waiting: it comes after
+  // that plan is saved or thrown away, never over it.
+  const [pendingTemplate, setPendingTemplate] = useState<string | null>(null)
 
   // A generated plan is minutes of DI work: leaving or reloading before it
   // is saved asks first, and the plan is kept in this browser until saved.
   useLeaveWarning(loading || (phase === "preview" && stages.length > 0))
 
   useEffect(() => {
-    if (searchParams.get("template")) return
-    const draft = readPlanDraft()
-    if (!draft) return
+    const templateId = searchParams.get("template")
+    const draft = readPlanDraft(draftKey)
+    if (!draft) {
+      if (templateId) applyTemplate(templateId)
+      return
+    }
+    if (templateId) setPendingTemplate(templateId)
     const f = draft.form
     setSubject(f.subject)
     setIsIntegrated(f.isIntegrated)
@@ -231,11 +238,11 @@ export function LessonPlanGenerator() {
     setStages(p.stages)
     setRestoredAt(draft.savedAt)
     setPhase("preview")
-  }, [searchParams])
+  }, [searchParams, draftKey, applyTemplate])
 
   useEffect(() => {
     if (phase !== "preview" || stages.length === 0) return
-    writePlanDraft({
+    writePlanDraft(draftKey, {
       savedAt: restoredAt ?? Date.now(),
       form: { subject, isIntegrated, secondarySubject, grade, topicId, customTopic, lessonType, duration, learningGoal },
       plan: {
@@ -249,7 +256,7 @@ export function LessonPlanGenerator() {
       },
     })
   }, [
-    phase, restoredAt, subject, isIntegrated, secondarySubject, grade, topicId, customTopic, lessonType,
+    draftKey, phase, restoredAt, subject, isIntegrated, secondarySubject, grade, topicId, customTopic, lessonType,
     duration, learningGoal, editTitle, editGoal, editCurriculumLink, editTeacherNote, editReflection,
     editCompetencies, stages,
   ])
@@ -378,7 +385,7 @@ export function LessonPlanGenerator() {
 
       const data = (await res.json().catch(() => ({}))) as { lesson_plan?: { id: string }; error?: string }
       if (!res.ok || !data.lesson_plan) throw new Error(data.error || "Nepavyko išsaugoti")
-      clearPlanDraft()
+      clearPlanDraft(draftKey)
 
       toast({
         title: "Pamokos planas išsaugotas!",
@@ -424,7 +431,7 @@ export function LessonPlanGenerator() {
 
       const saveData = (await saveRes.json().catch(() => ({}))) as { lesson_plan?: { id: string }; error?: string }
       if (!saveRes.ok || !saveData.lesson_plan) throw new Error(saveData.error || "Nepavyko išsaugoti")
-      clearPlanDraft()
+      clearPlanDraft(draftKey)
 
       router.push(`/lesson-plans/${saveData.lesson_plan.id}?convert=1`)
     } catch (err) {
@@ -438,10 +445,14 @@ export function LessonPlanGenerator() {
   }
 
   function handleRegenerate() {
-    clearPlanDraft()
+    clearPlanDraft(draftKey)
     setRestoredAt(null)
     setPhase("input")
     setStages([])
+    if (pendingTemplate) {
+      applyTemplate(pendingTemplate)
+      setPendingTemplate(null)
+    }
   }
 
   // --- Input phase ---
@@ -783,6 +794,7 @@ export function LessonPlanGenerator() {
               timeZone: "Europe/Vilnius",
             })}
             . Išsaugokite jį arba išmeskite.
+            {pendingTemplate && " Išmetus bus įkeltas pasirinktas pavyzdys."}
           </p>
           <Button variant="outline" size="sm" className="shrink-0" onClick={handleRegenerate}>
             Išmesti

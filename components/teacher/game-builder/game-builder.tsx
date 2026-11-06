@@ -30,7 +30,7 @@ import { TaskCardOverlay } from "./sortable-task-card"
 import { AiSuggestionCard } from "../ai-suggestion-card"
 import { useToast } from "@/hooks/use-toast"
 import { useIsDesktop } from "@/hooks/use-is-desktop"
-import { hasUnsavedTask } from "@/hooks/use-leave-warning"
+import { confirmDiscardTask } from "@/hooks/use-leave-warning"
 import {
   Sheet,
   SheetContent,
@@ -133,9 +133,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
   }, [suggestions, addedIds, suggestionsKey])
 
   // Leaving a task with unsaved changes asks first.
-  function confirmDiscard(): boolean {
-    return !hasUnsavedTask() || window.confirm("Užduoties pakeitimai neišsaugoti. Atmesti juos?")
-  }
+  const confirmDiscard = confirmDiscardTask
 
   // Generation success feedback
   const [generationSuccess, setGenerationSuccess] = useState<number | null>(null)
@@ -733,7 +731,11 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
             coexist with the desktop panel */}
         <Sheet
           open={!isDesktop && mobileSheetOpen}
-          onOpenChange={setMobileSheetOpen}
+          onOpenChange={(open) => {
+            // Closing the sheet drops the editor: unsaved changes ask first.
+            if (!open && !confirmDiscardTask()) return
+            setMobileSheetOpen(open)
+          }}
         >
           <SheetContent
             side="right"
