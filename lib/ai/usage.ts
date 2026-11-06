@@ -139,7 +139,7 @@ export const RESERVATION_MODEL = "reservation"
 export const RESERVATION_TTL_MS = 15 * 60_000
 
 type PageQuery = {
-  gt: (column: string, value: number) => PageQuery
+  gt: (column: string, value: number | string) => PageQuery
   order: (column: string, opts: { ascending: boolean }) => PageQuery
   limit: (n: number) => PromiseLike<{ data: unknown; error: unknown }>
 }
