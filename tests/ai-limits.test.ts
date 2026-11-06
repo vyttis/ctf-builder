@@ -209,6 +209,7 @@ import {
   monthActionsByUser,
   monthSpendUsd,
   recordAiUsage,
+  sumUsd,
   aiContext,
   RESERVATION_MODEL,
   usageByUser,
@@ -485,6 +486,13 @@ describe("budget alerts", () => {
   })
 })
 
+describe("spend total", () => {
+  it("adds many small costs up to the exact budget", () => {
+    expect(sumUsd(Array.from({ length: 5000 }, () => "0.01000"))).toBe(50)
+    expect(sumUsd([0.1, 0.2])).toBe(0.3)
+  })
+})
+
 describe("spend cache", () => {
   it("counts only the requested month, also when the next one has begun", async () => {
     const db = setup()
@@ -527,6 +535,31 @@ describe("spend cache", () => {
 })
 
 describe("usage per person", () => {
+  it("lists every active facilitator, past the first page of profiles", async () => {
+    const db = setup()
+    for (let i = 0; i < 1100; i++) {
+      db.rows("profiles").push({
+        id: `33333333-0000-0000-0000-${String(i).padStart(12, "0")}`,
+        role: "teacher",
+        status: "active",
+        full_name: `Vedėjas ${i}`,
+        email: null,
+        ai_monthly_limit: null,
+      })
+    }
+    const users = await usageByUser(db as never)
+    expect(users).toHaveLength(1102)
+  })
+
+  it("counts only the requested month, also when the next one has begun", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addCall(db, { cost_usd: 2, created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addCall(db, { cost_usd: 5, created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    const users = await usageByUser(db as never, lastDay)
+    expect(users.find((u) => u.userId === USER)).toMatchObject({ calls: 1, costUsd: 2 })
+  })
+
   it("lists active facilitators who have not used DI yet", async () => {
     const db = setup()
     addActions(db, 2)

@@ -112,10 +112,20 @@ export async function monthSpendUsd(admin: SupabaseClient, now = new Date(), fre
       .gte("created_at", new Date(month).toISOString())
       .lt("created_at", nextMonthStart(now).toISOString()),
   )
-  let total = 0
-  for (const row of rows) total += Number(row.cost_usd)
+  const total = sumUsd(rows.map((row) => row.cost_usd))
   if (generation === spendGeneration) spendCache = { month, usd: total, at: Date.now() }
   return total
+}
+
+/**
+ * Adds costs stored with five decimals (numeric(10,5)) in whole
+ * hundred-thousandths, so many small costs add up to the exact total and a
+ * budget that has been reached compares as reached.
+ */
+export function sumUsd(costs: Iterable<number | string>): number {
+  let units = 0
+  for (const cost of costs) units += Math.round(Number(cost) * 100_000)
+  return units / 100_000
 }
 
 /** Placeholder row that holds a limit slot while the action runs. */
@@ -142,15 +152,16 @@ type PageQuery = {
 export async function allRowsById<T extends { id: number | string }>(build: () => unknown): Promise<T[]> {
   const rows: T[] = []
   const page = 1000
-  let lastId = 0
+  let lastId: number | string | null = null
   for (;;) {
-    const query = (build() as PageQuery).gt("id", lastId).order("id", { ascending: true })
-    const { data, error } = await query.limit(page)
+    let query = build() as PageQuery
+    if (lastId !== null) query = query.gt("id", lastId)
+    const { data, error } = await query.order("id", { ascending: true }).limit(page)
     if (error) throw error
     const batch = (data ?? []) as T[]
     rows.push(...batch)
     if (batch.length < page) break
-    lastId = Number(batch[batch.length - 1].id)
+    lastId = batch[batch.length - 1].id
   }
   return rows
 }
@@ -491,11 +502,13 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
     admin
       .from("ai_usage")
       .select("id, user_id, request_id, endpoint, model, cost_usd, created_at")
-      .gte("created_at", monthStart(now).toISOString()),
+      .gte("created_at", monthStart(now).toISOString())
+      .lt("created_at", nextMonthStart(now).toISOString()),
   )
   // Actions follow monthActionsByUser: a reservation that got a model call
   // or is still in flight. Requests without a reservation (super admins, or
   // a call made while the allowance check failed open) count by request id.
+  // cost is kept in hundred-thousandths of a dollar (see sumUsd).
   type Acc = { reserved: Map<string, number>; called: Set<string>; calls: number; cost: number }
   const byUser = new Map<string, Acc>()
   for (const r of rows) {
@@ -507,7 +520,7 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
       u.calls += 1
       u.called.add(r.request_id)
     }
-    u.cost += Number(r.cost_usd)
+    u.cost += Math.round(Number(r.cost_usd) * 100_000)
     byUser.set(r.user_id, u)
   }
   // A call this month whose reservation was made last month (an action
@@ -536,9 +549,8 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
   }
 
   const columns = "id, full_name, email, role, ai_monthly_limit"
-  const { data: active, error: activeError } = await admin.from("profiles").select(columns).eq("status", "active")
-  if (activeError) throw activeError
-  const info = new Map(((active ?? []) as ProfileInfo[]).map((p) => [p.id, p]))
+  const active = await allRowsById<ProfileInfo>(() => admin.from("profiles").select(columns).eq("status", "active"))
+  const info = new Map(active.map((p) => [p.id, p]))
   const missing = Array.from(byUser.keys()).filter((id) => !info.has(id))
   if (missing.length > 0) {
     const { data: others } = await admin.from("profiles").select(columns).in("id", missing)
@@ -557,7 +569,7 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
         role: p?.role ?? null,
         actions: actionsOf(u),
         calls: u.calls,
-        costUsd: Math.round(u.cost * 100000) / 100000,
+        costUsd: u.cost / 100_000,
         limit: p?.ai_monthly_limit ?? null,
       }
     })
