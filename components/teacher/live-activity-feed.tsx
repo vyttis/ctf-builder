@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { pluralizeLt } from "@/lib/utils"
 import { LiveConnectionBanner } from "./live-connection-banner"
+import { useSubmissionFilter } from "@/hooks/use-submission-filter"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Activity,
@@ -45,7 +46,16 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
 
   const retry = useCallback(() => setRetryNonce((n) => n + 1), [])
 
+  // Only this activity's answers come over realtime (FAC-10); the task
+  // titles come with it, so an answer needs no title lookup.
+  const { filter: submissionFilter, titles } = useSubmissionFilter(gameId)
+  const titlesRef = useRef(titles)
   useEffect(() => {
+    titlesRef.current = titles
+  }, [titles])
+
+  useEffect(() => {
+    if (submissionFilter === undefined) return
     const supabase = createClient()
     let pollInterval: NodeJS.Timeout | null = null
     let cancelled = false
@@ -166,7 +176,12 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
       .channel(`activity_submissions_${gameId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "submissions" },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "submissions",
+          ...(submissionFilter ? { filter: submissionFilter } : {}),
+        },
         async (payload) => {
           const sub = payload.new as {
             id: string
@@ -186,19 +201,24 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
 
           if (!team || team.game_id !== gameId) return
 
-          // Fetch challenge title
-          const { data: challenge } = await supabase
-            .from("challenges")
-            .select("title")
-            .eq("id", sub.challenge_id)
-            .single()
+          // Task title: known from the task list; a task added a moment ago
+          // may not be in it yet.
+          let challengeTitle = titlesRef.current.get(sub.challenge_id)
+          if (!challengeTitle) {
+            const { data: challenge } = await supabase
+              .from("challenges")
+              .select("title")
+              .eq("id", sub.challenge_id)
+              .single()
+            challengeTitle = challenge?.title
+          }
 
           const event: ActivityEvent = {
             id: sub.id,
             type: sub.is_correct ? "submission_correct" : "submission_wrong",
             team_id: sub.team_id,
             team_name: team.name,
-            challenge_title: challenge?.title || "-",
+            challenge_title: challengeTitle || "-",
             points: sub.points_awarded,
             timestamp: sub.attempted_at,
           }
@@ -277,7 +297,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
       supabase.removeChannel(teamChannel)
       stopPolling()
     }
-  }, [gameId, maxEvents, retryNonce])
+  }, [gameId, maxEvents, retryNonce, submissionFilter])
 
   function formatTimestamp(ts: string) {
     const date = new Date(ts)
