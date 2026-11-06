@@ -229,7 +229,6 @@ describe("personal monthly limit", () => {
   it("counts every action of the month, past the first page of rows", async () => {
     const db = setup()
     addActions(db, 1200)
-    addCall(db, { endpoint: "di/verify" })
     expect(await monthActionsByUser(db as never, USER)).toBe(1200)
   })
 
@@ -285,12 +284,11 @@ describe("personal monthly limit", () => {
     expect(db.rows("ai_usage").filter((r) => r.model === RESERVATION_MODEL)).toHaveLength(1)
   })
 
-  it("does not reserve a slot for a re-check", async () => {
+  it("counts a standalone task check like any other action", async () => {
     const db = setup()
     addActions(db, 40)
-    const allowance = await checkAiAllowance(USER, "di/verify", new Date(), { countsTowardLimit: false })
-    expect(allowance.ok).toBe(true)
-    expect(db.rows("ai_usage").filter((r) => r.model === RESERVATION_MODEL)).toHaveLength(40)
+    const allowance = await checkAiAllowance(USER, "di/verify")
+    expect(allowance.ok).toBe(false)
   })
 
   it("fails open instead of applying defaults when settings cannot be read", async () => {

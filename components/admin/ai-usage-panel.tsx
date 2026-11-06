@@ -201,8 +201,7 @@ export function AiUsagePanel() {
           </Button>
         </form>
         <p className="text-xs text-muted-foreground">
-          Užklausa yra vienas vedėjo veiksmas su DI: užduočių generavimas, pamokos planas, dokumento importas. Pakartotinis
-          užduoties tikrinimas limito nemažina, bet kainuoja ir įskaičiuojamas į biudžetą.
+          Užklausa yra vienas vedėjo veiksmas su DI: užduočių generavimas su patikra, pamokos planas, dokumento importas.
         </p>
       </section>
 

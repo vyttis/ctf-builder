@@ -41,8 +41,9 @@ export async function POST(request: Request) {
     )
   }
   // Monthly DI limits (personal and platform budget); every model call
-  // from here on is recorded for this action.
-  const allowance = await checkAiAllowance(user.id, "di/verify", new Date(), { countsTowardLimit: false })
+  // from here on is recorded for this action. di/generate already verifies
+  // its own suggestions, so a call here is a separate action and counts.
+  const allowance = await checkAiAllowance(user.id, "di/verify")
   if (!allowance.ok) {
     return NextResponse.json({ error: allowance.message, code: allowance.code }, { status: 429 })
   }

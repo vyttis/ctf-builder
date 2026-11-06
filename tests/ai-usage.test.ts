@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }))
 
 import { costUsd, priceFor } from "@/lib/ai/pricing"
-import { monthGenitive, monthStart, nextMonthStart, resetsOnText, UNCOUNTED_ENDPOINTS } from "@/lib/ai/usage"
+import { monthGenitive, monthStart, nextMonthStart, resetsOnText } from "@/lib/ai/usage"
 
 describe("DI pricing", () => {
   it("prices by model family and overestimates unknown models", () => {
@@ -34,7 +34,4 @@ describe("DI months", () => {
     expect(resetsOnText(new Date("2026-12-31T23:00:00Z"))).toBe("sausio 1 d.")
   })
 
-  it("does not count a re-check against the personal limit", () => {
-    expect(UNCOUNTED_ENDPOINTS).toContain("di/verify")
-  })
 })
