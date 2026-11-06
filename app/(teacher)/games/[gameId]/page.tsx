@@ -292,7 +292,12 @@ export default async function GameDetailPage(
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <GameStatusWatcher gameCode={game.game_code} status={status} timeLimit={settings?.time_limit_minutes ?? null} />
+          <GameStatusWatcher
+            gameCode={game.game_code}
+            status={status}
+            timeLimit={settings?.time_limit_minutes ?? null}
+            resumedAt={(game as { resumed_at?: string | null }).resumed_at ?? null}
+          />
           <GameStatusActions
             gameId={game.id}
             status={status}

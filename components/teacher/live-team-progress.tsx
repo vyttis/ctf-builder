@@ -51,7 +51,7 @@ function teamLabel(n: number): string {
 }
 
 export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResumedAt = null, challengeCount }: LiveTeamProgressProps) {
-  const { teams, solvedCounts, lastSubmissions, connectionState, retry } =
+  const { teams, solvedCounts, lastSubmissions, historyLoaded, connectionState, retry } =
     useLiveGame(gameId)
   const [, setTick] = useState(0)
   const { toast } = useToast()
@@ -106,6 +106,9 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
   // resume. Not while paused, and not for a team that has solved every task.
   function isStuck(team: { id: string; joined_at: string }): boolean {
     if (paused) return false
+    // Before the answer history is read, a team that answered would look
+    // like one that never did.
+    if (!historyLoaded) return false
     if (challengeCount && (solvedCounts.get(team.id) ?? 0) >= challengeCount) return false
     const since = Math.max(
       new Date(lastSubmissions.get(team.id) ?? team.joined_at).getTime() || 0,
