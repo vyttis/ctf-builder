@@ -340,6 +340,8 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
     setPrefillData(null)
     setPreviewChallenge(null)
     setActiveTab("manual")
+    // Below lg the editor lives in a sheet: open it, or the tap does nothing.
+    if (!isDesktop) setMobileSheetOpen(true)
   }
 
   function handleAddNew() {
@@ -349,6 +351,7 @@ export function GameBuilder({ initialGame, initialChallenges }: GameBuilderProps
     setPreviewChallenge(null)
     setSelectedChallengeId(null)
     setActiveTab("manual")
+    if (!isDesktop) setMobileSheetOpen(true)
   }
 
   function handleDeleteChallenge(challenge: Challenge) {
