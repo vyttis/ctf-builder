@@ -41,7 +41,8 @@ interface UsersManagerProps {
 }
 
 const ALL = "all"
-const dateFormat = new Intl.DateTimeFormat("lt-LT", { dateStyle: "medium" })
+// Always Lithuanian time, so the server render and the browser show the same day.
+const dateFormat = new Intl.DateTimeFormat("lt-LT", { dateStyle: "medium", timeZone: "Europe/Vilnius" })
 const formatDate = (iso: string | null) => (iso ? dateFormat.format(new Date(iso)) : null)
 
 const STATUS_STYLE: Record<AccountStatus, string> = {
@@ -465,7 +466,7 @@ function ManageUserDialog({
 
   return (
     <Dialog open={user !== null} onOpenChange={(open) => !open && close()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         {user && (
           <>
             <DialogHeader>

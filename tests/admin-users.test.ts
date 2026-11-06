@@ -95,3 +95,13 @@ describe("userCsvRow without DI data", () => {
     expect(cells[cells.length - 1]).toBe("")
   })
 })
+
+describe("dateOnly", () => {
+  it("gives the calendar day in Lithuania", async () => {
+    const { dateOnly } = await import("@/lib/admin/user-rows")
+    // 23:30 UTC on 5 November is already 6 November in Vilnius.
+    expect(dateOnly("2026-11-05T23:30:00Z")).toBe("2026-11-06")
+    expect(dateOnly("2026-07-01T20:59:00Z")).toBe("2026-07-01")
+    expect(dateOnly(null)).toBe("")
+  })
+})

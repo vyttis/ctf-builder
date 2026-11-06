@@ -77,7 +77,14 @@ export const ROLE_LABEL: Record<UserRole, string> = {
   super_admin: "Super administratorius",
 }
 
-const dateOnly = (iso: string | null) => (iso ? iso.slice(0, 10) : "")
+// The calendar day in Lithuania (YYYY-MM-DD), not in UTC.
+const vilniusDay = new Intl.DateTimeFormat("lt-LT", {
+  timeZone: "Europe/Vilnius",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+})
+export const dateOnly = (iso: string | null) => (iso ? vilniusDay.format(new Date(iso)) : "")
 
 export const USER_CSV_HEADERS = [
   "Vardas",
