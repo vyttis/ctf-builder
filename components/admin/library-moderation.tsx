@@ -392,7 +392,7 @@ function TemplateCard({
           )}
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" aria-hidden="true" />
-            Pateikta {new Date(item.created_at).toLocaleDateString("lt-LT")}
+            Pateikta {new Date(item.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}
           </span>
           {item.status === "approved" && <span>Nukopijuota: {item.clone_count} k.</span>}
         </div>
