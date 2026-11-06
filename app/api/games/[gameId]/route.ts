@@ -192,6 +192,13 @@ export async function PATCH(request: Request, props: { params: Promise<{ gameId:
       if (error.code === "P0002") {
         return NextResponse.json({ error: "Veikla nerasta" }, { status: 404 })
       }
+      // A task without an answer was added while the start was checked.
+      if (error.code === "KS428") {
+        return NextResponse.json(
+          { error: "Kai kurios užduotys neturi nustatyto atsakymo. Nustatykite atsakymus prieš pradėdami veiklą." },
+          { status: 400 }
+        )
+      }
       return NextResponse.json({ error: "Nepavyko pakeisti būsenos." }, { status: 500 })
     }
     data = rpcRow(updated)

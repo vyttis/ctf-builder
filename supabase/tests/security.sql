@@ -400,6 +400,46 @@ BEGIN
   END IF;
 END $$;
 
+-- A task without an answer: the activity does not start with it, and a
+-- running activity cannot get one.
+INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
+  ('10000000-0000-0000-0000-0000000000c4', '00000000-0000-0000-0000-00000000000a', 'Be atsakymo', 'NOANSW', 'draft');
+INSERT INTO public.challenges (id, game_id, title, answer_hash, needs_answer) VALUES
+  ('20000000-0000-0000-0000-0000000000c4', '10000000-0000-0000-0000-0000000000c4', 'Kopija', '$2a$10$random', true);
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+DO $$
+BEGIN
+  BEGIN
+    PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c4', 'active');
+    RAISE EXCEPTION 'an activity with a task without an answer must not start';
+  EXCEPTION WHEN SQLSTATE 'KS428' THEN
+    NULL;
+  END;
+END $$;
+RESET ROLE;
+UPDATE public.challenges SET needs_answer = false WHERE id = '20000000-0000-0000-0000-0000000000c4';
+SET ROLE authenticated;
+DO $$
+DECLARE g public.games;
+BEGIN
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c4', 'active');
+  IF g.status <> 'active' THEN
+    RAISE EXCEPTION 'an activity whose tasks all have answers must start';
+  END IF;
+  BEGIN
+    INSERT INTO public.challenges (game_id, title, answer_hash, needs_answer)
+      VALUES ('10000000-0000-0000-0000-0000000000c4', 'Bibliotekos užduotis', '$2a$10$random', true);
+    RAISE EXCEPTION 'a running activity must not get a task without an answer';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  -- A task with an answer may still be added.
+  INSERT INTO public.challenges (game_id, title, answer_hash, needs_answer)
+    VALUES ('10000000-0000-0000-0000-0000000000c4', 'Nauja užduotis', '$2a$10$real', false);
+END $$;
+RESET ROLE;
+
 -- A blocked account cannot change its activity through the functions either.
 UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-00000000000a';
 SET ROLE authenticated;

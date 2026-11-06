@@ -13,8 +13,10 @@
 -- creates activities as drafts only; the activity only moves forward
 -- (draft -> active <-> paused -> finished), so a stale tab cannot reopen a
 -- finished activity; leaving a pause adds its length to paused_ms; the
--- first start sets starts_at; values for paused_at, paused_ms or
--- resumed_at sent by a client are ignored.
+-- first start sets starts_at; an activity with a task without an answer
+-- does not start, and such a task cannot be added while it runs
+-- (challenges_live_rules); values for paused_at, paused_ms or resumed_at
+-- sent by a client are ignored.
 --
 -- set_game_status() changes the status under a row lock for the owner.
 -- extend_game_time() adds minutes in one statement, so two devices adding 5
@@ -128,6 +130,15 @@ BEGIN
       RAISE EXCEPTION 'status cannot change from % to %', OLD.status, NEW.status USING ERRCODE = 'KS409';
     END IF;
 
+    -- A task without an answer cannot be solved: such an activity does not
+    -- start. Together with challenges_live_rules (which locks this row) a
+    -- task added at the same moment either blocks the start or is refused.
+    IF OLD.status = 'draft' AND EXISTS (
+      SELECT 1 FROM public.challenges c WHERE c.game_id = NEW.id AND c.needs_answer
+    ) THEN
+      RAISE EXCEPTION 'activity has tasks without an answer' USING ERRCODE = 'KS428';
+    END IF;
+
     IF OLD.paused_at IS NOT NULL THEN
       NEW.paused_ms := OLD.paused_ms
         + greatest(0, floor(extract(epoch FROM (now() - OLD.paused_at)) * 1000))::bigint;
@@ -149,6 +160,33 @@ $$;
 DROP TRIGGER IF EXISTS games_status_rules ON public.games;
 CREATE TRIGGER games_status_rules BEFORE INSERT OR UPDATE ON public.games
   FOR EACH ROW EXECUTE FUNCTION public.games_status_rules();
+
+-- Participants see the tasks of a running or paused activity as they are,
+-- so a task without an answer (a copy, a library task) is refused there.
+-- The activity row is locked for share, so a start running at the same
+-- moment either waits for this task (and then refuses to start, see above)
+-- or finishes first (and this task is refused).
+CREATE OR REPLACE FUNCTION public.challenges_live_rules()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_status text;
+BEGIN
+  IF NEW.needs_answer THEN
+    SELECT g.status INTO v_status FROM public.games g WHERE g.id = NEW.game_id FOR SHARE;
+    IF v_status IN ('active', 'paused') THEN
+      RAISE EXCEPTION 'a running activity cannot get a task without an answer' USING ERRCODE = 'KS409';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS challenges_live_rules ON public.challenges;
+CREATE TRIGGER challenges_live_rules BEFORE INSERT OR UPDATE OF needs_answer ON public.challenges
+  FOR EACH ROW EXECUTE FUNCTION public.challenges_live_rules();
 
 CREATE OR REPLACE FUNCTION public.set_game_status(p_game_id uuid, p_status text)
 RETURNS public.games
