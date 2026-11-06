@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AiQuotaNote } from "@/components/teacher/ai-quota-note"
 import { AiGameIdea, AiGameSuggestResponse } from "@/lib/ai/types"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -177,6 +178,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
                       </>
                     )}
                   </Button>
+                  <AiQuotaNote className="text-center" refreshKey={loading} />
                 </div>
 
                 {/* Error */}

@@ -23,6 +23,8 @@ interface LiveTeamProgressProps {
   gameId: string
   /** While paused nobody is stuck. */
   paused?: boolean
+  /** When the last pause ended, from the server, so a reload keeps it. */
+  resumedAt?: string | null
   /** Number of tasks; a team that solved them all is done, not stuck. */
   challengeCount?: number
 }
@@ -48,14 +50,17 @@ function teamLabel(n: number): string {
   return "komandų"
 }
 
-export function LiveTeamProgress({ gameId, paused = false, challengeCount }: LiveTeamProgressProps) {
+export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResumedAt = null, challengeCount }: LiveTeamProgressProps) {
   const { teams, solvedCounts, lastSubmissions, connectionState, retry } =
     useLiveGame(gameId)
   const [, setTick] = useState(0)
   const { toast } = useToast()
   // When the activity was last resumed: nobody could answer during the
-  // pause, so the 5 minutes count from here at the earliest.
-  const [resumedAt, setResumedAt] = useState<number | null>(null)
+  // pause, so the 5 minutes count from here at the earliest. The server's
+  // time (games.resumed_at) survives a reload or a resume from another
+  // device; the local one covers the seconds until the page refreshes.
+  const [localResumedAt, setResumedAt] = useState<number | null>(null)
+  const resumedAt = Math.max(localResumedAt ?? 0, serverResumedAt ? Date.parse(serverResumedAt) || 0 : 0) || null
   const wasPaused = useRef(paused)
   useEffect(() => {
     const resumed = wasPaused.current && !paused

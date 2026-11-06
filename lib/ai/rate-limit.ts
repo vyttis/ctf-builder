@@ -89,6 +89,16 @@ export function parseAiJson<T = unknown>(text: string): T {
   try {
     return JSON.parse(jsonText) as T
   } catch (strictErr) {
+    // The model sometimes closes the JSON and keeps writing (a closing
+    // fence and a Markdown explanation). Take the first complete block.
+    const block = firstJsonBlock(jsonText)
+    if (block && block !== jsonText) {
+      try {
+        return JSON.parse(block) as T
+      } catch {
+        // fall through to the repair pass
+      }
+    }
     // Repair pass — handles trailing commas, missing quotes, unclosed strings,
     // smart quotes, comments, etc. that LLMs occasionally emit.
     try {
@@ -104,4 +114,32 @@ export function parseAiJson<T = unknown>(text: string): T {
       )
     }
   }
+}
+
+/**
+ * The first complete JSON object or array in the text, found by matching
+ * brackets outside strings. Null when there is none.
+ */
+export function firstJsonBlock(text: string): string | null {
+  const start = text.search(/[[{]/)
+  if (start === -1) return null
+  let depth = 0
+  let inString = false
+  let escaped = false
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i]
+    if (inString) {
+      if (escaped) escaped = false
+      else if (ch === "\\") escaped = true
+      else if (ch === '"') inString = false
+      continue
+    }
+    if (ch === '"') inString = true
+    else if (ch === "{" || ch === "[") depth++
+    else if (ch === "}" || ch === "]") {
+      depth--
+      if (depth === 0) return text.slice(start, i + 1)
+    }
+  }
+  return null
 }

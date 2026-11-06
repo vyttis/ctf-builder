@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
 import { getPlayerSession, clearPlayerSession, savePlayerSession } from "@/lib/game/session"
+import { type GameClock, secondsLeft } from "@/lib/game/clock"
 import { pluralizeLt } from "@/lib/utils"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ReflectionForm } from "@/components/player/reflection-form"
@@ -73,18 +74,23 @@ function normalizeNumericAnswer(value: string): string {
   return value.trim().replace(",", ".")
 }
 
-// Stamp the team's server-side start (idempotent). Best-effort: the countdown
-// UI runs off localStorage regardless; this is what /api/submissions enforces
-// the deadline against.
-async function stampGameStart(token: string): Promise<void> {
+// Stamp the team's server-side start (idempotent) and return it with the
+// pause offset, so the countdown runs on the same deadline the server
+// enforces. null when the request fails; the page keeps asking (see the
+// effect that confirms the run).
+async function stampGameStart(token: string): Promise<{ startedAtMs: number; offsetMs: number } | null> {
   try {
-    await fetch("/api/play/start", {
+    const res = await fetch("/api/play/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_token: token }),
     })
+    if (!res.ok) return null
+    const data = (await res.json()) as { started_at?: string | null; pause_offset_ms?: number }
+    if (!data.started_at) return null
+    return { startedAtMs: Date.parse(data.started_at), offsetMs: Number(data.pause_offset_ms ?? 0) }
   } catch {
-    // Ignored — enforcement still works from whenever started_at first gets set.
+    return null
   }
 }
 
@@ -158,63 +164,76 @@ export default function PlayPage() {
     if (stored) setReflectionDone(true)
   }, [gameCode])
 
-  // Timer state
-  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null)
+  // Timer state. The clock follows lib/game/clock.ts: pauses stop it, and
+  // the deadline is the server's (team start + limit + pause time inside
+  // the run), corrected for this device's clock.
+  const [clock, setClock] = useState<GameClock>({ limitMinutes: null, pausedMs: 0, pausedAt: null })
+  const timeLimitMinutes = clock.limitMinutes
+  // confirmed: the start and pause offset came from the server. Until then
+  // the countdown runs from this device's start and keeps asking.
+  const [run, setRun] = useState<{ startedAtMs: number; offsetMs: number; confirmed: boolean } | null>(null)
+  const skewMsRef = useRef(0)
   const [gameStarted, setGameStarted] = useState(false)
   const [timeExpired, setTimeExpired] = useState(false)
   const [allowAccessRequests, setAllowAccessRequests] = useState(false)
   const [remainingSeconds, setRemainingSeconds] = useState(0)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const startTimeRef = useRef<number | null>(null)
 
-  const handleTimeExpired = useCallback(() => {
-    setTimeExpired(true)
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-  }, [])
+  const applyClock = useCallback(
+    (data: { time_limit_minutes?: number | null; paused_ms?: number | string | null; paused_at?: string | null }) => {
+      setClock((c) => ({
+        limitMinutes:
+          data.time_limit_minutes === undefined
+            ? c.limitMinutes
+            : typeof data.time_limit_minutes === "number" && data.time_limit_minutes > 0
+              ? data.time_limit_minutes
+              : null,
+        pausedMs: data.paused_ms === undefined || data.paused_ms === null ? c.pausedMs : Number(data.paused_ms) || 0,
+        pausedAt: data.paused_at === undefined ? c.pausedAt : data.paused_at,
+      }))
+    },
+    []
+  )
 
-  // Timer tick effect
+  // Timer tick. Keeps running after the time is up, so an extension made
+  // while this phone slept brings the team back in.
   useEffect(() => {
-    if (!gameStarted || !timeLimitMinutes || timeExpired || gameFinished) return
-
-    const storageKey = `ctf_start_${gameCode}`
-    let startTime = startTimeRef.current
-
-    if (!startTime) {
-      const stored = localStorage.getItem(storageKey)
-      if (stored) {
-        startTime = parseInt(stored, 10)
-      } else {
-        startTime = Date.now()
-        localStorage.setItem(storageKey, startTime.toString())
-      }
-      startTimeRef.current = startTime
-    }
-
-    const totalMs = timeLimitMinutes * 60 * 1000
-    const endTime = startTime + totalMs
+    if (!gameStarted || !timeLimitMinutes || !run || gameFinished) return
 
     function tick() {
-      const now = Date.now()
-      const remaining = Math.max(0, Math.ceil((endTime - now) / 1000))
-      setRemainingSeconds(remaining)
-
-      if (remaining <= 0) {
-        handleTimeExpired()
-      }
+      const left = secondsLeft(clock, run!.startedAtMs, run!.offsetMs, Date.now() + skewMsRef.current) ?? 0
+      setRemainingSeconds(left)
+      setTimeExpired(left <= 0)
     }
 
-    tick() // initial
-    timerRef.current = setInterval(tick, 1000)
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [gameStarted, timeLimitMinutes, run, clock, gameFinished])
 
+  // Anchor the countdown on the server's start and pause offset. A failed
+  // request is retried every few seconds; otherwise a late team that
+  // reloaded could keep a countdown that credits pauses from before its
+  // start, while the server rejects its answers.
+  const sessionToken = session?.session_token
+  const runConfirmed = run?.confirmed ?? true
+  useEffect(() => {
+    if (runConfirmed || !sessionToken || gameFinished) return
+    let cancelled = false
+    let inFlight = false
+    const confirm = async () => {
+      if (inFlight) return
+      inFlight = true
+      const server = await stampGameStart(sessionToken)
+      inFlight = false
+      if (!cancelled && server) setRun({ ...server, confirmed: true })
+    }
+    void confirm()
+    const interval = setInterval(confirm, 5000)
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
+      cancelled = true
+      clearInterval(interval)
     }
-  }, [gameStarted, timeLimitMinutes, timeExpired, gameFinished, gameCode, handleTimeExpired])
+  }, [runConfirmed, sessionToken, gameFinished])
 
   useEffect(() => {
     const s = getPlayerSession(gameCode)
@@ -286,24 +305,24 @@ export default function PlayPage() {
 
     const settings = state.game.settings
     const timeLimit = settings?.time_limit_minutes ?? null
-    setTimeLimitMinutes(timeLimit)
+    applyClock({ time_limit_minutes: timeLimit })
     setPathMode(settings?.challenge_path_mode || "linear")
     setShowLeaderboard(settings?.show_leaderboard !== false)
     setAllowAccessRequests(settings?.allow_access_requests === true)
 
     const storageKey = `ctf_start_${gameCode}`
-    const existingStart = localStorage.getItem(storageKey)
+    let existingStart: string | null = null
+    try {
+      existingStart = localStorage.getItem(storageKey)
+    } catch {
+      // Storage blocked: the server start below still applies.
+    }
     if (!timeLimit || existingStart) {
       setGameStarted(true)
       if (timeLimit && existingStart) {
-        // Already started on this device — ensure the server has a started_at
-        // so deadline enforcement works even for pre-existing runs (idempotent).
-        stampGameStart(s.session_token)
-        const startTime = parseInt(existingStart, 10)
-        const totalMs = timeLimit * 60 * 1000
-        if (Date.now() > startTime + totalMs) {
-          setTimeExpired(true)
-        }
+        // Already started on this device: run from the local start until the
+        // server answers with the real one (idempotent stamp).
+        setRun((r) => r ?? { startedAtMs: parseInt(existingStart!, 10), offsetMs: 0, confirmed: false })
       }
     }
 
@@ -330,22 +349,17 @@ export default function PlayPage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "games", filter: `id=eq.${gameId}` },
         (payload) => {
-          const updated = payload.new as { settings?: GameSettings; status?: string }
-          if (updated.settings?.time_limit_minutes !== undefined) {
-            setTimeLimitMinutes(updated.settings.time_limit_minutes)
-            // If time was expired but limit was extended, recheck
-            if (timeExpired && updated.settings.time_limit_minutes) {
-              const storageKey = `ctf_start_${gameCode}`
-              const stored = localStorage.getItem(storageKey)
-              if (stored) {
-                const startTime = parseInt(stored, 10)
-                const totalMs = updated.settings.time_limit_minutes * 60 * 1000
-                if (Date.now() < startTime + totalMs) {
-                  setTimeExpired(false)
-                }
-              }
-            }
+          const updated = payload.new as {
+            settings?: GameSettings
+            status?: string
+            paused_ms?: number | string | null
+            paused_at?: string | null
           }
+          applyClock({
+            time_limit_minutes: updated.settings ? (updated.settings.time_limit_minutes ?? null) : undefined,
+            paused_ms: updated.paused_ms,
+            paused_at: updated.paused_at,
+          })
           if (updated.status) {
             statusVersionRef.current += 1
             setGameStatus(updated.status)
@@ -359,7 +373,7 @@ export default function PlayPage() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [gameId, gameCode, timeExpired])
+  }, [gameId, gameCode, applyClock])
 
   // Status polling safety net: paused games may be invisible to anon realtime
   // (RLS), so realtime alone cannot be trusted to deliver pause events.
@@ -378,6 +392,7 @@ export default function PlayPage() {
       if (inFlight) return
       inFlight = true
       const startedAt = statusVersionRef.current
+      const sentAt = Date.now()
       try {
         const res = await fetch(
           `/api/play/status?game_code=${encodeURIComponent(gameCode)}`,
@@ -388,9 +403,25 @@ export default function PlayPage() {
           }
         )
         if (!res.ok) return
-        const data = (await res.json()) as { status: string | null; allow_access_requests?: boolean }
+        const data = (await res.json()) as {
+          status: string | null
+          allow_access_requests?: boolean
+          time_limit_minutes?: number | null
+          paused_ms?: number
+          paused_at?: string | null
+          now?: string
+        }
         if (disposed || !data.status) return
+        // Clock correction: the server's time is compared with the middle of
+        // the round trip, and only from a quick one, so network delay or a
+        // suspended tab is not mistaken for this device's clock being off.
+        const receivedAt = Date.now()
+        const serverNow = data.now ? Date.parse(data.now) : NaN
+        if (Number.isFinite(serverNow) && receivedAt - sentAt < 2000) {
+          skewMsRef.current = serverNow - (sentAt + receivedAt) / 2
+        }
         if (statusVersionRef.current !== startedAt) return
+        applyClock(data)
         setGameStatus(data.status)
         if (typeof data.allow_access_requests === "boolean") setAllowAccessRequests(data.allow_access_requests)
         if (data.status === "finished") {
@@ -404,6 +435,7 @@ export default function PlayPage() {
       }
     }
 
+    void checkStatus()
     const interval = setInterval(checkStatus, 5000)
     const onVisible = () => {
       if (document.visibilityState === "visible") void checkStatus()
@@ -415,16 +447,19 @@ export default function PlayPage() {
       clearInterval(interval)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [gameCode, gameFinished])
+  }, [gameCode, gameFinished, applyClock])
 
   function handleStart() {
     const storageKey = `ctf_start_${gameCode}`
     const now = Date.now()
-    localStorage.setItem(storageKey, now.toString())
-    startTimeRef.current = now
+    try {
+      localStorage.setItem(storageKey, now.toString())
+    } catch {
+      // Storage blocked: the server start still anchors the deadline.
+    }
+    // The server-side start is stamped by the effect that confirms the run.
+    setRun({ startedAtMs: now + skewMsRef.current, offsetMs: clock.pausedMs, confirmed: false })
     setGameStarted(true)
-    // Anchor the server-side deadline on the moment the student taps start.
-    if (session) stampGameStart(session.session_token)
   }
 
   // Free mode: handle submission from challenge detail modal

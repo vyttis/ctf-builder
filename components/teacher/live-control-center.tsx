@@ -8,6 +8,8 @@ import { TimeControls } from "@/components/teacher/time-controls"
 interface LiveControlCenterProps {
   gameId: string
   gameStatus: string
+  /** When the last pause ended (games.resumed_at), for the stuck badge. */
+  resumedAt?: string | null
   challengeCount?: number
   settings: {
     time_limit_minutes: number | null
@@ -18,6 +20,7 @@ interface LiveControlCenterProps {
 export function LiveControlCenter({
   gameId,
   gameStatus,
+  resumedAt = null,
   challengeCount,
   settings,
 }: LiveControlCenterProps) {
@@ -49,7 +52,12 @@ export function LiveControlCenter({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Team Progress - spans 2 cols on desktop */}
         <div className="lg:col-span-2">
-          <LiveTeamProgress gameId={gameId} paused={gameStatus === "paused"} challengeCount={challengeCount} />
+          <LiveTeamProgress
+            gameId={gameId}
+            paused={gameStatus === "paused"}
+            resumedAt={resumedAt}
+            challengeCount={challengeCount}
+          />
         </div>
 
         {/* Right sidebar: Announcements + Time Controls */}
