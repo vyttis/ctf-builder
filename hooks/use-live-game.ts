@@ -259,8 +259,21 @@ export function useLiveGame(gameId: string): UseLiveGameResult {
       )
       .subscribe(handleChannelStatus("submissions"))
 
+    // After the laptop sleeps or the network drops, realtime events from that
+    // time are lost and the board would stay stale until the next change.
+    // Read everything again when the page is shown or the network is back;
+    // the merge in fetchInitialData keeps what realtime delivered meanwhile.
+    const refresh = () => {
+      if (cancelled || document.visibilityState !== "visible") return
+      fetchInitialData().catch(() => {})
+    }
+    document.addEventListener("visibilitychange", refresh)
+    window.addEventListener("online", refresh)
+
     return () => {
       cancelled = true
+      document.removeEventListener("visibilitychange", refresh)
+      window.removeEventListener("online", refresh)
       supabase.removeChannel(teamChannel)
       supabase.removeChannel(submissionChannel)
       stopPolling()

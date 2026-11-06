@@ -104,7 +104,17 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
           points: s.points_awarded,
           timestamp: s.attempted_at,
         }))
-        setEvents(recentEvents.slice(0, maxEvents))
+        // Keep "joined" lines already shown (they are not re-read); answers
+        // come from this read. Newest first, each event once.
+        setEvents((prev) => {
+          const teamIds = new Set(teamMap.keys())
+          const joins = prev.filter((e) => e.type === "team_joined" && teamIds.has(e.team_id))
+          const seen = new Set<string>()
+          return [...recentEvents, ...joins]
+            .filter((e) => (seen.has(e.id) ? false : (seen.add(e.id), true)))
+            .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
+            .slice(0, maxEvents)
+        })
       }
 
       initialLoadDone.current = true
@@ -250,8 +260,19 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
       )
       .subscribe(handleChannelStatus("teams"))
 
+    // Events missed while the laptop slept or the network was down: read the
+    // recent ones again when the page is shown or the network is back.
+    const refresh = () => {
+      if (cancelled || document.visibilityState !== "visible") return
+      loadRecent().catch(() => {})
+    }
+    document.addEventListener("visibilitychange", refresh)
+    window.addEventListener("online", refresh)
+
     return () => {
       cancelled = true
+      document.removeEventListener("visibilitychange", refresh)
+      window.removeEventListener("online", refresh)
       supabase.removeChannel(submissionChannel)
       supabase.removeChannel(teamChannel)
       stopPolling()
