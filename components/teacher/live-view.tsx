@@ -10,7 +10,7 @@ import { LiveActivityFeed } from "./live-activity-feed"
 import { LiveConnectionBanner } from "./live-connection-banner"
 import { GameStatusActions } from "./game-status-actions"
 import { TimeControls } from "./time-controls"
-import { getPlayUrl } from "@/lib/game/play-url"
+import { getPlayUrl, getPublicUrl } from "@/lib/game/play-url"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
@@ -18,6 +18,7 @@ import type { GameStatus } from "@/types/game"
 import {
   ArrowLeft,
   Clock,
+  GraduationCap,
   Eye,
   EyeOff,
   Maximize2,
@@ -47,6 +48,8 @@ interface LiveViewProps {
     time_limit_minutes: number | null
   }
   challengeCount: number
+  /** Path of the teacher access request page, when the activity accepts requests. */
+  accessRequestPath?: string | null
 }
 
 function formatClock(totalSeconds: number): string {
@@ -62,7 +65,7 @@ function formatClock(totalSeconds: number): string {
 
 // Projector "class screen": big leaderboard + QR + activity feed on a dark
 // background, with a collapsible teacher control bar.
-export function LiveView({ game, challengeCount }: LiveViewProps) {
+export function LiveView({ game, challengeCount, accessRequestPath = null }: LiveViewProps) {
   const { toast } = useToast()
   const { teams, solvedCounts, connectionState, retry } = useLiveGame(game.id)
 
@@ -132,6 +135,19 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
   }, [])
 
   const playUrl = useMemo(() => getPlayUrl(game.game_code), [game.game_code])
+  const requestUrl = useMemo(
+    () => (accessRequestPath ? getPublicUrl(accessRequestPath) : null),
+    [accessRequestPath]
+  )
+  // The side QR shows the join code while the activity runs; the facilitator
+  // can switch it to the account request QR, and after the end it shows that.
+  const [showRequestQr, setShowRequestQr] = useState(false)
+  const sideQr =
+    requestUrl && (showRequestQr || status === "finished")
+      ? { kind: "request" as const, url: requestUrl }
+      : status !== "finished"
+        ? { kind: "join" as const, url: playUrl }
+        : null
 
   // Class-wide clock anchored on starts_at (per-team timers may differ —
   // this is the shared classroom time)
@@ -277,7 +293,7 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
 
           {/* Side panel: QR + activity */}
           <div className="space-y-4">
-            {status !== "finished" && (
+            {sideQr?.kind === "join" && (
               <div className="rounded-xl border border-white/10 bg-white p-4 text-center">
                 <QRCodeSVG
                   value={playUrl}
@@ -291,6 +307,25 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
                   {game.game_code}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 break-all">{playUrl}</p>
+              </div>
+            )}
+            {sideQr?.kind === "request" && (
+              <div className="rounded-xl border border-white/10 bg-white p-4 text-center">
+                <p className="mb-3 flex items-center justify-center gap-2 text-base font-semibold text-steam-dark">
+                  <GraduationCap className="h-5 w-5 text-secondary" aria-hidden="true" />
+                  Vedėjo paskyros prašymas
+                </p>
+                <QRCodeSVG
+                  value={sideQr.url}
+                  size={180}
+                  level="M"
+                  includeMargin={false}
+                  fgColor="#00323C"
+                  className="mx-auto"
+                />
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Mokytojai: nuskenuokite ir pateikite prašymą. Patvirtinus gausite laišką.
+                </p>
               </div>
             )}
             <LiveActivityFeed gameId={game.id} variant="projector" />
@@ -307,6 +342,18 @@ export function LiveView({ game, challengeCount }: LiveViewProps) {
               status={status}
               challengeCount={challengeCount}
             />
+            {requestUrl && status !== "finished" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowRequestQr((v) => !v)}
+                aria-pressed={showRequestQr}
+                className="gap-1.5 border-white/20 bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
+              >
+                <GraduationCap className="h-4 w-4" aria-hidden="true" />
+                {showRequestQr ? "Rodyti prisijungimo QR" : "Rodyti prašymo QR"}
+              </Button>
+            )}
             {(status === "active" || status === "paused") && (
               <>
                 <div className="[&_button]:border-white/20 [&_button]:text-white/80">

@@ -20,6 +20,20 @@ interface TeacherNavProps {
   // The teacher's currently running game (active/paused), if any — renders
   // a prominent LIVE shortcut to the class screen
   activeGame?: { id: string; title: string; paused?: boolean } | null
+  /** Pending account requests (super admin only). */
+  pendingRequests?: number
+}
+
+function PendingBadge({ count }: { count: number }) {
+  if (count <= 0) return null
+  return (
+    <span
+      className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-semibold leading-5 text-white"
+      aria-label={`${count} nauji paskyrų prašymai`}
+    >
+      {count}
+    </span>
+  )
 }
 
 export function TeacherNav({
@@ -28,6 +42,7 @@ export function TeacherNav({
   role = "teacher",
   avatarUrl,
   activeGame = null,
+  pendingRequests = 0,
 }: TeacherNavProps) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -73,6 +88,7 @@ export function TeacherNav({
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-steam-dark gap-2">
                     <Shield className="h-4 w-4" />
                     Administravimas
+                    <PendingBadge count={pendingRequests} />
                   </Button>
                 </Link>
               )}
@@ -193,6 +209,7 @@ export function TeacherNav({
                 <Button variant="ghost" className="w-full justify-start gap-3 h-11 text-steam-dark">
                   <Shield className="h-4 w-4" />
                   Administravimas
+                  <PendingBadge count={pendingRequests} />
                 </Button>
               </Link>
             )}

@@ -68,14 +68,14 @@ be `_` ir aprašymo). Po 1 žingsnio galutinis sąrašas:
 for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
          00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
          00021 00022 00023 00024 00025 00026 \
-         20261106120000; do
+         20261106120000 20261106130000; do
   supabase migration repair --status applied "$v"
 done
 ```
 
 > `00007` čia = `00007_di_verification_columns` (vienintelis likęs `00007`).
 > `00026` = pervadintas bcrypt. `20261106120000` = atsakymų ir rolių
-> spragos, pritaikyta ranka 2026-11-06 (žr. žemiau). `00023`/`00024` = šio darbo migracijos
+> spragos, `20261106130000` = uždara registracija, abi pritaikytos ranka 2026-11-06 (žr. žemiau). `00023`/`00024` = šio darbo migracijos
 > (`team_started_at`, `hint_reveals`) — pažymimos kaip pritaikytos tik jei jos
 > jau suvestos ranka produkcijoje (žr. PR deploy žingsnį).
 
@@ -110,9 +110,45 @@ select
 
 Prieš taikymą (2026-11-06): visi `true`. Po taikymo visi turi būti `false`.
 
+Pritaikyta produkcijoje 2026-11-06 apie 12:58 (prieš tai atsarginė kopija
+`backup_20261106` ir PR #48, kuris pakeitė `challenges(count)` į
+`challenges(id)`). Po taikymo: visi šeši `false`; `authenticated` mato
+`challenges.title`, gali keisti `profiles.full_name`, vykdyti
+`get_game_stats`; atvira užduočių politika tik `anon`. Eigos patikra su
+veikla PN3BJ5: kūrimas, užduotys, pradžia, prisijungimas, atsakymai, klasės
+ekranas (realtime), analitika, administravimo statistika, pabaiga.
+
 Svarbu toliau: naujiems `challenges` ir `submissions` stulpeliams `SELECT`
 reikia suteikti atskirai abiem rolėms (`anon` ir `authenticated`), kitaip
-puslapiai jų nematys.
+puslapiai jų nematys. `teams`, `challenges` ir `submissions` lentelėms
+naudotojo sesija negali naudoti `(count)` ar `(*)` įterpimų (PostgREST
+atsako „permission denied“); tai tikrina `tests/column-grants.test.ts`.
+
+## 2026-11-06: uždara registracija ir DI apskaita
+
+Failas `supabase/migrations/20261106130000_access_requests_and_ai_usage.sql`,
+grąžinimas `supabase/rollback/20261106130000_access_requests_and_ai_usage.sql`.
+Tik prideda: `profiles` stulpelius (`status`, vardas, pavardė, mokyklos
+kodas, savivaldybė, dalykai, klasės, sutikimas, patvirtinimas, DI limitas),
+lenteles `request_links`, `access_requests`, `admin_audit_log`, `ai_usage`,
+`platform_settings` (tik serveriui) ir griežtinančias politikas: rašyti
+veiklas, užduotis, pranešimus, pamokų planus ir bibliotekos įrašus gali tik
+`status = 'active'` paskyros. Esamos paskyros gauna `active`, naujos
+`pending`.
+
+Patikra po taikymo:
+
+```sql
+select
+  (select count(*) from public.profiles where status <> 'active') as not_active,
+  (select count(*) from public.platform_settings) as settings_rows,
+  has_table_privilege('authenticated','public.access_requests','SELECT') as auth_requests,
+  has_column_privilege('authenticated','public.profiles','status','UPDATE') as auth_status,
+  (select count(*) from pg_policies where policyname like 'Only active accounts%') as active_policies;
+```
+
+Tikimasi: `not_active` 0, `settings_rows` 1, abu leidimai `false`,
+`active_policies` 15.
 
 ## Konvencija toliau
 

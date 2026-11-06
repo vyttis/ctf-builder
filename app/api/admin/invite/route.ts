@@ -1,115 +1,72 @@
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { requireRole } from "@/lib/auth/roles"
-import { NextResponse } from "next/server"
+import { NextResponse, after } from "next/server"
 import { z } from "zod"
+import { requireSuperAdmin } from "@/lib/access/admin-guard"
+import { grantAccount, logAdminAction, publicBaseUrl } from "@/lib/access/approve"
+import { sendEmail } from "@/lib/email/send"
+import { accountActivatedEmail } from "@/lib/email/templates"
+import { schoolChoiceSchema } from "@/lib/access/profile-fields"
 
-const inviteSchema = z.object({
-  email: z.string().email("Neteisingas el. pašto adresas"),
-  full_name: z.string().min(2, "Vardas per trumpas"),
-  school: z.string().min(2, "Mokyklos pavadinimas per trumpas"),
-  phone: z.string().min(6, "Telefono numeris per trumpas"),
-  role: z.enum(["teacher", "admin", "super_admin"]),
-})
+const inviteSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email("Neteisingas el. pašto adresas").max(200),
+    first_name: z.string().trim().min(1, "Įveskite vardą").max(80),
+    last_name: z.string().trim().min(1, "Įveskite pavardę").max(80),
+    role: z.enum(["teacher", "admin", "super_admin"]),
+  })
+  .merge(schoolChoiceSchema.partial())
 
-// POST /api/admin/invite — invite a new user (admin+ only)
+// POST /api/admin/invite: the super admin creates an account directly
+// (same result as approving a request). The person gets an invitation
+// email and completes the profile on first sign-in.
 export async function POST(request: Request) {
+  const guard = await requireSuperAdmin()
+  if (!guard.ok) return guard.response
+
+  let body: unknown
   try {
-    const supabase = await createClient()
-    await requireRole(supabase, "admin", "super_admin")
-
-    const body = await request.json()
-    const parsed = inviteSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message || "Neteisingi duomenys" },
-        { status: 400 }
-      )
-    }
-
-    const { email, full_name, school, phone, role } = parsed.data
-
-    // Only super_admin can assign admin/super_admin roles
-    const callerRole = await requireRole(supabase, "admin", "super_admin")
-    if (role !== "teacher" && callerRole !== "super_admin") {
-      return NextResponse.json(
-        { error: "Tik super administratorius gali priskirti admin roles" },
-        { status: 403 }
-      )
-    }
-
-    const adminClient = createAdminClient()
-
-    // Check if user already exists
-    const { data: existingProfile } = await adminClient
-      .from("profiles")
-      .select("id")
-      .eq("email", email)
-      .single()
-
-    if (existingProfile) {
-      return NextResponse.json(
-        { error: "Vartotojas su šiuo el. paštu jau egzistuoja" },
-        { status: 409 }
-      )
-    }
-
-    // Create user via Supabase Auth admin API (sends invite email)
-    const { data: authData, error: authError } =
-      await adminClient.auth.admin.inviteUserByEmail(email, {
-        data: {
-          full_name,
-        },
-      })
-
-    if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: 500 })
-    }
-
-    if (!authData.user) {
-      return NextResponse.json(
-        { error: "Nepavyko sukurti vartotojo" },
-        { status: 500 }
-      )
-    }
-
-    // Update the auto-created profile with additional fields
-    const { error: profileError } = await adminClient
-      .from("profiles")
-      .update({
-        full_name,
-        school,
-        phone,
-        role,
-        onboarding_completed: true,
-      })
-      .eq("id", authData.user.id)
-
-    if (profileError) {
-      return NextResponse.json(
-        { error: profileError.message },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: authData.user.id,
-        email,
-        full_name,
-        school,
-        phone,
-        role,
-      },
-    })
-  } catch (error: unknown) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Prieiga uždrausta",
-      },
-      { status: 403 }
-    )
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Netinkamas užklausos formatas." }, { status: 400 })
   }
+  const parsed = inviteSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message || "Patikrinkite laukus." }, { status: 400 })
+  }
+  const d = parsed.data
+
+  const result = await grantAccount(
+    guard.admin,
+    {
+      email: d.email,
+      first_name: d.first_name,
+      last_name: d.last_name,
+      school_code: d.school_code ?? null,
+      school_name: d.school_name?.trim() || null,
+      municipality: d.municipality ?? null,
+      role: d.role,
+    },
+    guard.userId,
+    new URL(request.url).origin,
+  )
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
+
+  await logAdminAction(guard.admin, guard.userId, result.existing ? "account.activate" : "account.invite", "profile", result.userId, {
+    email: d.email,
+    role: d.role,
+  })
+
+  if (result.existing) {
+    const loginUrl = `${publicBaseUrl(new URL(request.url).origin)}/vedejui`
+    after(() => sendEmail(accountActivatedEmail(d.email, d.first_name, loginUrl)))
+  }
+
+  const { data: profile } = await guard.admin.from("profiles").select("*").eq("id", result.userId).single()
+  return NextResponse.json({
+    ok: true,
+    existing: result.existing,
+    user: profile,
+    message: result.existing
+      ? "Paskyra su šiuo el. paštu jau buvo. Ji aktyvuota, rolė nepakeista."
+      : "Kvietimas išsiųstas el. paštu.",
+  })
 }

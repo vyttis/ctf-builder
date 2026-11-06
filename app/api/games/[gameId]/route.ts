@@ -16,6 +16,7 @@ const updateGameSchema = z.object({
       show_leaderboard: z.boolean().optional(),
       shuffle_challenges: z.boolean().optional(),
       challenge_path_mode: z.enum(["linear", "free"]).optional(),
+      allow_access_requests: z.boolean().optional(),
     })
     .optional(),
 })

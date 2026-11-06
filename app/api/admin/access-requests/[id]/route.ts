@@ -1,0 +1,100 @@
+import { NextResponse, after } from "next/server"
+import { z } from "zod"
+import { requireSuperAdmin } from "@/lib/access/admin-guard"
+import { grantAccount, logAdminAction, publicBaseUrl } from "@/lib/access/approve"
+import { sendEmail } from "@/lib/email/send"
+import { accountActivatedEmail, requestRejectedEmail } from "@/lib/email/templates"
+
+const decisionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("approve") }),
+  z.object({ action: z.literal("reject"), note: z.string().trim().max(500).optional() }),
+])
+
+// POST /api/admin/access-requests/[id]: approve (sends the invitation or
+// activates an existing account) or reject a pending request.
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params
+  const guard = await requireSuperAdmin()
+  if (!guard.ok) return guard.response
+
+  const parsed = decisionSchema.safeParse(await request.json().catch(() => null))
+  if (!parsed.success) return NextResponse.json({ error: "Neteisingas veiksmas." }, { status: 400 })
+
+  const { data: req } = await guard.admin
+    .from("access_requests")
+    .select("id, email, first_name, last_name, school_code, school_name, municipality, status")
+    .eq("id", id)
+    .maybeSingle()
+  if (!req) return NextResponse.json({ error: "Prašymas nerastas." }, { status: 404 })
+  if (req.status !== "pending") {
+    return NextResponse.json({ error: "Šis prašymas jau išspręstas." }, { status: 409 })
+  }
+
+  const now = new Date().toISOString()
+
+  if (parsed.data.action === "reject") {
+    const { error } = await guard.admin
+      .from("access_requests")
+      .update({ status: "rejected", review_note: parsed.data.note || null, reviewed_by: guard.userId, reviewed_at: now })
+      .eq("id", id)
+      .eq("status", "pending")
+    if (error) return NextResponse.json({ error: "Nepavyko atmesti prašymo." }, { status: 500 })
+    await logAdminAction(guard.admin, guard.userId, "access_request.reject", "access_request", id, {
+      email: req.email,
+    })
+    after(() => sendEmail(requestRejectedEmail(req.email, req.first_name)))
+    return NextResponse.json({ ok: true, status: "rejected" })
+  }
+
+  // Claim the request first, so a double click cannot invite twice.
+  const { data: claimed } = await guard.admin
+    .from("access_requests")
+    .update({ status: "approved", reviewed_by: guard.userId, reviewed_at: now })
+    .eq("id", id)
+    .eq("status", "pending")
+    .select("id")
+  if (!claimed || claimed.length === 0) {
+    return NextResponse.json({ error: "Šis prašymas jau išspręstas." }, { status: 409 })
+  }
+
+  const account = await grantAccount(
+    guard.admin,
+    {
+      email: req.email,
+      first_name: req.first_name,
+      last_name: req.last_name,
+      school_code: req.school_code,
+      school_name: req.school_name,
+      municipality: req.municipality,
+    },
+    guard.userId,
+    new URL(request.url).origin,
+  )
+  if (!account.ok) {
+    await guard.admin
+      .from("access_requests")
+      .update({ status: "pending", reviewed_by: null, reviewed_at: null })
+      .eq("id", id)
+    return NextResponse.json({ error: account.error }, { status: account.status })
+  }
+
+  await guard.admin.from("access_requests").update({ user_id: account.userId }).eq("id", id)
+  await logAdminAction(guard.admin, guard.userId, "access_request.approve", "access_request", id, {
+    email: req.email,
+    existing_account: account.existing,
+  })
+  // A new account gets Supabase's invitation email; an existing one is
+  // activated silently, so tell the teacher they can sign in.
+  if (account.existing) {
+    const loginUrl = `${publicBaseUrl(new URL(request.url).origin)}/vedejui`
+    after(() => sendEmail(accountActivatedEmail(req.email, req.first_name, loginUrl)))
+  }
+
+  return NextResponse.json({
+    ok: true,
+    status: "approved",
+    message: account.existing
+      ? "Paskyra jau buvo, ji aktyvuota: mokytojas gali prisijungti iš karto."
+      : "Kvietimas išsiųstas el. paštu. Paspaudęs nuorodą mokytojas užbaigs registraciją.",
+  })
+}

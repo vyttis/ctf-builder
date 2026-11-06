@@ -1,52 +1,53 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { z } from "zod"
+import { onboardingSchema } from "@/lib/access/profile-fields"
+import { findSchoolByCode } from "@/lib/access/schools"
 
-const onboardingSchema = z.object({
-  full_name: z.string().min(2, "Vardas per trumpas"),
-  school: z.string().min(2, "Mokyklos pavadinimas per trumpas"),
-  phone: z.string().min(6, "Telefono numeris per trumpas"),
-})
-
+// POST /api/onboarding: the facilitator completes the profile on first
+// sign-in. Writes only the columns authenticated users may update (see the
+// column grants in the migrations); status and role stay server-controlled.
 export async function POST(request: Request) {
-  try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Neprisijungęs" }, { status: 401 })
-    }
-
-    const body = await request.json()
-    const parsed = onboardingSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message || "Neteisingi duomenys" },
-        { status: 400 }
-      )
-    }
-
-    const { full_name, school, phone } = parsed.data
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name,
-        school,
-        phone,
-        onboarding_completed: true,
-      })
-      .eq("id", user.id)
-
-    if (error) {
-      console.error("Onboarding UPDATE error:", error)
-      return NextResponse.json({ error: "Nepavyko išsaugoti profilio." }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: "Prisijunkite iš naujo." }, { status: 401 })
   }
+
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Netinkamas užklausos formatas." }, { status: 400 })
+  }
+  const parsed = onboardingSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message || "Patikrinkite laukus." }, { status: 400 })
+  }
+
+  const d = parsed.data
+  const registry = d.school_code ? findSchoolByCode(d.school_code) : null
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      first_name: d.first_name,
+      last_name: d.last_name,
+      full_name: `${d.first_name} ${d.last_name}`,
+      school: registry?.name ?? d.school_name,
+      school_code: registry?.code ?? null,
+      municipality: registry?.municipality ?? d.municipality ?? null,
+      school_type: registry?.type ?? null,
+      subjects: d.subjects,
+      grades: d.grades,
+      consent_at: new Date().toISOString(),
+      onboarding_completed: true,
+    })
+    .eq("id", user.id)
+
+  if (error) {
+    console.error("[onboarding] update failed", { code: error.code })
+    return NextResponse.json({ error: "Nepavyko išsaugoti profilio." }, { status: 500 })
+  }
+  return NextResponse.json({ ok: true })
 }

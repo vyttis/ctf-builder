@@ -29,3 +29,14 @@ export function getPlayUrl(gameCode: string): string {
   }
   return `/play/${gameCode}`
 }
+
+/**
+ * Absolute participant-host URL for another public path, e.g. the access
+ * request page shown as a QR on the class screen. Same host rules as
+ * getPlayUrl.
+ */
+export function getPublicUrl(path: string): string {
+  const playUrl = getPlayUrl("X")
+  const base = playUrl.slice(0, playUrl.length - "/play/X".length)
+  return `${base}${path}`
+}

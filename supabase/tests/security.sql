@@ -31,8 +31,12 @@ GRANT EXECUTE ON FUNCTION public.t_denied(text), public.t_ok(text), public.t_row
 INSERT INTO auth.users (id, email) VALUES
   ('00000000-0000-0000-0000-00000000000a', 'a@example.lt'),
   ('00000000-0000-0000-0000-00000000000b', 'b@example.lt'),
-  ('00000000-0000-0000-0000-0000000000ad', 'admin@example.lt');
+  ('00000000-0000-0000-0000-0000000000ad', 'admin@example.lt'),
+  ('00000000-0000-0000-0000-0000000000ee', 'pending@example.lt');
 UPDATE public.profiles SET role = 'super_admin' WHERE id = '00000000-0000-0000-0000-0000000000ad';
+-- Approved accounts; ...ee stays as it was created (waiting for approval).
+UPDATE public.profiles SET status = 'active'
+  WHERE id IN ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-0000000000ad');
 
 INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
   ('10000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'A', 'AAAAAA', 'active'),
@@ -68,6 +72,19 @@ SELECT public.t_ok($q$UPDATE public.profiles SET full_name = 'Vardenis', school 
 SELECT public.t_denied($q$UPDATE public.profiles SET role = 'super_admin' WHERE id = auth.uid()$q$);
 SELECT public.t_denied($q$UPDATE public.profiles SET email = 'x@example.lt' WHERE id = auth.uid()$q$);
 SELECT public.t_denied($q$INSERT INTO public.profiles (id, email, role) VALUES (gen_random_uuid(), 'x@example.lt', 'super_admin')$q$);
+
+-- Own statistics fields yes; status, DI limit, approval no.
+SELECT public.t_ok($q$UPDATE public.profiles SET first_name = 'Vardenis', last_name = 'Pavardenis', school_code = '190000000', municipality = 'Klaipėdos m.', subjects = '{Matematika}', grades = '{5-8}', consent_at = now() WHERE id = auth.uid()$q$);
+SELECT public.t_denied($q$UPDATE public.profiles SET status = 'active' WHERE id = auth.uid()$q$);
+SELECT public.t_denied($q$UPDATE public.profiles SET ai_monthly_limit = 100000 WHERE id = auth.uid()$q$);
+SELECT public.t_denied($q$UPDATE public.profiles SET approved_at = now() WHERE id = auth.uid()$q$);
+-- Server-only tables.
+SELECT public.t_denied('SELECT * FROM public.access_requests');
+SELECT public.t_denied($q$INSERT INTO public.access_requests (email, first_name, last_name, school_name, source) VALUES ('x@example.lt', 'A', 'B', 'Mokykla', 'qr')$q$);
+SELECT public.t_denied('SELECT * FROM public.admin_audit_log');
+SELECT public.t_denied('SELECT * FROM public.request_links');
+SELECT public.t_denied('SELECT * FROM public.ai_usage');
+SELECT public.t_denied('SELECT * FROM public.platform_settings');
 
 -- Library: only new items in review.
 SELECT public.t_ok($q$INSERT INTO public.library_items (title, published_by, status) VALUES ('Šablonas', auth.uid(), 'pending_review')$q$);
@@ -105,7 +122,42 @@ SELECT public.t_denied($q$SELECT public.get_game_stats('10000000-0000-0000-0000-
 SELECT public.t_denied($q$SELECT public.get_game_reflections('10000000-0000-0000-0000-00000000000b')$q$);
 SELECT public.t_denied($q$SELECT public.get_platform_stats()$q$);
 SELECT public.t_denied($q$UPDATE public.profiles SET role = 'super_admin'$q$);
+SELECT public.t_denied('SELECT * FROM public.access_requests');
+SELECT public.t_denied('SELECT * FROM public.ai_usage');
 RESET ROLE;
+
+-- New accounts wait for approval; the service role activates them.
+DO $$
+BEGIN
+  IF (SELECT status FROM public.profiles WHERE id = '00000000-0000-0000-0000-0000000000ee') <> 'pending' THEN
+    RAISE EXCEPTION 'a new profile must start as pending';
+  END IF;
+END $$;
+
+-- A pending account cannot write facilitator data through the REST API;
+-- an active one can.
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000ee', false);
+SELECT set_config('request.jwt.claim.role', 'authenticated', false);
+SELECT public.t_denied($q$INSERT INTO public.games (teacher_id, title, game_code) VALUES (auth.uid(), 'Laukia', 'PPPPPP')$q$);
+SELECT public.t_denied($q$INSERT INTO public.library_items (title, published_by, status) VALUES ('Šablonas', auth.uid(), 'pending_review')$q$);
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+SELECT public.t_ok($q$INSERT INTO public.games (teacher_id, title, game_code) VALUES (auth.uid(), 'Aktyvus', 'QQQQQQ')$q$);
+SELECT public.t_ok($q$UPDATE public.games SET title = 'A2' WHERE id = '10000000-0000-0000-0000-00000000000a'$q$);
+RESET ROLE;
+-- Blocking an account stops its writes at once.
+UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-00000000000a';
+SET ROLE authenticated;
+SELECT public.t_denied($q$INSERT INTO public.games (teacher_id, title, game_code) VALUES (auth.uid(), 'Blokuotas', 'RRRRRR')$q$);
+UPDATE public.games SET title = 'pakeista' WHERE id = '10000000-0000-0000-0000-00000000000a';
+RESET ROLE;
+DO $$
+BEGIN
+  IF (SELECT title FROM public.games WHERE id = '10000000-0000-0000-0000-00000000000a') <> 'A2' THEN
+    RAISE EXCEPTION 'a blocked account must not update its activities';
+  END IF;
+END $$;
+UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a';
 
 -- Service role (server API): everything it uses today.
 SET ROLE service_role;
@@ -113,6 +165,9 @@ SELECT set_config('request.jwt.claim.role', 'service_role', false);
 SELECT public.t_ok('SELECT answer_hash FROM public.challenges');
 SELECT public.t_ok('SELECT answer FROM public.submissions');
 SELECT public.t_ok($q$SELECT public.get_game_stats('10000000-0000-0000-0000-00000000000b')$q$);
-SELECT public.t_ok($q$UPDATE public.profiles SET role = 'teacher' WHERE id = '00000000-0000-0000-0000-00000000000a'$q$);
+SELECT public.t_ok($q$UPDATE public.profiles SET role = 'teacher', status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a'$q$);
+SELECT public.t_ok($q$INSERT INTO public.access_requests (email, first_name, last_name, school_name, source) VALUES ('x@example.lt', 'A', 'B', 'Mokykla', 'qr')$q$);
+SELECT public.t_ok($q$INSERT INTO public.ai_usage (user_id, request_id, endpoint, model, input_tokens, output_tokens, cost_usd) VALUES ('00000000-0000-0000-0000-00000000000a', gen_random_uuid(), 'di/generate', 'claude', 1000, 500, 0.01)$q$);
+SELECT public.t_rows('SELECT * FROM public.platform_settings', 1);
 RESET ROLE;
 

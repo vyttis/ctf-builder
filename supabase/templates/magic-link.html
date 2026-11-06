@@ -1,0 +1,25 @@
+<!-- Supabase Auth > Emails > Templates > Magic link or OTP. Subject: Jūsų prisijungimo kodas -->
+<!doctype html>
+<html lang="lt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Jūsų prisijungimo kodas</title>
+<style>@media (max-width:480px){.px{padding-left:20px!important;padding-right:20px!important}}</style></head>
+<body style="margin:0;padding:0;background:#F1F5F6">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#F1F5F6">Įveskite jį KU STEAM pamokų prisijungimo lange.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F1F5F6;font-family:Arial, Helvetica, sans-serif">
+<tr><td align="center" style="padding:32px 16px 24px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border-radius:14px;border-collapse:separate;overflow:hidden">
+<tr><td style="padding:0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="height:6px;line-height:6px;font-size:1px;background:#008CB4">&nbsp;</td><td style="height:6px;line-height:6px;font-size:1px;background:#00323C">&nbsp;</td><td style="height:6px;line-height:6px;font-size:1px;background:#00D296">&nbsp;</td><td style="height:6px;line-height:6px;font-size:1px;background:#FA2864">&nbsp;</td><td style="height:6px;line-height:6px;font-size:1px;background:#FAC846">&nbsp;</td></tr></table></td></tr>
+<tr><td class="px" style="padding:28px 40px 0"><img src="{{ .SiteURL }}/email/steam-logo.png" width="145" height="40" alt="STEAM LT Klaipėda" style="display:block;border:0"></td></tr>
+<tr><td class="px" style="padding:28px 40px 24px;font-family:Arial, Helvetica, sans-serif;color:#00323C">
+<h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;font-weight:700;color:#00323C">Prisijungimo kodas</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#00323C">Įveskite šį kodą KU STEAM pamokų prisijungimo lange:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#EAFBF5;border:1px solid #B5EEDB;border-radius:12px;border-collapse:separate"><tr><td align="center" style="padding:22px 16px;font-family:'Courier New', Courier, monospace;font-size:38px;font-weight:700;letter-spacing:12px;color:#00323C">{{ .Token }}</td></tr></table>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#4A6168">Kodas veikia vieną kartą ir galioja ribotą laiką. Jei jis nebegalioja, prisijungimo lange paprašykite naujo.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="height:1px;line-height:1px;font-size:1px;background:#E3EAEC">&nbsp;</td></tr></table>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#4A6168">Jungtis nebandėte? Nieko daryti nereikia: be šio kodo niekas negali prisijungti prie jūsų paskyros.</p>
+</td></tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px"><tr><td align="center" style="padding:20px 24px 8px;font-family:Arial, Helvetica, sans-serif;font-size:12px;line-height:1.6;color:#4A6168">
+KU STEAM centras, Klaipėdos universitetas<br>Klausimai: <a href="mailto:steam@ku.lt" style="color:#006F8F">steam@ku.lt</a>
+</td></tr></table>
+</td></tr></table>
+</body></html>

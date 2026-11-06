@@ -25,6 +25,9 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
+const NO_ACCOUNT =
+  "Šiuo el. paštu vedėjo paskyros nėra. Paskyros prašymą galite pateikti veiklos pabaigoje arba per nuorodą, kurią gausite iš KU STEAM centro (steam@ku.lt)."
+
 export function LoginForm() {
   const [email, setEmail] = useState("")
   const [otp, setOtp] = useState("")
@@ -40,12 +43,17 @@ export function LoginForm() {
       const friendlyMessages: Record<string, string> = {
         auth_failed: "Bandykite dar kartą arba naudokite kitą prisijungimo būdą.",
         pkce_mismatch:
-          "Prisijungimas nutrūko tarp skirtingų adresų. Bandykite dar kartą šiame puslapyje — jei klaida kartojasi, praneškite administratoriui.",
+          "Prisijungimas nutrūko tarp skirtingų adresų. Bandykite dar kartą šiame puslapyje. Jei klaida kartojasi, praneškite administratoriui.",
         access_denied: "Prisijungimas atšauktas. Bandykite dar kartą.",
       }
+      // Sign-up is closed: an unknown Google account comes back with a
+      // "Signups not allowed" error from Supabase.
+      const description = /signups? not allowed|not allowed for/i.test(error)
+        ? NO_ACCOUNT
+        : friendlyMessages[error] ?? error
       toast({
         title: "Prisijungimas nepavyko",
-        description: friendlyMessages[error] ?? error,
+        description,
         variant: "destructive",
       })
     }
@@ -79,15 +87,18 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: true,
+        // Accounts are created only by the super admin's approval.
+        shouldCreateUser: false,
       },
     })
     setLoading(false)
 
     if (error) {
+      const noAccount =
+        error.code === "otp_disabled" || /signups? not allowed|user not found/i.test(error.message)
       toast({
-        title: "Klaida",
-        description: "Nepavyko išsiųsti kodo. Bandykite dar kartą.",
+        title: noAccount ? "Paskyros nėra" : "Klaida",
+        description: noAccount ? NO_ACCOUNT : "Nepavyko išsiųsti kodo. Bandykite dar kartą.",
         variant: "destructive",
       })
       return

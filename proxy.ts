@@ -2,36 +2,57 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { hostKind, legacyRedirect } from "@/lib/hosts"
 
-// In-memory onboarding-completed cache: user.id → { completed, expiresAt }.
-// 30s TTL is short enough to feel "live" but cuts ~30-50ms off every teacher
-// navigation. Cache is per-instance — irrelevant for correctness because the
-// values are read-only flags. Only `completed: true` is cached: onboarding is
-// one-way, so true never goes stale, while caching false would bounce a user
-// who just finished onboarding back to /onboarding for up to 30s (the API
-// route runs in a different runtime and cannot bust this cache).
-type OnboardingCacheEntry = { completed: boolean; expiresAt: number }
-const ONBOARDING_TTL_MS = 30_000
-const onboardingCache = new Map<string, OnboardingCacheEntry>()
+// In-memory account gate cache: user.id → { expiresAt }. Only the fully
+// open state (active and onboarded) is cached, for 30 s: it cuts ~30-50 ms
+// off every teacher navigation. Anything else is read fresh, so a user who
+// just finished onboarding or was just approved is not bounced back. A
+// block reaches cached instances within 30 s.
+type GateCacheEntry = { expiresAt: number }
+const GATE_TTL_MS = 30_000
+const gateCache = new Map<string, GateCacheEntry>()
 
-async function isOnboardingCompleted(
+type AccountGate = { status: "pending" | "active" | "blocked"; onboarded: boolean }
+
+async function accountGate(
   supabase: ReturnType<typeof createServerClient>,
   userId: string,
-): Promise<boolean> {
+): Promise<AccountGate> {
   const now = Date.now()
-  const cached = onboardingCache.get(userId)
-  if (cached && cached.expiresAt > now) return cached.completed
+  const cached = gateCache.get(userId)
+  if (cached && cached.expiresAt > now) return { status: "active", onboarded: true }
 
-  const { data: profile } = await supabase
+  const first = await supabase
     .from("profiles")
-    .select("onboarding_completed")
+    .select("onboarding_completed, status")
     .eq("id", userId)
     .single()
-
-  const completed = Boolean(profile?.onboarding_completed)
-  if (completed) {
-    onboardingCache.set(userId, { completed, expiresAt: now + ONBOARDING_TTL_MS })
+  let profile: { onboarding_completed: boolean; status: string } | null = first.data
+  if (first.error?.code === "42703") {
+    // Database without the status column yet (before 20261106130000):
+    // every existing account was active, so behave as before.
+    const legacy = await supabase.from("profiles").select("onboarding_completed").eq("id", userId).single()
+    profile = legacy.data ? { ...legacy.data, status: "active" } : null
   }
-  return completed
+
+  const status = (profile?.status as AccountGate["status"]) ?? "pending"
+  const onboarded = Boolean(profile?.onboarding_completed)
+  if (status === "active" && onboarded) {
+    gateCache.set(userId, { expiresAt: now + GATE_TTL_MS })
+  }
+  return { status, onboarded }
+}
+
+// Facilitator APIs need an active account. Participant and public APIs
+// (play, teams, submissions, reflections, health, schools, access
+// requests) do not: a signed-in teacher may also play in someone's class.
+const FACILITATOR_API =
+  /^\/api\/(admin|ai|challenges|di|games|import|lesson-plans|lessons|library|upload|onboarding)(\/|$)/
+
+/** Where an account that may not use the facilitator area goes. */
+function gateRedirect(gate: AccountGate, pathname: string): string | null {
+  if (gate.status !== "active") return pathname === "/laukia" ? null : "/laukia"
+  if (!gate.onboarded && pathname !== "/onboarding") return "/onboarding"
+  return null
 }
 
 export async function proxy(request: NextRequest) {
@@ -130,11 +151,10 @@ export async function proxy(request: NextRequest) {
   if (kind === "app") {
     const isAuthCallback = url.pathname === "/auth/callback"
     const isAuthPage = url.pathname.startsWith("/auth")
-    const isOnboarding = url.pathname === "/onboarding"
-    const isOnboardingApi = url.pathname === "/api/onboarding"
-
-    // Always let /auth/callback through — it exchanges the OAuth code
-    if (isAuthCallback) {
+    // Always let /auth/callback and /auth/confirm through: they turn an
+    // OAuth code or an invitation link into a session, even when another
+    // session is already open in this browser.
+    if (isAuthCallback || url.pathname === "/auth/confirm") {
       return response
     }
 
@@ -148,12 +168,17 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Check onboarding completion for authenticated users (30s in-memory cache)
-    if (user && !isOnboarding && !isOnboardingApi && !isAuthPage) {
-      const completed = await isOnboardingCompleted(supabase, user.id)
-      if (!completed) {
-        url.pathname = "/onboarding"
-        return NextResponse.redirect(url)
+    if (user && !isAuthPage) {
+      const gate = await accountGate(supabase, user.id)
+      if (FACILITATOR_API.test(url.pathname) && gate.status !== "active") {
+        return NextResponse.json({ error: "Paskyra dar nepatvirtinta." }, { status: 403 })
+      }
+      if (!url.pathname.startsWith("/api/")) {
+        const target = gateRedirect(gate, url.pathname)
+        if (target) {
+          url.pathname = target
+          return NextResponse.redirect(url)
+        }
       }
     }
 
@@ -165,7 +190,6 @@ export async function proxy(request: NextRequest) {
   const isAuthCallback = url.pathname === "/auth/callback"
   const isAuthPage = url.pathname.startsWith("/auth")
   const isOnboarding = url.pathname === "/onboarding"
-  const isOnboardingApi = url.pathname === "/api/onboarding"
   const isTeacherRoute =
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/games") ||
@@ -173,8 +197,8 @@ export async function proxy(request: NextRequest) {
     url.pathname.startsWith("/library") ||
     url.pathname.startsWith("/lesson-plans")
 
-  // Always let /auth/callback through — it exchanges the OAuth code
-  if (isAuthCallback) {
+  // Always let /auth/callback and /auth/confirm through (see above)
+  if (isAuthCallback || url.pathname === "/auth/confirm") {
     return response
   }
 
@@ -198,12 +222,24 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Check onboarding completion for authenticated users on teacher routes
-  if (user && isTeacherRoute && !isOnboarding && !isOnboardingApi) {
-    const completed = await isOnboardingCompleted(supabase, user.id)
-    if (!completed) {
-      url.pathname = "/onboarding"
+  // Account gate: pending or blocked accounts see /laukia, active ones
+  // finish onboarding first. Participant pages are never gated.
+  if (user && (isTeacherRoute || isOnboarding || url.pathname === "/laukia")) {
+    const gate = await accountGate(supabase, user.id)
+    const target = gateRedirect(gate, url.pathname)
+    if (target && target !== url.pathname) {
+      url.pathname = target
       return NextResponse.redirect(url)
+    }
+    if (url.pathname === "/laukia" && gate.status === "active") {
+      url.pathname = gate.onboarded ? "/dashboard" : "/onboarding"
+      return NextResponse.redirect(url)
+    }
+  }
+  if (user && FACILITATOR_API.test(url.pathname)) {
+    const gate = await accountGate(supabase, user.id)
+    if (gate.status !== "active") {
+      return NextResponse.json({ error: "Paskyra dar nepatvirtinta." }, { status: 403 })
     }
   }
 

@@ -18,7 +18,7 @@ cleanup() {
 trap cleanup EXIT
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
-  PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1)}"
+  PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1 || true)}"
   [[ -x "$PGBIN/initdb" ]] || { echo "No Postgres binaries found; set DATABASE_URL or PGBIN" >&2; exit 1; }
   PGTMP="$(mktemp -d)"
   PORT="${PGPORT_TEST:-55432}"
