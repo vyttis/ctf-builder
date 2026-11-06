@@ -13,6 +13,8 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Prisijunkite." }, { status: 401 })
 
   const admin = createAdminClient()
+  // One moment for every figure below, so they all describe the same month.
+  const now = new Date()
   let profile: { role: string; ai_monthly_limit: number | null } | null
   let settings: Awaited<ReturnType<typeof loadAiSettings>>
   let used: number
@@ -25,7 +27,7 @@ export async function GET() {
     if (profileRes.error) throw profileRes.error
     profile = profileRes.data
     settings = loaded
-    ;[used, spent] = await Promise.all([monthActionsByUser(admin, user.id), monthSpendUsd(admin)])
+    ;[used, spent] = await Promise.all([monthActionsByUser(admin, user.id, now), monthSpendUsd(admin, now)])
   } catch {
     // The note next to the DI buttons simply stays hidden.
     return NextResponse.json({ error: "DI likučio dabar gauti nepavyko." }, { status: 503 })
@@ -38,7 +40,7 @@ export async function GET() {
       used,
       limit,
       remaining: limit === null ? null : Math.max(0, limit - used),
-      resetsOn: resetsOnText(),
+      resetsOn: resetsOnText(now),
       blocked: budgetBlocked ? "ai_budget" : limit !== null && used >= limit ? "ai_user_limit" : null,
     },
     { headers: { "Cache-Control": "no-store" } },

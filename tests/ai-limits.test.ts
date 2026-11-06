@@ -297,6 +297,14 @@ describe("personal monthly limit", () => {
     expect(await monthActionsByUser(db as never, USER)).toBe(1200)
   })
 
+  it("does not count next month's actions in the requested month", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addActions(db, 2, { created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addActions(db, 3, { created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    expect(await monthActionsByUser(db as never, USER, lastDay)).toBe(2)
+  })
+
   it("keeps an action in the month it was reserved in", async () => {
     const db = setup()
     const now = new Date()

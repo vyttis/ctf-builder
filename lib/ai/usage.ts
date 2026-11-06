@@ -188,6 +188,7 @@ export async function monthActionsByUser(
         .eq("user_id", userId)
         .eq("model", RESERVATION_MODEL)
         .gte("created_at", since)
+        .lt("created_at", nextMonthStart(now).toISOString())
       if (upToId !== undefined) query = query.lte("id", upToId)
       return query
     }),
@@ -200,6 +201,8 @@ export async function monthActionsByUser(
         .gte("created_at", since),
     ),
   ])
+  // Calls have no upper bound: a call recorded just after midnight still
+  // belongs to an action reserved before it.
   const called = new Set(calls.map((c) => c.request_id))
   const inFlightSince = now.getTime() - RESERVATION_TTL_MS
   return reservations.filter(
