@@ -710,12 +710,14 @@ export default function PlayPage() {
           role="status"
           aria-live="polite"
         >
+          {/* An announcement sent during the pause reaches the team here too. */}
+          {gameId && <AnnouncementBanner gameId={gameId} />}
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
             <Clock className="h-10 w-10 text-highlight" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Žaidimas pristabdytas</h1>
+          <h1 className="text-2xl font-bold mb-2">Veikla pristabdyta</h1>
           <p className="text-white/70 mb-6">
-            Palaukite, kol vedėjas tęs žaidimą. Jūsų taškai išsaugoti.
+            Palaukite, kol vedėjas tęs veiklą. Jūsų taškai išsaugoti.
           </p>
           <div className="bg-white/5 rounded-2xl p-4 mb-2">
             <p className="text-2xl font-bold">{totalPoints} tšk.</p>

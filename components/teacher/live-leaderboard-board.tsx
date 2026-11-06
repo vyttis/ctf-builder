@@ -4,11 +4,17 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import type { LiveTeam } from "@/hooks/use-live-game"
 import { Crown, Medal, Users } from "lucide-react"
+import { pluralizeLt } from "@/lib/utils"
 
 interface LiveLeaderboardBoardProps {
   teams: LiveTeam[]
   solvedCounts: Map<string, number>
   totalChallenges: number
+  /**
+   * false when the activity's leaderboard is off: the class screen then
+   * lists the teams that joined, by name, without places, points or progress.
+   */
+  ranked?: boolean
 }
 
 const podiumStyles = [
@@ -28,6 +34,7 @@ export function LiveLeaderboardBoard({
   teams,
   solvedCounts,
   totalChallenges,
+  ranked = true,
 }: LiveLeaderboardBoardProps) {
   const prefersReduced = useReducedMotion()
 
@@ -39,6 +46,28 @@ export function LiveLeaderboardBoard({
         <p className="text-base mt-2 text-white/40">
           Nuskaitykite QR kodą ir prisijunkite
         </p>
+      </div>
+    )
+  }
+
+  if (!ranked) {
+    const byName = [...teams].sort((a, b) => a.name.localeCompare(b.name, "lt"))
+    return (
+      <div>
+        <p className="mb-4 text-base text-white/60">
+          Prisijungė {teams.length} {pluralizeLt(teams.length, "komanda", "komandos", "komandų")}. Rezultatų lentelė
+          šioje veikloje nerodoma.
+        </p>
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {byName.map((team) => (
+            <li
+              key={team.id}
+              className="truncate rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-2xl font-bold text-white"
+            >
+              {team.name}
+            </li>
+          ))}
+        </ul>
       </div>
     )
   }

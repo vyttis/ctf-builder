@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useLiveGame } from "@/hooks/use-live-game"
 import { LiveLeaderboardBoard } from "./live-leaderboard-board"
 import { LiveActivityFeed } from "./live-activity-feed"
+import { AnnouncementBanner } from "@/components/player/announcement-banner"
 import { LiveConnectionBanner } from "./live-connection-banner"
 import { GameStatusActions } from "./game-status-actions"
 import { TimeControls } from "./time-controls"
@@ -49,6 +50,8 @@ interface LiveViewProps {
     time_limit_minutes: number | null
     paused_ms: number
     paused_at: string | null
+    /** The activity's leaderboard setting: off hides places and points here too. */
+    show_leaderboard: boolean
   }
   challengeCount: number
   /** Path of the teacher access request page, when the activity accepts requests. */
@@ -319,9 +322,12 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
           </div>
         )}
 
+        {/* The facilitator's announcements, for the whole class */}
+        <AnnouncementBanner gameId={game.id} variant="projector" />
+
         {status === "finished" && (
           <div className="mb-6 rounded-2xl border border-accent/40 bg-accent/10 px-6 py-4 text-center">
-            <p className="text-2xl font-bold">Žaidimas baigtas!</p>
+            <p className="text-2xl font-bold">Veikla baigta!</p>
             <p className="text-white/60 mt-1">Galutiniai rezultatai žemiau 🏆</p>
           </div>
         )}
@@ -332,6 +338,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
             teams={teams}
             solvedCounts={solvedCounts}
             totalChallenges={challengeCount}
+            ranked={game.show_leaderboard}
           />
 
           {/* Side panel: QR + activity */}
@@ -371,7 +378,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
                 </p>
               </div>
             )}
-            <LiveActivityFeed gameId={game.id} variant="projector" />
+            <LiveActivityFeed gameId={game.id} variant="projector" hidePoints={!game.show_leaderboard} />
           </div>
         </div>
       </div>
