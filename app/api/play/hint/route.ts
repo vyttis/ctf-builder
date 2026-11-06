@@ -2,7 +2,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-// POST /api/play/hint — record that a team revealed a hint.
+// POST /api/play/hint — record that a team revealed a hint and return its
+// text. The play state sends only hints the team already opened, so this is
+// the one way to read a hint, and reading it always records the penalty.
 //
 // The hint penalty in /api/submissions is computed from these rows, not from a
 // client-declared count, so a student can no longer reveal hints and then
@@ -55,8 +57,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Užduotis nerasta" }, { status: 404 })
     }
 
-    const availableHints = Array.isArray(challenge.hints) ? challenge.hints.length : 0
-    if (parsed.data.hint_index >= availableHints) {
+    const hints: unknown[] = Array.isArray(challenge.hints) ? challenge.hints : []
+    const hint = hints[parsed.data.hint_index]
+    if (typeof hint !== "string") {
       return NextResponse.json({ error: "Tokios užuominos nėra" }, { status: 400 })
     }
 
@@ -71,13 +74,13 @@ export async function POST(request: Request) {
     // back to the client-declared hint count.
     if (insertError && insertError.code !== "23505") {
       if (insertError.code === "42P01") {
-        return NextResponse.json({ ok: false, tracked: false })
+        return NextResponse.json({ ok: false, tracked: false, hint })
       }
       console.error("hint reveal insert failed:", insertError.message)
       return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, tracked: true })
+    return NextResponse.json({ ok: true, tracked: true, hint })
   } catch (err) {
     console.error("play/hint exception:", err)
     return NextResponse.json({ error: "Serverio klaida" }, { status: 500 })
