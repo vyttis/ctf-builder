@@ -69,7 +69,7 @@ for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
          00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
          00021 00022 00023 00024 00025 00026 \
          20261106120000 20261106130000 20261106140000 20261106145000 \
-         20261106150000; do
+         20261106150000 20261106160000 20261106170000; do
   supabase migration repair --status applied "$v"
 done
 ```
@@ -326,7 +326,7 @@ teisės `{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgr
 (vykdyti galėjo ir PUBLIC). Grąžinimas atkuria būtent tai: `hints` ir
 funkcijos teises, įskaitant PUBLIC.
 
-Dar nepritaikyta produkcijoje.
+Pritaikyta produkcijoje 2026-11-06 18:13 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai 0 vykstančių veiklų). Patikra po taikymo: `anon_hints` `false`, `anon_notes` `false`, `anon_title` `true`, `auth_hints` `true`, `anon_state` `false`, `auth_state` `false`, `service_state` `true`; funkcijos teisės `{postgres=X/postgres,service_role=X/postgres}`.
 
 ## Konvencija toliau
 
