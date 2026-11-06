@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs"
 import { timingSafeEqual } from "crypto"
+import { canonicalNumber } from "@/lib/game/number-answer"
 
 const BCRYPT_ROUNDS = 10
 
@@ -48,30 +49,55 @@ function foldedOptionsAreDistinct(options: readonly string[] | null | undefined)
 }
 
 /**
+ * A typed text answer may end with punctuation the participant did not mean
+ * (the iOS double-space shortcut adds "."). Tried as an extra form, so a
+ * stored answer that really ends with "?" still matches when typed in full.
+ */
+function withoutTrailingPunctuation(form: string): string {
+  return form.replace(/[.,;:!?…]+$/u, "").trimEnd()
+}
+
+/**
  * Forms tried against the stored hash, in order.
- * - text: folded (current hashes), then exact (hashes made before folding);
+ * - text: folded (current hashes), folded without trailing punctuation,
+ *   then exact (hashes made before folding);
  * - multiple choice: exact; folded only when no two options fold to the same
  *   string, which covers a task switched from text to choice without a new
  *   answer and can never credit a different option;
- * - number and anything else: exact.
+ * - number: the canonical value ("2.5"), the same with a decimal comma
+ *   (older hashes of "2,5"), then exact;
+ * - anything else: exact.
  */
 function candidateForms(submitted: string, rules: AnswerRules): string[] {
   const exact = normalizeAnswerLegacy(submitted)
   const folded = normalizeAnswer(submitted)
   let forms: string[]
   if (foldsDiacritics(rules.type)) {
-    forms = [folded, exact]
+    forms = [folded, withoutTrailingPunctuation(folded), exact]
   } else if (rules.type === "multiple_choice" && foldedOptionsAreDistinct(rules.options)) {
     forms = [exact, folded]
+  } else if (rules.type === "number") {
+    const canonical = canonicalNumber(submitted)
+    forms = canonical === null ? [exact] : [canonical, canonical.replace(".", ","), exact]
   } else {
     forms = [exact]
   }
-  return [...new Set(forms)]
+  return [...new Set(forms.filter((f) => f.length > 0))]
+}
+
+/**
+ * The form a new answer is stored in. Numbers are stored by value, so any
+ * way of writing the same number matches; text that is not a number keeps
+ * its exact form.
+ */
+export function storedForm(answer: string, type: string | null | undefined): string {
+  if (foldsDiacritics(type)) return normalizeAnswer(answer)
+  if (type === "number") return canonicalNumber(answer) ?? normalizeAnswerLegacy(answer)
+  return normalizeAnswerLegacy(answer)
 }
 
 export async function hashAnswer(answer: string, type: string | null | undefined): Promise<string> {
-  const form = foldsDiacritics(type) ? normalizeAnswer(answer) : normalizeAnswerLegacy(answer)
-  return bcrypt.hash(form, BCRYPT_ROUNDS)
+  return bcrypt.hash(storedForm(answer, type), BCRYPT_ROUNDS)
 }
 
 function plaintextEquals(candidate: string, stored: string): boolean {

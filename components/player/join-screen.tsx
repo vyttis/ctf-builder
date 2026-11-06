@@ -59,6 +59,12 @@ export function JoinScreen() {
                   className="pl-11 h-14 text-center text-2xl tracking-[0.4em] font-mono font-bold bg-white"
                   maxLength={6}
                   autoFocus
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  enterKeyHint="go"
+                  aria-label="Veiklos kodas"
                 />
               </div>
               <Button

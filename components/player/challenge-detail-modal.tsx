@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AnswerInput } from "@/components/player/answer-input"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Send,
@@ -19,7 +20,6 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { pluralizeLt } from "@/lib/utils"
@@ -85,6 +85,8 @@ export function ChallengeDetailModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Close the phone keyboard so the result below the button is visible.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
     if (!answer.trim() || !challenge || isSolved) return
 
     setLoading(true)
@@ -255,16 +257,7 @@ export function ChallengeDetailModal({
                 ))}
               </div>
             ) : (
-              <Input
-                type="text"
-                inputMode={challenge.type === "number" ? "decimal" : "text"}
-                placeholder="Jūsų atsakymas..."
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                className="h-12 text-base bg-white"
-                autoFocus
-                disabled={loading}
-              />
+              <AnswerInput type={challenge.type} value={answer} onChange={setAnswer} disabled={loading} />
             )}
 
             <Button

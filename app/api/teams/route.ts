@@ -9,19 +9,17 @@ const createTeamSchema = z.object({
   team_name: z.string().min(1, "Komandos vardas privalomas").max(30),
 })
 
-// Higher limit for classroom environments where many teams share the same NAT.
-const RATE_LIMIT = 30
+// A whole class often joins from one school network (one public IP), and
+// a retry after a taken name counts as another attempt. So the limit is per
+// IP and activity code, generous enough for a workshop of 50 teams with
+// retries, with a wider ceiling per IP across all codes.
+const RATE_PER_GAME = 150
+const RATE_PER_IP = 400
 const RATE_WINDOW = 60_000
 
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-    if (!(await checkAiRateLimitAsync("teams", ip, RATE_LIMIT, RATE_WINDOW))) {
-      return NextResponse.json(
-        { error: "Per daug užklausų. Palaukite minutę." },
-        { status: 429 }
-      )
-    }
 
     let body
     try {
@@ -40,6 +38,17 @@ export async function POST(request: Request) {
       )
     }
 
+    const gameKey = `${ip}:${parsed.data.game_code.toUpperCase()}`
+    if (
+      !(await checkAiRateLimitAsync("teams-ip", ip, RATE_PER_IP, RATE_WINDOW)) ||
+      !(await checkAiRateLimitAsync("teams", gameKey, RATE_PER_GAME, RATE_WINDOW))
+    ) {
+      return NextResponse.json(
+        { error: "Per daug bandymų prisijungti. Palaukite minutę." },
+        { status: 429 }
+      )
+    }
+
     const supabase = createAdminClient()
 
     // Find the active game
@@ -53,7 +62,7 @@ export async function POST(request: Request) {
     if (gameError || !game) {
       console.error("Game lookup failed:", gameError?.message)
       return NextResponse.json(
-        { error: "Žaidimas nerastas arba neaktyvus" },
+        { error: "Veikla nerasta arba dar neprasidėjo. Patikrinkite kodą." },
         { status: 404 }
       )
     }
@@ -68,7 +77,7 @@ export async function POST(request: Request) {
     const maxTeams = (settings?.max_teams as number) || 50
     if (teamCount && teamCount >= maxTeams) {
       return NextResponse.json(
-        { error: "Žaidimas pilnas — pasiektas maksimalus komandų skaičius" },
+        { error: "Veikloje jau visos vietos užimtos: pasiektas didžiausias komandų skaičius." },
         { status: 400 }
       )
     }
@@ -83,7 +92,7 @@ export async function POST(request: Request) {
 
     if (existingTeam) {
       return NextResponse.json(
-        { error: "Šis komandos vardas jau užimtas" },
+        { error: "Šis komandos vardas jau užimtas. Pasirinkite kitą." },
         { status: 400 }
       )
     }
@@ -105,7 +114,7 @@ export async function POST(request: Request) {
       // pre-check above, the loser hits unique(game_id, name).
       if (error.code === "23505") {
         return NextResponse.json(
-          { error: "Šis komandos vardas jau užimtas" },
+          { error: "Šis komandos vardas jau užimtas. Pasirinkite kitą." },
           { status: 400 }
         )
       }

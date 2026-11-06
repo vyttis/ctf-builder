@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest"
+import bcrypt from "bcryptjs"
+import { canonicalNumber } from "@/lib/game/number-answer"
 import {
   normalizeAnswer,
   normalizeAnswerLegacy,
@@ -121,5 +123,56 @@ describe("verifyAnswer (legacy plaintext path)", () => {
     const rules = { type: "multiple_choice", options: ["kasti", "kąsti"] }
     await expect(verifyAnswer("kasti", "kąsti", rules)).resolves.toBe(false)
     await expect(verifyAnswer("kąsti", "kąsti", rules)).resolves.toBe(true)
+  })
+})
+
+describe("number answers by value", () => {
+  it("reads the ways people write numbers", () => {
+    expect(canonicalNumber("2,5")).toBe("2.5")
+    expect(canonicalNumber(" 2.50 ")).toBe("2.5")
+    expect(canonicalNumber("+5")).toBe("5")
+    expect(canonicalNumber("07")).toBe("7")
+    expect(canonicalNumber("1 000")).toBe("1000")
+    expect(canonicalNumber("1 000,25")).toBe("1000.25")
+    expect(canonicalNumber("−3")).toBe("-3")
+    expect(canonicalNumber(",5")).toBe("0.5")
+    expect(canonicalNumber("-0")).toBe("0")
+    expect(canonicalNumber("3 m")).toBeNull()
+    expect(canonicalNumber("1.2.3")).toBeNull()
+    expect(canonicalNumber("")).toBeNull()
+  })
+
+  it("matches any form of the same number for new answers", async () => {
+    const hash = await hashAnswer("2,50", "number")
+    for (const typed of ["2.5", "2,5", "2.50", "+2.5", " 2.5 "]) {
+      expect(await verifyAnswer(typed, hash, NUMBER)).toBe(true)
+    }
+    expect(await verifyAnswer("25", hash, NUMBER)).toBe(false)
+    expect(await verifyAnswer("-2.5", hash, NUMBER)).toBe(false)
+  })
+
+  it("still matches older hashes made from the typed text", async () => {
+    const oldComma = await bcrypt.hash("2,5", 4)
+    expect(await verifyAnswer("2.5", oldComma, NUMBER)).toBe(true)
+    const oldDot = await bcrypt.hash("1000", 4)
+    expect(await verifyAnswer("1 000", oldDot, NUMBER)).toBe(true)
+  })
+
+  it("keeps answers that are not numbers as typed", async () => {
+    const hash = await hashAnswer("3 m", "number")
+    expect(await verifyAnswer("3 m", hash, NUMBER)).toBe(true)
+  })
+})
+
+describe("text answers with a stray full stop", () => {
+  it("ignores punctuation added at the end", async () => {
+    const hash = await hashAnswer("Šaltinis", "text")
+    expect(await verifyAnswer("saltinis.", hash, { type: "text" })).toBe(true)
+    expect(await verifyAnswer("Šaltinis!", hash, { type: "text" })).toBe(true)
+  })
+
+  it("still matches an answer that really ends with punctuation", async () => {
+    const hash = await hashAnswer("Kodėl?", "text")
+    expect(await verifyAnswer("kodel?", hash, { type: "text" })).toBe(true)
   })
 })

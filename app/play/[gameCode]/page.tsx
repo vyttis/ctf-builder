@@ -16,6 +16,7 @@ import Image from "next/image"
 type GameState =
   | { status: "loading" }
   | { status: "not_found" }
+  | { status: "error" }
   | { status: "inactive"; gameStatus: string }
   | { status: "ready"; title: string; description: string | null }
 
@@ -43,9 +44,15 @@ export default function JoinGamePage() {
 
   async function validateGame() {
     try {
-      const res = await fetch(`/api/play/state?game_code=${encodeURIComponent(gameCode)}`)
-      if (!res.ok) {
+      const res = await fetch(`/api/play/state?game_code=${encodeURIComponent(gameCode)}`, { cache: "no-store" })
+      // Only a clear "no such activity" says the code is wrong; a network
+      // or server failure asks to try again instead.
+      if (res.status === 404 || res.status === 400) {
         setGameState({ status: "not_found" })
+        return
+      }
+      if (!res.ok) {
+        setGameState({ status: "error" })
         return
       }
       const data = await res.json()
@@ -67,9 +74,33 @@ export default function JoinGamePage() {
         description: game.description,
       })
     } catch {
-      setGameState({ status: "not_found" })
+      setGameState({ status: "error" })
     }
   }
+
+  // While the activity has not started (or is paused), check every 5 s and
+  // open the join form as soon as it runs.
+  const waitingFor = gameState.status === "inactive" ? gameState.gameStatus : null
+  useEffect(() => {
+    if (waitingFor !== "draft" && waitingFor !== "paused") return
+    let disposed = false
+    const check = async () => {
+      try {
+        const res = await fetch(`/api/play/status?game_code=${encodeURIComponent(gameCode)}`, { cache: "no-store" })
+        if (!res.ok) return
+        const data = (await res.json()) as { status: string | null }
+        if (!disposed && data.status === "active") void validateGame()
+      } catch {
+        // The next round retries.
+      }
+    }
+    const interval = setInterval(check, 5000)
+    return () => {
+      disposed = true
+      clearInterval(interval)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitingFor, gameCode])
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
@@ -111,7 +142,7 @@ export default function JoinGamePage() {
     } catch (error: unknown) {
       toast({
         title: "Klaida",
-        description: error instanceof Error ? error.message : "Nepavyko prisijungti prie žaidimo",
+        description: error instanceof Error ? error.message : "Nepavyko prisijungti prie veiklos",
         variant: "destructive",
       })
     } finally {
@@ -124,6 +155,32 @@ export default function JoinGamePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Network or server failure: the code may well be right
+  if (gameState.status === "error") {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-highlight/10 flex items-center justify-center">
+            <AlertCircle className="h-10 w-10 text-highlight-ink" aria-hidden="true" />
+          </div>
+          <h1 className="text-xl font-bold text-steam-dark mb-2">Nepavyko susisiekti</h1>
+          <p className="text-muted-foreground mb-6">
+            Patikrinkite interneto ryšį ir bandykite dar kartą. Kodas <span className="font-mono font-bold">{gameCode}</span> gali būti teisingas.
+          </p>
+          <Button
+            onClick={() => {
+              setGameState({ status: "loading" })
+              void validateGame()
+            }}
+            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            Bandyti dar kartą
+          </Button>
+        </div>
       </div>
     )
   }
@@ -141,10 +198,10 @@ export default function JoinGamePage() {
             <AlertCircle className="h-10 w-10 text-accent" />
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
-            Žaidimas nerastas
+            Veikla nerasta
           </h1>
           <p className="text-muted-foreground mb-2">
-            Kodas <span className="font-mono font-bold">{gameCode}</span> neatitinka jokio žaidimo.
+            Kodas <span className="font-mono font-bold">{gameCode}</span> neatitinka jokios veiklos.
           </p>
           <p className="text-sm text-muted-foreground mb-6">
             Patikrinkite kodą ir bandykite dar kartą.
@@ -163,9 +220,9 @@ export default function JoinGamePage() {
   // Game inactive (draft, paused, finished)
   if (gameState.status === "inactive") {
     const messages: Record<string, string> = {
-      draft: "Šis žaidimas dar neaktyvuotas. Palaukite, kol vedėjas jį paleis.",
-      paused: "Šis žaidimas pristabdytas. Palaukite, kol vedėjas jį tęs.",
-      finished: "Šis žaidimas jau baigtas.",
+      draft: "Veikla dar neprasidėjo. Šis langas atsinaujins pats, kai vedėjas ją pradės.",
+      paused: "Veikla pristabdyta. Šis langas atsinaujins pats, kai vedėjas ją tęs.",
+      finished: "Ši veikla jau baigta.",
     }
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -178,10 +235,10 @@ export default function JoinGamePage() {
             <AlertCircle className="h-10 w-10 text-highlight" />
           </div>
           <h1 className="text-xl font-bold text-steam-dark mb-2">
-            Žaidimas nepasiekiamas
+            {gameState.gameStatus === "finished" ? "Veikla baigta" : "Palaukite"}
           </h1>
           <p className="text-muted-foreground mb-6">
-            {messages[gameState.gameStatus] || "Žaidimas šiuo metu nepasiekiamas."}
+            {messages[gameState.gameStatus] || "Veikla šiuo metu nepasiekiama."}
           </p>
           <div className="flex flex-col gap-2 items-center">
             {(gameState.gameStatus === "draft" || gameState.gameStatus === "paused") && (
@@ -255,6 +312,9 @@ export default function JoinGamePage() {
                     maxLength={30}
                     required
                     autoFocus
+                    autoComplete="off"
+                    enterKeyHint="go"
+                    aria-label="Komandos vardas"
                   />
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
@@ -271,8 +331,8 @@ export default function JoinGamePage() {
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
-                    Pradėti žaidimą
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    Prisijungti prie veiklos
+                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </>
                 )}
               </Button>
