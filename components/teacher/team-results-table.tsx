@@ -61,7 +61,7 @@ export function TeamResultsTable({
     <Card className="border-border/50 bg-white">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle className="text-base flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-highlight" />
+          <Trophy className="h-4 w-4 text-highlight-ink" />
           Komandų rezultatai
         </CardTitle>
         <Button
@@ -97,10 +97,10 @@ export function TeamResultsTable({
                         variant="outline"
                         className={`text-xs px-1.5 ${
                           index === 0
-                            ? "border-highlight/50 text-highlight"
+                            ? "border-highlight/50 text-highlight-ink"
                             : index === 1
                             ? "border-border text-muted-foreground"
-                            : "border-accent/40 text-accent"
+                            : "border-accent/40 text-accent-ink"
                         }`}
                       >
                         {index + 1}

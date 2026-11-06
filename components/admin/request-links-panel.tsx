@@ -195,7 +195,7 @@ export function RequestLinksPanel() {
               <li key={l.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 space-y-0.5">
                   <p className="flex items-center gap-2 font-medium text-steam-dark">
-                    <Link2 className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                    <Link2 className="h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" />
                     {l.label}
                   </p>
                   <p className="text-xs text-muted-foreground">

@@ -203,7 +203,7 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
                         </button>
                         <button
                           type="button"
-                          className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm text-accent hover:bg-accent/5"
+                          className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm text-accent-ink hover:bg-accent/5"
                           onClick={() => setEditing({ id: team.id, name: team.name, mode: "remove" })}
                         >
                           <Trash2 className="h-4 w-4" aria-hidden="true" />

@@ -122,7 +122,7 @@ export function DiWorkspace({
                     <div
                       className={`shrink-0 ${
                         selectedScenario === s.id
-                          ? "text-highlight"
+                          ? "text-highlight-ink"
                           : "text-muted-foreground"
                       }`}
                     >
@@ -144,7 +144,7 @@ export function DiWorkspace({
           {selectedScenario && (
             <Badge
               variant="outline"
-              className="text-xs text-highlight border-highlight/30"
+              className="text-xs text-highlight-ink border-highlight/30"
             >
               Scenarijus: {scenarios.find((s) => s.id === selectedScenario)?.label}
             </Badge>

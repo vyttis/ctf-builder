@@ -94,7 +94,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
         >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-highlight/10 flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-highlight" />
+              <Sparkles className="h-4 w-4 text-highlight-ink" />
             </div>
             <div className="text-left">
               <p className="font-medium text-steam-dark text-sm">
@@ -141,7 +141,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
                           onClick={() => handleGenerate(btn.theme)}
                           className="h-auto py-2 px-2 flex flex-col items-center gap-1 text-xs border-border/50 hover:border-highlight/50 hover:bg-highlight/5"
                         >
-                          <Icon className="h-4 w-4 text-highlight" />
+                          <Icon className="h-4 w-4 text-highlight-ink" />
                           {btn.label}
                         </Button>
                       )
@@ -183,7 +183,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
 
                 {/* Error */}
                 {error && (
-                  <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 text-sm text-accent">
+                  <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 text-sm text-accent-ink">
                     {error}
                   </div>
                 )}
@@ -250,7 +250,7 @@ export function AiGameAssistant({ onAcceptIdea }: AiGameAssistantProps) {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleReject(index)}
-                                className="text-muted-foreground hover:text-accent gap-1.5 text-xs h-7"
+                                className="text-muted-foreground hover:text-accent-ink gap-1.5 text-xs h-7"
                               >
                                 <X className="h-3 w-3" />
                                 Atmesti

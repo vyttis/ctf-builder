@@ -45,7 +45,7 @@ const LIBRARY_STATUS_BADGES: Record<
   },
   rejected: {
     label: "Biblioteka: atmesta",
-    className: "border-accent/40 text-accent",
+    className: "border-accent/40 text-accent-ink",
   },
 }
 
@@ -119,7 +119,7 @@ export default async function GameDetailPage(
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <Card className="border-border/50 bg-white">
         <CardContent className="p-4 text-center">
-          <Puzzle className="h-5 w-5 mx-auto mb-1 text-primary" />
+          <Puzzle className="h-5 w-5 mx-auto mb-1 text-primary-ink" />
           <p className="text-2xl font-bold text-steam-dark">
             {challenges.length}
           </p>
@@ -128,14 +128,14 @@ export default async function GameDetailPage(
       </Card>
       <Card className="border-border/50 bg-white">
         <CardContent className="p-4 text-center">
-          <Users className="h-5 w-5 mx-auto mb-1 text-secondary" />
+          <Users className="h-5 w-5 mx-auto mb-1 text-secondary-ink" />
           <p className="text-2xl font-bold text-steam-dark">{teamCount}</p>
           <p className="text-xs text-muted-foreground">Komandos</p>
         </CardContent>
       </Card>
       <Card className="border-border/50 bg-white">
         <CardContent className="p-4 text-center">
-          <Trophy className="h-5 w-5 mx-auto mb-1 text-highlight" />
+          <Trophy className="h-5 w-5 mx-auto mb-1 text-highlight-ink" />
           <p className="text-2xl font-bold text-steam-dark">
             {challenges.reduce(
               (sum: number, c: Challenge) => sum + (c.points || 0),
@@ -147,7 +147,7 @@ export default async function GameDetailPage(
       </Card>
       <Card className="border-border/50 bg-white">
         <CardContent className="p-4 text-center">
-          <Clock className="h-5 w-5 mx-auto mb-1 text-accent" />
+          <Clock className="h-5 w-5 mx-auto mb-1 text-accent-ink" />
           <p className="text-2xl font-bold text-steam-dark">
             {settings?.time_limit_minutes || "∞"}
           </p>
@@ -161,7 +161,7 @@ export default async function GameDetailPage(
     <Card className="border-border/50 bg-white">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg flex items-center gap-2">
-          <Puzzle className="h-5 w-5 text-primary" />
+          <Puzzle className="h-5 w-5 text-primary-ink" />
           Užduotys
         </CardTitle>
         <Link href={`/games/${game.id}/builder`}>
@@ -204,7 +204,7 @@ export default async function GameDetailPage(
                     </p>
                   </div>
                   {challenge.needs_answer && (
-                    <Badge className="shrink-0 text-xs bg-accent/10 text-accent border-accent/40 hover:bg-accent/15 gap-1">
+                    <Badge className="shrink-0 text-xs bg-accent/10 text-accent-ink border-accent/40 hover:bg-accent/15 gap-1">
                       <AlertTriangle className="h-3 w-3" />
                       Trūksta atsakymo
                     </Badge>
@@ -309,7 +309,7 @@ export default async function GameDetailPage(
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
+                className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
               >
                 <MonitorPlay className="h-4 w-4" />
                 Klasės ekranas
@@ -333,7 +333,7 @@ export default async function GameDetailPage(
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 border-secondary/30 text-secondary hover:bg-secondary/5"
+                className="gap-2 border-secondary/30 text-secondary-ink hover:bg-secondary/5"
               >
                 <Printer className="h-4 w-4" />
                 Spausdinti ataskaitą

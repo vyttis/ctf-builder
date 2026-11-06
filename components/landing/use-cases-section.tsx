@@ -57,7 +57,7 @@ export function UseCasesSection() {
             />
           </div>
           <figcaption className="mt-4 flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
-            <span className="numeral-display text-[10px] uppercase tracking-wider text-primary font-semibold shrink-0 mt-0.5">
+            <span className="numeral-display text-[10px] uppercase tracking-wider text-primary-ink font-semibold shrink-0 mt-0.5">
               Pav. 02
             </span>
             <span>
@@ -72,7 +72,7 @@ export function UseCasesSection() {
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-5">
               <span className="inline-flex h-px w-10 bg-primary" />
-              <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-semibold">
+              <span className="text-[11px] uppercase tracking-[0.22em] text-primary-ink font-semibold">
                 §5 · Pavyzdžiai
               </span>
             </div>
@@ -97,7 +97,7 @@ export function UseCasesSection() {
                   <div className="numeral-display font-medium text-xl text-steam-dark/30 tabular-nums">
                     0{index + 1}
                   </div>
-                  <div className="font-display italic text-sm text-secondary mt-1 leading-tight whitespace-nowrap">
+                  <div className="font-display italic text-sm text-secondary-ink mt-1 leading-tight whitespace-nowrap">
                     {item.when}
                   </div>
                 </div>

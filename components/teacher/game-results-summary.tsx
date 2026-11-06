@@ -102,7 +102,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
       <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 to-white">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-secondary" />
+            <BarChart3 className="h-5 w-5 text-secondary-ink" />
             Klasės rezultatų suvestinė
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
@@ -147,7 +147,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
               <ChallengeListPanel
                 title="Sudėtingiausios užduotys"
                 hint="Kur klasė užstrigo. Verta aptarti."
-                icon={<AlertCircle className="h-4 w-4 text-accent" />}
+                icon={<AlertCircle className="h-4 w-4 text-accent-ink" />}
                 tone="accent"
                 items={hardest}
                 totalTeams={stats.total_teams}
@@ -155,7 +155,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
               <ChallengeListPanel
                 title="Lengviausiai pavyko"
                 hint="Dalyviai jau valdo šią medžiagą."
-                icon={<CheckCircle2 className="h-4 w-4 text-primary" />}
+                icon={<CheckCircle2 className="h-4 w-4 text-primary-ink" />}
                 tone="primary"
                 items={easiest}
                 totalTeams={stats.total_teams}
@@ -165,7 +165,7 @@ export function GameResultsSummary({ gameId, totalChallenges }: GameResultsSumma
 
           {/* Methodological note */}
           <div className="rounded-lg border border-secondary/30 bg-secondary/5 p-3 text-xs text-muted-foreground leading-relaxed">
-            <strong className="text-secondary">Metodinė pastaba.</strong>{" "}
+            <strong className="text-secondary-ink">Metodinė pastaba.</strong>{" "}
             Suvestinė pateikia kiekybinius rodiklius. Pedagoginis vertinimas reikalauja
             kokybinės refleksijos su klase: kas pavyko, kodėl, ką darysite kitą pamoką.
           </div>
@@ -190,9 +190,9 @@ function KpiCard({
 }) {
   const tints: Record<string, string> = {
     primary: "bg-primary/10 text-primary-ink",
-    secondary: "bg-secondary/10 text-secondary",
+    secondary: "bg-secondary/10 text-secondary-ink",
     highlight: "bg-highlight/15 text-steam-dark",
-    accent: "bg-accent/10 text-accent",
+    accent: "bg-accent/10 text-accent-ink",
   }
   return (
     <div className="rounded-xl border border-border/40 bg-white p-3">
@@ -247,7 +247,7 @@ function ChallengeListPanel({
               </div>
               <Badge
                 variant="outline"
-                className={`text-[10px] shrink-0 ${tone === "primary" ? "border-primary/30 text-primary-ink" : "border-accent/30 text-accent"}`}
+                className={`text-[10px] shrink-0 ${tone === "primary" ? "border-primary/30 text-primary-ink" : "border-accent/30 text-accent-ink"}`}
               >
                 {coveragePct}% klasės
               </Badge>

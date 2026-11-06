@@ -21,7 +21,7 @@ function TeacherViewMock() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
-            <Settings className="h-3 w-3 text-primary" />
+            <Settings className="h-3 w-3 text-primary-ink" />
           </div>
           <span className="text-[10px] font-semibold text-steam-dark">
             Mokytojo aplinka
@@ -29,7 +29,7 @@ function TeacherViewMock() {
         </div>
         <div className="flex gap-1">
           <div className="h-5 px-2 bg-primary/8 rounded flex items-center">
-            <span className="text-[9px] text-primary font-medium">
+            <span className="text-[9px] text-primary-ink font-medium">
               3 komandos
             </span>
           </div>
@@ -37,9 +37,9 @@ function TeacherViewMock() {
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Užduotys", value: "8", icon: Puzzle, color: "text-primary" },
-          { label: "Komandos", value: "3", icon: Users, color: "text-secondary" },
-          { label: "Atsakymai", value: "18", icon: BarChart3, color: "text-highlight" },
+          { label: "Užduotys", value: "8", icon: Puzzle, color: "text-primary-ink" },
+          { label: "Komandos", value: "3", icon: Users, color: "text-secondary-ink" },
+          { label: "Atsakymai", value: "18", icon: BarChart3, color: "text-highlight-ink" },
         ].map((kpi) => {
           const KIcon = kpi.icon
           return (
@@ -90,14 +90,14 @@ function StudentViewMock() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded bg-secondary/10 flex items-center justify-center">
-            <Puzzle className="h-3 w-3 text-secondary" />
+            <Puzzle className="h-3 w-3 text-secondary-ink" />
           </div>
           <span className="text-[10px] font-semibold text-steam-dark">
             Mokinio vaizdas
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <Star className="h-3 w-3 text-highlight" />
+          <Star className="h-3 w-3 text-highlight-ink" />
           <span className="text-[10px] font-bold text-steam-dark">280 tšk</span>
         </div>
       </div>
@@ -114,7 +114,7 @@ function StudentViewMock() {
             className={`w-6 h-6 rounded-full flex items-center justify-center ${ch.done ? "bg-primary/10" : "bg-muted"}`}
           >
             {ch.done ? (
-              <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-primary-ink" />
             ) : (
               <Puzzle className="h-3 w-3 text-muted-foreground/40" />
             )}
@@ -125,7 +125,7 @@ function StudentViewMock() {
             </div>
           </div>
           <div className="flex items-center gap-0.5">
-            <Trophy className="h-3 w-3 text-highlight/50" />
+            <Trophy className="h-3 w-3 text-highlight-ink/50" />
             <span className="text-[9px] text-muted-foreground">{ch.pts}</span>
           </div>
         </div>
@@ -137,7 +137,7 @@ function StudentViewMock() {
           </span>
         </div>
         <div className="h-8 px-3 rounded-lg bg-primary/10 flex items-center">
-          <span className="text-[10px] font-semibold text-primary">
+          <span className="text-[10px] font-semibold text-primary-ink">
             Tikrinti
           </span>
         </div>
@@ -180,7 +180,7 @@ export function ClassroomExperienceSection() {
           transition={{ duration: 0.5 }}
         >
           <div className="mb-4 flex items-center gap-2">
-            <Monitor className="h-4 w-4 text-primary" />
+            <Monitor className="h-4 w-4 text-primary-ink" />
             <span className="text-sm font-semibold text-steam-dark">
               Mokytojo aplinka
             </span>
@@ -216,7 +216,7 @@ export function ClassroomExperienceSection() {
           transition={{ delay: 0.15, duration: 0.5 }}
         >
           <div className="mb-4 flex items-center gap-2">
-            <Smartphone className="h-4 w-4 text-secondary" />
+            <Smartphone className="h-4 w-4 text-secondary-ink" />
             <span className="text-sm font-semibold text-steam-dark">
               Mokinio vaizdas
             </span>

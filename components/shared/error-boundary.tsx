@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex flex-col items-center justify-center min-h-[200px] p-6 text-center">
           <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-            <AlertTriangle className="h-7 w-7 text-accent" />
+            <AlertTriangle className="h-7 w-7 text-accent-ink" />
           </div>
           <h2 className="text-lg font-semibold text-steam-dark mb-1">
             {this.props.fallbackTitle || "Kažkas nutiko ne taip"}

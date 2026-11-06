@@ -134,14 +134,14 @@ export default async function LessonPlansPage({
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
-                        <FileText className="h-4.5 w-4.5 text-secondary" />
+                        <FileText className="h-4.5 w-4.5 text-secondary-ink" />
                       </div>
                       <Badge variant={status.variant} className="text-xs shrink-0">
                         {status.label}
                       </Badge>
                     </div>
 
-                    <h3 className="font-semibold text-steam-dark text-sm mb-1 line-clamp-2 group-hover:text-secondary transition-colors">
+                    <h3 className="font-semibold text-steam-dark text-sm mb-1 line-clamp-2 group-hover:text-secondary-ink transition-colors">
                       {plan.title}
                     </h3>
 
@@ -157,7 +157,7 @@ export default async function LessonPlansPage({
                         {getSubjectLabel(plan.subject)}
                       </span>
                       {plan.secondary_subject && (
-                        <span className="bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="bg-accent/10 text-accent-ink px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Sparkles className="h-3 w-3" />
                           {getSubjectLabel(plan.secondary_subject)}
                         </span>
@@ -178,7 +178,7 @@ export default async function LessonPlansPage({
                       <span className="text-xs text-muted-foreground">
                         {LESSON_TYPE_LABELS[plan.lesson_type] || plan.lesson_type}
                       </span>
-                      <ArrowRight className="h-3.5 w-3.5 text-secondary opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="h-3.5 w-3.5 text-secondary-ink opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </div>
                   </CardContent>
                 </Card>

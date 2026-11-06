@@ -136,7 +136,7 @@ export function GameEditDialog({
               {...register("title")}
             />
             {errors.title && (
-              <p className="text-sm text-accent">{errors.title.message}</p>
+              <p className="text-sm text-accent-ink">{errors.title.message}</p>
             )}
           </div>
 
@@ -162,7 +162,7 @@ export function GameEditDialog({
                 {...register("max_teams", { valueAsNumber: true })}
               />
               {errors.max_teams && (
-                <p className="text-sm text-accent">{errors.max_teams.message}</p>
+                <p className="text-sm text-accent-ink">{errors.max_teams.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -183,7 +183,7 @@ export function GameEditDialog({
                 }}
               />
               {errors.time_limit_minutes && (
-                <p className="text-sm text-accent">
+                <p className="text-sm text-accent-ink">
                   {errors.time_limit_minutes.message}
                 </p>
               )}

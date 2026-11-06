@@ -77,7 +77,7 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-steam-dark text-lg truncate group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-steam-dark text-lg truncate group-hover:text-primary-ink transition-colors">
                   {game.title}
                 </h3>
                 {game.description && (
@@ -117,7 +117,7 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-secondary-ink"
                     onClick={(e) => {
                       e.preventDefault()
                       e.stopPropagation()
@@ -129,7 +129,7 @@ export function GameCard({ game, index, onUpdate }: GameCardProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-accent"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-accent-ink"
                     onClick={(e) => {
                       e.preventDefault()
                       e.stopPropagation()

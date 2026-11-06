@@ -79,7 +79,7 @@ export default function LibraryPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-steam-dark flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-secondary" />
+            <BookOpen className="h-6 w-6 text-secondary-ink" />
             Veiklų biblioteka
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -143,7 +143,7 @@ export default function LibraryPage() {
       {/* Items grid */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
         </div>
       ) : error ? (
         <div className="text-center py-20">

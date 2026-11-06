@@ -116,7 +116,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
     return (
       <div className="space-y-2">
         <Label className="flex items-center gap-1.5">
-          <ImagePlus className="h-3.5 w-3.5 text-primary" />
+          <ImagePlus className="h-3.5 w-3.5 text-primary-ink" />
           Paveiksliukas
         </Label>
         <div className="relative rounded-xl overflow-hidden border border-border/50 bg-muted/20">
@@ -139,7 +139,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   return (
     <div className="space-y-2">
       <Label className="flex items-center gap-1.5">
-        <ImagePlus className="h-3.5 w-3.5 text-primary" />
+        <ImagePlus className="h-3.5 w-3.5 text-primary-ink" />
         Paveiksliukas (neprivaloma)
       </Label>
 
@@ -172,7 +172,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
 
         {uploading ? (
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
             <span className="text-sm text-muted-foreground">Įkeliama...</span>
           </div>
         ) : (

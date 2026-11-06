@@ -23,7 +23,7 @@ export function FinishRequestCard({ gameCode, sessionToken }: FinishRequestCardP
       className="mt-6 rounded-2xl border border-secondary/30 bg-secondary/5 p-5 text-left"
     >
       <div className="flex items-start gap-3">
-        <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-secondary" aria-hidden="true" />
+        <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-secondary-ink" aria-hidden="true" />
         <div className="space-y-1">
           <h2 id="finish-request-title" className="font-semibold text-steam-dark">
             Norite vesti tokias veiklas savo mokiniams?

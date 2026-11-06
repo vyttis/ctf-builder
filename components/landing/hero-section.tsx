@@ -267,9 +267,9 @@ export function HeroSection() {
                             disabled={picked !== null && !isPicked}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all ${
                               showResult && opt.correct
-                                ? "border-primary bg-primary/10 text-primary"
+                                ? "border-primary bg-primary/10 text-primary-ink"
                                 : showResult && !opt.correct
-                                  ? "border-accent bg-accent/10 text-accent"
+                                  ? "border-accent bg-accent/10 text-accent-ink"
                                   : picked && !isPicked
                                     ? "border-border bg-white text-muted-foreground opacity-50"
                                     : "border-border bg-white text-steam-dark hover:border-primary/40 hover:bg-primary/[0.03]"
@@ -298,8 +298,8 @@ export function HeroSection() {
                         animate={{ opacity: 1, y: 0 }}
                         className={`mt-4 px-4 py-3 rounded-lg text-xs ${
                           correctPicked
-                            ? "bg-primary/10 border border-primary/20 text-primary"
-                            : "bg-accent/10 border border-accent/20 text-accent"
+                            ? "bg-primary/10 border border-primary/20 text-primary-ink"
+                            : "bg-accent/10 border border-accent/20 text-accent-ink"
                         }`}
                       >
                         {correctPicked ? (

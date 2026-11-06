@@ -107,7 +107,7 @@ export function TeacherNav({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="max-w-full min-w-0 gap-2 border-accent/40 text-accent hover:bg-accent/5 font-semibold"
+                  className="max-w-full min-w-0 gap-2 border-accent/40 text-accent-ink hover:bg-accent/5 font-semibold"
                 >
                   <LiveDot paused={activeGame.paused} />
                   <span className="truncate">{liveLabel(activeGame)}</span>
@@ -133,7 +133,7 @@ export function TeacherNav({
               size="sm"
               onClick={handleLogout}
               aria-label="Atsijungti"
-              className="hidden lg:flex shrink-0 text-muted-foreground hover:text-accent"
+              className="hidden lg:flex shrink-0 text-muted-foreground hover:text-accent-ink"
             >
               <LogOut className="h-4 w-4" />
             </Button>
@@ -177,7 +177,7 @@ export function TeacherNav({
               <Link href={`/games/${activeGame.id}/live`} onClick={() => setMobileMenuOpen(false)}>
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-3 h-11 border-accent/40 text-accent font-semibold"
+                  className="w-full justify-start gap-3 h-11 border-accent/40 text-accent-ink font-semibold"
                 >
                   <LiveDot paused={activeGame.paused} />
                   {liveLabel(activeGame)}
@@ -221,7 +221,7 @@ export function TeacherNav({
                   setMobileMenuOpen(false)
                   handleLogout()
                 }}
-                className="w-full justify-start gap-3 h-11 text-accent hover:text-accent"
+                className="w-full justify-start gap-3 h-11 text-accent-ink hover:text-accent-ink"
               >
                 <LogOut className="h-4 w-4" />
                 Atsijungti

@@ -29,9 +29,9 @@ const podiumColors = [
 ]
 
 const podiumIcons = [
-  <Crown key="1" className="h-5 w-5 text-highlight" />,
+  <Crown key="1" className="h-5 w-5 text-highlight-ink" />,
   <Medal key="2" className="h-5 w-5 text-muted-foreground" />,
-  <Medal key="3" className="h-5 w-5 text-accent" />,
+  <Medal key="3" className="h-5 w-5 text-accent-ink" />,
 ]
 
 export default function LeaderboardPage() {
@@ -150,7 +150,7 @@ export default function LeaderboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
       </div>
     )
   }
@@ -271,7 +271,7 @@ export default function LeaderboardPage() {
 
                         <div className="text-right shrink-0">
                           <div className="flex items-center gap-1 justify-end">
-                            <Star className="h-3.5 w-3.5 text-highlight shrink-0" />
+                            <Star className="h-3.5 w-3.5 text-highlight-ink shrink-0" />
                             <span className="font-bold text-lg text-steam-dark tabular-nums">{team.total_points}</span>
                           </div>
                           <p className="text-[10px] text-muted-foreground">

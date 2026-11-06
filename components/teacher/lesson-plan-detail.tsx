@@ -30,9 +30,9 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
 }
 
 const ACTIVITY_TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  intro: { label: "Įvadas", color: "bg-secondary/10 text-secondary" },
+  intro: { label: "Įvadas", color: "bg-secondary/10 text-secondary-ink" },
   challenge: { label: "Veikla", color: "bg-primary/10 text-primary-ink" },
-  discussion: { label: "Diskusija", color: "bg-accent/10 text-accent" },
+  discussion: { label: "Diskusija", color: "bg-accent/10 text-accent-ink" },
   reflection: { label: "Refleksija", color: "bg-highlight/15 text-steam-dark" },
 }
 
@@ -140,7 +140,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
           {getSubjectLabel(plan.subject)}
         </Badge>
         {plan.secondary_subject && (
-          <Badge variant="outline" className="gap-1 border-accent/40 text-accent">
+          <Badge variant="outline" className="gap-1 border-accent/40 text-accent-ink">
             <Sparkles className="h-3 w-3" />
             {getSubjectLabel(plan.secondary_subject)}
           </Badge>
@@ -163,7 +163,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
       {plan.goal && (
         <Card className="border-border/50 bg-white mb-4">
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-secondary mb-1 flex items-center gap-1">
+            <p className="text-xs font-medium text-secondary-ink mb-1 flex items-center gap-1">
               <Target className="h-3 w-3" />
               Pamokos tikslas
             </p>
@@ -176,7 +176,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
       {plan.curriculum_link && (
         <Card className="border-secondary/20 bg-secondary/5 mb-6">
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-secondary mb-1 flex items-center gap-1">
+            <p className="text-xs font-medium text-secondary-ink mb-1 flex items-center gap-1">
               <Target className="h-3 w-3" />
               Ryšys su ugdymo programa
             </p>
@@ -207,7 +207,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
       {/* Stages / lesson flow */}
       <div className="mb-6">
         <h2 className="text-sm font-medium text-steam-dark flex items-center gap-2 mb-3">
-          <Clock className="h-4 w-4 text-secondary" />
+          <Clock className="h-4 w-4 text-secondary-ink" />
           Pamokos eiga
         </h2>
 
@@ -218,7 +218,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
               <Card key={index} className="border-border/50 bg-white">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-sm font-bold text-secondary shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-sm font-bold text-secondary-ink shrink-0">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -240,7 +240,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
                       {(stage.bloom_level || (stage.competencies?.length ?? 0) > 0) && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {stage.bloom_level && BLOOM_LABELS[stage.bloom_level as BloomLevel] && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary/10 text-secondary border border-secondary/20">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary/10 text-secondary-ink border border-secondary/20">
                               Bloom: {BLOOM_LABELS[stage.bloom_level as BloomLevel]}
                             </span>
                           )}
@@ -282,7 +282,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
       {plan.teacher_methodical_note && (
         <Card className="border-highlight/30 bg-highlight/5 mb-6">
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-highlight mb-1 flex items-center gap-1">
+            <p className="text-xs font-medium text-highlight-ink mb-1 flex items-center gap-1">
               <BookOpen className="h-3 w-3" />
               Metodinė pastaba mokytojui
             </p>
@@ -297,7 +297,7 @@ export function LessonPlanDetail({ plan }: LessonPlanDetailProps) {
           <Button
             onClick={handleConvert}
             disabled={converting}
-            className="flex-1 gap-2 border-accent/30 text-accent hover:bg-accent/5"
+            className="flex-1 gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
             variant="outline"
             size="lg"
           >

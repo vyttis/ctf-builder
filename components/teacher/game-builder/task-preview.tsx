@@ -44,7 +44,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Eye className="h-4 w-4 text-secondary" />
+          <Eye className="h-4 w-4 text-secondary-ink" />
           <h3 className="font-semibold text-sm text-steam-dark">
             Dalyvio vaizdas
           </h3>
@@ -81,8 +81,8 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
                     challenge.difficulty === "easy"
                       ? "text-primary-ink border-primary/30"
                       : challenge.difficulty === "hard"
-                      ? "text-accent border-accent/30"
-                      : "text-highlight border-highlight/30"
+                      ? "text-accent-ink border-accent/30"
+                      : "text-highlight-ink border-highlight/30"
                   }`}
                 >
                   {difficultyLabel}
@@ -153,7 +153,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 text-xs text-highlight border-highlight/30 hover:bg-highlight/5"
+                className="gap-1.5 text-xs text-highlight-ink border-highlight/30 hover:bg-highlight/5"
                 onClick={() =>
                   setRevealedHints((prev) =>
                     Math.min(prev + 1, challenge.hints.length)
@@ -167,7 +167,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
                   : `Užuomina (${revealedHints}/${challenge.hints.length})`}
                 {challenge.hint_penalty > 0 &&
                   revealedHints < challenge.hints.length && (
-                    <span className="text-accent ml-1">
+                    <span className="text-accent-ink ml-1">
                       -{challenge.hint_penalty} tšk.
                     </span>
                   )}
@@ -179,7 +179,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
                       key={i}
                       className="flex items-start gap-2 p-2.5 rounded-lg bg-highlight/5 border border-highlight/10"
                     >
-                      <Lightbulb className="h-3.5 w-3.5 text-highlight shrink-0 mt-0.5" />
+                      <Lightbulb className="h-3.5 w-3.5 text-highlight-ink shrink-0 mt-0.5" />
                       <p className="text-xs text-steam-dark/80">{hint}</p>
                     </div>
                   ))}
@@ -191,7 +191,7 @@ export function TaskPreview({ challenge, onClose }: TaskPreviewProps) {
           {/* Explanation preview */}
           {challenge.explanation && (
             <div className="p-3 rounded-lg bg-secondary/5 border border-secondary/20">
-              <p className="text-xs font-medium text-secondary mb-1">
+              <p className="text-xs font-medium text-secondary-ink mb-1">
                 Paaiškinimas (rodomas po teisingo atsakymo)
               </p>
               <p className="text-xs text-steam-dark/70">

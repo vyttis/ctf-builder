@@ -95,7 +95,7 @@ export default function AdminLibraryPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-steam-dark flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-highlight" />
+            <BookOpen className="h-6 w-6 text-highlight-ink" />
             Bibliotekos moderavimas
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -106,7 +106,7 @@ export default function AdminLibraryPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
         </div>
       ) : items.length > 0 ? (
         <div className="space-y-4">
@@ -224,7 +224,7 @@ export default function AdminLibraryPage() {
                     variant="outline"
                     onClick={() => handleReview(item.id, "rejected")}
                     disabled={actionId === item.id}
-                    className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
+                    className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
                   >
                     <XCircle className="h-4 w-4" />
                     Atmesti
@@ -236,7 +236,7 @@ export default function AdminLibraryPage() {
         </div>
       ) : (
         <div className="text-center py-20">
-          <CheckCircle className="h-12 w-12 mx-auto text-primary/30 mb-3" />
+          <CheckCircle className="h-12 w-12 mx-auto text-primary-ink/30 mb-3" />
           <p className="text-muted-foreground text-sm">
             Nėra laukiančių patvirtinimo šablonų
           </p>

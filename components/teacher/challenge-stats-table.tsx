@@ -17,8 +17,8 @@ interface ChallengeStatsTableProps {
 
 const difficultyLabels: Record<string, { label: string; className: string }> = {
   easy: { label: "Lengva", className: "text-primary-ink border-primary/30 bg-primary/5" },
-  medium: { label: "Vidutinė", className: "text-highlight border-highlight/30 bg-highlight/5" },
-  hard: { label: "Sunki", className: "text-accent border-accent/30 bg-accent/5" },
+  medium: { label: "Vidutinė", className: "text-highlight-ink border-highlight/30 bg-highlight/5" },
+  hard: { label: "Sunki", className: "text-accent-ink border-accent/30 bg-accent/5" },
 }
 
 function ProgressCell({ percent }: { percent: number }) {
@@ -89,7 +89,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
     <Card className="border-border/50 bg-white">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
+          <BarChart3 className="h-5 w-5 text-primary-ink" />
           Užduočių statistika
         </CardTitle>
         {rowCount > 0 && (

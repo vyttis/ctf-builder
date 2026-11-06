@@ -68,7 +68,7 @@ function GenerationProgress() {
   return (
     <div className="rounded-lg border border-secondary/30 bg-secondary/5 p-4 space-y-3">
       <div className="flex items-center gap-3">
-        <Loader2 className="h-5 w-5 animate-spin text-secondary shrink-0" />
+        <Loader2 className="h-5 w-5 animate-spin text-secondary-ink shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-steam-dark">
             {stages[currentStageIndex].label}
@@ -352,7 +352,7 @@ export function LessonPlanGenerator() {
         <Card className="border-border/50 bg-white">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-secondary" />
+              <GraduationCap className="h-5 w-5 text-secondary-ink" />
               Pamokos parametrai
             </CardTitle>
           </CardHeader>
@@ -360,7 +360,7 @@ export function LessonPlanGenerator() {
             {/* Subject */}
             <div className="space-y-2">
               <Label htmlFor="lp-subject">
-                Dalykas <span className="text-accent" aria-hidden="true">*</span>
+                Dalykas <span className="text-accent-ink" aria-hidden="true">*</span>
               </Label>
               <SubjectCombobox
                 id="lp-subject"
@@ -392,7 +392,7 @@ export function LessonPlanGenerator() {
                 className="space-y-2"
               >
                 <Label htmlFor="lp-grade">
-                  Klasė <span className="text-accent" aria-hidden="true">*</span>
+                  Klasė <span className="text-accent-ink" aria-hidden="true">*</span>
                 </Label>
                 <Select
                   value={grade?.toString() ?? ""}
@@ -445,7 +445,7 @@ export function LessonPlanGenerator() {
                     }}
                   />
                   <Label htmlFor="integrated" className="cursor-pointer text-sm font-normal">
-                    <Sparkles className="inline h-3.5 w-3.5 text-accent mr-1" />
+                    <Sparkles className="inline h-3.5 w-3.5 text-accent-ink mr-1" />
                     Integruoti su antru dalyku (STEAM veikla)
                   </Label>
                 </div>
@@ -500,7 +500,7 @@ export function LessonPlanGenerator() {
                 className="space-y-2"
               >
                 <Label htmlFor="lp-topic">
-                  Tema <span className="text-accent" aria-hidden="true">*</span>
+                  Tema <span className="text-accent-ink" aria-hidden="true">*</span>
                 </Label>
                 {curriculumTopics.length > 0 && (
                   <Select
@@ -541,7 +541,7 @@ export function LessonPlanGenerator() {
             {/* Lesson type */}
             <div className="space-y-2">
               <Label htmlFor="lp-type">
-                Pamokos tipas <span className="text-accent" aria-hidden="true">*</span>
+                Pamokos tipas <span className="text-accent-ink" aria-hidden="true">*</span>
               </Label>
               <Select value={lessonType} onValueChange={setLessonType}>
                 <SelectTrigger id="lp-type">
@@ -560,7 +560,7 @@ export function LessonPlanGenerator() {
             {/* Duration */}
             <div className="space-y-2">
               <Label htmlFor="lp-duration">
-                Trukmė <span className="text-accent" aria-hidden="true">*</span>
+                Trukmė <span className="text-accent-ink" aria-hidden="true">*</span>
               </Label>
               <Select
                 value={duration.toString()}
@@ -601,7 +601,7 @@ export function LessonPlanGenerator() {
                 animate={{ opacity: 1 }}
                 className="rounded-lg bg-secondary/5 border border-secondary/20 p-3"
               >
-                <p className="text-xs font-medium text-secondary mb-1 flex items-center gap-1">
+                <p className="text-xs font-medium text-secondary-ink mb-1 flex items-center gap-1">
                   <BookOpen className="h-3 w-3" />
                   Programos kontekstas
                 </p>
@@ -680,22 +680,22 @@ export function LessonPlanGenerator() {
 
             {/* Meta info */}
             <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
+              <span className="bg-secondary/10 text-secondary-ink px-2 py-0.5 rounded-full">
                 {getSubjectLabel(subject)}
               </span>
               {isIntegrated && secondarySubject && (
-                <span className="bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="bg-accent/10 text-accent-ink px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
                   {getSubjectLabel(secondarySubject)}
                 </span>
               )}
-              <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
+              <span className="bg-secondary/10 text-secondary-ink px-2 py-0.5 rounded-full">
                 {grade} klasė
               </span>
-              <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
+              <span className="bg-secondary/10 text-secondary-ink px-2 py-0.5 rounded-full">
                 {LESSON_TYPES.find((lt) => lt.id === lessonType)?.label}
               </span>
-              <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
+              <span className="bg-secondary/10 text-secondary-ink px-2 py-0.5 rounded-full">
                 {duration} min.
               </span>
             </div>
@@ -714,7 +714,7 @@ export function LessonPlanGenerator() {
         {editCurriculumLink && (
           <CardContent className="pt-0">
             <div className="rounded-lg bg-secondary/5 border border-secondary/20 p-3">
-              <p className="text-xs font-medium text-secondary mb-1 flex items-center gap-1">
+              <p className="text-xs font-medium text-secondary-ink mb-1 flex items-center gap-1">
                 <Target className="h-3 w-3" />
                 Ryšys su ugdymo programa
               </p>
@@ -732,7 +732,7 @@ export function LessonPlanGenerator() {
       {/* Stages */}
       <div className="space-y-1">
         <h3 className="text-sm font-medium text-steam-dark flex items-center gap-2 mb-3">
-          <Clock className="h-4 w-4 text-secondary" />
+          <Clock className="h-4 w-4 text-secondary-ink" />
           Pamokos eiga ({stages.length} veiklos)
         </h3>
 
@@ -786,7 +786,7 @@ export function LessonPlanGenerator() {
       {/* Teacher note */}
       <Card className="border-highlight/30 bg-highlight/5">
         <CardContent className="p-4 space-y-2">
-          <Label className="text-xs text-highlight flex items-center gap-1">
+          <Label className="text-xs text-highlight-ink flex items-center gap-1">
             <BookOpen className="h-3 w-3" />
             Metodinė pastaba mokytojui
           </Label>
@@ -838,7 +838,7 @@ export function LessonPlanGenerator() {
           disabled={stages.length === 0 || converting || phase === "saving"}
           variant="outline"
           size="lg"
-          className="gap-2 border-accent/30 text-accent hover:bg-accent/5"
+          className="gap-2 border-accent/30 text-accent-ink hover:bg-accent/5"
         >
           {converting ? (
             <>

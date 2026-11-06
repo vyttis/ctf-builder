@@ -126,7 +126,7 @@ export function GameForm({ prefillData }: GameFormProps) {
         {/* AI prefill banner */}
         {prefillData && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-highlight/10 border border-highlight/20">
-            <Sparkles className="h-4 w-4 text-highlight shrink-0" />
+            <Sparkles className="h-4 w-4 text-highlight-ink shrink-0" />
             <p className="text-sm text-steam-dark">
               Užpildyta pagal DI pasiūlymą. Peržiūrėkite ir patvirtinkite.
             </p>
@@ -137,7 +137,7 @@ export function GameForm({ prefillData }: GameFormProps) {
         <Card className="border-border/50 bg-white shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
-              <GamepadIcon className="h-5 w-5 text-primary" />
+              <GamepadIcon className="h-5 w-5 text-primary-ink" />
               Pagrindinė informacija
             </CardTitle>
           </CardHeader>
@@ -151,7 +151,7 @@ export function GameForm({ prefillData }: GameFormProps) {
                 {...register("title")}
               />
               {errors.title && (
-                <p className="text-sm text-accent">{errors.title.message}</p>
+                <p className="text-sm text-accent-ink">{errors.title.message}</p>
               )}
             </div>
 
@@ -172,7 +172,7 @@ export function GameForm({ prefillData }: GameFormProps) {
         <Card className="border-border/50 bg-white shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-highlight" />
+              <Sparkles className="h-5 w-5 text-highlight-ink" />
               Nustatymai
             </CardTitle>
           </CardHeader>
@@ -189,7 +189,7 @@ export function GameForm({ prefillData }: GameFormProps) {
                   {...register("max_teams", { valueAsNumber: true })}
                 />
                 {errors.max_teams && (
-                  <p className="text-sm text-accent">{errors.max_teams.message}</p>
+                  <p className="text-sm text-accent-ink">{errors.max_teams.message}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -213,7 +213,7 @@ export function GameForm({ prefillData }: GameFormProps) {
                   }}
                 />
                 {errors.time_limit_minutes && (
-                  <p className="text-sm text-accent">
+                  <p className="text-sm text-accent-ink">
                     {errors.time_limit_minutes.message}
                   </p>
                 )}
