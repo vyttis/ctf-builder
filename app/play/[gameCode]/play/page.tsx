@@ -183,6 +183,10 @@ export default function PlayPage() {
   const [run, setRun] = useState<{ startedAtMs: number; offsetMs: number; confirmed: boolean } | null>(null)
   const skewMsRef = useRef(0)
   const [gameStarted, setGameStarted] = useState(false)
+  // A timed activity sends its tasks only after the server has the team's
+  // start; until then the team knows how many there are.
+  const [awaitingStart, setAwaitingStart] = useState(false)
+  const [taskCount, setTaskCount] = useState(0)
   const [timeExpired, setTimeExpired] = useState(false)
   const [allowAccessRequests, setAllowAccessRequests] = useState(false)
   const [remainingSeconds, setRemainingSeconds] = useState(0)
@@ -256,6 +260,41 @@ export default function PlayPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameCode, router])
 
+  // The tasks of a timed activity come once the server has the team's start.
+  useEffect(() => {
+    if (!awaitingStart || !run?.confirmed || !session) return
+    void loadChallenges(session)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingStart, run?.confirmed, session])
+
+  // On the ready screen, another device of the team may press "Pradėti":
+  // ask every few seconds, and join its clock as soon as it started.
+  useEffect(() => {
+    if (!awaitingStart || gameStarted || !session) return
+    let busy = false
+    const poll = async () => {
+      if (busy || document.visibilityState !== "visible") return
+      busy = true
+      try {
+        const res = await fetch(`/api/play/state?game_code=${encodeURIComponent(gameCode)}`, {
+          headers: { "x-session-token": session.session_token },
+          cache: "no-store",
+        })
+        if (!res.ok) return
+        const state = (await res.json()) as { team_started_at?: string | null; challenge_count?: number }
+        if (typeof state.challenge_count === "number") setTaskCount(state.challenge_count)
+        if (state.team_started_at) void loadChallenges(session)
+      } catch {
+        // Network hiccup: the next round retries.
+      } finally {
+        busy = false
+      }
+    }
+    const interval = setInterval(poll, 5000)
+    return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingStart, gameStarted, session, gameCode])
+
   async function loadChallenges(s: PlayerSession) {
     // Single round-trip via /api/play/state (game + challenges + solved submissions)
     setLoadError(false)
@@ -265,6 +304,10 @@ export default function PlayPage() {
       team: { id: string; name: string } | null
       solved: { challenge_id: string; points_awarded: number }[]
       tasks_version?: string | null
+      challenge_count?: number
+      awaiting_start?: boolean
+      team_started_at?: string | null
+      team_pause_offset_ms?: number
     }
     try {
       const res = await fetch(
@@ -335,6 +378,20 @@ export default function PlayPage() {
         setRun((r) => r ?? { startedAtMs: parseInt(existingStart!, 10), offsetMs: 0, confirmed: false })
       }
     }
+    const serverStart = state.team_started_at ? Date.parse(state.team_started_at) : NaN
+    if (timeLimit && Number.isFinite(serverStart)) {
+      // The team already started, here or on another device (a rejoin link):
+      // its clock runs from the server's start, no "Pradėti" again.
+      setGameStarted(true)
+      setRun({ startedAtMs: serverStart, offsetMs: state.team_pause_offset_ms ?? 0, confirmed: true })
+      try {
+        localStorage.setItem(storageKey, String(serverStart))
+      } catch {
+        // Storage blocked: the server start still applies.
+      }
+    }
+    setAwaitingStart(state.awaiting_start === true)
+    setTaskCount(state.challenge_count ?? state.challenges.length)
 
     setChallenges(state.challenges)
     challengesRef.current = state.challenges
@@ -401,8 +458,14 @@ export default function PlayPage() {
         solved?: { challenge_id: string; points_awarded?: number }[]
         team?: { total_points?: number } | null
         tasks_version?: string | null
+        awaiting_start?: boolean
+        challenge_count?: number
       }
-      if (!Array.isArray(state.challenges)) return
+      if (typeof state.challenge_count === "number") setTaskCount(state.challenge_count)
+      // Tasks held back until the team's start (on the ready screen, or a
+      // limit set while the team was already working): keep what it has;
+      // its first answer starts the clock on the server.
+      if (!Array.isArray(state.challenges) || state.awaiting_start) return
       // Without a marker in the answer (its read failed), keep the polled
       // one: the tasks are now at least that new, and change detection goes on.
       tasksVersionRef.current = state.tasks_version ?? polledVersion
@@ -853,9 +916,20 @@ export default function PlayPage() {
     )
   }
 
+  // "Pradėti" pressed, the tasks are on their way (they follow the server's
+  // start; the page keeps asking until it has it).
+  if (awaitingStart && gameStarted && gameStatus !== "draft") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-4" role="status">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-ink" aria-hidden="true" />
+        <p className="text-sm text-muted-foreground">Ruošiamos užduotys...</p>
+      </div>
+    )
+  }
+
   // The game was reverted to draft, or has no challenges (e.g. the teacher
   // deleted them mid-game) — an explicit message instead of a forever-spinner.
-  if (gameStatus === "draft" || (challenges.length === 0 && !gameFinished)) {
+  if (gameStatus === "draft" || (challenges.length === 0 && !gameFinished && !awaitingStart)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
@@ -1002,14 +1076,14 @@ export default function PlayPage() {
               {timeLimitMinutes} min.
             </p>
             <p className="text-sm text-muted-foreground">
-              Paspaudus &quot;Pradėti&quot;, laikas pradės skaičiuotis atgal.
+              Paspaudus „Pradėti“, laikas pradės skaičiuotis atgal.
             </p>
           </div>
 
           <div className="space-y-3 text-left mb-6 text-sm text-muted-foreground">
             <div className="flex items-start gap-2">
               <span className="text-primary-ink font-bold mt-0.5">•</span>
-              <span>Užduočių skaičius: <strong className="text-steam-dark">{challenges.length}</strong></span>
+              <span>Užduočių skaičius: <strong className="text-steam-dark">{taskCount}</strong></span>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-primary-ink font-bold mt-0.5">•</span>
