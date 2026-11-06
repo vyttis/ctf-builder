@@ -288,6 +288,39 @@ Tikimasi: `auth_fn` `true`, `anon_fn` `false`, `definer` `true`.
 
 Pritaikyta produkcijoje 2026-11-06 16:35 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai funkcijos nebuvo, 0 vykstančių veiklų). Patikra po taikymo: `auth_fn` `true`, `anon_fn` `false`, `definer` `true`, `search_path=public, pg_temp`. Kodas (PR #54) sujungtas po to.
 
+### 20261106170000_close_participant_hint_reads
+
+Failas `supabase/migrations/20261106170000_close_participant_hint_reads.sql`,
+grąžinimas `supabase/rollback/20261106170000_close_participant_hint_reads.sql`.
+Su viešu anon raktu buvo galima tiesiogiai skaityti visų vykstančių,
+pristabdytų ir baigtų veiklų užuominas (taip apeinama užuominų bauda) ir DI
+patikros pastabas (jose gali būti atsakymas), o `get_player_game_state()`
+galėjo kviesti anon ir prisijungę vartotojai. Migracija atima anon teisę
+skaityti `hints` ir `verification_*` stulpelius ir funkciją palieka tik
+serveriui (service role). Programa šiuos duomenis skaito tik serveriu,
+vedėjai savo užduotis mato kaip anksčiau. Duomenys nekeičiami.
+
+Taikymo tvarka: bet kada, kodo keisti nereikia.
+
+Patikra po taikymo:
+
+```sql
+select
+  has_column_privilege('anon', 'public.challenges', 'hints', 'SELECT') as anon_hints,
+  has_column_privilege('anon', 'public.challenges', 'verification_issues', 'SELECT') as anon_notes,
+  has_column_privilege('anon', 'public.challenges', 'title', 'SELECT') as anon_title,
+  has_column_privilege('authenticated', 'public.challenges', 'hints', 'SELECT') as auth_hints,
+  has_function_privilege('anon', 'public.get_player_game_state(text,text)', 'EXECUTE') as anon_state,
+  has_function_privilege('authenticated', 'public.get_player_game_state(text,text)', 'EXECUTE') as auth_state,
+  has_function_privilege('service_role', 'public.get_player_game_state(text,text)', 'EXECUTE') as service_state;
+```
+
+Tikimasi: `anon_hints` `false`, `anon_notes` `false`, `anon_title` `true`,
+`auth_hints` `true`, `anon_state` `false`, `auth_state` `false`,
+`service_state` `true`.
+
+Dar nepritaikyta produkcijoje.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir
