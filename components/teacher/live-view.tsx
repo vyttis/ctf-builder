@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
@@ -318,7 +318,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
       <div className="flex-1 px-6 py-6">
         {connectionState === "degraded" && (
           <div className="mb-4">
-            <LiveConnectionBanner onRetry={retry} />
+            <LiveConnectionBanner onRetry={retry} tone="dark" />
           </div>
         )}
 
@@ -356,7 +356,23 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
                 <p className="mt-3 font-mono text-3xl font-bold tracking-[0.25em] text-steam-dark">
                   {game.game_code}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1 break-all">{playUrl}</p>
+                {/* Read from the back of the room: large, without the scheme,
+                    breaking only after a slash. */}
+                <p className="mt-2 text-lg font-semibold leading-snug text-steam-dark">
+                  {playUrl
+                    .replace(/^https?:\/\//, "")
+                    .split("/")
+                    .map((part, i, parts) => (
+                      <Fragment key={i}>
+                        {part}
+                        {i < parts.length - 1 && (
+                          <>
+                            /<wbr />
+                          </>
+                        )}
+                      </Fragment>
+                    ))}
+                </p>
               </div>
             )}
             {sideQr?.kind === "request" && (
