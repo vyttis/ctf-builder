@@ -95,19 +95,11 @@ export async function monthSpendUsd(admin: SupabaseClient, now = new Date(), fre
   if (!fresh && spendCache && spendCache.month === month && Date.now() - spendCache.at < SPEND_TTL_MS) {
     return spendCache.usd
   }
+  const rows = await allRowsById<{ id: number; cost_usd: number | string }>(() =>
+    admin.from("ai_usage").select("id, cost_usd").gte("created_at", new Date(month).toISOString()),
+  )
   let total = 0
-  const page = 1000
-  for (let from = 0; ; from += page) {
-    const { data, error } = await admin
-      .from("ai_usage")
-      .select("cost_usd")
-      .gte("created_at", new Date(month).toISOString())
-      .order("id", { ascending: true })
-      .range(from, from + page - 1)
-    if (error) throw error
-    for (const row of data ?? []) total += Number(row.cost_usd)
-    if (!data || data.length < page) break
-  }
+  for (const row of rows) total += Number(row.cost_usd)
   spendCache = { month, usd: total, at: Date.now() }
   return total
 }
@@ -122,17 +114,29 @@ export const RESERVATION_MODEL = "reservation"
  */
 export const RESERVATION_TTL_MS = 15 * 60_000
 
-async function allPages<T>(
-  build: () => { range: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }> },
-): Promise<T[]> {
+type PageQuery = {
+  gt: (column: string, value: number) => PageQuery
+  order: (column: string, opts: { ascending: boolean }) => PageQuery
+  limit: (n: number) => PromiseLike<{ data: unknown; error: unknown }>
+}
+
+/**
+ * Every row of a query, read in pages by id (keyset, not offset): rows
+ * deleted between two reads (a released reservation) cannot shift a page
+ * and make the next one skip a row. The query must select "id".
+ */
+export async function allRowsById<T extends { id: number | string }>(build: () => unknown): Promise<T[]> {
   const rows: T[] = []
   const page = 1000
-  for (let from = 0; ; from += page) {
-    const { data, error } = await build().range(from, from + page - 1)
+  let lastId = 0
+  for (;;) {
+    const query = (build() as PageQuery).gt("id", lastId).order("id", { ascending: true })
+    const { data, error } = await query.limit(page)
     if (error) throw error
     const batch = (data ?? []) as T[]
     rows.push(...batch)
     if (batch.length < page) break
+    lastId = Number(batch[batch.length - 1].id)
   }
   return rows
 }
@@ -152,7 +156,7 @@ export async function monthActionsByUser(
 ): Promise<number> {
   const since = monthStart(now).toISOString()
   const [reservations, calls] = await Promise.all([
-    allPages<{ id: number; request_id: string; created_at: string }>(() => {
+    allRowsById<{ id: number; request_id: string; created_at: string }>(() => {
       let query = admin
         .from("ai_usage")
         .select("id, request_id, created_at")
@@ -160,16 +164,15 @@ export async function monthActionsByUser(
         .eq("model", RESERVATION_MODEL)
         .gte("created_at", since)
       if (upToId !== undefined) query = query.lte("id", upToId)
-      return query.order("id", { ascending: true })
+      return query
     }),
-    allPages<{ request_id: string }>(() =>
+    allRowsById<{ id: number; request_id: string }>(() =>
       admin
         .from("ai_usage")
         .select("id, request_id")
         .eq("user_id", userId)
         .neq("model", RESERVATION_MODEL)
-        .gte("created_at", since)
-        .order("id", { ascending: true }),
+        .gte("created_at", since),
     ),
   ])
   const called = new Set(calls.map((c) => c.request_id))
@@ -325,15 +328,29 @@ export function budgetLevel(spentUsd: number, settings: AiSettings): BudgetLevel
 
 const ALERT_ACTION = "ai_budget.alert"
 
-async function alertClaimIds(admin: SupabaseClient, target: string): Promise<number[]> {
-  const { data } = await admin
+/** A claim not marked delivered after this long belongs to a worker that died. */
+const ALERT_CLAIM_TTL_MS = 10 * 60_000
+
+/**
+ * Whether this month's email for a level is out ("sent"), being sent right
+ * now by another worker ("busy"), or still to send ("free"). A claim left
+ * behind by a worker that stopped before delivery is removed, so the email
+ * is retried.
+ */
+async function alertClaimState(admin: SupabaseClient, target: string, now: Date): Promise<"sent" | "busy" | "free"> {
+  const { data, error } = await admin
     .from("admin_audit_log")
-    .select("id")
+    .select("id, created_at, details")
     .eq("action", ALERT_ACTION)
     .eq("target_id", target)
-    .order("id", { ascending: true })
-    .limit(5)
-  return (data ?? []).map((r) => Number(r.id))
+    .limit(1)
+  if (error) throw error
+  const claim = data?.[0] as { id: number; created_at: string; details: { delivered?: boolean } | null } | undefined
+  if (!claim) return "free"
+  if (claim.details?.delivered) return "sent"
+  if (now.getTime() - Date.parse(claim.created_at) < ALERT_CLAIM_TTL_MS) return "busy"
+  await admin.from("admin_audit_log").delete().eq("id", claim.id).eq("action", ALERT_ACTION)
+  return "free"
 }
 
 /**
@@ -341,8 +358,9 @@ async function alertClaimIds(admin: SupabaseClient, target: string): Promise<num
  * every recorded call, so it starts from the per-instance spend (kept
  * current by recordAiUsage) and reads the database only once a threshold
  * may have been crossed and its email is not out yet. The audit row is the
- * claim (unique per month and level, migration 20261106145000), and it is
- * removed again if the email could not go out, so a later call retries.
+ * claim (unique per month and level, migration 20261106145000): it is
+ * marked delivered after the email goes out, removed again if it could not
+ * go out, and taken over after ten minutes if its worker stopped midway.
  */
 export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date()): Promise<void> {
   try {
@@ -350,13 +368,13 @@ export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date
     const monthKey = monthStart(now).toISOString().slice(0, 7)
     const cachedLevel = budgetLevel(await monthSpendUsd(admin, now), settings)
     if (!cachedLevel) return
-    if ((await alertClaimIds(admin, `${monthKey}:${cachedLevel}`)).length > 0) return
+    if ((await alertClaimState(admin, `${monthKey}:${cachedLevel}`, now)) !== "free") return
 
     const spent = await monthSpendUsd(admin, now, true)
     const level = budgetLevel(spent, settings)
     if (!level) return
     const target = `${monthKey}:${level}`
-    if (level !== cachedLevel && (await alertClaimIds(admin, target)).length > 0) return
+    if (level !== cachedLevel && (await alertClaimState(admin, target, now)) !== "free") return
 
     // The unique index (one row per month and level) is the claim: the
     // insert that wins sends, a second one fails with 23505.
@@ -402,6 +420,12 @@ export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date
           ),
         )
         delivered = result.ok
+        if (delivered) {
+          await admin
+            .from("admin_audit_log")
+            .update({ details: { spent_usd: spent, budget_usd: settings.ai_monthly_budget_usd, delivered: true } })
+            .eq("id", claimId)
+        }
       }
     } finally {
       if (!delivered) await release()
@@ -430,19 +454,20 @@ type ProfileInfo = { id: string; full_name: string | null; email: string | null;
  * set a personal limit before the first use.
  */
 export async function usageByUser(admin: SupabaseClient, now = new Date()): Promise<UserUsage[]> {
-  const rows: { user_id: string | null; request_id: string; endpoint: string; model: string; cost_usd: number; created_at: string }[] = []
-  const page = 1000
-  for (let from = 0; ; from += page) {
-    const { data, error } = await admin
+  const rows = await allRowsById<{
+    id: number
+    user_id: string | null
+    request_id: string
+    endpoint: string
+    model: string
+    cost_usd: number
+    created_at: string
+  }>(() =>
+    admin
       .from("ai_usage")
-      .select("user_id, request_id, endpoint, model, cost_usd, created_at")
-      .gte("created_at", monthStart(now).toISOString())
-      .order("id", { ascending: true })
-      .range(from, from + page - 1)
-    if (error) throw error
-    rows.push(...((data ?? []) as typeof rows))
-    if (!data || data.length < page) break
-  }
+      .select("id, user_id, request_id, endpoint, model, cost_usd, created_at")
+      .gte("created_at", monthStart(now).toISOString()),
+  )
   // Actions follow monthActionsByUser: a reservation that got a model call
   // or is still in flight. Requests without a reservation (super admins, or
   // a call made while the allowance check failed open) count by request id.
@@ -460,11 +485,28 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
     u.cost += Number(r.cost_usd)
     byUser.set(r.user_id, u)
   }
+  // A call this month whose reservation was made last month (an action
+  // that ran across midnight on the 1st) belongs to last month.
+  const orphanIds = new Set<string>()
+  for (const u of byUser.values()) for (const id of u.called) if (!u.reserved.has(id)) orphanIds.add(id)
+  const earlier = new Set<string>()
+  const orphanList = Array.from(orphanIds)
+  for (let i = 0; i < orphanList.length; i += 200) {
+    const { data, error } = await admin
+      .from("ai_usage")
+      .select("request_id")
+      .in("request_id", orphanList.slice(i, i + 200))
+      .eq("model", RESERVATION_MODEL)
+      .lt("created_at", monthStart(now).toISOString())
+    if (error) throw error
+    for (const r of data ?? []) earlier.add(r.request_id)
+  }
+
   const inFlightSince = now.getTime() - RESERVATION_TTL_MS
   const actionsOf = (u: Acc) => {
     let n = 0
     for (const [requestId, at] of u.reserved) if (u.called.has(requestId) || at >= inFlightSince) n += 1
-    for (const requestId of u.called) if (!u.reserved.has(requestId)) n += 1
+    for (const requestId of u.called) if (!u.reserved.has(requestId) && !earlier.has(requestId)) n += 1
     return n
   }
 

@@ -50,7 +50,7 @@ class FakeDb {
 
 class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
   private filters: ((r: Row) => boolean)[] = []
-  private op: "select" | "insert" | "delete" = "select"
+  private op: "select" | "insert" | "delete" | "update" = "select"
   private payload: Row[] = []
   private from_ = 0
   private to_ = Infinity
@@ -69,6 +69,19 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
   }
   delete() {
     this.op = "delete"
+    return this
+  }
+  update(p: Row) {
+    this.op = "update"
+    this.payload = [p]
+    return this
+  }
+  gt(c: string, v: string | number) {
+    this.filters.push((r) => (r[c] as string | number) > v)
+    return this
+  }
+  lt(c: string, v: string | number) {
+    this.filters.push((r) => (r[c] as string | number) < v)
     return this
   }
   eq(c: string, v: unknown) {
@@ -140,6 +153,10 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null }> {
     if (this.op === "delete") {
       this.db.tables[this.table] = rows.filter((r) => !matched.includes(r))
       return null
+    }
+    if (this.op === "update") {
+      for (const r of matched) Object.assign(r, this.payload[0])
+      return matched
     }
     const sorted = [...matched].sort((a, b) => Number(a.id) - Number(b.id))
     const page = sorted.slice(this.from_, this.to_ + 1)
@@ -392,6 +409,41 @@ describe("budget alerts", () => {
     expect(String(db.rows("admin_audit_log")[0]?.target_id)).toMatch(/:alert$/)
   })
 
+  it("takes over a claim whose worker stopped before sending", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    const monthKey = new Date().toISOString().slice(0, 7)
+    db.rows("admin_audit_log").push({
+      id: db.nextId("admin_audit_log"),
+      action: "ai_budget.alert",
+      target_id: `${monthKey}:alert`,
+      details: {},
+      created_at: new Date(Date.now() - 20 * 60_000).toISOString(),
+    })
+    await maybeSendBudgetAlert(db as never)
+    expect(h.sent).toBe(1)
+    const claims = db.rows("admin_audit_log")
+    expect(claims).toHaveLength(1)
+    expect((claims[0].details as { delivered?: boolean }).delivered).toBe(true)
+  })
+
+  it("leaves a claim that another worker is sending right now", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    const monthKey = new Date().toISOString().slice(0, 7)
+    db.rows("admin_audit_log").push({
+      id: db.nextId("admin_audit_log"),
+      action: "ai_budget.alert",
+      target_id: `${monthKey}:alert`,
+      details: {},
+      created_at: new Date().toISOString(),
+    })
+    await maybeSendBudgetAlert(db as never)
+    expect(h.sent).toBe(0)
+  })
+
   it("does not read the database below the threshold", async () => {
     const db = setup()
     addCall(db, { cost_usd: 1 })
@@ -412,5 +464,17 @@ describe("usage per person", () => {
     expect(users.map((u) => u.userId)).toEqual([USER, OTHER])
     expect(users[0]).toMatchObject({ actions: 3, calls: 3 })
     expect(users[1]).toMatchObject({ actions: 0, calls: 0, costUsd: 0 })
+  })
+
+  it("leaves an action that ran across the month boundary in the earlier month", async () => {
+    const db = setup()
+    const now = new Date()
+    const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) - 1000).toISOString()
+    db.rows("ai_usage").push(
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "late", endpoint: "di/generate", model: "reservation", cost_usd: 0, created_at: lastMonth },
+      { id: db.nextId("ai_usage"), user_id: USER, request_id: "late", endpoint: "di/generate", model: "claude-sonnet-4-6", cost_usd: 0.01, created_at: now.toISOString() },
+    )
+    const users = await usageByUser(db as never, now)
+    expect(users.find((u) => u.userId === USER)).toMatchObject({ actions: 0, calls: 1 })
   })
 })

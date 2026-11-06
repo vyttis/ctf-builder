@@ -22,6 +22,7 @@ export async function GET() {
       admin.from("profiles").select("role, ai_monthly_limit").eq("id", user.id).maybeSingle(),
       loadAiSettings(admin),
     ])
+    if (profileRes.error) throw profileRes.error
     profile = profileRes.data
     settings = loaded
     ;[used, spent] = await Promise.all([monthActionsByUser(admin, user.id), monthSpendUsd(admin)])

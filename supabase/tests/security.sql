@@ -252,7 +252,8 @@ SELECT set_config('request.jwt.claim.role', 'service_role', false);
 DO $$
 DECLARE
   u constant uuid := '00000000-0000-0000-0000-00000000000b';
-  month_start constant timestamptz := date_trunc('month', now());
+  -- Fixed bounds, so the test does not depend on when in the month it runs.
+  month_start constant timestamptz := now() - interval '1 day';
   in_flight constant timestamptz := now() - interval '15 minutes';
   r1 integer;
   r2 integer;
@@ -260,7 +261,7 @@ DECLARE
 BEGIN
   -- A reservation that never got a model call and is past the window: free.
   INSERT INTO public.ai_usage (user_id, request_id, endpoint, model, created_at)
-    VALUES (u, gen_random_uuid(), 'di/generate', 'reservation', greatest(month_start, now() - interval '20 minutes'));
+    VALUES (u, gen_random_uuid(), 'di/generate', 'reservation', now() - interval '20 minutes');
   r1 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, month_start, in_flight);
   r2 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, month_start, in_flight);
   r3 := public.reserve_ai_action(u, gen_random_uuid(), 'di/generate', 2, month_start, in_flight);
