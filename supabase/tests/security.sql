@@ -197,10 +197,13 @@ BEGIN
   IF f IS NULL OR f > now() + interval '1 minute' THEN
     RAISE EXCEPTION 'finished_at must be set by the trigger, got %', f;
   END IF;
-  UPDATE public.games SET status = 'active' WHERE id = '10000000-0000-0000-0000-00000000000a';
-  IF (SELECT finished_at FROM public.games WHERE id = '10000000-0000-0000-0000-00000000000a') IS NOT NULL THEN
-    RAISE EXCEPTION 'reopening must clear finished_at';
-  END IF;
+  -- A finished activity stays finished (20261106150000), for every writer.
+  BEGIN
+    UPDATE public.games SET status = 'active' WHERE id = '10000000-0000-0000-0000-00000000000a';
+    RAISE EXCEPTION 'a finished activity must not be reopened';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
 END $$;
 
 -- A request link stops at its limit.
@@ -286,3 +289,308 @@ BEGIN
   INSERT INTO public.admin_audit_log (action, target_type, target_id) VALUES ('profile.block', 'profile', 'x');
 END $$;
 RESET ROLE;
+
+-- Pause clock, status rules and time extensions (20261106150000).
+INSERT INTO public.games (id, teacher_id, title, game_code, status, settings) VALUES
+  ('10000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-00000000000a', 'Laikas', 'CLOCK1', 'draft', '{"time_limit_minutes": 30}'),
+  ('10000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-00000000000a', 'Be laiko', 'CLOCK2', 'active', '{}');
+
+-- An activity without tasks does not start.
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+DO $$
+BEGIN
+  PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+  RAISE EXCEPTION 'an activity without tasks must not start';
+EXCEPTION WHEN SQLSTATE 'KS427' THEN
+  NULL;
+END $$;
+RESET ROLE;
+INSERT INTO public.challenges (id, game_id, title, answer_hash) VALUES
+  ('20000000-0000-0000-0000-0000000000c1', '10000000-0000-0000-0000-0000000000c1', 'Laiko užduotis', '$2a$10$real');
+
+SET ROLE anon;
+SELECT set_config('request.jwt.claim.sub', '', false);
+SELECT public.t_denied($q$SELECT public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active')$q$);
+SELECT public.t_denied($q$SELECT public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5)$q$);
+RESET ROLE;
+
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.role', 'authenticated', false);
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+DO $$
+BEGIN
+  PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+  RAISE EXCEPTION 'another teacher must not change this activity';
+EXCEPTION WHEN SQLSTATE 'P0002' THEN
+  NULL;
+END $$;
+
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+DO $$
+DECLARE g public.games;
+BEGIN
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+  IF g.status <> 'active' OR g.starts_at IS NULL THEN
+    RAISE EXCEPTION 'starting must set the status and starts_at, got % %', g.status, g.starts_at;
+  END IF;
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'paused');
+  IF g.paused_at IS NULL OR g.paused_ms <> 0 THEN
+    RAISE EXCEPTION 'pausing must mark paused_at, got % %', g.paused_at, g.paused_ms;
+  END IF;
+  -- The same status again changes nothing.
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'paused');
+  IF g.paused_at IS NULL THEN
+    RAISE EXCEPTION 'a repeated pause must keep the pause running';
+  END IF;
+END $$;
+RESET ROLE;
+
+-- Two minutes of pause pass (the trigger keeps the clock, so step around it).
+ALTER TABLE public.games DISABLE TRIGGER games_status_rules;
+UPDATE public.games SET paused_at = now() - interval '2 minutes' WHERE id = '10000000-0000-0000-0000-0000000000c1';
+ALTER TABLE public.games ENABLE TRIGGER games_status_rules;
+
+SET ROLE authenticated;
+DO $$
+DECLARE g public.games;
+BEGIN
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+  IF g.paused_at IS NOT NULL OR g.paused_ms NOT BETWEEN 119000 AND 125000 THEN
+    RAISE EXCEPTION 'resuming must add the pause to paused_ms, got % %', g.paused_at, g.paused_ms;
+  END IF;
+  IF g.resumed_at IS NULL OR g.resumed_at < now() - interval '1 minute' THEN
+    RAISE EXCEPTION 'resuming must record resumed_at, got %', g.resumed_at;
+  END IF;
+
+  -- A client creates drafts only, so a paused activity cannot appear
+  -- without a running pause clock.
+  BEGIN
+    INSERT INTO public.games (teacher_id, title, game_code, status)
+      VALUES (auth.uid(), 'Iš karto pristabdyta', 'PAUSE1', 'paused');
+    RAISE EXCEPTION 'a client must not insert a paused activity';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+
+  -- A client cannot set the clock fields directly.
+  UPDATE public.games SET paused_ms = 0, paused_at = now() WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  IF (SELECT paused_ms FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1') < 119000
+     OR (SELECT paused_at FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1') IS NOT NULL THEN
+    RAISE EXCEPTION 'paused_ms and paused_at must ignore direct writes';
+  END IF;
+
+  -- A settings save while running keeps the limit and merges the rest.
+  g := public.update_game_settings('10000000-0000-0000-0000-0000000000c1', '{"time_limit_minutes": 1, "show_leaderboard": false}');
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 30 OR (g.settings ->> 'show_leaderboard')::boolean IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'a running settings save must keep the limit and merge the rest, got %', g.settings;
+  END IF;
+  -- The title and description of the same save go in the same statement.
+  g := public.update_game_settings('10000000-0000-0000-0000-0000000000c1', '{"show_leaderboard": true}',
+    '{"title": "Pervadinta", "description": null}');
+  IF g.title <> 'Pervadinta' OR g.description IS NOT NULL OR (g.settings ->> 'show_leaderboard')::boolean IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'details must be saved with the settings, got % % %', g.title, g.description, g.settings;
+  END IF;
+
+  g := public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
+  g := public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 THEN
+    RAISE EXCEPTION 'two extensions of 5 must give 40, got %', g.settings ->> 'time_limit_minutes';
+  END IF;
+  -- A direct write of the whole settings (an older client, the REST API)
+  -- keeps the running limit, and cannot remove it either.
+  UPDATE public.games SET settings = '{"time_limit_minutes": 5, "show_leaderboard": false}'
+    WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 OR (g.settings ->> 'show_leaderboard')::boolean IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'a direct settings write must keep the running limit, got %', g.settings;
+  END IF;
+  UPDATE public.games SET settings = '{"show_leaderboard": true}' WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c1';
+  IF (g.settings ->> 'time_limit_minutes')::numeric <> 40 THEN
+    RAISE EXCEPTION 'a direct settings write must not remove the running limit, got %', g.settings;
+  END IF;
+  -- An activity without a limit does not get one that way either.
+  UPDATE public.games SET settings = '{"time_limit_minutes": 5}' WHERE id = '10000000-0000-0000-0000-0000000000c2';
+  IF (SELECT settings ? 'time_limit_minutes' FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c2') THEN
+    RAISE EXCEPTION 'a running activity without a limit must not get one by a direct write';
+  END IF;
+
+  BEGIN
+    PERFORM public.extend_game_time('10000000-0000-0000-0000-0000000000c2', 5);
+    RAISE EXCEPTION 'an activity without a limit must not get one by extending';
+  EXCEPTION WHEN SQLSTATE 'KS422' THEN
+    NULL;
+  END;
+
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'finished');
+  IF g.status <> 'finished' OR g.finished_at IS NULL THEN
+    RAISE EXCEPTION 'finishing must set finished_at';
+  END IF;
+  BEGIN
+    PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c1', 'active');
+    RAISE EXCEPTION 'a finished activity must not be reopened';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  BEGIN
+    UPDATE public.games SET status = 'paused' WHERE id = '10000000-0000-0000-0000-0000000000c1';
+    RAISE EXCEPTION 'a direct update must not reopen a finished activity either';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  BEGIN
+    PERFORM public.extend_game_time('10000000-0000-0000-0000-0000000000c1', 5);
+    RAISE EXCEPTION 'a finished activity must not get more time';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+END $$;
+RESET ROLE;
+
+-- A server-side insert of a running or paused activity gets a consistent clock.
+INSERT INTO public.games (id, teacher_id, title, game_code, status, paused_ms, paused_at, resumed_at) VALUES
+  ('10000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-00000000000a', 'Serverio', 'SRVPSE', 'paused', 999, NULL, now());
+DO $$
+DECLARE g public.games;
+BEGIN
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c3';
+  IF g.paused_at IS NULL OR g.paused_ms <> 0 OR g.resumed_at IS NOT NULL OR g.starts_at IS NULL THEN
+    RAISE EXCEPTION 'an inserted paused activity must start its pause clock, got % % % %',
+      g.paused_at, g.paused_ms, g.resumed_at, g.starts_at;
+  END IF;
+END $$;
+
+-- A team that starts after a pause gets the pause offset from the database,
+-- whatever the caller wrote.
+INSERT INTO public.teams (id, game_id, name, session_token) VALUES
+  ('30000000-0000-0000-0000-0000000000c1', '10000000-0000-0000-0000-0000000000c1', 'Vėlyva', 'token-late');
+UPDATE public.teams SET started_at = now(), pause_offset_ms = 0 WHERE id = '30000000-0000-0000-0000-0000000000c1';
+DO $$
+DECLARE offset_ms bigint;
+BEGIN
+  SELECT pause_offset_ms INTO offset_ms FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000c1';
+  IF offset_ms < 119000 THEN
+    RAISE EXCEPTION 'a late team must start with the earlier pause as its offset, got %', offset_ms;
+  END IF;
+  UPDATE public.teams SET pause_offset_ms = 0, name = 'Vėlyva 2' WHERE id = '30000000-0000-0000-0000-0000000000c1';
+  IF (SELECT pause_offset_ms FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000c1') <> offset_ms THEN
+    RAISE EXCEPTION 'the pause offset must not change after the start';
+  END IF;
+END $$;
+
+-- A task without an answer: the activity does not start with it, and a
+-- running activity cannot get one.
+INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
+  ('10000000-0000-0000-0000-0000000000c4', '00000000-0000-0000-0000-00000000000a', 'Be atsakymo', 'NOANSW', 'draft');
+INSERT INTO public.challenges (id, game_id, title, answer_hash, needs_answer) VALUES
+  ('20000000-0000-0000-0000-0000000000c4', '10000000-0000-0000-0000-0000000000c4', 'Kopija', '$2a$10$random', true);
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+DO $$
+BEGIN
+  BEGIN
+    PERFORM public.set_game_status('10000000-0000-0000-0000-0000000000c4', 'active');
+    RAISE EXCEPTION 'an activity with a task without an answer must not start';
+  EXCEPTION WHEN SQLSTATE 'KS428' THEN
+    NULL;
+  END;
+END $$;
+RESET ROLE;
+UPDATE public.challenges SET needs_answer = false WHERE id = '20000000-0000-0000-0000-0000000000c4';
+SET ROLE authenticated;
+DO $$
+DECLARE g public.games;
+BEGIN
+  g := public.set_game_status('10000000-0000-0000-0000-0000000000c4', 'active');
+  IF g.status <> 'active' THEN
+    RAISE EXCEPTION 'an activity whose tasks all have answers must start';
+  END IF;
+  BEGIN
+    INSERT INTO public.challenges (game_id, title, answer_hash, needs_answer)
+      VALUES ('10000000-0000-0000-0000-0000000000c4', 'Bibliotekos užduotis', '$2a$10$random', true);
+    RAISE EXCEPTION 'a running activity must not get a task without an answer';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  -- A task with an answer may still be added.
+  INSERT INTO public.challenges (game_id, title, answer_hash, needs_answer)
+    VALUES ('10000000-0000-0000-0000-0000000000c4', 'Nauja užduotis', '$2a$10$real', false);
+END $$;
+RESET ROLE;
+-- Nor can a task without an answer be moved into it from a draft.
+INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
+  ('10000000-0000-0000-0000-0000000000c5', '00000000-0000-0000-0000-00000000000a', 'Juodraštis', 'DRAFT5', 'draft');
+INSERT INTO public.challenges (id, game_id, title, answer_hash, needs_answer) VALUES
+  ('20000000-0000-0000-0000-0000000000c5', '10000000-0000-0000-0000-0000000000c5', 'Kopija 2', '$2a$10$random', true);
+SET ROLE authenticated;
+DO $$
+BEGIN
+  UPDATE public.challenges SET game_id = '10000000-0000-0000-0000-0000000000c4'
+    WHERE id = '20000000-0000-0000-0000-0000000000c5';
+  RAISE EXCEPTION 'a task without an answer must not move into a running activity';
+EXCEPTION WHEN SQLSTATE 'KS409' THEN
+  NULL;
+END $$;
+RESET ROLE;
+
+-- A running activity keeps its tasks: neither deleted nor moved away.
+SET ROLE authenticated;
+DO $$
+BEGIN
+  BEGIN
+    DELETE FROM public.challenges WHERE id = '20000000-0000-0000-0000-0000000000c4';
+    RAISE EXCEPTION 'a task must not be deleted from a running activity';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  BEGIN
+    UPDATE public.challenges SET game_id = '10000000-0000-0000-0000-0000000000c5'
+      WHERE id = '20000000-0000-0000-0000-0000000000c4';
+    RAISE EXCEPTION 'a task must not be moved out of a running activity';
+  EXCEPTION WHEN SQLSTATE 'KS409' THEN
+    NULL;
+  END;
+  -- A draft's tasks may still be deleted.
+  DELETE FROM public.challenges WHERE id = '20000000-0000-0000-0000-0000000000c5';
+  IF EXISTS (SELECT 1 FROM public.challenges WHERE id = '20000000-0000-0000-0000-0000000000c5') THEN
+    RAISE EXCEPTION 'a task of a draft must be deletable';
+  END IF;
+END $$;
+RESET ROLE;
+-- Deleting the running activity itself removes its tasks.
+INSERT INTO public.games (id, teacher_id, title, game_code, status) VALUES
+  ('10000000-0000-0000-0000-0000000000c7', '00000000-0000-0000-0000-00000000000a', 'Trinama', 'DELET7', 'active');
+INSERT INTO public.challenges (game_id, title, answer_hash) VALUES
+  ('10000000-0000-0000-0000-0000000000c7', 'Trinamos veiklos užduotis', '$2a$10$real');
+SET ROLE authenticated;
+DELETE FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c7';
+RESET ROLE;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.challenges WHERE game_id = '10000000-0000-0000-0000-0000000000c7') THEN
+    RAISE EXCEPTION 'deleting a running activity must remove its tasks';
+  END IF;
+END $$;
+
+-- A blocked account cannot change its activity through the functions either.
+INSERT INTO public.games (id, teacher_id, title, game_code, status, settings) VALUES
+  ('10000000-0000-0000-0000-0000000000c6', '00000000-0000-0000-0000-00000000000a', 'Užblokuota', 'BLOCK6', 'active', '{"time_limit_minutes": 30}');
+UPDATE public.profiles SET status = 'blocked' WHERE id = '00000000-0000-0000-0000-00000000000a';
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+SET ROLE authenticated;
+-- Each function must fail, not return an unchanged row as a success.
+SELECT public.t_denied($q$SELECT public.set_game_status('10000000-0000-0000-0000-0000000000c6', 'paused')$q$);
+SELECT public.t_denied($q$SELECT public.update_game_settings('10000000-0000-0000-0000-0000000000c6', '{"show_leaderboard": false}'::jsonb, '{"title": "Pakeista"}'::jsonb)$q$);
+SELECT public.t_denied($q$SELECT public.extend_game_time('10000000-0000-0000-0000-0000000000c6', 5)$q$);
+RESET ROLE;
+DO $$
+DECLARE
+  g public.games;
+BEGIN
+  SELECT * INTO g FROM public.games WHERE id = '10000000-0000-0000-0000-0000000000c6';
+  IF g.status <> 'active' OR g.title <> 'Užblokuota' OR g.settings <> '{"time_limit_minutes": 30}'::jsonb THEN
+    RAISE EXCEPTION 'a blocked account must not change its activity';
+  END IF;
+END $$;
+UPDATE public.profiles SET status = 'active' WHERE id = '00000000-0000-0000-0000-00000000000a';

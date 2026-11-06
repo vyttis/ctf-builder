@@ -24,6 +24,8 @@ interface BuilderSettingsProps {
   title: string
   description: string | null
   settings: GameSettings
+  /** The activity runs: its time limit changes only through "Pratęsti". */
+  live?: boolean
   onSaved: () => void
 }
 
@@ -34,6 +36,7 @@ export function BuilderSettings({
   title,
   description,
   settings,
+  live = false,
   onSaved,
 }: BuilderSettingsProps) {
   const { toast } = useToast()
@@ -68,7 +71,8 @@ export function BuilderSettings({
           description: formDescription || null,
           settings: {
             max_teams: maxTeams,
-            time_limit_minutes: timeLimit,
+            // While the activity runs the database keeps the limit; it is not sent.
+            ...(live ? {} : { time_limit_minutes: timeLimit }),
             show_leaderboard: showLeaderboard,
             shuffle_challenges: shuffleChallenges,
             challenge_path_mode: challengePathMode,
@@ -144,19 +148,27 @@ export function BuilderSettings({
               />
             </div>
             <div className="space-y-2">
-              <Label>Laiko limitas (min.)</Label>
+              <Label htmlFor="builder-time-limit">Laiko limitas (min.)</Label>
               <Input
+                id="builder-time-limit"
                 type="number"
                 min={5}
                 max={300}
                 placeholder="Be limito"
                 value={timeLimit ?? ""}
+                disabled={live}
+                aria-describedby={live ? "builder-time-limit-note" : undefined}
                 onChange={(e) => {
                   const val = e.target.value
                   setTimeLimit(val ? parseInt(val) : null)
                 }}
                 className="bg-white"
               />
+              {live && (
+                <p id="builder-time-limit-note" className="text-xs text-muted-foreground">
+                  Veiklai vykstant laiką galima tik pratęsti valdymo centre.
+                </p>
+              )}
             </div>
           </div>
 

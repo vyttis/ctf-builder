@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const supabase = createAdminClient()
     const { data: game } = await supabase
       .from("games")
-      .select("status, settings")
+      .select("status, settings, paused_ms, paused_at")
       .eq("game_code", gameCode)
       .maybeSingle()
 
@@ -36,6 +36,11 @@ export async function GET(request: Request) {
         status: game.status,
         time_limit_minutes: settings.time_limit_minutes ?? null,
         allow_access_requests: settings.allow_access_requests === true,
+        // Clock: pauses stop the countdown (lib/game/clock.ts). now lets
+        // the phone correct for its own clock being off.
+        paused_ms: Number(game.paused_ms ?? 0),
+        paused_at: game.paused_at ?? null,
+        now: new Date().toISOString(),
       },
       { headers: { "Cache-Control": "no-store" } }
     )
