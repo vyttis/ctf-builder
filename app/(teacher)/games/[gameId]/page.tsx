@@ -382,6 +382,7 @@ export default async function GameDetailPage(
             <LiveControlCenter
               gameId={game.id}
               gameStatus={game.status}
+              challengeCount={challenges.length}
               settings={{
                 time_limit_minutes: settings?.time_limit_minutes ?? null,
                 max_teams: settings?.max_teams ?? 50,

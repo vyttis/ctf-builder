@@ -8,6 +8,7 @@ import { TimeControls } from "@/components/teacher/time-controls"
 interface LiveControlCenterProps {
   gameId: string
   gameStatus: string
+  challengeCount?: number
   settings: {
     time_limit_minutes: number | null
     max_teams: number
@@ -17,6 +18,7 @@ interface LiveControlCenterProps {
 export function LiveControlCenter({
   gameId,
   gameStatus,
+  challengeCount,
   settings,
 }: LiveControlCenterProps) {
   if (gameStatus !== "active" && gameStatus !== "paused") {
@@ -28,14 +30,16 @@ export function LiveControlCenter({
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="relative">
-          <Radio className="h-6 w-6 text-primary" />
-          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-steam-green animate-pulse" />
+          <Radio className="h-6 w-6 text-primary-ink" aria-hidden="true" />
+          {gameStatus === "active" && (
+            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-steam-green motion-safe:animate-pulse" />
+          )}
         </div>
         <h2 className="text-xl font-bold text-steam-dark tracking-tight">
           Valdymo centras
         </h2>
         {gameStatus === "paused" && (
-          <span className="inline-flex items-center rounded-md bg-steam-yellow/15 px-2.5 py-0.5 text-xs font-semibold text-steam-yellow border border-steam-yellow/30">
+          <span className="inline-flex items-center rounded-md bg-steam-yellow/15 px-2.5 py-0.5 text-xs font-semibold text-highlight-ink border border-steam-yellow/30">
             Pristabdytas
           </span>
         )}
@@ -45,7 +49,7 @@ export function LiveControlCenter({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Team Progress - spans 2 cols on desktop */}
         <div className="lg:col-span-2">
-          <LiveTeamProgress gameId={gameId} />
+          <LiveTeamProgress gameId={gameId} paused={gameStatus === "paused"} challengeCount={challengeCount} />
         </div>
 
         {/* Right sidebar: Announcements + Time Controls */}
