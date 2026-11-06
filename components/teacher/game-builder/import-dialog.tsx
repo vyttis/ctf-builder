@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { AiQuotaNote } from "@/components/teacher/ai-quota-note"
 import { AiSuggestion } from "@/lib/ai/types"
 import { Button } from "@/components/ui/button"
 import {
@@ -112,10 +113,11 @@ export function ImportDialog({
         <DialogHeader>
           <DialogTitle>Importuoti iš dokumento</DialogTitle>
           <DialogDescription>
-            Įkelkite PDF, DOCX arba TXT failą — DI sugeneruos užduotis pagal
-            turinį
+            Įkelkite PDF, DOCX arba TXT failą: DI sugeneruos užduotis pagal
+            turinį.
           </DialogDescription>
         </DialogHeader>
+        <AiQuotaNote />
 
         {step === "upload" && (
           <div

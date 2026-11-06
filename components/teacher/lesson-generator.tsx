@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { AiQuotaNote } from "@/components/teacher/ai-quota-note"
 import { useRouter } from "next/navigation"
 import { Challenge } from "@/types/game"
 import { SUBJECTS, LESSON_TYPES, DURATIONS, getGradesForSubject } from "@/lib/curriculum/subjects"
@@ -450,6 +451,7 @@ export function LessonGenerator({
                 </>
               )}
             </Button>
+            <AiQuotaNote className="text-center" refreshKey={loading} />
           </CardContent>
         </Card>
 
