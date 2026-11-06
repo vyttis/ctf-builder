@@ -31,7 +31,7 @@ export default async function GameReportPage(
 
   const { data: game } = await supabase
     .from("games")
-    .select("id, title, description, status, game_code, created_at, teacher_id")
+    .select("id, title, description, status, game_code, created_at, starts_at, finished_at, teacher_id")
     .eq("id", params.gameId)
     .eq("teacher_id", user!.id)
     .single()
@@ -62,6 +62,25 @@ export default async function GameReportPage(
       ? Math.round((stats.correct_submissions / stats.total_submissions) * 100)
       : 0
 
+  // The day the activity ran (its start), not the day it was created, and
+  // how long it ran when it has finished.
+  const startedAt = game.starts_at ? new Date(game.starts_at) : null
+  const finishedAt = game.finished_at ? new Date(game.finished_at) : null
+  const dateFmt = new Intl.DateTimeFormat("lt-LT", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Vilnius" })
+  // Older activities may have run without a recorded start: say only what
+  // is known instead of calling them unstarted.
+  const createdText = `sukurta ${new Date(game.created_at).toLocaleDateString("lt-LT", { timeZone: "Europe/Vilnius" })}`
+  const ranText = startedAt
+    ? dateFmt.format(startedAt)
+    : game.status === "draft"
+      ? `nepradėta (${createdText})`
+      : finishedAt
+        ? `baigta ${dateFmt.format(finishedAt)}`
+        : createdText
+  const durationMin = startedAt && finishedAt ? Math.max(0, Math.round((finishedAt.getTime() - startedAt.getTime()) / 60000)) : null
+  const durationText =
+    durationMin === null ? null : durationMin >= 60 ? `${Math.floor(durationMin / 60)} val. ${durationMin % 60} min.` : `${durationMin} min.`
+
   const kpis = [
     { label: "Komandos", value: String(detailed.total_teams) },
     { label: "Užduotys", value: String(totalChallenges) },
@@ -76,7 +95,7 @@ export default async function GameReportPage(
         <Link href={`/games/${game.id}`}>
           <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
             <ArrowLeft className="h-4 w-4" />
-            Žaidimo detalės
+            Veiklos puslapis
           </Button>
         </Link>
         <PrintReportButton />
@@ -104,20 +123,24 @@ export default async function GameReportPage(
               </span>
             )}
             <span>
-              <span className="text-muted-foreground">Data:</span>{" "}
-              <span className="font-medium">
-                {new Date(game.created_at).toLocaleDateString("lt-LT")}
-              </span>
+              <span className="text-muted-foreground">Vyko:</span>{" "}
+              <span className="font-medium">{ranText}</span>
             </span>
+            {durationText && (
+              <span>
+                <span className="text-muted-foreground">Trukmė:</span>{" "}
+                <span className="font-medium">{durationText}</span>
+              </span>
+            )}
             <span>
-              <span className="text-muted-foreground">Žaidimo kodas:</span>{" "}
+              <span className="text-muted-foreground">Veiklos kodas:</span>{" "}
               <span className="font-mono font-medium">{game.game_code}</span>
             </span>
           </div>
         </div>
 
         {/* KPI row */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {kpis.map((kpi) => (
             <div
               key={kpi.label}

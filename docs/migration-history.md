@@ -188,7 +188,9 @@ Failas `supabase/migrations/20261106145000_ai_reservations_and_alert_claims.sql`
 grąžinimas `supabase/rollback/20261106145000_ai_reservations_and_alert_claims.sql`.
 `reserve_ai_action()` suskaičiuoja mėnesio veiksmus ir įrašo rezervaciją
 vienu kvietimu, laikydama asmens užraktą (`pg_advisory_xact_lock`), todėl
-paskutinės laisvos vietos negali užimti dvi užklausos. Unikalus indeksas
+paskutinės laisvos vietos negali užimti dvi užklausos. Mėnuo (UTC) ir
+vykdomų veiksmų langas skaičiuojami nuo to paties laiko, kurį gauna
+rezervacijos eilutė. Unikalus indeksas
 leidžia vieną biudžeto įspėjimą per mėnesį ir lygį. Indeksas `ai_usage(request_id)`
 pagreitina skaičiavimą. Duomenys nekeičiami; funkciją gali kviesti tik
 `service_role`.
@@ -199,8 +201,8 @@ Patikra po taikymo:
 
 ```sql
 select
-  has_function_privilege('service_role', 'public.reserve_ai_action(uuid,uuid,text,integer,timestamptz,timestamptz)', 'EXECUTE') as service_fn,
-  has_function_privilege('authenticated', 'public.reserve_ai_action(uuid,uuid,text,integer,timestamptz,timestamptz)', 'EXECUTE') as auth_fn,
+  has_function_privilege('service_role', 'public.reserve_ai_action(uuid,uuid,text,integer,integer)', 'EXECUTE') as service_fn,
+  has_function_privilege('authenticated', 'public.reserve_ai_action(uuid,uuid,text,integer,integer)', 'EXECUTE') as auth_fn,
   (select count(*) from pg_indexes where indexname in ('ai_usage_request', 'admin_audit_log_ai_budget_alert_once')) as indexes;
 ```
 

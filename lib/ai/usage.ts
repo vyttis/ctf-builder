@@ -86,22 +86,46 @@ export async function loadAiSettings(admin: SupabaseClient): Promise<AiSettings>
 }
 
 // The month's spend, cached briefly per server instance: every DI action
-// reads it, and a minute of lag is fine for a monthly budget.
+// reads it, and a minute of lag is fine for a monthly budget. A usage row
+// written by this instance drops the cache, and a scan that was already
+// running when that happened does not store its total, so the cache never
+// misses or double-counts a cost this instance recorded.
 let spendCache: { month: number; usd: number; at: number } | null = null
+let spendGeneration = 0
 const SPEND_TTL_MS = 60_000
+
+function invalidateSpendCache() {
+  spendGeneration += 1
+  spendCache = null
+}
 
 export async function monthSpendUsd(admin: SupabaseClient, now = new Date(), fresh = false): Promise<number> {
   const month = monthStart(now).getTime()
   if (!fresh && spendCache && spendCache.month === month && Date.now() - spendCache.at < SPEND_TTL_MS) {
     return spendCache.usd
   }
+  const generation = spendGeneration
   const rows = await allRowsById<{ id: number; cost_usd: number | string }>(() =>
-    admin.from("ai_usage").select("id, cost_usd").gte("created_at", new Date(month).toISOString()),
+    admin
+      .from("ai_usage")
+      .select("id, cost_usd")
+      .gte("created_at", new Date(month).toISOString())
+      .lt("created_at", nextMonthStart(now).toISOString()),
   )
-  let total = 0
-  for (const row of rows) total += Number(row.cost_usd)
-  spendCache = { month, usd: total, at: Date.now() }
+  const total = sumUsd(rows.map((row) => row.cost_usd))
+  if (generation === spendGeneration) spendCache = { month, usd: total, at: Date.now() }
   return total
+}
+
+/**
+ * Adds costs stored with five decimals (numeric(10,5)) in whole
+ * hundred-thousandths, so many small costs add up to the exact total and a
+ * budget that has been reached compares as reached.
+ */
+export function sumUsd(costs: Iterable<number | string>): number {
+  let units = 0
+  for (const cost of costs) units += Math.round(Number(cost) * 100_000)
+  return units / 100_000
 }
 
 /** Placeholder row that holds a limit slot while the action runs. */
@@ -115,7 +139,7 @@ export const RESERVATION_MODEL = "reservation"
 export const RESERVATION_TTL_MS = 15 * 60_000
 
 type PageQuery = {
-  gt: (column: string, value: number) => PageQuery
+  gt: (column: string, value: number | string) => PageQuery
   order: (column: string, opts: { ascending: boolean }) => PageQuery
   limit: (n: number) => PromiseLike<{ data: unknown; error: unknown }>
 }
@@ -128,15 +152,16 @@ type PageQuery = {
 export async function allRowsById<T extends { id: number | string }>(build: () => unknown): Promise<T[]> {
   const rows: T[] = []
   const page = 1000
-  let lastId = 0
+  let lastId: number | string | null = null
   for (;;) {
-    const query = (build() as PageQuery).gt("id", lastId).order("id", { ascending: true })
-    const { data, error } = await query.limit(page)
+    let query = build() as PageQuery
+    if (lastId !== null) query = query.gt("id", lastId)
+    const { data, error } = await query.order("id", { ascending: true }).limit(page)
     if (error) throw error
     const batch = (data ?? []) as T[]
     rows.push(...batch)
     if (batch.length < page) break
-    lastId = Number(batch[batch.length - 1].id)
+    lastId = batch[batch.length - 1].id
   }
   return rows
 }
@@ -163,6 +188,7 @@ export async function monthActionsByUser(
         .eq("user_id", userId)
         .eq("model", RESERVATION_MODEL)
         .gte("created_at", since)
+        .lt("created_at", nextMonthStart(now).toISOString())
       if (upToId !== undefined) query = query.lte("id", upToId)
       return query
     }),
@@ -175,6 +201,8 @@ export async function monthActionsByUser(
         .gte("created_at", since),
     ),
   ])
+  // Calls have no upper bound: a call recorded just after midnight still
+  // belongs to an action reserved before it.
   const called = new Set(calls.map((c) => c.request_id))
   const inFlightSince = now.getTime() - RESERVATION_TTL_MS
   return reservations.filter(
@@ -186,6 +214,7 @@ export async function monthActionsByUser(
  * Takes a limit slot for this action before any model call. The database
  * counts and inserts under a per-person lock (reserve_ai_action, migration
  * 20261106145000), so two requests at the last free slot cannot both pass.
+ * The database takes the month from the reservation's own timestamp.
  * If the action ends without a model call (bad input, the model failed), the
  * slot is given back after the response; a request killed before that stops
  * counting after RESERVATION_TTL_MS.
@@ -195,15 +224,13 @@ async function reserveAction(
   admin: SupabaseClient,
   ctx: AiContext,
   limit: number,
-  now: Date,
 ): Promise<number | null> {
   const { data, error } = await admin.rpc("reserve_ai_action", {
     p_user_id: ctx.userId,
     p_request_id: ctx.requestId,
     p_endpoint: ctx.endpoint,
     p_limit: limit,
-    p_month_start: monthStart(now).toISOString(),
-    p_in_flight_since: new Date(now.getTime() - RESERVATION_TTL_MS).toISOString(),
+    p_in_flight_seconds: RESERVATION_TTL_MS / 1000,
   })
   if (error) throw error
   const used = Number(data)
@@ -266,7 +293,7 @@ export async function checkAiAllowance(
       }
     }
     const limit = profile?.ai_monthly_limit ?? settings.ai_user_monthly_limit
-    const used = await reserveAction(admin, ctx, limit, now)
+    const used = await reserveAction(admin, ctx, limit)
     if (used === null) {
       return {
         ok: false,
@@ -311,7 +338,7 @@ export async function recordAiUsage(model: string, usage: TokenUsage | undefined
       console.error("[ai-usage] insert failed", { code: error.code })
       return
     }
-    if (spendCache && spendCache.month === monthStart().getTime()) spendCache.usd += cost
+    invalidateSpendCache()
     after(() => maybeSendBudgetAlert(admin))
   } catch (error) {
     console.error("[ai-usage] record failed", { error: error instanceof Error ? error.message : "unknown" })
@@ -354,10 +381,30 @@ async function alertClaimState(admin: SupabaseClient, target: string, now: Date)
 }
 
 /**
- * Sends the 80 % and 100 % budget emails once per month each. Runs after
- * every recorded call, so it starts from the per-instance spend (kept
- * current by recordAiUsage) and reads the database only once a threshold
- * may have been crossed and its email is not out yet. The audit row is the
+ * Marks a claim delivered after its email went out. Retried, because a claim
+ * left unmarked looks abandoned after ALERT_CLAIM_TTL_MS and the email would
+ * be sent again; if every attempt fails, that one duplicate email is the
+ * accepted cost (a lost alert would be worse).
+ */
+async function markAlertDelivered(admin: SupabaseClient, claimId: number, spent: number, budget: number) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { error } = await admin
+      .from("admin_audit_log")
+      .update({ details: { spent_usd: spent, budget_usd: budget, delivered: true } })
+      .eq("id", claimId)
+    if (!error) return
+    console.error("[ai-usage] marking budget alert delivered failed", { attempt, code: error.code })
+    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 500))
+  }
+}
+
+/**
+ * Sends the 80 % and 100 % budget emails once per month each. When one call
+ * moves spending from below the warning straight past the budget, only the
+ * 100 % email goes: it already reports the spend, and a warning arriving
+ * after it would say less. Runs after
+ * every recorded call, starting from the per-instance spend cache, and reads
+ * the claims only once a threshold may have been crossed. The audit row is the
  * claim (unique per month and level, migration 20261106145000): it is
  * marked delivered after the email goes out, removed again if it could not
  * go out, and taken over after ten minutes if its worker stopped midway.
@@ -420,12 +467,7 @@ export async function maybeSendBudgetAlert(admin: SupabaseClient, now = new Date
           ),
         )
         delivered = result.ok
-        if (delivered) {
-          await admin
-            .from("admin_audit_log")
-            .update({ details: { spent_usd: spent, budget_usd: settings.ai_monthly_budget_usd, delivered: true } })
-            .eq("id", claimId)
-        }
+        if (delivered) await markAlertDelivered(admin, claimId, spent, settings.ai_monthly_budget_usd)
       }
     } finally {
       if (!delivered) await release()
@@ -466,11 +508,13 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
     admin
       .from("ai_usage")
       .select("id, user_id, request_id, endpoint, model, cost_usd, created_at")
-      .gte("created_at", monthStart(now).toISOString()),
+      .gte("created_at", monthStart(now).toISOString())
+      .lt("created_at", nextMonthStart(now).toISOString()),
   )
   // Actions follow monthActionsByUser: a reservation that got a model call
   // or is still in flight. Requests without a reservation (super admins, or
   // a call made while the allowance check failed open) count by request id.
+  // cost is kept in hundred-thousandths of a dollar (see sumUsd).
   type Acc = { reserved: Map<string, number>; called: Set<string>; calls: number; cost: number }
   const byUser = new Map<string, Acc>()
   for (const r of rows) {
@@ -482,7 +526,7 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
       u.calls += 1
       u.called.add(r.request_id)
     }
-    u.cost += Number(r.cost_usd)
+    u.cost += Math.round(Number(r.cost_usd) * 100_000)
     byUser.set(r.user_id, u)
   }
   // A call this month whose reservation was made last month (an action
@@ -511,9 +555,8 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
   }
 
   const columns = "id, full_name, email, role, ai_monthly_limit"
-  const { data: active, error: activeError } = await admin.from("profiles").select(columns).eq("status", "active")
-  if (activeError) throw activeError
-  const info = new Map(((active ?? []) as ProfileInfo[]).map((p) => [p.id, p]))
+  const active = await allRowsById<ProfileInfo>(() => admin.from("profiles").select(columns).eq("status", "active"))
+  const info = new Map(active.map((p) => [p.id, p]))
   const missing = Array.from(byUser.keys()).filter((id) => !info.has(id))
   if (missing.length > 0) {
     const { data: others } = await admin.from("profiles").select(columns).in("id", missing)
@@ -532,7 +575,7 @@ export async function usageByUser(admin: SupabaseClient, now = new Date()): Prom
         role: p?.role ?? null,
         actions: actionsOf(u),
         calls: u.calls,
-        costUsd: Math.round(u.cost * 100000) / 100000,
+        costUsd: u.cost / 100_000,
         limit: p?.ai_monthly_limit ?? null,
       }
     })

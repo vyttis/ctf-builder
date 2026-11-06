@@ -25,12 +25,15 @@ class FakeDb {
     return Promise.resolve().then(() => {
       if (name !== "reserve_ai_action") return { data: null, error: { code: "PGRST202", message: "unknown function" } }
       const rows = this.rows("ai_usage")
+      const now = new Date()
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString()
+      const inFlightSince = new Date(now.getTime() - Number(args.p_in_flight_seconds) * 1000).toISOString()
       const used = rows.filter(
         (r) =>
           r.user_id === args.p_user_id &&
           r.model === "reservation" &&
-          String(r.created_at) >= String(args.p_month_start) &&
-          (String(r.created_at) >= String(args.p_in_flight_since) ||
+          String(r.created_at) >= monthStart &&
+          (String(r.created_at) >= inFlightSince ||
             rows.some((c) => c.request_id === r.request_id && c.model !== "reservation")),
       ).length
       if (used >= Number(args.p_limit)) return { data: -1, error: null }
@@ -41,7 +44,7 @@ class FakeDb {
         endpoint: args.p_endpoint,
         model: "reservation",
         cost_usd: 0,
-        created_at: new Date().toISOString(),
+        created_at: now.toISOString(),
       })
       return { data: used, error: null }
     })
@@ -206,6 +209,7 @@ import {
   monthActionsByUser,
   monthSpendUsd,
   recordAiUsage,
+  sumUsd,
   aiContext,
   RESERVATION_MODEL,
   usageByUser,
@@ -291,6 +295,14 @@ describe("personal monthly limit", () => {
     const db = setup()
     addActions(db, 1200)
     expect(await monthActionsByUser(db as never, USER)).toBe(1200)
+  })
+
+  it("does not count next month's actions in the requested month", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addActions(db, 2, { created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addActions(db, 3, { created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    expect(await monthActionsByUser(db as never, USER, lastDay)).toBe(2)
   })
 
   it("keeps an action in the month it was reserved in", async () => {
@@ -444,6 +456,33 @@ describe("budget alerts", () => {
     expect(h.sent).toBe(0)
   })
 
+  it("marks a sent alert delivered even when the first write fails", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 42 })
+    await monthSpendUsd(db as never, new Date(), true)
+    let failures = 1
+    const realFrom = db.from.bind(db)
+    vi.spyOn(db, "from").mockImplementation((table: string) => {
+      const query = realFrom(table)
+      const realUpdate = query.update.bind(query)
+      query.update = (payload: Row) => {
+        const q = realUpdate(payload)
+        if (failures-- > 0) {
+          q.then = ((onFulfilled, onRejected) =>
+            Promise.resolve({ data: null, error: { code: "XX000", message: "unavailable" } }).then(
+              onFulfilled as never,
+              onRejected,
+            )) as typeof q.then
+        }
+        return q
+      }
+      return query
+    })
+    await maybeSendBudgetAlert(db as never)
+    expect(h.sent).toBe(1)
+    expect((db.rows("admin_audit_log")[0].details as { delivered?: boolean }).delivered).toBe(true)
+  })
+
   it("does not read the database below the threshold", async () => {
     const db = setup()
     addCall(db, { cost_usd: 1 })
@@ -455,7 +494,80 @@ describe("budget alerts", () => {
   })
 })
 
+describe("spend total", () => {
+  it("adds many small costs up to the exact budget", () => {
+    expect(sumUsd(Array.from({ length: 5000 }, () => "0.01000"))).toBe(50)
+    expect(sumUsd([0.1, 0.2])).toBe(0.3)
+  })
+})
+
+describe("spend cache", () => {
+  it("counts only the requested month, also when the next one has begun", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addCall(db, { cost_usd: 2, created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addCall(db, { cost_usd: 5, created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    expect(await monthSpendUsd(db as never, lastDay, true)).toBeCloseTo(2, 10)
+  })
+
+  it("does not lose a cost recorded while a spend scan was running", async () => {
+    const db = setup()
+    addCall(db, { cost_usd: 1 })
+    await monthSpendUsd(db as never, new Date(), true)
+
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const realFrom = db.from.bind(db)
+    vi.spyOn(db, "from").mockImplementationOnce((table: string) => {
+      const query = realFrom(table)
+      const deliver = query.then.bind(query)
+      // The rows are read now; the answer arrives only after the gate opens.
+      query.then = ((onFulfilled, onRejected) =>
+        deliver((v) => gate.then(() => v)).then(onFulfilled as never, onRejected)) as typeof query.then
+      return query
+    })
+    const scan = monthSpendUsd(db as never, new Date(), true)
+
+    const allowance = await checkAiAllowance(USER, "di/generate")
+    if (!allowance.ok) throw new Error("expected allowance")
+    await aiContext.run(allowance.ctx, () => recordAiUsage("claude-sonnet-4-6", { input_tokens: 1000, output_tokens: 500 }))
+    release()
+    await scan
+
+    const total = db.rows("ai_usage").reduce((sum, r) => sum + Number(r.cost_usd), 0)
+    expect(total).toBeGreaterThan(1)
+    expect(await monthSpendUsd(db as never)).toBeCloseTo(total, 10)
+  })
+})
+
 describe("usage per person", () => {
+  it("lists every active facilitator, past the first page of profiles", async () => {
+    const db = setup()
+    for (let i = 0; i < 1100; i++) {
+      db.rows("profiles").push({
+        id: `33333333-0000-0000-0000-${String(i).padStart(12, "0")}`,
+        role: "teacher",
+        status: "active",
+        full_name: `Vedėjas ${i}`,
+        email: null,
+        ai_monthly_limit: null,
+      })
+    }
+    const users = await usageByUser(db as never)
+    expect(users).toHaveLength(1102)
+  })
+
+  it("counts only the requested month, also when the next one has begun", async () => {
+    const db = setup()
+    const lastDay = new Date(Date.UTC(2026, 10, 30, 23, 59, 59))
+    addCall(db, { cost_usd: 2, created_at: new Date(Date.UTC(2026, 10, 30, 12)).toISOString() })
+    addCall(db, { cost_usd: 5, created_at: new Date(Date.UTC(2026, 11, 1, 0, 0, 1)).toISOString() })
+    const users = await usageByUser(db as never, lastDay)
+    expect(users.find((u) => u.userId === USER)).toMatchObject({ calls: 1, costUsd: 2 })
+  })
+
   it("lists active facilitators who have not used DI yet", async () => {
     const db = setup()
     addActions(db, 2)

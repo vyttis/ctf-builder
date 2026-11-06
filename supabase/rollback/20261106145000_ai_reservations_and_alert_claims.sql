@@ -4,7 +4,7 @@
 
 BEGIN;
 
-DROP FUNCTION IF EXISTS public.reserve_ai_action(uuid, uuid, text, integer, timestamptz, timestamptz);
+DROP FUNCTION IF EXISTS public.reserve_ai_action(uuid, uuid, text, integer, integer);
 DROP INDEX IF EXISTS public.admin_audit_log_ai_budget_alert_once;
 DROP INDEX IF EXISTS public.ai_usage_request;
 
