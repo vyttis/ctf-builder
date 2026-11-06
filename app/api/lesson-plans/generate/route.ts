@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { friendlyAiError } from "@/lib/ai/error-message"
 import { NextResponse } from "next/server"
 import { buildLessonPlanSystemPrompt, buildLessonPlanUserMessage } from "@/lib/ai/lesson-plan-prompt"
 import { getGradesForSubject, getGradesIntersection } from "@/lib/curriculum/subjects"
@@ -142,13 +143,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
     console.error("Lesson plan generate error:", errMsg, error)
-    const friendly = errMsg.includes("model")
-      ? `DI modelis neprieinamas: ${errMsg}`
-      : errMsg.includes("rate") || errMsg.includes("429")
-        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
-        : errMsg.includes("overloaded") || errMsg.includes("529")
-          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
-          : `Pamokos plano generavimas nepavyko: ${errMsg}`
+    const friendly = friendlyAiError(error, "Pamokos plano generavimas nepavyko. Bandykite dar kartą.")
     return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }

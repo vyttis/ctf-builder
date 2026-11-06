@@ -132,6 +132,9 @@ export default function PlayPage() {
   // Live game status: paused shows a full-screen overlay, finished ends the
   // game even mid-play (teacher-ended)
   const [gameStatus, setGameStatus] = useState<string>("active")
+  // Bumped on every realtime status event, so a status poll that started
+  // earlier can tell its answer is older and must not overwrite it.
+  const statusVersionRef = useRef(0)
   const [endedByTeacher, setEndedByTeacher] = useState(false)
   const [loadError, setLoadError] = useState(false)
   // Distinguishes "still loading" from "loaded, but the game has no challenges"
@@ -330,6 +333,7 @@ export default function PlayPage() {
             }
           }
           if (updated.status) {
+            statusVersionRef.current += 1
             setGameStatus(updated.status)
             if (updated.status === "finished") {
               setEndedByTeacher(true)
@@ -344,30 +348,58 @@ export default function PlayPage() {
   }, [gameId, gameCode, timeExpired])
 
   // Status polling safety net: paused games may be invisible to anon realtime
-  // (RLS), so realtime alone cannot be trusted to deliver pause events
+  // (RLS), so realtime alone cannot be trusted to deliver pause events.
+  // 5 s keeps a teacher's pause visible to participants almost at once;
+  // the request is a tiny status read, and it also re-runs when the tab
+  // becomes visible again (phones suspend timers in the background).
   useEffect(() => {
     if (gameFinished) return
 
-    const interval = setInterval(async () => {
+    // One request at a time: overlapping polls could finish out of order and
+    // an older "active" would hide the pause overlay. A hung request is cut
+    // off so it cannot block the next polls.
+    let inFlight = false
+    let disposed = false
+    const checkStatus = async () => {
+      if (inFlight) return
+      inFlight = true
+      const startedAt = statusVersionRef.current
       try {
         const res = await fetch(
           `/api/play/status?game_code=${encodeURIComponent(gameCode)}`,
-          { cache: "no-store" }
+          {
+            cache: "no-store",
+            // AbortSignal.timeout is missing on older phones (iOS < 16)
+            signal: typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(8000) : undefined,
+          }
         )
         if (!res.ok) return
         const data = (await res.json()) as { status: string | null }
-        if (!data.status) return
+        if (disposed || !data.status) return
+        if (statusVersionRef.current !== startedAt) return
         setGameStatus(data.status)
         if (data.status === "finished") {
           setEndedByTeacher(true)
           setGameFinished(true)
         }
       } catch {
-        // Network hiccup — next poll retries
+        // Network hiccup or timeout: the next poll retries
+      } finally {
+        inFlight = false
       }
-    }, 20000)
+    }
 
-    return () => clearInterval(interval)
+    const interval = setInterval(checkStatus, 5000)
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void checkStatus()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+
+    return () => {
+      disposed = true
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
   }, [gameCode, gameFinished])
 
   function handleStart() {

@@ -127,7 +127,7 @@ export async function POST(request: Request) {
     description: parsed.data.description,
     type: parsed.data.type,
     points: parsed.data.points,
-    answer_hash: await hashAnswer(answerToHash),
+    answer_hash: await hashAnswer(answerToHash, parsed.data.type),
     hints: parsed.data.hints,
     options: parsed.data.options,
     order_index: orderIndex,

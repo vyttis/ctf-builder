@@ -43,11 +43,11 @@ async function verifyChallengeOwnership(
 ) {
   const { data: challenge } = await supabase
     .from("challenges")
-    .select("id, game_id")
+    .select("id, game_id, type")
     .eq("id", challengeId)
     .single()
 
-  if (!challenge) return false
+  if (!challenge) return null
 
   const { data: game } = await supabase
     .from("games")
@@ -56,7 +56,7 @@ async function verifyChallengeOwnership(
     .eq("teacher_id", userId)
     .single()
 
-  return !!game
+  return game ? { type: challenge.type as string | null } : null
 }
 
 export async function PATCH(request: Request, props: { params: Promise<{ challengeId: string }> }) {
@@ -88,8 +88,8 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
   }
 
   // Verify the challenge belongs to a game owned by this teacher
-  const isOwner = await verifyChallengeOwnership(supabase, params.challengeId, user.id)
-  if (!isOwner) {
+  const owned = await verifyChallengeOwnership(supabase, params.challengeId, user.id)
+  if (!owned) {
     return NextResponse.json(
       { error: "Užduotis nerasta arba neturite teisės" },
       { status: 404 }
@@ -102,7 +102,9 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
   // If answer is being updated, hash it with bcrypt (never stored/returned in
   // plaintext) and clear the needs_answer flag set on duplicated/cloned tasks
   if (correct_answer) {
-    updateData.answer_hash = await hashAnswer(correct_answer)
+    // Text answers fold diacritics, choices keep the exact form: use the
+    // type being saved, or the task's current one when it is unchanged
+    updateData.answer_hash = await hashAnswer(correct_answer, parsed.data.type ?? owned.type)
     updateData.needs_answer = false
   }
 
@@ -144,8 +146,8 @@ export async function DELETE(_request: Request, props: { params: Promise<{ chall
   }
 
   // Verify the challenge belongs to a game owned by this teacher
-  const isOwner = await verifyChallengeOwnership(supabase, params.challengeId, user.id)
-  if (!isOwner) {
+  const owned = await verifyChallengeOwnership(supabase, params.challengeId, user.id)
+  if (!owned) {
     return NextResponse.json(
       { error: "Užduotis nerasta arba neturite teisės" },
       { status: 404 }

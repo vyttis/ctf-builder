@@ -72,7 +72,7 @@ export async function POST(_request: Request, props: { params: Promise<{ itemId:
             description: c.description || "",
             type: c.type || "text",
             points: c.points || 100,
-            answer_hash: await hashAnswer(crypto.randomUUID()),
+            answer_hash: await hashAnswer(crypto.randomUUID(), c.type || "text"),
             hints: c.hints || [],
             options: c.options || null,
             order_index: c.order_index || 0,

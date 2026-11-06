@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { friendlyAiError } from "@/lib/ai/error-message"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import Anthropic from "@anthropic-ai/sdk"
@@ -177,14 +178,7 @@ export async function POST(request: Request) {
 
     // Fixed Lithuanian messages only — raw SDK errors (English) end up
     // rendered verbatim in the teacher UI. Details stay in the server log.
-    const friendly =
-      errMsg.includes("rate") || errMsg.includes("429")
-        ? "DI paslauga šiuo metu perkrauta. Bandykite po minutės."
-        : errMsg.includes("overloaded") || errMsg.includes("529")
-          ? "DI paslauga laikinai perkrauta. Bandykite po minutės."
-          : errMsg.includes("model")
-            ? "DI modelis šiuo metu neprieinamas. Bandykite vėliau."
-            : "DI užduočių generavimas nepavyko. Bandykite dar kartą."
+    const friendly = friendlyAiError(error, "DI užduočių generavimas nepavyko. Bandykite dar kartą.")
 
     return NextResponse.json({ error: friendly }, { status: 500 })
   }

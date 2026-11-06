@@ -70,7 +70,7 @@ export async function POST(request: Request, props: { params: Promise<{ planId: 
     let successCount = 0
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i]
-      const answerHash = await hashAnswer(String(stage.correct_answer))
+      const answerHash = await hashAnswer(String(stage.correct_answer), stage.type)
 
       const { error: challengeError } = await supabase
         .from("challenges")
