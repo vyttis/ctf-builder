@@ -17,7 +17,8 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useLiveGame } from "@/hooks/use-live-game"
 import { LiveConnectionBanner } from "./live-connection-banner"
-import { Users, Trophy, Clock, AlertTriangle, MoreHorizontal, Loader2, Pencil, Trash2 } from "lucide-react"
+import { Users, Trophy, Clock, AlertTriangle, MoreHorizontal, Loader2, Pencil, Trash2, Smartphone } from "lucide-react"
+import { TeamRejoinDialog } from "./team-rejoin-dialog"
 
 interface LiveTeamProgressProps {
   gameId: string
@@ -72,6 +73,8 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
   // Moderation: rename an unsuitable name, remove a test or duplicate team.
   const [editing, setEditing] = useState<{ id: string; name: string; mode: "rename" | "remove" } | null>(null)
   const [nameDraft, setNameDraft] = useState("")
+  // A team that lost its device gets a QR to continue on another one.
+  const [rejoinTeam, setRejoinTeam] = useState<{ id: string; name: string } | null>(null)
   const [busy, setBusy] = useState(false)
 
   async function moderate() {
@@ -189,7 +192,7 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
                           <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent align="end" className="w-44 p-1">
+                      <PopoverContent align="end" className="w-52 p-1">
                         <button
                           type="button"
                           className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-muted"
@@ -200,6 +203,14 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
                         >
                           <Pencil className="h-4 w-4" aria-hidden="true" />
                           Pervadinti
+                        </button>
+                        <button
+                          type="button"
+                          className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-muted"
+                          onClick={() => setRejoinTeam({ id: team.id, name: team.name })}
+                        >
+                          <Smartphone className="h-4 w-4" aria-hidden="true" />
+                          Grąžinti į komandą
                         </button>
                         <button
                           type="button"
@@ -242,6 +253,8 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
           )
         })}
       </div>
+
+      <TeamRejoinDialog gameId={gameId} team={rejoinTeam} onClose={() => setRejoinTeam(null)} />
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && !busy && setEditing(null)}>
         <DialogContent className="sm:max-w-md">

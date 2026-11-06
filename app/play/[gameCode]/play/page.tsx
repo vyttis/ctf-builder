@@ -41,6 +41,7 @@ import { HintList } from "@/components/player/hint-list"
 import Link from "next/link"
 import Image from "next/image"
 import { TimerAnnouncer } from "@/components/player/timer-announcer"
+import { LeaveTeamButton } from "@/components/player/leave-team-button"
 
 interface PlayerChallenge {
   id: string
@@ -1180,13 +1181,7 @@ export default function PlayPage() {
             <span>Komanda: </span>
             <span className="font-medium text-steam-dark">{session.team_name}</span>
             <span className="mx-2">&middot;</span>
-            <button
-              onClick={() => { clearPlayerSession(gameCode); router.replace(`/play/${gameCode}`) }}
-              className="text-xs text-muted-foreground/60 hover:text-accent-ink transition-colors inline-flex items-center gap-1"
-            >
-              <LogOut className="h-3 w-3" />
-              Išeiti
-            </button>
+            <LeaveTeamButton onLeave={() => { clearPlayerSession(gameCode); router.replace(`/play/${gameCode}`) }} />
           </div>
         </div>
       </div>
@@ -1431,16 +1426,12 @@ export default function PlayPage() {
           <span>Komanda: </span>
           <span className="font-medium text-steam-dark">{session.team_name}</span>
           <span className="mx-2">&middot;</span>
-          <button
-            onClick={() => {
+          <LeaveTeamButton
+            onLeave={() => {
               clearPlayerSession(gameCode)
               router.replace(`/play/${gameCode}`)
             }}
-            className="text-xs text-muted-foreground/60 hover:text-accent-ink transition-colors inline-flex items-center gap-1"
-          >
-            <LogOut className="h-3 w-3" />
-            Išeiti
-          </button>
+          />
         </div>
       </div>
     </div>
