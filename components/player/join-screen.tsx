@@ -39,7 +39,7 @@ export function JoinScreen() {
         <Image src="/illustrations/adventure-start.svg" alt="" width={192} height={192} className="mx-auto mb-6" priority />
 
         <h1 className="text-2xl font-bold text-steam-dark mb-2">
-          Prisijunk prie veiklos
+          Prisijunkite prie veiklos
         </h1>
         <p className="text-muted-foreground mb-6">
           Įveskite veiklos kodą arba nuskaitykite QR kodą

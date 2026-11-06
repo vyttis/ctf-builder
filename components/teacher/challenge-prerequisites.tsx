@@ -178,7 +178,7 @@ export function ChallengePrerequisites({
                 placeholder="Ieškoti užduočių..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-2 py-1.5 text-sm rounded border border-gray-200 outline-none focus:border-steam-green focus:ring-1 focus:ring-steam-green/30 transition-colors"
+                className="w-full px-2 py-1.5 text-sm rounded border border-gray-200 outline-none focus:border-steam-dark focus-visible:ring-2 focus-visible:ring-ring transition-colors"
                 autoFocus
               />
             </div>

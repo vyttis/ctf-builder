@@ -17,7 +17,7 @@ test.describe("canonical host", () => {
 
   test("participants enter a code at /prisijungti", async ({ page }) => {
     await page.goto(`${CLASSROOM}/prisijungti`)
-    await expect(page.getByRole("heading", { name: "Prisijunk prie veiklos" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Prisijunkite prie veiklos" })).toBeVisible()
     await page.getByPlaceholder("KODAS").fill("ZZZZZZ")
     await page.getByPlaceholder("KODAS").press("Enter")
     await expect(page).toHaveURL(/\/play\/ZZZZZZ$/)

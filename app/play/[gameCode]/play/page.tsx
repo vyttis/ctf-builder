@@ -40,6 +40,7 @@ import { ChallengeDetailModal } from "@/components/player/challenge-detail-modal
 import { HintList } from "@/components/player/hint-list"
 import Link from "next/link"
 import Image from "next/image"
+import { TimerAnnouncer } from "@/components/player/timer-announcer"
 
 interface PlayerChallenge {
   id: string
@@ -1137,12 +1138,13 @@ export default function PlayPage() {
                       ? "bg-highlight text-highlight-foreground"
                       : ""
                   }`}
-                  aria-live={remainingSeconds <= 60 ? "assertive" : "off"}
+                  aria-label={`Liko laiko ${formatTime(remainingSeconds)}`}
                 >
-                  <Clock className="h-3 w-3" />
+                  <Clock className="h-3 w-3" aria-hidden="true" />
                   {formatTime(remainingSeconds)}
                 </Badge>
               )}
+              {timeLimitMinutes && <TimerAnnouncer seconds={remainingSeconds} />}
               {showLeaderboard && (
                 <Link href={`/play/${gameCode}/leaderboard`}>
                   <Button variant="ghost" size="sm" className="gap-1 text-xs">
@@ -1229,12 +1231,13 @@ export default function PlayPage() {
                 className={`gap-1 font-mono text-xs tabular-nums ${
                   isTimerCritical ? "animate-pulse" : ""
                 } ${isTimerWarning && !isTimerCritical ? "bg-highlight text-highlight-foreground" : ""}`}
-                aria-live={isTimerCritical ? "assertive" : "off"}
+                aria-label={`Liko laiko ${formatTime(remainingSeconds)}`}
               >
-                <Clock className="h-3 w-3" />
+                <Clock className="h-3 w-3" aria-hidden="true" />
                 {formatTime(remainingSeconds)}
               </Badge>
             )}
+            {timeLimitMinutes && <TimerAnnouncer seconds={remainingSeconds} />}
             {showLeaderboard && (
               <Link href={`/play/${gameCode}/leaderboard`}>
                 <Button variant="ghost" size="sm" className="gap-1 text-xs">
