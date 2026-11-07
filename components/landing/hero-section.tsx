@@ -93,7 +93,7 @@ export function HeroSection() {
                 className="rise-in flex items-center gap-3 mb-7"
               >
                 <span className="inline-flex h-px w-10 bg-primary/60" />
-                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-semibold">
+                <span className="text-xs uppercase tracking-[0.22em] text-primary font-semibold">
                   Klaipėdos universiteto STEAM centras
                 </span>
               </div>
@@ -169,7 +169,7 @@ export function HeroSection() {
                     <div className="numeral-display text-3xl md:text-4xl font-medium text-white">
                       {stat.num}
                     </div>
-                    <div className="text-[11px] uppercase tracking-wider text-white/55 mt-1.5">
+                    <div className="text-xs uppercase tracking-wider text-white/55 mt-1.5">
                       {stat.label}
                     </div>
                   </div>
@@ -196,19 +196,19 @@ export function HeroSection() {
                       <span className="w-2.5 h-2.5 rounded-full bg-highlight/60" />
                       <span className="w-2.5 h-2.5 rounded-full bg-primary/60" />
                     </div>
-                    <span className="text-[10px] font-mono text-muted-foreground tracking-wider">
-                      pamoka.live • 7 kl. biologija
+                    <span className="text-xs font-mono text-muted-foreground tracking-wider">
+                      pamokos.kusteam.app • 7 kl. biologija
                     </span>
                   </div>
 
                   {/* Card content — looks like a real challenge */}
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary-ink font-semibold">
+                      <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-primary-ink font-semibold">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                         Užduotis 3 iš 5
                       </span>
-                      <span className="text-[11px] font-mono text-muted-foreground">
+                      <span className="text-xs font-mono text-muted-foreground">
                         150 tšk.
                       </span>
                     </div>
@@ -242,7 +242,7 @@ export function HeroSection() {
                             }`}
                           >
                             <span
-                              className={`shrink-0 w-6 h-6 rounded-md border flex items-center justify-center text-[11px] font-bold uppercase ${
+                              className={`shrink-0 w-6 h-6 rounded-md border flex items-center justify-center text-xs font-bold uppercase ${
                                 showResult && opt.correct
                                   ? "border-primary bg-primary text-primary-foreground"
                                   : showResult && !opt.correct
@@ -294,7 +294,7 @@ export function HeroSection() {
                 {/* Floating editorial tag — "try it" hint */}
                 <div
                   style={{ animationDelay: "900ms" }}
-                  className="fade-in-css -rotate-6 absolute -top-5 -left-6 bg-highlight text-steam-dark rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider shadow-lg shadow-highlight/30 flex items-center gap-1.5"
+                  className="fade-in-css -rotate-6 absolute -top-5 -left-6 bg-highlight text-steam-dark rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg shadow-highlight/30 flex items-center gap-1.5"
                 >
                   <Sparkles className="h-3 w-3" />
                   Spauskite

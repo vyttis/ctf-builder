@@ -200,8 +200,8 @@ function KpiCard({
         {icon}
       </div>
       <div className="text-xl font-bold text-steam-dark tabular-nums leading-none">{value}</div>
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1">{label}</div>
-      {hint && <div className="text-[10px] text-muted-foreground mt-0.5">{hint}</div>}
+      <div className="text-xs uppercase tracking-wider text-muted-foreground mt-1">{label}</div>
+      {hint && <div className="text-xs text-muted-foreground mt-0.5">{hint}</div>}
     </div>
   )
 }
@@ -228,7 +228,7 @@ function ChallengeListPanel({
         {icon}
         <h4 className="text-sm font-semibold text-steam-dark">{title}</h4>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-3">{hint}</p>
+      <p className="text-xs text-muted-foreground mb-3">{hint}</p>
       <ol className="space-y-2">
         {items.map((c) => {
           const successRate = c.attempts > 0 ? Math.round((c.solves / c.attempts) * 100) : 0
@@ -239,7 +239,7 @@ function ChallengeListPanel({
                 <div className="font-medium text-steam-dark text-[13px] truncate">
                   {c.order_index + 1}. {c.title}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                   <span>{c.solves} išsprendė</span>
                   <span>·</span>
                   <span>{successRate}% tikslumas</span>
@@ -247,7 +247,7 @@ function ChallengeListPanel({
               </div>
               <Badge
                 variant="outline"
-                className={`text-[10px] shrink-0 ${tone === "primary" ? "border-primary/30 text-primary-ink" : "border-accent/30 text-accent-ink"}`}
+                className={`text-xs shrink-0 ${tone === "primary" ? "border-primary/30 text-primary-ink" : "border-accent/30 text-accent-ink"}`}
               >
                 {coveragePct}% klasės
               </Badge>

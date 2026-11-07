@@ -132,7 +132,7 @@ export function DiWorkspace({
                       <p className="text-xs font-medium text-steam-dark">
                         {s.label}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {s.description}
                       </p>
                     </div>

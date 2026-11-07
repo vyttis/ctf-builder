@@ -47,7 +47,7 @@ export function UseCasesSection() {
             />
           </div>
           <figcaption className="mt-4 flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
-            <span className="numeral-display text-[10px] uppercase tracking-wider text-primary-ink font-semibold shrink-0 mt-0.5">
+            <span className="numeral-display text-xs uppercase tracking-wider text-primary-ink font-semibold shrink-0 mt-0.5">
               Pav. 02
             </span>
             <span>
@@ -62,7 +62,7 @@ export function UseCasesSection() {
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-5">
               <span className="inline-flex h-px w-10 bg-primary" />
-              <span className="text-[11px] uppercase tracking-[0.22em] text-primary-ink font-semibold">
+              <span className="text-xs uppercase tracking-[0.22em] text-primary-ink font-semibold">
                 §5 · Pavyzdžiai
               </span>
             </div>

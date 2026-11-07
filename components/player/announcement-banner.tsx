@@ -136,7 +136,7 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
           {/* In-flow (sticky) instead of fixed: a fixed banner covered the
               header row — game code, points and the countdown timer — for the
               whole 15s on mobile */}
-          <div className="bg-steam-blue text-white shadow-lg rounded-xl">
+          <div className="bg-secondary text-white shadow-lg rounded-xl">
             <div className={large ? "flex items-start gap-4 px-6 py-5" : "max-w-2xl mx-auto px-4 py-3 flex items-start gap-3"}>
               <Megaphone className={large ? "h-8 w-8 shrink-0" : "h-5 w-5 shrink-0 mt-0.5"} aria-hidden="true" />
               <p className={large ? "flex-1 text-2xl font-semibold leading-snug" : "flex-1 text-sm font-medium leading-snug"}>

@@ -15,7 +15,7 @@ export function AboutCreatorsSection() {
       <div className="max-w-3xl mb-14">
         <div className="flex items-center gap-3 mb-5">
           <span className="inline-flex h-px w-10 bg-steam-dark/40" />
-          <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
+          <span className="text-xs uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
             §9 · Apie kūrėjus
           </span>
         </div>
@@ -50,7 +50,7 @@ export function AboutCreatorsSection() {
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                 sizes="(max-width: 1024px) 33vw, 240px"
               />
-              <figcaption className="absolute bottom-3 left-3 text-[10px] uppercase tracking-wider text-white font-bold drop-shadow-sm">
+              <figcaption className="absolute bottom-3 left-3 text-xs uppercase tracking-wider text-white font-bold drop-shadow-sm">
                 {photo.caption}
               </figcaption>
             </figure>
@@ -73,7 +73,7 @@ export function AboutCreatorsSection() {
               return (
                 <div key={i} className="relative pl-7">
                   <Icon className="absolute left-0 top-0.5 h-4 w-4 text-primary-ink" aria-hidden="true" />
-                  <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold mb-0.5">
+                  <dt className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold mb-0.5">
                     {item.label}
                   </dt>
                   <dd className="text-sm md:text-base text-steam-dark font-medium">

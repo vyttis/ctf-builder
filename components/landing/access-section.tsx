@@ -39,7 +39,7 @@ export function AccessSection() {
           <div className="mb-14">
             <div className="flex items-center gap-3 mb-5">
               <span className="inline-flex h-px w-10 bg-highlight" />
-              <span className="text-[11px] uppercase tracking-[0.22em] text-highlight-ink font-semibold">
+              <span className="text-xs uppercase tracking-[0.22em] text-highlight-ink font-semibold">
                 §8 · Prieiga
               </span>
             </div>
@@ -89,7 +89,7 @@ export function AccessSection() {
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
                 <span className="inline-flex h-px w-8 bg-primary/60" />
-                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-semibold">
+                <span className="text-xs uppercase tracking-[0.22em] text-primary font-semibold">
                   Susisiekti
                 </span>
               </div>

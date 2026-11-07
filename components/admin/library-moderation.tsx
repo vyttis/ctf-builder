@@ -508,10 +508,10 @@ function TaskPreview({ task, index }: { task: ChallengeSnapshot; index: number }
           {index + 1}
         </span>
         <span className="font-medium text-steam-dark">{task.title}</span>
-        <Badge variant="secondary" className="text-[10px]">
+        <Badge variant="secondary" className="text-xs">
           {TYPE_LABELS[task.type] ?? task.type}
         </Badge>
-        <Badge variant="outline" className="text-[10px]">
+        <Badge variant="outline" className="text-xs">
           {task.points} tšk.
         </Badge>
       </div>

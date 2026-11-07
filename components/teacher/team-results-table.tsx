@@ -110,7 +110,7 @@ export function TeamResultsTable({
                     )}
                   </td>
                   <td className="py-2.5 px-3 font-medium text-steam-dark">{team.name}</td>
-                  <td className="py-2.5 px-3 text-right font-bold text-steam-green tabular-nums">
+                  <td className="py-2.5 px-3 text-right font-bold text-primary-ink tabular-nums">
                     {team.total_points}
                   </td>
                   <td className="py-2.5 px-3 text-right tabular-nums">

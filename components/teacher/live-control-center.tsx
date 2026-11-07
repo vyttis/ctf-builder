@@ -37,14 +37,14 @@ export function LiveControlCenter({
         <div className="relative">
           <Radio className="h-6 w-6 text-primary-ink" aria-hidden="true" />
           {gameStatus === "active" && (
-            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-steam-green motion-safe:animate-pulse" />
+            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary motion-safe:animate-pulse" />
           )}
         </div>
         <h2 className="text-xl font-bold text-steam-dark tracking-tight">
           Valdymo centras
         </h2>
         {gameStatus === "paused" && (
-          <span className="inline-flex items-center rounded-md bg-steam-yellow/15 px-2.5 py-0.5 text-xs font-semibold text-highlight-ink border border-steam-yellow/30">
+          <span className="inline-flex items-center rounded-md bg-highlight/15 px-2.5 py-0.5 text-xs font-semibold text-highlight-ink border border-highlight/30">
             Pristabdytas
           </span>
         )}

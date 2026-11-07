@@ -166,7 +166,7 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
             <Card
               key={team.id}
               className={`border-border/50 bg-white transition-shadow hover:shadow-md ${
-                stuck ? "ring-1 ring-steam-yellow/50" : ""
+                stuck ? "ring-1 ring-highlight/50" : ""
               }`}
             >
               <CardContent className="p-4">
@@ -174,14 +174,14 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
                   <div className="min-w-0">
                     <p className="font-semibold text-sm text-steam-dark truncate">
                       {index === 0 && teams.length > 1 && (
-                        <Trophy className="inline h-3.5 w-3.5 text-steam-yellow mr-1 -mt-0.5" />
+                        <Trophy className="inline h-3.5 w-3.5 text-highlight-ink mr-1 -mt-0.5" />
                       )}
                       {team.name}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     {stuck && (
-                      <Badge className="shrink-0 bg-steam-yellow/15 text-highlight-ink border-steam-yellow/30 hover:bg-steam-yellow/20">
+                      <Badge className="shrink-0 bg-highlight/15 text-highlight-ink border-highlight/30 hover:bg-highlight/20">
                         <AlertTriangle className="h-3 w-3 mr-1" aria-hidden="true" />
                         Įstrigo!
                       </Badge>
@@ -228,7 +228,7 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <p className="text-muted-foreground mb-0.5">Taškai</p>
-                    <p className="font-bold text-lg text-steam-green leading-none">
+                    <p className="font-bold text-lg text-primary-ink leading-none">
                       {team.total_points}
                     </p>
                   </div>
@@ -243,7 +243,7 @@ export function LiveTeamProgress({ gameId, paused = false, resumedAt: serverResu
                 </div>
 
                 {lastSub && (
-                  <div className="mt-3 pt-2 border-t border-border/40 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <div className="mt-3 pt-2 border-t border-border/40 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     <span>Paskutinis atsakymas: {formatTimeSince(lastSub)}</span>
                   </div>

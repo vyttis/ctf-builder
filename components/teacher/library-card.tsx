@@ -127,7 +127,7 @@ export function LibraryCard({ item }: LibraryCardProps) {
               <Badge
                 key={tag}
                 variant="outline"
-                className="text-[10px] px-1.5 py-0 text-muted-foreground"
+                className="text-xs px-1.5 py-0 text-muted-foreground"
               >
                 {tag}
               </Badge>

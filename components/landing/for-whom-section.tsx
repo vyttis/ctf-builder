@@ -28,7 +28,7 @@ export function ForWhomSection() {
           <div className="mb-14">
             <div className="flex items-center gap-3 mb-5">
               <span className="inline-flex h-px w-10 bg-steam-dark/40" />
-              <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
+              <span className="text-xs uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
                 §2 · Kam
               </span>
             </div>
@@ -65,7 +65,7 @@ export function ForWhomSection() {
                     <h3 className="text-xl md:text-2xl font-bold text-steam-dark tracking-tight text-balance leading-tight">
                       {item.quote}
                     </h3>
-                    <span className="hidden sm:inline shrink-0 text-[10px] uppercase tracking-[0.18em] text-secondary-ink font-semibold">
+                    <span className="hidden sm:inline shrink-0 text-xs uppercase tracking-[0.18em] text-secondary-ink font-semibold">
                       {item.tag}
                     </span>
                   </div>
@@ -93,7 +93,7 @@ export function ForWhomSection() {
               />
             </div>
             <figcaption className="mt-4 flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
-              <span className="numeral-display text-[10px] uppercase tracking-wider text-secondary-ink font-semibold shrink-0 mt-0.5">
+              <span className="numeral-display text-xs uppercase tracking-wider text-secondary-ink font-semibold shrink-0 mt-0.5">
                 Pav. 01
               </span>
               <span>

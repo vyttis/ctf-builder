@@ -165,12 +165,12 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
                       </p>
                     )}
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-xs">
                         <Puzzle className="h-2.5 w-2.5 mr-1" />
                         {item.challenge_data?.length || 0} užd.
                       </Badge>
                       {item.subject && (
-                        <Badge variant="secondary" className="text-[10px]">
+                        <Badge variant="secondary" className="text-xs">
                           {item.subject}
                         </Badge>
                       )}
@@ -200,13 +200,13 @@ export function LibraryWorkspace({ gameId, onTaskAdded }: LibraryWorkspaceProps)
                           <div className="flex gap-1.5 mt-0.5">
                             <Badge
                               variant="outline"
-                              className="text-[9px] px-1 py-0"
+                              className="text-xs px-1 py-0"
                             >
                               {snap.points} tšk.
                             </Badge>
                             <Badge
                               variant="secondary"
-                              className="text-[9px] px-1 py-0"
+                              className="text-xs px-1 py-0"
                             >
                               {snap.type === "text"
                                 ? "Tekstas"

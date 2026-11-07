@@ -240,7 +240,7 @@ export default function LeaderboardPage() {
                               {team.name}
                             </span>
                             {isMe && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary-ink shrink-0">
+                              <Badge variant="outline" className="text-xs px-1.5 py-0 border-primary/30 text-primary-ink shrink-0">
                                 Jūs
                               </Badge>
                             )}
@@ -260,7 +260,7 @@ export default function LeaderboardPage() {
                                   <AchievementBadge key={a.id} type={a.type} size="sm" />
                                 ))}
                                 {overflow > 0 && (
-                                  <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
+                                  <span className="text-xs font-bold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
                                     +{overflow}
                                   </span>
                                 )}
@@ -274,7 +274,7 @@ export default function LeaderboardPage() {
                             <Star className="h-3.5 w-3.5 text-highlight-ink shrink-0" />
                             <span className="font-bold text-lg text-steam-dark tabular-nums">{team.total_points}</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {pluralizeLt(team.total_points, "taškas", "taškai", "taškų")}
                           </p>
                         </div>

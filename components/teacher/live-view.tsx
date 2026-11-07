@@ -282,7 +282,7 @@ export function LiveView({ game, challengeCount, accessRequestPath = null }: Liv
               >
                 {formatClock(clock.value)}
               </p>
-              <p className="text-[11px] text-white/50 uppercase tracking-wide flex items-center gap-1 justify-end">
+              <p className="text-xs text-white/50 uppercase tracking-wide flex items-center gap-1 justify-end">
                 <Clock className="h-3 w-3" />
                 {clock.label}
               </p>

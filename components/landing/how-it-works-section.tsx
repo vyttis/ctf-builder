@@ -68,7 +68,7 @@ export function HowItWorksSection() {
       <div className="max-w-3xl mb-20 md:mb-28">
         <div className="flex items-center gap-3 mb-5">
           <span className="inline-flex h-px w-10 bg-steam-dark/40" />
-          <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
+          <span className="text-xs uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
             §1 · Eiga
           </span>
         </div>
@@ -105,7 +105,7 @@ export function HowItWorksSection() {
                 </div>
                 <div className="flex items-center gap-3 mt-3">
                   <span className={`h-px w-12 ${colors.line}`} />
-                  <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-steam-dark">
+                  <span className="text-xs uppercase tracking-[0.2em] font-semibold text-steam-dark">
                     Žingsnis {step.number}
                   </span>
                 </div>
