@@ -42,6 +42,9 @@ export function orderForTeam<T extends { id: string }>(challenges: T[], teamId: 
     .map(({ c }) => c)
 }
 
+// Two or more option letters joined by commas, "ir", "bei" or "arba".
+const LETTERS = "[a-f](\\s*,\\s*[a-f]|\\s+(ir|bei|arba)\\s+[a-f])+"
+
 // An option that points at the others ("Visi išvardyti", "Nė vienas iš
 // jų", "A ir B atsakymai teisingi") only makes sense in the order the
 // facilitator wrote. Phrases, not single words: "Visi vaikai turi šią
@@ -54,8 +57,13 @@ const REFERS_TO_OTHER_OPTIONS = [
   /\b(joks|jokia)\s+(iš|atsakym|variant)/iu,
   // The whole option is one such word: "Visi", "Abu", "Nė vienas".
   /^\s*(visi|visos|abu|abi|joks|jokia|(nė|nei)\s+vien(as|a))\s*[.!]?\s*$/iu,
-  // Option letters as the participant sees them: "A ir B", "A, B ir C".
-  /(^|[^\p{L}])[A-F]\s*(,|ir|bei|arba)\s*[A-F](?![\p{L}])/u,
+  // Option letters as the participant sees them, in any case: the whole
+  // option ("A ir B", "a, b ir c", "Tik B arba C"), or letters next to a
+  // word about answers ("A ir B atsakymai teisingi", "Teisingi variantai A
+  // ir C"). "Vitaminai B ir C" is about vitamins and is shuffled.
+  new RegExp(`^\\s*(tik\\s+)?${LETTERS}\\s*[.!]?\\s*$`, "iu"),
+  new RegExp(`(^|\\s)${LETTERS}\\s+(atsakym|variant|teising)`, "iu"),
+  new RegExp(`(atsakym|variant)\\p{L}*\\s+${LETTERS}(?![\\p{L}])`, "iu"),
 ]
 
 export function optionsReferToEachOther(options: readonly string[]): boolean {
