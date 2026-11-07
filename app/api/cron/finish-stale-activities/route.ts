@@ -5,6 +5,10 @@ import { STALE_MIN_AGE_MS, isStaleActivity, latest } from "@/lib/game/stale"
 
 export const maxDuration = 60
 
+const PAGE_SIZE = 200
+/** Headroom under maxDuration. */
+const TIME_BUDGET_MS = 45_000
+
 type LiveGame = {
   id: string
   title: string
@@ -37,74 +41,100 @@ export async function GET(request: Request) {
   const admin = createAdminClient()
   const now = Date.now()
   const startedBefore = new Date(now - STALE_MIN_AGE_MS).toISOString()
-
-  const { data, error } = await admin
-    .from("games")
-    .select("id, title, status, teacher_id, starts_at, created_at, updated_at")
-    .in("status", ["active", "paused"])
-    .or(`starts_at.lt.${startedBefore},and(starts_at.is.null,created_at.lt.${startedBefore})`)
-    .limit(200)
-  if (error) {
-    console.error(JSON.stringify({ event: "auto_finish_list_failed", code: error.code }))
-    return NextResponse.json({ error: "list failed" }, { status: 500 })
-  }
-
-  const games = (data ?? []) as LiveGame[]
-  const finished: string[] = []
+  let checked = 0
+  let finished = 0
   let failed = 0
+  let cursor: string | null = null
 
-  for (const game of games) {
-    const [teamRes, subRes] = await Promise.all([
-      admin.from("teams").select("joined_at").eq("game_id", game.id).order("joined_at", { ascending: false }).limit(1),
-      admin
-        .from("submissions")
-        .select("attempted_at, teams!inner(game_id)")
-        .eq("teams.game_id", game.id)
-        .order("attempted_at", { ascending: false })
-        .limit(1),
-    ])
-    // A failed read is not proof of silence: skip this activity.
-    if (teamRes.error || subRes.error) {
-      failed++
-      continue
+  // Candidates in id order, a page at a time, so every one is seen even
+  // when there are many; near the time limit the rest waits a night.
+  for (;;) {
+    if (Date.now() - now > TIME_BUDGET_MS) {
+      console.warn(JSON.stringify({ event: "auto_finish_time_budget", checked }))
+      break
     }
-
-    const startedAt = game.starts_at ?? game.created_at
-    const lastActivityAt =
-      latest(game.updated_at, teamRes.data?.[0]?.joined_at, subRes.data?.[0]?.attempted_at) ?? startedAt
-    if (!isStaleActivity({ startedAt, lastActivityAt }, now)) continue
-
-    const { data: updated, error: updateError } = await admin
+    let query = admin
       .from("games")
-      .update({ status: "finished" })
-      .eq("id", game.id)
+      .select("id, title, status, teacher_id, starts_at, created_at, updated_at")
       .in("status", ["active", "paused"])
-      .select("id")
-    if (updateError) {
-      failed++
-      console.error(JSON.stringify({ event: "auto_finish_failed", game: game.id, code: updateError.code }))
-      continue
+      .or(`starts_at.lt.${startedBefore},and(starts_at.is.null,created_at.lt.${startedBefore})`)
+      .order("id", { ascending: true })
+      .limit(PAGE_SIZE)
+    if (cursor) query = query.gt("id", cursor)
+    const { data, error } = await query
+    if (error) {
+      console.error(JSON.stringify({ event: "auto_finish_list_failed", code: error.code }))
+      if (checked === 0) return NextResponse.json({ error: "list failed" }, { status: 500 })
+      break
     }
-    // Finished meanwhile by the facilitator or an administrator.
-    if (!updated || updated.length === 0) continue
-    finished.push(game.id)
-
-    const { error: auditError } = await admin.from("admin_audit_log").insert({
-      actor_id: null,
-      action: "game_auto_finish",
-      target_type: "game",
-      target_id: game.id,
-      details: {
-        title: game.title,
-        previous_status: game.status,
-        teacher_id: game.teacher_id,
-        started_at: startedAt,
-        last_activity_at: lastActivityAt,
-      },
-    })
-    if (auditError) console.error(JSON.stringify({ event: "auto_finish_audit_failed", code: auditError.code }))
+    const games = (data ?? []) as LiveGame[]
+    for (const game of games) {
+      const result = await finishIfStale(admin, game, now)
+      if (result === "finished") finished++
+      if (result === "failed") failed++
+    }
+    checked += games.length
+    if (games.length < PAGE_SIZE) break
+    cursor = games[games.length - 1].id
   }
 
-  console.log(JSON.stringify({ event: "auto_finish_done", checked: games.length, finished: finished.length, failed }))
-  return NextResponse.json({ checked: games.length, finished: finished.length, failed })
+  console.log(JSON.stringify({ event: "auto_finish_done", checked, finished, failed }))
+  return NextResponse.json({ checked, finished, failed })
+}
+
+async function finishIfStale(
+  admin: ReturnType<typeof createAdminClient>,
+  game: LiveGame,
+  now: number,
+): Promise<"finished" | "kept" | "failed"> {
+  const [teamRes, subRes] = await Promise.all([
+    admin.from("teams").select("joined_at").eq("game_id", game.id).order("joined_at", { ascending: false }).limit(1),
+    admin
+      .from("submissions")
+      .select("attempted_at, teams!inner(game_id)")
+      .eq("teams.game_id", game.id)
+      .order("attempted_at", { ascending: false })
+      .limit(1),
+  ])
+  // A failed read is not proof of silence: leave this activity alone.
+  if (teamRes.error || subRes.error) return "failed"
+
+  const startedAt = game.starts_at ?? game.created_at
+  const lastActivityAt =
+    latest(game.updated_at, teamRes.data?.[0]?.joined_at, subRes.data?.[0]?.attempted_at) ?? startedAt
+  if (!isStaleActivity({ startedAt, lastActivityAt }, now)) return "kept"
+
+  // Only if the activity row is unchanged since it was read: a pause,
+  // resume or extension in between keeps it running. A first answer or
+  // join in the same few milliseconds is not covered (no lock across
+  // tables); after two quiet hours at night that is accepted.
+  const { data: updated, error: updateError } = await admin
+    .from("games")
+    .update({ status: "finished" })
+    .eq("id", game.id)
+    .in("status", ["active", "paused"])
+    .eq("updated_at", game.updated_at)
+    .select("id")
+  if (updateError) {
+    console.error(JSON.stringify({ event: "auto_finish_failed", game: game.id, code: updateError.code }))
+    return "failed"
+  }
+  // Finished or changed meanwhile by the facilitator or an administrator.
+  if (!updated || updated.length === 0) return "kept"
+
+  const { error: auditError } = await admin.from("admin_audit_log").insert({
+    actor_id: null,
+    action: "game_auto_finish",
+    target_type: "game",
+    target_id: game.id,
+    details: {
+      title: game.title,
+      previous_status: game.status,
+      teacher_id: game.teacher_id,
+      started_at: startedAt,
+      last_activity_at: lastActivityAt,
+    },
+  })
+  if (auditError) console.error(JSON.stringify({ event: "auto_finish_audit_failed", code: auditError.code }))
+  return "finished"
 }
