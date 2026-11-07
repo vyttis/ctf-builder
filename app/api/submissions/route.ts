@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { calculatePoints } from "@/lib/game/scoring"
 import { startTeamClock } from "@/lib/game/team-start"
-import { MAX_ANSWER_LENGTH, verifyAnswer } from "@/lib/game/answer-hasher"
+import { MAX_ANSWER_LENGTH, verifyAcceptedAnswers, verifyAnswer } from "@/lib/game/answer-hasher"
 import { evaluateAchievements, saveAchievements } from "@/lib/game/achievements"
 import { pluralizeLt } from "@/lib/utils"
 import { NextResponse } from "next/server"
@@ -15,6 +15,35 @@ import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 // many teams one caller creates.
 const VERIFY_PER_TEAM_PER_MINUTE = 60
 const VERIFY_PER_GAME_PER_MINUTE = 2000
+
+const CHECK_COLUMNS = "id, type, options, points, game_id, explanation, hint_penalty, hints, answer_hash"
+
+type ChallengeForCheck = {
+  id: string
+  type: string
+  options: string[] | null
+  points: number
+  game_id: string
+  explanation: string | null
+  hint_penalty: number | null
+  hints: unknown
+  answer_hash: string
+}
+
+/**
+ * The task with what checking needs, extra accepted answers included. A
+ * database without 20261107100000 has no such column: the task is read
+ * without it, so answers keep being checked during the rollout.
+ */
+async function readChallenge(supabase: ReturnType<typeof createAdminClient>, challengeId: string) {
+  const withAccepted = await supabase
+    .from("challenges")
+    .select(`${CHECK_COLUMNS}, accepted_answer_hashes`)
+    .eq("id", challengeId)
+    .single()
+  if (withAccepted.error?.code !== "42703") return withAccepted
+  return supabase.from("challenges").select(CHECK_COLUMNS).eq("id", challengeId).single()
+}
 
 const submitAnswerSchema = z.object({
   session_token: z.string().min(1),
@@ -95,11 +124,7 @@ export async function POST(request: Request) {
         .eq("team_id", team.id)
         .eq("is_correct", false)
         .gte("attempted_at", oneMinuteAgo),
-      supabase
-        .from("challenges")
-        .select("id, type, options, points, game_id, explanation, hint_penalty, hints, answer_hash")
-        .eq("id", parsed.data.challenge_id)
-        .single(),
+      readChallenge(supabase, parsed.data.challenge_id),
       // Authoritative hint count (00024). If the table is missing the query
       // errors and we fall back to the client-declared count below.
       supabase
@@ -112,7 +137,7 @@ export async function POST(request: Request) {
     const game = gameRes.data
     const existingSolve = existingSolveRes.data
     const recentAttempts = recentAttemptsRes.count
-    const challenge = challengeRes.data
+    const challenge = challengeRes.data as (ChallengeForCheck & { accepted_answer_hashes?: string[] | null }) | null
 
     if (!game || game.status !== "active") {
       const statusMessages: Record<string, string> = {
@@ -209,11 +234,14 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verify answer server-side with bcrypt (supports legacy plaintext hashes)
-    const isCorrect = await verifyAnswer(parsed.data.answer, challenge.answer_hash, {
-      type: challenge.type,
-      options: challenge.options,
-    })
+    // Verify answer server-side with bcrypt (supports legacy plaintext hashes),
+    // then the task's extra accepted answers (20261107100000), if any.
+    const isCorrect =
+      (await verifyAnswer(parsed.data.answer, challenge.answer_hash, {
+        type: challenge.type,
+        options: challenge.options,
+      })) ||
+      (await verifyAcceptedAnswers(parsed.data.answer, challenge.accepted_answer_hashes, challenge.type))
 
     // Hint penalty from server-recorded reveals (00024), not the client-declared
     // count — otherwise a student could reveal hints and submit hints_used: 0.

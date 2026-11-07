@@ -328,6 +328,43 @@ funkcijos teises, įskaitant PUBLIC.
 
 Pritaikyta produkcijoje 2026-11-06 18:13 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai 0 vykstančių veiklų). Patikra po taikymo: `anon_hints` `false`, `anon_notes` `false`, `anon_title` `true`, `auth_hints` `true`, `anon_state` `false`, `auth_state` `false`, `service_state` `true`; funkcijos teisės `{postgres=X/postgres,service_role=X/postgres}`.
 
+## 2026-11-07: keli priimami atsakymai
+
+Failas `supabase/migrations/20261107100000_accepted_answers.sql`,
+grąžinimas `supabase/rollback/20261107100000_accepted_answers.sql`.
+Prideda `challenges.accepted_answer_hashes` (iki 5 papildomų atsakymų,
+saugomi kaip bcrypt maišos, `anon` ir `authenticated` jų neskaito) ir
+sugeneruotą `challenges.accepted_answer_count`, kurį skaito tik
+`authenticated` (vedėjas mato, kiek jų yra). Esamos užduotys gauna tuščią
+sąrašą, kiti duomenys nekeičiami. Sugeneruotas stulpelis perrašo lentelę
+`challenges` (keli tūkstančiai eilučių, trumpas išskirtinis užraktas), todėl
+taikyti, kai nevyksta veiklos.
+
+Taikymo tvarka: pirma migracija, tada kodas (PR su funkcija). Kodas veikia ir
+su sena schema: atsakymai tikrinami kaip anksčiau, o papildomų atsakymų
+išsaugoti neleidžiama (503).
+
+Atsarginė kopija: duomenys nekeičiami, tik pridedami stulpeliai, todėl
+atskira kopija nebūtina; grąžinimas pašalina abu stulpelius ir apribojimą.
+
+Patikra po taikymo:
+
+```sql
+select
+  (select count(*) from information_schema.columns where table_schema = 'public'
+     and table_name = 'challenges' and column_name in ('accepted_answer_hashes', 'accepted_answer_count')) as cols,
+  has_column_privilege('anon', 'public.challenges', 'accepted_answer_hashes', 'SELECT') as anon_hashes,
+  has_column_privilege('authenticated', 'public.challenges', 'accepted_answer_hashes', 'SELECT') as auth_hashes,
+  has_column_privilege('authenticated', 'public.challenges', 'accepted_answer_count', 'SELECT') as auth_count,
+  has_column_privilege('anon', 'public.challenges', 'accepted_answer_count', 'SELECT') as anon_count,
+  (select count(*) from public.challenges where accepted_answer_count <> 0) as with_extras;
+```
+
+Tikimasi: `cols` 2, `anon_hashes` `false`, `auth_hashes` `false`,
+`auth_count` `true`, `anon_count` `false`, `with_extras` 0.
+
+Pritaikyta produkcijoje 2026-11-07 apie 08:52 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai 0 vykstančių veiklų, 114 užduočių). Patikra po taikymo: `cols` 2, `anon_hashes` `false`, `auth_hashes` `false`, `auth_count` `true`, `anon_count` `false`, `with_extras` 0.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir

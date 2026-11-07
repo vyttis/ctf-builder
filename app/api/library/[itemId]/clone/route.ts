@@ -95,6 +95,9 @@ export async function POST(_request: Request, props: { params: Promise<{ itemId:
                   }
                 : {}),
               ...(withNeedsAnswer ? { needs_answer: !source } : {}),
+              ...(source?.accepted_answer_hashes?.length
+                ? { accepted_answer_hashes: source.accepted_answer_hashes }
+                : {}),
             }
           })
         )

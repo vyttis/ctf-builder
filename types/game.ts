@@ -55,6 +55,8 @@ export interface Challenge {
   // True when the challenge was duplicated/cloned and the teacher has not yet
   // set a real answer. Blocks game activation.
   needs_answer?: boolean
+  // How many extra accepted answers the task has; the answers stay hidden.
+  accepted_answer_count?: number
   created_at: string
   updated_at: string
 }

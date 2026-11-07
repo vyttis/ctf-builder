@@ -79,6 +79,7 @@ export async function POST(request: Request, props: { params: Promise<{ itemId: 
       difficulty: source?.difficulty ?? null,
       ...(source?.hint_penalty != null ? { hint_penalty: source.hint_penalty } : {}),
       needs_answer: !source,
+      ...(source?.accepted_answer_hashes?.length ? { accepted_answer_hashes: source.accepted_answer_hashes } : {}),
     })
     .select(SAFE_COLUMNS)
     .single()

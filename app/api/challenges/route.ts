@@ -3,6 +3,7 @@ import { hashAnswer, MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { isLiveStatus, LIVE_EDIT_BLOCKED } from "@/lib/game/live-edit"
+import { acceptedAnswersSchema, prepareAcceptedAnswers } from "@/lib/game/accepted-answers"
 
 // Safe columns to return (never include answer_hash)
 const MINIMAL_CHALLENGE_COLUMNS = "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, created_at, updated_at"
@@ -13,6 +14,9 @@ const PATH_COLUMNS = ", prerequisites"
 const LEGACY_CHALLENGE_COLUMNS = BASE_CHALLENGE_COLUMNS + DI_COLUMNS + PATH_COLUMNS
 const NEEDS_ANSWER_COLUMNS = ", needs_answer"
 const SAFE_CHALLENGE_COLUMNS = LEGACY_CHALLENGE_COLUMNS + NEEDS_ANSWER_COLUMNS
+// How many extra accepted answers a task has (20261107100000); the answers
+// themselves are never readable.
+const LIST_CHALLENGE_COLUMNS = SAFE_CHALLENGE_COLUMNS + ", accepted_answer_count"
 
 const createChallengeSchema = z.object({
   game_id: z.string().uuid(),
@@ -28,6 +32,8 @@ const createChallengeSchema = z.object({
   // Duplicated/cloned challenges arrive without an answer: they get an
   // unguessable random answer_hash and are flagged until the teacher sets one.
   needs_answer: z.boolean().default(false),
+  // More answers that also count as correct (text and number tasks).
+  accepted_answers: acceptedAnswersSchema.optional(),
   hints: z.array(z.string()).max(10).default([]),
   options: z.array(z.string()).nullable().default(null),
   order_index: z.number().default(0),
@@ -130,6 +136,17 @@ export async function POST(request: Request) {
     ? crypto.randomUUID()
     : parsed.data.correct_answer!
 
+  const accepted = await prepareAcceptedAnswers(
+    parsed.data.accepted_answers ?? [],
+    parsed.data.type,
+    parsed.data.needs_answer ? null : parsed.data.correct_answer,
+  )
+  if (!accepted.ok) {
+    return NextResponse.json({ error: accepted.error }, { status: 400 })
+  }
+  // Sent only when there are some, so tasks without them save as before.
+  const acceptedPayload = accepted.hashes.length > 0 ? { accepted_answer_hashes: accepted.hashes } : {}
+
   const minimalPayload = {
     game_id: parsed.data.game_id,
     title: parsed.data.title,
@@ -172,9 +189,18 @@ export async function POST(request: Request) {
   }
   let result = (await supabase
     .from("challenges")
-    .insert({ ...minimalPayload, ...extraPayload, ...diPayload, ...needsAnswerPayload })
+    .insert({ ...minimalPayload, ...extraPayload, ...diPayload, ...needsAnswerPayload, ...acceptedPayload })
     .select(SAFE_CHALLENGE_COLUMNS)
     .single()) as ChallengeQueryResult
+
+  // Never save the task without the extra answers the facilitator gave.
+  if (result.error && isColumnError(result.error) && accepted.hashes.length > 0) {
+    console.error("accepted_answer_hashes column missing:", result.error.message)
+    return NextResponse.json(
+      { error: "Kitų priimamų atsakymų dar negalima išsaugoti. Pašalinkite juos arba bandykite vėliau." },
+      { status: 503 }
+    )
+  }
 
   if (result.error && isColumnError(result.error)) {
     console.warn("needs_answer column missing, retrying without it:", result.error.message)
@@ -249,11 +275,19 @@ export async function GET(request: Request) {
   }
   let result = (await supabase
     .from("challenges")
-    .select(SAFE_CHALLENGE_COLUMNS)
+    .select(LIST_CHALLENGE_COLUMNS)
     .eq("game_id", gameId)
     .order("order_index", { ascending: true })) as ChallengeListResult
 
   // Fall back progressively if columns don't exist yet
+  if (result.error?.code === "42703") {
+    result = (await supabase
+      .from("challenges")
+      .select(SAFE_CHALLENGE_COLUMNS)
+      .eq("game_id", gameId)
+      .order("order_index", { ascending: true })) as ChallengeListResult
+  }
+
   if (result.error && (result.error.message?.includes("column") || result.error.code === "42703")) {
     result = (await supabase
       .from("challenges")
