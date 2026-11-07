@@ -20,6 +20,8 @@ export interface SourceChallenge {
   difficulty: string | null
   hint_penalty: number | null
   needs_answer: boolean | null
+  /** Extra accepted answers (20261107100000); [] when there are none or no column. */
+  accepted_answer_hashes?: string[] | null
 }
 
 const SOURCE_COLUMNS =
@@ -71,7 +73,14 @@ export async function sourceAnswers(
   snapshots: SnapshotKey[],
 ): Promise<(SourceChallenge | null)[]> {
   if (!sourceGameId) return snapshots.map(() => null)
-  const { data, error } = await admin.from("challenges").select(SOURCE_COLUMNS).eq("game_id", sourceGameId)
+  const read = (columns: string) =>
+    admin.from("challenges").select(columns).eq("game_id", sourceGameId) as unknown as PromiseLike<{
+      data: SourceChallenge[] | null
+      error: { code?: string } | null
+    }>
+  let { data, error } = await read(`${SOURCE_COLUMNS}, accepted_answer_hashes`)
+  // A database without 20261107100000 has no extra answers to copy.
+  if (error?.code === "42703") ({ data, error } = await read(SOURCE_COLUMNS))
   if (error || !data) return snapshots.map(() => null)
-  return matchSourceChallenges(snapshots, data as SourceChallenge[])
+  return matchSourceChallenges(snapshots, data)
 }

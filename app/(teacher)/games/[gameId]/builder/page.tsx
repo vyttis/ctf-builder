@@ -21,12 +21,19 @@ export default async function BuilderPage(
   const CHALLENGE_FIELDS =
     "id, game_id, title, description, type, points, hints, options, order_index, image_url, maps_url, explanation, difficulty, hint_penalty, generated_by_di, verification_verdict, verification_issues, verification_confidence, prerequisites, needs_answer, created_at, updated_at"
 
-  const { data: game } = await supabase
-    .from("games")
-    .select(`*, challenges(${CHALLENGE_FIELDS})`)
-    .eq("id", params.gameId)
-    .eq("teacher_id", user!.id)
-    .single()
+  // With how many extra accepted answers each task has (20261107100000);
+  // a database without that column is read as before.
+  const readGame = (withCount: boolean) =>
+    supabase
+      .from("games")
+      .select(
+        `*, challenges(${withCount ? `${CHALLENGE_FIELDS}, accepted_answer_count` : CHALLENGE_FIELDS})` as `*, challenges(${typeof CHALLENGE_FIELDS})`
+      )
+      .eq("id", params.gameId)
+      .eq("teacher_id", user!.id)
+      .single()
+  const withCount = await readGame(true)
+  const game = withCount.error?.code === "42703" ? (await readGame(false)).data : withCount.data
 
   if (!game) {
     notFound()

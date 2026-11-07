@@ -4,6 +4,11 @@ import { generateGameCode } from "@/lib/game/code-generator"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+function acceptedHashes(task: object): string[] {
+  const hashes = (task as { accepted_answer_hashes?: unknown }).accepted_answer_hashes
+  return Array.isArray(hashes) ? hashes.filter((h): h is string => typeof h === "string") : []
+}
+
 const duplicateSchema = z.object({
   title: z.string().min(3, "Pavadinimas turi būti bent 3 simbolių").optional(),
 })
@@ -120,6 +125,9 @@ export async function POST(request: Request, props: { params: Promise<{ gameId: 
         // duplicate of an answer-less task (dummy hash) pass the activation
         // guard and ship unsolvable tasks to a live class.
         needs_answer: c.needs_answer ?? false,
+        // Extra accepted answers travel too (20261107100000); a source read
+        // from a database without the column has none to copy.
+        ...(acceptedHashes(c).length > 0 ? { accepted_answer_hashes: acceptedHashes(c) } : {}),
         // Insert without prerequisites first, remap after
       }))
 

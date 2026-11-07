@@ -166,3 +166,58 @@ export async function verifyAnswer(
   }
   return false
 }
+
+/** Most extra accepted answers a task can have (the database checks it too). */
+export const MAX_ACCEPTED_ANSWERS = 5
+
+/**
+ * Extra accepted answers are checked only after the main answer failed, so
+ * every wrong answer pays for all of them. Each is compared once (its form
+ * is fixed when it is stored, see acceptedForm) at a lower bcrypt cost:
+ * five of them add about as much as one main-answer comparison.
+ */
+const ACCEPTED_BCRYPT_ROUNDS = 8
+
+/**
+ * The one form an extra accepted answer is stored and compared in: text
+ * folded and without trailing punctuation, a number by its value. null when
+ * a number answer is not a number.
+ */
+function acceptedForm(answer: string, type: string | null | undefined): { text: string; number: boolean } | null {
+  if (type === "number") {
+    const canonical = canonicalNumber(answer)
+    return canonical === null ? null : { text: valueDigest(canonical), number: true }
+  }
+  return { text: withoutTrailingPunctuation(normalizeAnswer(answer)), number: false }
+}
+
+/** The key two accepted answers are the same by (for removing repeats). */
+export function acceptedAnswerKey(answer: string, type: string | null | undefined): string | null {
+  return acceptedForm(answer, type)?.text ?? null
+}
+
+export async function hashAcceptedAnswer(answer: string, type: string | null | undefined): Promise<string> {
+  const form = acceptedForm(answer, type)
+  if (!form) throw new Error("not a number")
+  const hash = await bcrypt.hash(form.text, ACCEPTED_BCRYPT_ROUNDS)
+  return form.number ? hash + NUMBER_VALUE_SUFFIX : hash
+}
+
+/** True when the answer matches one of the task's extra accepted answers. */
+export async function verifyAcceptedAnswers(
+  submitted: string,
+  hashes: readonly string[] | null | undefined,
+  type: string | null | undefined,
+): Promise<boolean> {
+  if (!hashes || hashes.length === 0 || type === "multiple_choice") return false
+  const form = acceptedForm(submitted, type)
+  if (!form || form.text.length === 0) return false
+  for (const stored of hashes.slice(0, MAX_ACCEPTED_ANSWERS)) {
+    if (!stored.startsWith("$2")) continue
+    const isNumber = stored.endsWith(NUMBER_VALUE_SUFFIX)
+    if (isNumber !== form.number) continue
+    const hash = isNumber ? stored.slice(0, -NUMBER_VALUE_SUFFIX.length) : stored
+    if (await bcrypt.compare(form.text, hash)) return true
+  }
+  return false
+}

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { hashAnswer, MAX_ANSWER_LENGTH } from "@/lib/game/answer-hasher"
 import { isLiveStatus, LIVE_EDIT_BLOCKED, samePrerequisites } from "@/lib/game/live-edit"
+import { acceptedAnswersSchema, prepareAcceptedAnswers } from "@/lib/game/accepted-answers"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -18,6 +19,8 @@ const updateChallengeSchema = z.object({
     .min(1)
     .max(MAX_ANSWER_LENGTH, `Atsakymas gali būti iki ${MAX_ANSWER_LENGTH} ženklų`)
     .optional(),
+  // Replaces the extra accepted answers; [] removes them. Left out, they stay.
+  accepted_answers: acceptedAnswersSchema.optional(),
   hints: z.array(z.string()).optional(),
   options: z.array(z.string()).nullable().optional(),
   order_index: z.number().optional(),
@@ -37,8 +40,9 @@ const updateChallengeSchema = z.object({
   mark_reviewed: z.literal(true).optional(),
 }).strict()
 
-type ChallengeUpdatePayload = Omit<z.infer<typeof updateChallengeSchema>, "mark_reviewed"> & {
+type ChallengeUpdatePayload = Omit<z.infer<typeof updateChallengeSchema>, "mark_reviewed" | "accepted_answers"> & {
   answer_hash?: string
+  accepted_answer_hashes?: string[]
   needs_answer?: boolean
   correct_answer?: never
   verification_verdict?: null
@@ -128,8 +132,19 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
     return NextResponse.json({ error: LIVE_EDIT_BLOCKED.prerequisites, code: "live" }, { status: 409 })
   }
 
-  const { correct_answer, mark_reviewed, ...rest } = parsed.data
+  const { correct_answer, mark_reviewed, accepted_answers, ...rest } = parsed.data
   const updateData: ChallengeUpdatePayload = { ...rest }
+
+  // Extra accepted answers are stored in the form of the task's type: new
+  // ones replace them, and a change of type drops the old ones.
+  const typeAfter = parsed.data.type ?? owned.type
+  if (accepted_answers !== undefined) {
+    const accepted = await prepareAcceptedAnswers(accepted_answers, typeAfter, correct_answer)
+    if (!accepted.ok) return NextResponse.json({ error: accepted.error }, { status: 400 })
+    updateData.accepted_answer_hashes = accepted.hashes
+  } else if (parsed.data.type !== undefined && parsed.data.type !== owned.type) {
+    updateData.accepted_answer_hashes = []
+  }
   // A repeated id would make the task need more solves than there are tasks
   // (is_challenge_unlocked compares with the list length): store each once.
   if (updateData.prerequisites) updateData.prerequisites = [...new Set(updateData.prerequisites)]
@@ -157,6 +172,25 @@ export async function PATCH(request: Request, props: { params: Promise<{ challen
     .eq("id", params.challengeId)
     .select(SAFE_CHALLENGE_COLUMNS)
     .single()
+
+  // A database without 20261107100000: extra answers the facilitator gave
+  // are never dropped silently; clearing them has nothing to clear.
+  // (PostgREST answers PGRST204 for a written column it does not know.)
+  if ((error?.code === "PGRST204" || error?.code === "42703") && updateData.accepted_answer_hashes !== undefined) {
+    if (updateData.accepted_answer_hashes.length > 0) {
+      return NextResponse.json(
+        { error: "Kitų priimamų atsakymų dar negalima išsaugoti. Pašalinkite juos arba bandykite vėliau." },
+        { status: 503 }
+      )
+    }
+    delete updateData.accepted_answer_hashes
+    ;({ data, error } = await supabase
+      .from("challenges")
+      .update(updateData)
+      .eq("id", params.challengeId)
+      .select(SAFE_CHALLENGE_COLUMNS)
+      .single())
+  }
 
   // needs_answer column may not exist on unmigrated DBs — retry without it
   if (error && (error.message?.includes("column") || error.code === "42703")) {

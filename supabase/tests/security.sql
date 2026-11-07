@@ -60,6 +60,9 @@ SELECT public.t_denied('SELECT answer FROM public.submissions');
 SELECT public.t_denied('SELECT * FROM public.submissions');
 -- What pages and the live view still read keeps working.
 SELECT public.t_ok('SELECT id, title, hints, options, needs_answer, explanation, verification_issues FROM public.challenges');
+-- Extra accepted answers stay hidden; the facilitator sees how many (20261107100000).
+SELECT public.t_denied('SELECT accepted_answer_hashes FROM public.challenges');
+SELECT public.t_ok('SELECT id, accepted_answer_count FROM public.challenges');
 -- Only own tasks: explanations of other activities stay hidden.
 SELECT public.t_rows('SELECT id FROM public.challenges', 1);
 SELECT public.t_rows($q$SELECT explanation FROM public.challenges WHERE game_id = '10000000-0000-0000-0000-00000000000b'$q$, 0);
@@ -120,6 +123,8 @@ SELECT public.t_denied('SELECT answer FROM public.submissions');
 SELECT public.t_ok('SELECT id, title, options FROM public.challenges');
 -- Hints and DI notes reach participants only through the server (20261106170000).
 SELECT public.t_denied('SELECT hints FROM public.challenges');
+SELECT public.t_denied('SELECT accepted_answer_hashes FROM public.challenges');
+SELECT public.t_denied('SELECT accepted_answer_count FROM public.challenges');
 SELECT public.t_denied('SELECT verification_issues FROM public.challenges');
 SELECT public.t_denied('SELECT verification_verdict FROM public.challenges');
 SELECT public.t_denied($q$SELECT public.get_player_game_state('AAAAAA', 'x')$q$);
@@ -682,4 +687,21 @@ BEGIN
      OR NOT EXISTS (SELECT 1 FROM public.teams WHERE id = '30000000-0000-0000-0000-0000000000d3') THEN
     RAISE EXCEPTION 'refused moderation must leave the teams as they were';
   END IF;
+END $$;
+
+-- At most five extra accepted answers, counted by the database (20261107100000).
+DO $$
+BEGIN
+  UPDATE public.challenges SET accepted_answer_hashes = ARRAY['$2a$08$a', '$2a$08$b']
+    WHERE id = '20000000-0000-0000-0000-00000000000a';
+  IF (SELECT accepted_answer_count FROM public.challenges WHERE id = '20000000-0000-0000-0000-00000000000a') <> 2 THEN
+    RAISE EXCEPTION 'accepted_answer_count must follow the list';
+  END IF;
+  BEGIN
+    UPDATE public.challenges SET accepted_answer_hashes = ARRAY['1', '2', '3', '4', '5', '6']
+      WHERE id = '20000000-0000-0000-0000-00000000000a';
+    RAISE EXCEPTION 'six accepted answers must be refused';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
 END $$;

@@ -34,6 +34,7 @@ import {
 import { ImageUpload } from "../image-upload"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { ChallengePrerequisites } from "../challenge-prerequisites"
+import { AcceptedAnswersField } from "./accepted-answers-field"
 
 interface ManualTaskEditorProps {
   gameId: string
@@ -59,6 +60,9 @@ interface TaskForm {
   type: ChallengeType
   pointsText: string
   correctAnswer: string
+  // New extra accepted answers typed in this edit (the saved ones are hashes).
+  acceptedAnswers: string[]
+  removeAccepted: boolean
   hints: string[]
   options: string[]
   imageUrl: string | null
@@ -78,6 +82,8 @@ function initialForm(challenge: Challenge | null, prefill: AiSuggestion | null):
       pointsText: String(challenge.points),
       // The stored answer is only a hash: the field starts empty.
       correctAnswer: "",
+      acceptedAnswers: [],
+      removeAccepted: false,
       hints: challenge.hints || [],
       options: challenge.options || [],
       imageUrl: challenge.image_url,
@@ -94,6 +100,8 @@ function initialForm(challenge: Challenge | null, prefill: AiSuggestion | null):
     type: prefill?.type ?? "text",
     pointsText: String(prefill?.points ?? 100),
     correctAnswer: prefill?.correct_answer ?? "",
+    acceptedAnswers: [],
+    removeAccepted: false,
     hints: prefill?.hints || [],
     options: prefill?.type === "multiple_choice" && prefill.options ? prefill.options : [],
     imageUrl: null,
@@ -107,8 +115,8 @@ function initialForm(challenge: Challenge | null, prefill: AiSuggestion | null):
 
 const formKey = (f: TaskForm) =>
   JSON.stringify([
-    f.title, f.description, f.type, f.pointsText, f.correctAnswer, f.hints, f.options, f.imageUrl,
-    f.mapsUrl, f.explanation, f.difficulty, f.hintPenalty, f.prerequisites,
+    f.title, f.description, f.type, f.pointsText, f.correctAnswer, f.acceptedAnswers, f.removeAccepted,
+    f.hints, f.options, f.imageUrl, f.mapsUrl, f.explanation, f.difficulty, f.hintPenalty, f.prerequisites,
   ])
 
 export function ManualTaskEditor({
@@ -135,6 +143,8 @@ export function ManualTaskEditor({
   // Kept as typed, so the field can be cleared and retyped; checked on save.
   const [pointsText, setPointsText] = useState("100")
   const [correctAnswer, setCorrectAnswer] = useState("")
+  const [acceptedAnswers, setAcceptedAnswers] = useState<string[]>([])
+  const [removeAccepted, setRemoveAccepted] = useState(false)
   const [hints, setHints] = useState<string[]>([])
   const [options, setOptions] = useState<string[]>([])
   const [imageUrl, setImageUrl] = useState<string | null>(null)
@@ -155,8 +165,8 @@ export function ManualTaskEditor({
   // The form as last loaded: an edit compared against it is unsaved work.
   const [baseline, setBaseline] = useState<string | null>(null)
   const snapshot = formKey({
-    title, description, type, pointsText, correctAnswer, hints, options, imageUrl,
-    mapsUrl, explanation, difficulty, hintPenalty, prerequisites,
+    title, description, type, pointsText, correctAnswer, acceptedAnswers, removeAccepted, hints, options,
+    imageUrl, mapsUrl, explanation, difficulty, hintPenalty, prerequisites,
   })
   // Stays set while saving: the work is safe only once the save succeeded.
   const dirty = baseline !== null && snapshot !== baseline
@@ -171,6 +181,8 @@ export function ManualTaskEditor({
     setType(f.type)
     setPointsText(f.pointsText)
     setCorrectAnswer(f.correctAnswer)
+    setAcceptedAnswers(f.acceptedAnswers)
+    setRemoveAccepted(f.removeAccepted)
     setHints(f.hints)
     setOptions(f.options)
     setInitialOptions(challenge ? challenge.options || [] : null)
@@ -278,6 +290,15 @@ export function ManualTaskEditor({
         explanation: explanation.trim() || null,
         difficulty,
         hint_penalty: hintPenalty,
+      }
+
+      // Extra accepted answers: new ones replace the saved ones; "Pašalinti"
+      // sends none. Choice tasks have none.
+      const newAccepted = acceptedAnswers.map((a) => a.trim()).filter(Boolean)
+      if (type !== "multiple_choice" && newAccepted.length > 0) {
+        payload.accepted_answers = newAccepted
+      } else if (type !== "multiple_choice" && isEditing && removeAccepted) {
+        payload.accepted_answers = []
       }
 
       if (!isEditing) {
@@ -534,6 +555,20 @@ export function ManualTaskEditor({
               : "Tikrinant nesvarbu didžiosios raidės, lietuviškos raidės (š = s) ir nereikalingi tarpai. Žodžio forma ir tarpai tarp žodžių turi sutapti."}
           </p>
         </div>
+      )}
+
+      {/* More accepted answers (text and number tasks) */}
+      {type !== "multiple_choice" && (
+        <AcceptedAnswersField
+          fieldId={fieldId}
+          type={type}
+          values={acceptedAnswers}
+          onChange={setAcceptedAnswers}
+          savedCount={challenge?.accepted_answer_count ?? 0}
+          savedForType={challenge ? challenge.type === type : true}
+          remove={removeAccepted}
+          onRemoveChange={setRemoveAccepted}
+        />
       )}
 
       {/* Hints */}
