@@ -45,14 +45,14 @@ export async function GET(request: Request) {
   let finished = 0
   let failed = 0
   let cursor: string | null = null
+  // Why the run stopped before seeing every candidate, if it did.
+  let stopped: "time_budget" | "list_failed" | null = null
+  const overBudget = () => Date.now() - now > TIME_BUDGET_MS
 
   // Candidates in id order, a page at a time, so every one is seen even
-  // when there are many; near the time limit the rest waits a night.
-  for (;;) {
-    if (Date.now() - now > TIME_BUDGET_MS) {
-      console.warn(JSON.stringify({ event: "auto_finish_time_budget", checked }))
-      break
-    }
+  // when there are many. The time budget is checked before each activity,
+  // so near the limit the rest waits a night instead of being cut off.
+  pages: for (;;) {
     let query = admin
       .from("games")
       .select("id, title, status, teacher_id, starts_at, created_at, updated_at")
@@ -64,22 +64,28 @@ export async function GET(request: Request) {
     const { data, error } = await query
     if (error) {
       console.error(JSON.stringify({ event: "auto_finish_list_failed", code: error.code }))
-      if (checked === 0) return NextResponse.json({ error: "list failed" }, { status: 500 })
+      stopped = "list_failed"
       break
     }
     const games = (data ?? []) as LiveGame[]
     for (const game of games) {
+      if (overBudget()) {
+        stopped = "time_budget"
+        break pages
+      }
       const result = await finishIfStale(admin, game, now)
+      checked++
       if (result === "finished") finished++
       if (result === "failed") failed++
     }
-    checked += games.length
     if (games.length < PAGE_SIZE) break
     cursor = games[games.length - 1].id
   }
 
-  console.log(JSON.stringify({ event: "auto_finish_done", checked, finished, failed }))
-  return NextResponse.json({ checked, finished, failed })
+  const summary = { checked, finished, failed, incomplete: stopped !== null, stopped }
+  console.log(JSON.stringify({ event: "auto_finish_done", ...summary }))
+  // A read failure means activities were skipped: report it as a failed run.
+  return NextResponse.json(summary, { status: stopped === "list_failed" ? 500 : 200 })
 }
 
 async function finishIfStale(
