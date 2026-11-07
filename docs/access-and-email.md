@@ -26,9 +26,16 @@ Neaktyvios paskyros (`pending`, `blocked`) mato `/laukia`, vedėjo API grąžina
 pamokų planų ir bibliotekos įrašų (griežtinančios RLS politikos).
 
 Prisijungimo forma kodo nebesiunčia nežinomiems el. paštams
-(`shouldCreateUser: false`). Kad ir Google nesukurtų naujų paskyrų, Supabase
-nustatymuose išjungti „Allow new users to sign up“ (Authentication → Sign
-In / Providers). Kvietimai veikia ir išjungus.
+(`shouldCreateUser: false`). Supabase nustatymas „Allow new users to sign up“
+(Authentication → Sign In / Providers) išjungtas 2026-11-07 (savininko
+sprendimas: tik pakviesti vedėjai), todėl ir Google nekuria naujų paskyrų;
+prisijungimo puslapis tokiu atveju rodo „Paskyros nėra“. Kvietimai veikia ir
+išjungus (Supabase `invite` šio nustatymo netikrina). Patikrinti:
+`GET <SUPABASE_URL>/auth/v1/settings` su anon raktu grąžina
+`"disable_signup": true`.
+
+Telefono numerio vedėjo paskyrai nereikia (2026-11-07): nei prašymo, nei
+profilio formoje jo nėra.
 
 ## Laiškai
 

@@ -103,8 +103,9 @@ export async function proxy(request: NextRequest) {
 
   // Uptime checks call /api/health without a session. On app.* the auth
   // guard below would answer with the login page (HTML, 200), so let the
-  // health route through before any Supabase call.
-  if (url.pathname === "/api/health") {
+  // health route through before any Supabase call. Scheduled jobs
+  // (/api/cron/*) carry their own secret and need no session either.
+  if (url.pathname === "/api/health" || url.pathname.startsWith("/api/cron/")) {
     return NextResponse.next({ request })
   }
 
