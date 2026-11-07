@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs"
 import { describe, expect, it } from "vitest"
 import { hashAcceptedAnswer, verifyAcceptedAnswers } from "@/lib/game/answer-hasher"
 import { acceptedAnswersSchema, prepareAcceptedAnswers } from "@/lib/game/accepted-answers"
@@ -30,6 +31,19 @@ describe("extra accepted answers", () => {
     expect(await verifyAcceptedAnswers("B", null, "text")).toBe(false)
   })
 
+  it("compares a long answer in full, past bcrypt's 72 bytes", async () => {
+    const long = "a".repeat(72) + "x"
+    const hashes = [await hashAcceptedAnswer(long, "text")]
+    expect(hashes[0].endsWith(":sha")).toBe(true)
+    expect(await verifyAcceptedAnswers(long, hashes, "text")).toBe(true)
+    expect(await verifyAcceptedAnswers("a".repeat(72) + "wrong", hashes, "text")).toBe(false)
+  })
+
+  it("still reads a hash made before the digest (no suffix)", async () => {
+    const legacy = [await bcrypt.hash("vilniaus miestas", 8)]
+    expect(await verifyAcceptedAnswers("Vilniaus miestas", legacy, "text")).toBe(true)
+  })
+
   it("does not mix a text hash with a number answer", async () => {
     const hashes = [await hashAcceptedAnswer("42", "text")]
     expect(await verifyAcceptedAnswers("42", hashes, "number")).toBe(false)
@@ -42,6 +56,13 @@ describe("prepareAcceptedAnswers", () => {
     expect(r.ok && r.hashes.length).toBe(2)
     const same = await prepareAcceptedAnswers(["Vilniaus miestas", "Vilnius"], "text", "vilniaus miestas")
     expect(same.ok && same.hashes.length).toBe(1)
+  })
+
+  it("keeps an extra answer the main one does not accept", async () => {
+    const r = await prepareAcceptedAnswers(["JAV"], "text", "JAV.")
+    expect(r.ok && r.hashes.length).toBe(1)
+    const num = await prepareAcceptedAnswers(["3.140", "3,1416"], "number", "3,14")
+    expect(num.ok && num.hashes.length).toBe(1)
   })
 
   it("refuses a non-number for a number task", async () => {

@@ -4,6 +4,7 @@ import {
   hashAcceptedAnswer,
   MAX_ACCEPTED_ANSWERS,
   MAX_ANSWER_LENGTH,
+  sameAsMainAnswer,
 } from "@/lib/game/answer-hasher"
 
 /** Extra accepted answers as the task routes receive them (plain text). */
@@ -15,8 +16,9 @@ export type PreparedAcceptedAnswers = { ok: true; hashes: string[] } | { ok: fal
 
 /**
  * Hashes for a task's extra accepted answers. Empty entries, repeats and an
- * entry equal to the main answer (when it is sent along) are dropped; a
- * choice task has none, since its answer is one of the options.
+ * entry the main answer already accepts as stored (when it is sent along)
+ * are dropped; a choice task has none, since its answer is one of the
+ * options.
  */
 export async function prepareAcceptedAnswers(
   answers: readonly string[],
@@ -24,7 +26,7 @@ export async function prepareAcceptedAnswers(
   mainAnswer?: string | null,
 ): Promise<PreparedAcceptedAnswers> {
   if (type === "multiple_choice") return { ok: true, hashes: [] }
-  const mainKey = mainAnswer ? acceptedAnswerKey(mainAnswer, type) : null
+  const main = mainAnswer?.trim() || null
   const seen = new Set<string>()
   const kept: string[] = []
   for (const raw of answers) {
@@ -32,7 +34,7 @@ export async function prepareAcceptedAnswers(
     if (!answer) continue
     const key = acceptedAnswerKey(answer, type)
     if (key === null) return { ok: false, error: "Kiti priimami atsakymai turi būti skaičiai." }
-    if (key === mainKey || seen.has(key)) continue
+    if ((main && sameAsMainAnswer(answer, main, type)) || seen.has(key)) continue
     seen.add(key)
     kept.push(answer)
   }
