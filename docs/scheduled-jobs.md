@@ -27,4 +27,7 @@ automatiškai.
    Ten pat mygtukas „Run“ paleidžia darbą rankiniu būdu.
 
 Rezultatas matomas Vercel žurnale: įvykis `auto_finish_done` su `checked`,
-`finished` ir `failed` skaičiais.
+`finished` ir `failed` skaičiais. Jei darbas nespėjo per 45 s
+(`stopped: "time_budget"`), likusios veiklos laukia kitos nakties. Jei
+nepavyko perskaityti sąrašo (`stopped: "list_failed"`), atsakymas 500 ir
+Vercel pažymi paleidimą kaip nepavykusį.
