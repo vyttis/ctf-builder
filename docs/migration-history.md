@@ -1,97 +1,159 @@
 # Migracijų istorija ir perėjimas prie Supabase CLI
 
-## Dabartinė būklė
+## Dabartinė būklė (patikrinta 2026-11-07, tik skaitymas)
 
-Migracijos produkcijoje buvo taikomos **rankiniu būdu per Supabase SQL Editor**,
-ne per `supabase db push`. Todėl CLI istorijos lentelė yra tuščia:
+Migracijos produkcijoje taikomos rankiniu būdu per Supabase SQL Editor. CLI istorijos lentelė yra, bet tuščia:
 
 ```sql
-SELECT count(*) FROM supabase_migrations.schema_migrations;  -- 0
+select count(*) from supabase_migrations.schema_migrations;  -- 0
 ```
 
-Iki 2026-11-05 produkcijoje trūko `00021` (`challenges.needs_answer`), nors
-`00022`–`00024` buvo pritaikytos. Tai laužė veiklos puslapį ir užduočių kūrimą.
-2026-11-05 `00021` pritaikyta (prieš tai `public.challenges` nukopijuota į
-`backup_20261105.challenges`), taip pat pritaikyta `00025` (Security Advisor
-pataisos). Lentelės `templates` produkcijoje nėra, nors `00001` ją kuria: ji buvo
-pašalinta ranka. Taip pat sutaisytos dviejų 2026-03-03 komandų taškų sumos, kurių
-`increment_team_score` tuo metu neatnaujino (senos reikšmės
-`backup_20261105.team_totals`). Dabar visi `00001`–`00025` pakeitimai yra DB, tik CLI apie tai
-„nežino". Praktinės pasekmės:
+Produkcija veikia Postgres 17.6. Repozitorijoje 35 migracijų failai ir 34 skirtingos versijos, nes `00007` kartojasi.
 
-- `supabase db push` bandytų taikyti **visą** `00001…` seką iš naujo → lūžtų ties
-  `already exists`. **Nenaudokite `db push`, kol neatliktas žemiau aprašytas
-  `migration repair`.**
-- Naujos migracijos taikomos taip pat rankiniu būdu (žr. PR aprašymus, kur
-  pateikiamas paruoštas SQL, apgaubtas `BEGIN; … COMMIT;`).
+Produkcijos schema palyginta su tuščia Postgres, kurioje pritaikyti visi 35 failai. Palyginimo užklausa: `supabase/tests/schema-fingerprint.sql` (žr. „Schemos atspaudas“).
 
-## Žinoma problema: dubliuotas `00007` prefiksas
+| Sritis | Objektų | Rezultatas |
+| --- | --- | --- |
+| Lentelės ir sekos | 18 | sutampa |
+| Stulpeliai | 186 | sutampa |
+| Apribojimai | 85 | sutampa |
+| Indeksai | 32 | sutampa |
+| RLS politikos (`public` ir `storage.objects`) | 57 | sutampa |
+| Trigeriai | 11 | sutampa |
+| Realtime lentelės | 5 | sutampa |
+| Stulpelių teisės | 50 | sutampa |
+| Funkcijų vykdymo teisės | 53 | sutampa |
+| Lentelių teisės | 42 | sutampa. Skiriasi tik Postgres 17 teisė `MAINTAIN`, kurios vietinis Postgres 16 neturi |
+| Funkcijos | 26 | 25 sutampa, `handle_new_user()` skiriasi |
 
-Du failai dalinasi ta pačia versija:
+`handle_new_user()` produkcijoje pakeista ranka, ne migracija:
+
+- Produkcijoje naujam naudotojui su Vyčio asmeniniu Gmail adresu iškart įrašomas vaidmuo `super_admin`, kitiems `teacher`. Vardas imamas iš `full_name` arba `name`.
+- Failuose (`00002`) vaidmuo neįrašomas (lieka stulpelio numatytasis `teacher`). Vardas imamas iš `full_name` arba lieka tuščia eilutė.
+- Nuo `20261106130000` naujos paskyros gauna `pending`, o `get_my_role()` neaktyviai paskyrai grąžina `teacher`. Todėl automatinis `super_admin` neveikia, kol paskyros nepatvirtina administratorius.
+
+Kurią versiją palikti, sprendžia Vytis (BACKLOG CLS-011). Istorijos sutvarkymui tai netrukdo: visi failai produkcijoje pritaikyti, funkcija pakeista vėliau.
+
+Išvada: produkcijos schema atitinka visas 35 migracijas, bet CLI to nežino. Todėl:
+
+- **Nenaudoti `supabase db push`, kol neatlikta žemiau aprašyta procedūra.** Jis bandytų taikyti visą seką iš naujo.
+- **Niekada nenaudoti `db push --include-all`.** Jis iš naujo vykdytų jau pritaikytus failus.
+- Naujos migracijos taikomos rankiniu būdu, kaip iki šiol (`BEGIN; … COMMIT;` per SQL Editor).
+
+## Dubliuota versija `00007`
 
 | Failas | Ką daro | Priklausomybės |
-|---|---|---|
-| `00007_bcrypt_answer_hash.sql` | `pgcrypto` + `check_answer` perrašymas (grynas idempotentiškas DDL) | Nei nuo ko, nei kas nuo jo |
-| `00007_di_verification_columns.sql` | prideda `generated_by_di`, `verification_*` stulpelius į `challenges` | **Turi būti prieš `00018`** (jis deda CHECK ant `verification_confidence`) |
+| --- | --- | --- |
+| `00007_bcrypt_answer_hash.sql` | įjungia `pgcrypto`, perrašo `check_answer` | `00018` naudoja `gen_salt()` ir `crypt()` iš `pgcrypto`. `00025` prisega `search_path` visoms tuo metu esamoms funkcijoms |
+| `00007_di_verification_columns.sql` | prideda `generated_by_di` ir `verification_*` stulpelius | turi būti prieš `00018` (CHECK ant `verification_confidence`) |
 
-CLI `schema_migrations.version` yra unikalus raktas → dvi `00007` versijos
-sukeltų konfliktą. Kol taikoma rankiniu būdu, tai nekelia jokių problemų.
+Supabase CLI versiją laiko `schema_migrations` pirminiu raktu ir versijas lygina kaip tekstą. Patikrinta su CLI 3.0.0 vietinėje DB kopijoje (tuščia istorija, pilna schema):
 
-## Runbook: perėjimas prie CLI valdomų migracijų
+- `migration repair --status applied` įrašo 34 eilutes, ne 35.
+- `migration list` vieną `00007` palieka be atitikmens.
+- `db push --dry-run` sustoja: „Found local migration files to be inserted before the last migration on remote database“ ir siūlo `--include-all`.
 
-Atlikti **vieną kartą**, kai norima pereiti nuo rankinio prie `supabase db push`.
+Ankstesnis planas pervadinti `00007_bcrypt_answer_hash.sql` į `00026` netinka. Patikrinta lokaliai: tuščioje DB `00018` lūžta (`function gen_salt(unknown, integer) does not exist`), o `check_answer` netenka `search_path`, nes `CREATE OR REPLACE` po `00025` jį nuima.
 
-### 1. Išspręsti `00007` dublį (repo pakeitimas)
+Tinka vardas `000071_bcrypt_answer_hash.sql`. Pagal failo vardą (`test:db`) ir pagal CLI versijų tvarką failas lieka tarp `00006` ir `00008`. Patikrinta lokaliai abiem tvarkomis: visų sričių atspaudai sutampa su dabartiniais, `check_answer` išlaiko `search_path`. Failo turinys nekeičiamas.
 
-`00007_bcrypt_answer_hash.sql` yra idempotentiškas DDL be jokios eiliškumo
-priklausomybės (tik `create extension if not exists` ir `create or replace
-function`), todėl saugu jam suteikti naują, unikalią versiją gale sekos:
+`tests/migration-versions.test.ts` neleidžia atsirasti naujoms pasikartojančioms versijoms.
+
+## Sutvarkymo procedūra (laukia Vyčio patvirtinimo)
+
+Į produkcijos `supabase_migrations.schema_migrations` rašoma tik su atskiru Vyčio patvirtinimu. Schema ir duomenys nekeičiami, įrašoma tik istorija. Visa eiga išbandyta su CLI 3.0.0 vietinėje produkcijos schemos kopijoje: 35 eilutės, `migration list` be skirtumų, `db push --dry-run` „Remote database is up to date“, schema nepasikeitė, grąžinimas istoriją ištuštino.
+
+### 1. Pakeitimai repozitorijoje (PR, produkcijos nekeičia)
 
 ```bash
 git mv supabase/migrations/00007_bcrypt_answer_hash.sql \
-       supabase/migrations/00026_bcrypt_answer_hash.sql
+       supabase/migrations/000071_bcrypt_answer_hash.sql
 ```
 
-`00007_di_verification_columns.sql` lieka `00007` (jis privalo būti prieš
-`00018`). Po pervadinimo atnaujinti dvi istorines nuorodas komentaruose, kad
-neliktų dviprasmybės:
+- `tests/migration-versions.test.ts`: `KNOWN_DUPLICATES` palikti tuščią.
+- `supabase/config.toml`: `[inbucket]` pakeisti į `[local_smtp]`. Be to CLI 3.0.0 nepasileidžia („[inbucket] in supabase/config.toml is no longer supported“).
+- CI: `npm test` ir `Database` (`test:db`) žali.
 
-- `00018_audit_hardening.sql` — „Pre-bcrypt migration 00007…" → be numerio.
-- `00013_challenge_paths.sql` — „pattern from 00005/00007" → „from 00005".
+### 2. Patikra prieš rašymą (tik skaitymas, SQL Editor)
 
-### 2. Pažymėti visas esamas migracijas kaip pritaikytas
+```sql
+select count(*) from supabase_migrations.schema_migrations;               -- 0
+select count(*) from public.games where status in ('active', 'paused');  -- 0
+```
 
-Kadangi schema jau DB, pasakome CLI to nekartoti (versijos = failų prefiksai,
-be `_` ir aprašymo). Po 1 žingsnio galutinis sąrašas:
+Paleisti `supabase/tests/schema-fingerprint.sql`. Rezultatas turi sutapti su lentele „Schemos atspaudas“. Jei nesutampa, sustoti.
+
+### 3. Įrašyti istoriją (vykdo Vytis, reikia DB slaptažodžio)
+
+CLI 3.0.0 pagal nutylėjimą dirba su vietine DB. Produkcijai būtinas `--remote`.
 
 ```bash
-for v in 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010 \
-         00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
-         00021 00022 00023 00024 00025 00026 \
-         20261106120000 20261106130000 20261106140000 20261106145000 \
-         20261106150000 20261106160000 20261106170000; do
-  supabase migration repair --status applied "$v"
-done
+npx supabase@3.0.0 link --project-ref menmndjyfeuwfweubwnl
+npx supabase@3.0.0 migration list --remote        # Remote stulpelis tuščias, 35 Local eilutės
+npx supabase@3.0.0 migration repair --status applied --remote
 ```
 
-> `00007` čia = `00007_di_verification_columns` (vienintelis likęs `00007`).
-> `00026` = pervadintas bcrypt. `20261106120000` = atsakymų ir rolių
-> spragos, `20261106130000` = uždara registracija, `20261106140000` = neaktyvios paskyros be teisių; visos pritaikytos ranka 2026-11-06 (žr. žemiau). `00023`/`00024` = šio darbo migracijos
-> (`team_started_at`, `hint_reveals`) — pažymimos kaip pritaikytos tik jei jos
-> jau suvestos ranka produkcijoje (žr. PR deploy žingsnį).
-
-### 3. Patikra
+Be versijų `repair` viena transakcija įrašo visus 35 vietinius failus (versiją, vardą ir sakinius). CLI paprašys patvirtinti. Versijas galima nurodyti ir aiškiai:
 
 ```bash
-supabase migration list   # remote ir local stulpeliai turi sutapti
-supabase db push          # turi rodyti „Remote database is up to date"
+npx supabase@3.0.0 migration repair --status applied --remote \
+  00001 00002 00003 00004 00005 00006 00007 000071 00008 00009 00010 \
+  00011 00012 00013 00014 00015 00016 00017 00018 00019 00020 \
+  00021 00022 00023 00024 00025 \
+  20261106120000 20261106130000 20261106140000 20261106145000 \
+  20261106150000 20261106160000 20261106170000 20261107100000 20261107120000
 ```
+
+### 4. Patikra po rašymo
+
+```bash
+npx supabase@3.0.0 migration list --remote          # Local ir Remote sutampa visose 35 eilutėse
+npx supabase@3.0.0 db push --dry-run --remote       # „Remote database is up to date.“
+```
+
+SQL Editor: `select count(*) from supabase_migrations.schema_migrations;` turi grąžinti 35. Atspaudas nepasikeitęs.
+
+### Grąžinimas
+
+Prieš rašymą lentelė tuščia, todėl grąžinimas ją vėl ištuština. Schema nuo to nesikeičia.
+
+```bash
+npx supabase@3.0.0 migration repair --status reverted --remote   # be versijų išvalo visą istoriją
+```
+
+### Po sutvarkymo
+
+Naują migraciją galima taikyti dviem būdais, abu tik su Vyčio patvirtinimu:
+
+- kaip iki šiol per SQL Editor, o tada `migration repair --status applied --remote <versija>`;
+- `db push --dry-run --remote`, tada `db push --remote`.
+
+## Schemos atspaudas
+
+`supabase/tests/schema-fingerprint.sql` tik skaito sistemos katalogus. Jis apima tai, ką kuria migracijos: `public` lenteles, stulpelius, apribojimus, indeksus, RLS, politikas (`public` ir `storage.objects`), funkcijas, trigerius, realtime lenteles ir `anon`, `authenticated`, `service_role`, `PUBLIC` teises. Plėtinių objektai ir teisių suteikėjas neįtraukiami. Užklausą galima paleisti produkcijos SQL Editor ir lokaliai po migracijų. Vienos srities objektus su jų md5 grąžina detalus režimas (aprašytas failo pradžioje).
+
+Produkcija 2026-11-07:
+
+| kind | n | fp |
+| --- | --- | --- |
+| column | 186 | `0b8cafaadf003d01766a42a31e3894d6` |
+| constraint | 85 | `32cf918681be97296aeacc014d9d87fd` |
+| function | 26 | `af321e0f4f59a6180d4df6c55e72273b` |
+| grant.column | 50 | `95c8dcc0fa52abb386b95f8942e022de` |
+| grant.function | 53 | `b8d852bac14f7a308e4da3d12aa72452` |
+| grant.table | 42 | `0d0aa2b35c41cf90611319b7668164bb` |
+| index | 32 | `818d85ecdd15e093a85f3bb52280f8e1` |
+| policy | 57 | `a7a2bd206c5f2f9c6ee93fb69d6bc475` |
+| realtime | 5 | `d718741a8a346c9aa2c306739d3fada4` |
+| table | 18 | `4456d03e6c5fa3e0ee1b8a1835df268d` |
+| trigger | 11 | `6b0e207b15b5ecf28ecd7e75c9c4dbb6` |
+
+Vietinė Postgres 16 po visų migracijų duoda tuos pačius atspaudus, išskyrus `function` (`1951b8acc9fc0ea793fc0f2f4f5235fd`, dėl `handle_new_user`) ir `grant.table` (`8d13ac3ebb8e5923124bbfe1b8bdaaaa`, dėl `MAINTAIN`).
 
 ## 2026-11-06: atsakymų, rolių ir statistikos spragos
 
 Failas `supabase/migrations/20261106120000_close_answer_and_role_gaps.sql`
-(pavadintas pagal CLI konvenciją, todėl nesikerta su runbook'e numatytu
-`00026`). Grąžinimas: `supabase/rollback/20261106120000_close_answer_and_role_gaps.sql`.
+(pavadintas pagal CLI konvenciją). Grąžinimas: `supabase/rollback/20261106120000_close_answer_and_role_gaps.sql`.
 Abu failai tikrinami `npm run test:db` (visos migracijos tuščioje Postgres 16,
 saugumo patikros, grąžinimas ir pakartotinis pritaikymas) ir CI darbe „Database".
 
@@ -471,5 +533,5 @@ chronologiškos:
 supabase migration new <trumpas_aprasymas>   # sukuria <timestamp>_<aprasymas>.sql
 ```
 
-Kol schema_migrations tuščia (t. y. kol neatliktas šis runbook'as), naujas
+Kol `schema_migrations` tuščia (kol neatlikta „Sutvarkymo procedūra“), naujas
 migracijas ir toliau taikyti rankiniu būdu per SQL Editor, viena transakcija.

@@ -39,6 +39,10 @@ for f in "$ROOT"/supabase/migrations/*.sql; do
 done
 psql "$DATABASE_URL" "${PSQL_OPTS[@]}" -f "$ROOT/supabase/tests/security.sql" >/dev/null
 echo "security checks passed"
+# The read-only fingerprint used to compare production with the files
+# (docs/migration-history.md) must keep running on the migrated schema.
+psql "$DATABASE_URL" "${PSQL_OPTS[@]}" -f "$ROOT/supabase/tests/schema-fingerprint.sql" >/dev/null
+echo "schema fingerprint ran"
 
 if [[ "${TEST_ROLLBACK:-1}" == "1" ]]; then
   # Every rollback must apply cleanly newest first (later migrations may
