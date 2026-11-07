@@ -61,6 +61,9 @@ describe("prepareAcceptedAnswers", () => {
   it("keeps an extra answer the main one does not accept", async () => {
     const r = await prepareAcceptedAnswers(["JAV"], "text", "JAV.")
     expect(r.ok && r.hashes.length).toBe(1)
+    // The other way round the main answer already accepts it.
+    const covered = await prepareAcceptedAnswers(["JAV.", "JAV!"], "text", "JAV")
+    expect(covered.ok && covered.hashes.length).toBe(0)
     const num = await prepareAcceptedAnswers(["3.140", "3,1416"], "number", "3,14")
     expect(num.ok && num.hashes.length).toBe(1)
   })

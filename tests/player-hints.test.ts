@@ -159,7 +159,15 @@ describe("choice options in each team's own order", () => {
   })
 
   it("keeps the order for compound letter references", () => {
-    for (const extra of ["A ir B atsakymai teisingi", "A, B ir C", "Tik B arba C"]) {
+    for (const extra of [
+      "A ir B atsakymai teisingi",
+      "A, B ir C",
+      "Tik B arba C",
+      "a ir b",
+      "A IR B",
+      "a ir b atsakymai teisingi",
+      "Teisingi atsakymai A ir C",
+    ]) {
       expect(optionsReferToEachOther([...options, extra])).toBe(true)
     }
   })
@@ -170,6 +178,8 @@ describe("choice options in each team's own order", () => {
     expect(optionsReferToEachOther(["Temperatūra pakilo aukščiau nulio", "Nukrito", "Nepakito"])).toBe(false)
     expect(optionsReferToEachOther(["Abi rankos", "Viena ranka", "Kojos"])).toBe(false)
     expect(optionsReferToEachOther(["Vitaminas C", "Vitaminas D", "Geležis"])).toBe(false)
+    expect(optionsReferToEachOther(["Vitaminai B ir C", "Vitaminas A", "Geležis"])).toBe(false)
+    expect(optionsReferToEachOther(["Fairbanks", "Anchorage", "Juneau"])).toBe(false)
   })
 
   it("still keeps the order for a bare quantifier option", () => {

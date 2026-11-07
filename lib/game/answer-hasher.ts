@@ -214,12 +214,16 @@ export function acceptedAnswerKey(answer: string, type: string | null | undefine
 }
 
 /**
- * True when an extra answer adds nothing to the main one: it is the main
- * answer in its stored form. "JAV" next to a main "JAV." is kept, because
- * the main answer does not accept "JAV".
+ * True when an extra answer adds nothing to the main one: the main answer
+ * accepts everything the extra one would. A number by value. For text, the
+ * main answer accepts a typed form with or without trailing punctuation
+ * only when it has none itself: "JAV." next to a main "JAV" is dropped,
+ * "JAV" next to a main "JAV." is kept.
  */
 export function sameAsMainAnswer(extra: string, main: string, type: string | null | undefined): boolean {
-  return storedForm(extra, type) === storedForm(main, type)
+  if (type === "number") return storedForm(extra, type) === storedForm(main, type)
+  const stored = storedForm(main, type)
+  return stored === withoutTrailingPunctuation(stored) && acceptedAnswerKey(extra, type) === stored
 }
 
 export async function hashAcceptedAnswer(answer: string, type: string | null | undefined): Promise<string> {
