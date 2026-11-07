@@ -363,6 +363,8 @@ select
 Tikimasi: `cols` 2, `anon_hashes` `false`, `auth_hashes` `false`,
 `auth_count` `true`, `anon_count` `false`, `with_extras` 0.
 
+Pritaikyta produkcijoje 2026-11-07 apie 08:52 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai 0 vykstančių veiklų, 114 užduočių). Patikra po taikymo: `cols` 2, `anon_hashes` `false`, `auth_hashes` `false`, `auth_count` `true`, `anon_count` `false`, `with_extras` 0.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir
