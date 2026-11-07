@@ -2,10 +2,14 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { tasksVersion } from "@/lib/game/tasks-version"
 import { NextResponse } from "next/server"
 
+// A participant sees an announcement this long after it was sent: a team
+// that reloads or joins a little later still gets it.
+const ANNOUNCEMENT_WINDOW_MS = 2 * 60 * 1000
+
 // GET /api/play/status?game_code=XXXXXX — lightweight game-status poll for
-// the player page. Uses the admin client so paused games are visible even
-// on databases without migration 00020 (anon RLS may hide paused rows, and
-// realtime UPDATE events for them are then never delivered).
+// the player page. Participants cannot read activities with the anon key
+// (20261107120000), so this is how the play page learns about a pause, more
+// time, changed tasks and the facilitator's latest announcement.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const gameCode = searchParams.get("game_code")?.toUpperCase()
@@ -18,8 +22,12 @@ export async function GET(request: Request) {
     const supabase = createAdminClient()
     const { data: game } = await supabase
       .from("games")
-      .select("status, settings, paused_ms, paused_at, resumed_at, challenges(id, updated_at)")
+      .select(
+        "status, settings, paused_ms, paused_at, resumed_at, challenges(id, updated_at), announcements(id, message, created_at)"
+      )
       .eq("game_code", gameCode)
+      .order("created_at", { referencedTable: "announcements", ascending: false })
+      .limit(1, { referencedTable: "announcements" })
       .maybeSingle()
 
     if (!game) {
@@ -31,6 +39,14 @@ export async function GET(request: Request) {
 
     const settings =
       (game.settings as { time_limit_minutes?: number | null; allow_access_requests?: boolean }) || {}
+    const now = new Date()
+    const latest = (game.announcements as { id: string; message: string; created_at: string }[] | null)?.[0]
+    const announcement =
+      latest &&
+      (game.status === "active" || game.status === "paused") &&
+      now.getTime() - Date.parse(latest.created_at) < ANNOUNCEMENT_WINDOW_MS
+        ? { id: latest.id, message: latest.message, created_at: latest.created_at }
+        : null
 
     return NextResponse.json(
       {
@@ -44,10 +60,12 @@ export async function GET(request: Request) {
         // When the last pause ended: the facilitator's page counts the
         // "stuck" time from it.
         resumed_at: game.resumed_at ?? null,
-        now: new Date().toISOString(),
+        now: now.toISOString(),
         // Changes when a task is added, removed or saved: the phone then
         // reloads the tasks. Hidden before the start, like the tasks.
         tasks_version: game.status === "draft" ? null : tasksVersion(game.challenges),
+        // The latest announcement while it is fresh (the banner shows it once).
+        announcement,
       },
       {
         // Every phone of a class asks every 5 s (30 phones: 6 requests a

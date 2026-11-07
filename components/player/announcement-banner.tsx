@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { motion, AnimatePresence } from "framer-motion"
 import { Megaphone, X } from "lucide-react"
 
-interface AnnouncementItem {
+export interface AnnouncementItem {
   id: string
   message: string
   created_at: string
@@ -15,6 +15,14 @@ interface AnnouncementBannerProps {
   gameId: string
   /** "projector": large text for the class screen. */
   variant?: "default" | "projector"
+  /**
+   * Participants: the latest fresh announcement from the play page's status
+   * poll (/api/play/status). They cannot read announcements with the anon
+   * key (20261107120000), so the banner then makes no Supabase reads.
+   * Leave it out on the facilitator's screen, which reads its own
+   * activity's announcements and gets them in real time.
+   */
+  latest?: AnnouncementItem | null
 }
 
 const AUTO_DISMISS_MS = 15000
@@ -23,8 +31,9 @@ const AUTO_DISMISS_MS = 15000
 // INSERTs that happen while subscribed).
 const RECENT_WINDOW_MS = 2 * 60 * 1000
 
-export function AnnouncementBanner({ gameId, variant = "default" }: AnnouncementBannerProps) {
+export function AnnouncementBanner({ gameId, variant = "default", latest }: AnnouncementBannerProps) {
   const large = variant === "projector"
+  const fromPoll = latest !== undefined
   const [activeAnnouncement, setActiveAnnouncement] =
     useState<AnnouncementItem | null>(null)
   // The last announcement shown here, so the polling below never shows the
@@ -48,10 +57,27 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
     })
   }, [gameId])
 
-  // The latest recent announcement: on load (missed while not subscribed)
-  // and every 15 s, because some school networks block the realtime
-  // WebSocket and the announcement would otherwise never arrive.
+  // Participants: show what the status poll delivers, once, unless it was
+  // closed here before (the server sends only fresh ones).
+  const latestId = latest?.id ?? null
   useEffect(() => {
+    if (!fromPoll || !latest) return
+    let dismissedId: string | null = null
+    try {
+      dismissedId = sessionStorage.getItem(`ctf_seen_announcement_${gameId}`)
+    } catch {
+      // Storage unavailable
+    }
+    if (latest.id !== dismissedId && latest.id !== shownIdRef.current) setActiveAnnouncement(latest)
+    // Only a new announcement matters, not a new object for the same one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromPoll, latestId, gameId])
+
+  // Facilitator's screen: the latest recent announcement on load (missed
+  // while not subscribed) and every 15 s, because some school networks block
+  // the realtime WebSocket and the announcement would otherwise never arrive.
+  useEffect(() => {
+    if (fromPoll) return
     const supabase = createClient()
     let cancelled = false
 
@@ -85,7 +111,7 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
       cancelled = true
       clearInterval(interval)
     }
-  }, [gameId])
+  }, [gameId, fromPoll])
 
   // Auto-dismiss timer
   useEffect(() => {
@@ -95,8 +121,9 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
     return () => clearTimeout(timer)
   }, [activeAnnouncement, dismiss])
 
-  // Subscribe to realtime announcements
+  // Facilitator's screen: realtime announcements of their own activity
   useEffect(() => {
+    if (fromPoll) return
     const supabase = createClient()
 
     const channel = supabase
@@ -120,7 +147,7 @@ export function AnnouncementBanner({ gameId, variant = "default" }: Announcement
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [gameId])
+  }, [gameId, fromPoll])
 
   return (
     <AnimatePresence>

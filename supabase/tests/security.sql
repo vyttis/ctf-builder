@@ -48,6 +48,10 @@ INSERT INTO public.teams (id, game_id, name, session_token) VALUES
   ('30000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000b', 'Komanda', 'token-b');
 INSERT INTO public.submissions (team_id, challenge_id, answer, is_correct, points_awarded) VALUES
   ('30000000-0000-0000-0000-00000000000b', '20000000-0000-0000-0000-00000000000b', 'teisingas', true, 100);
+INSERT INTO public.achievements (game_id, team_id, type, challenge_id) VALUES
+  ('10000000-0000-0000-0000-00000000000b', '30000000-0000-0000-0000-00000000000b', 'first_solver', '20000000-0000-0000-0000-00000000000b');
+INSERT INTO public.announcements (game_id, message, created_by) VALUES
+  ('10000000-0000-0000-0000-00000000000b', 'Liko 5 minutės', '00000000-0000-0000-0000-00000000000b');
 
 -- Signed in as teacher A, looking at teacher B's activity.
 SET ROLE authenticated;
@@ -69,6 +73,14 @@ SELECT public.t_rows($q$SELECT explanation FROM public.challenges WHERE game_id 
 SELECT public.t_ok('SELECT count(*) FROM public.challenges');
 SELECT public.t_ok('SELECT id, team_id, challenge_id, is_correct, points_awarded, attempted_at FROM public.submissions');
 SELECT public.t_ok('SELECT g.id, (SELECT count(*) FROM public.challenges c WHERE c.game_id = g.id) FROM public.games g');
+-- Another facilitator's running activity cannot be listed or reached by
+-- its teams, results, announcements or achievements (20261107120000).
+SELECT public.t_rows('SELECT id FROM public.games', 1);
+SELECT public.t_rows($q$SELECT id FROM public.games WHERE game_code = 'BBBBBB'$q$, 0);
+SELECT public.t_rows('SELECT id FROM public.teams', 0);
+SELECT public.t_rows('SELECT id FROM public.submissions', 0);
+SELECT public.t_rows('SELECT id FROM public.announcements', 0);
+SELECT public.t_rows('SELECT id FROM public.achievements', 0);
 -- The participant state function is for the server only (20261106170000).
 SELECT public.t_denied($q$SELECT public.get_player_game_state('AAAAAA', 'x')$q$);
 
@@ -112,6 +124,25 @@ SELECT public.t_ok($q$SELECT public.get_platform_stats()$q$);
 SELECT public.t_ok($q$SELECT public.get_game_stats('10000000-0000-0000-0000-00000000000b')$q$);
 SELECT public.t_rows('SELECT id FROM public.challenges', 2);
 SELECT public.t_denied('SELECT answer_hash FROM public.challenges');
+-- Admins keep every activity's teams, results, announcements, achievements.
+SELECT public.t_rows('SELECT id FROM public.games', 2);
+SELECT public.t_rows('SELECT id FROM public.teams', 1);
+SELECT public.t_rows('SELECT id FROM public.submissions', 1);
+SELECT public.t_rows('SELECT id FROM public.announcements', 1);
+SELECT public.t_rows('SELECT id FROM public.achievements', 1);
+SELECT public.t_denied('SELECT answer FROM public.submissions');
+RESET ROLE;
+
+-- The facilitator keeps their own activity's teams, results, announcements
+-- and achievements (live view and its realtime use these policies).
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+SELECT public.t_rows('SELECT id FROM public.games', 1);
+SELECT public.t_rows('SELECT id FROM public.teams', 1);
+SELECT public.t_rows('SELECT id FROM public.submissions', 1);
+SELECT public.t_rows('SELECT id FROM public.announcements', 1);
+SELECT public.t_rows('SELECT id FROM public.achievements', 1);
+SELECT public.t_denied('SELECT session_token FROM public.teams');
 RESET ROLE;
 
 -- Anonymous participant.
@@ -120,7 +151,15 @@ SELECT set_config('request.jwt.claim.sub', '', false);
 SELECT set_config('request.jwt.claim.role', 'anon', false);
 SELECT public.t_denied('SELECT answer_hash FROM public.challenges');
 SELECT public.t_denied('SELECT answer FROM public.submissions');
-SELECT public.t_ok('SELECT id, title, options FROM public.challenges');
+-- No listing of running activities or anything that leads to their code
+-- (20261107120000): participants read through the server with the code.
+SELECT public.t_denied('SELECT game_code, title FROM public.games');
+SELECT public.t_denied('SELECT id FROM public.games');
+SELECT public.t_denied('SELECT id, title, options FROM public.challenges');
+SELECT public.t_denied('SELECT id, game_id, name, total_points FROM public.teams');
+SELECT public.t_denied('SELECT id, team_id, is_correct FROM public.submissions');
+SELECT public.t_denied('SELECT id, game_id, message FROM public.announcements');
+SELECT public.t_denied('SELECT id, game_id, team_id FROM public.achievements');
 -- Hints and DI notes reach participants only through the server (20261106170000).
 SELECT public.t_denied('SELECT hints FROM public.challenges');
 SELECT public.t_denied('SELECT accepted_answer_hashes FROM public.challenges');
@@ -129,7 +168,6 @@ SELECT public.t_denied('SELECT verification_issues FROM public.challenges');
 SELECT public.t_denied('SELECT verification_verdict FROM public.challenges');
 SELECT public.t_denied($q$SELECT public.get_player_game_state('AAAAAA', 'x')$q$);
 SELECT public.t_denied('SELECT explanation FROM public.challenges');
-SELECT public.t_rows('SELECT id FROM public.challenges', 2);
 SELECT public.t_denied($q$SELECT public.get_game_stats('10000000-0000-0000-0000-00000000000b')$q$);
 SELECT public.t_denied($q$SELECT public.get_game_reflections('10000000-0000-0000-0000-00000000000b')$q$);
 SELECT public.t_denied($q$SELECT public.get_platform_stats()$q$);

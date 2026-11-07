@@ -12,7 +12,7 @@ import { motion } from "framer-motion"
 import { AlertTriangle, BarChart3, Clock, Loader2, LogOut, Play, Star, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { AnnouncementBanner } from "@/components/player/announcement-banner"
+import { AnnouncementBanner, type AnnouncementItem } from "@/components/player/announcement-banner"
 import { ReflectionForm } from "@/components/player/reflection-form"
 import { FinishRequestCard } from "@/components/access/finish-request-card"
 import { TimerAnnouncer } from "@/components/player/timer-announcer"
@@ -106,10 +106,13 @@ export function PlayNotReady({ draft, onRefresh }: { draft: boolean; onRefresh: 
 /** Paused by the facilitator: full screen until the activity resumes. */
 export function PlayPaused({
   gameId,
+  announcement,
   totalPoints,
   teamName,
 }: {
   gameId: string | null
+  /** From the play page's status poll. */
+  announcement: AnnouncementItem | null
   totalPoints: number
   teamName: string
 }) {
@@ -123,7 +126,7 @@ export function PlayPaused({
         aria-live="polite"
       >
         {/* An announcement sent during the pause reaches the team here too. */}
-        {gameId && <AnnouncementBanner gameId={gameId} />}
+        {gameId && <AnnouncementBanner gameId={gameId} latest={announcement} />}
         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
           <Clock className="h-10 w-10 text-highlight" />
         </div>

@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,7 +16,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import type { LeaderboardEntry, Achievement } from "@/types/game"
+import type { LeaderboardResponse, LeaderboardTeam } from "@/lib/game/leaderboard"
 import { getPlayerSession } from "@/lib/game/session"
 import { pluralizeLt } from "@/lib/utils"
 import { AchievementBadge } from "@/components/player/achievement-badge"
@@ -38,114 +37,69 @@ export default function LeaderboardPage() {
   const params = useParams()
   const gameCode = (params.gameCode as string).toUpperCase()
 
-  const [teams, setTeams] = useState<LeaderboardEntry[]>([])
+  const [teams, setTeams] = useState<LeaderboardTeam[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [leaderboardDisabled, setLeaderboardDisabled] = useState(false)
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
-  const [gameId, setGameId] = useState<string | null>(null)
-  const [teamAchievements, setTeamAchievements] = useState<Record<string, Achievement[]>>({})
+  const inFlight = useRef(false)
 
-  const supabase = useMemo(() => createClient(), [])
-
+  // The board comes from the server (participants cannot read teams with
+  // the anon key since 20261107120000). One request at a time; a failed one
+  // keeps the last board and the next poll retries.
   const fetchLeaderboard = useCallback(async () => {
-    const { data: game } = await supabase
-      .from("games")
-      .select("id, settings")
-      .eq("game_code", gameCode)
-      .maybeSingle()
-
-    // Unknown code (or a game hidden from players) — an explicit error beats
-    // an empty board that quietly never updates.
-    if (!game) {
-      setNotFound(true)
-      setLoading(false)
-      return
-    }
-
-    const settings = (game.settings as Record<string, unknown> | null) ?? {}
-    if (settings.show_leaderboard === false) {
-      setLeaderboardDisabled(true)
-      setLoading(false)
-      return
-    }
-    setGameId(game.id)
-
-    // Teams + achievements in parallel
-    const [teamsRes, achievementsRes] = await Promise.all([
-      supabase
-        .from("teams")
-        .select(
-          "id, name, total_points, current_challenge_index, joined_at, updated_at, submissions(challenge_id)"
-        )
-        .eq("game_id", game.id)
-        .eq("submissions.is_correct", true)
-        .order("total_points", { ascending: false })
-        .order("updated_at", { ascending: true }),
-      supabase
-        .from("achievements")
-        .select("*")
-        .eq("game_id", game.id),
-    ])
-
-    if (teamsRes.data) setTeams(teamsRes.data)
-
-    if (achievementsRes.data) {
-      const grouped: Record<string, Achievement[]> = {}
-      for (const a of achievementsRes.data) {
-        if (!grouped[a.team_id]) grouped[a.team_id] = []
-        grouped[a.team_id].push(a as Achievement)
+    if (inFlight.current) return
+    inFlight.current = true
+    try {
+      const res = await fetch(`/api/play/leaderboard?game_code=${encodeURIComponent(gameCode)}`, {
+        cache: "no-store",
+        signal: typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(8000) : undefined,
+      })
+      if (res.status >= 500) return
+      const data = (await res.json()) as LeaderboardResponse | { error: string }
+      if ("error" in data || data.state === "not_found") {
+        setNotFound(true)
+      } else if (data.state === "disabled") {
+        setLeaderboardDisabled(true)
+      } else {
+        setNotFound(false)
+        setLeaderboardDisabled(false)
+        setTeams(data.teams)
       }
-      setTeamAchievements(grouped)
+    } catch {
+      // Network hiccup or timeout: the next poll retries
+    } finally {
+      inFlight.current = false
+      setLoading(false)
     }
-
-    setLoading(false)
-  }, [gameCode, supabase])
+  }, [gameCode])
 
   useEffect(() => {
     const session = getPlayerSession(gameCode)
     if (session) {
       setMyTeamId(session.team_id)
     }
-    fetchLeaderboard()
-  }, [gameCode, fetchLeaderboard])
+  }, [gameCode])
 
-  // Realtime subscription with fallback polling
+  // Every 4 s while the page is visible, and at once when it becomes
+  // visible again (phones suspend timers in the background). Stops on an
+  // unknown code or a board the facilitator turned off.
+  const stopped = notFound || leaderboardDisabled
   useEffect(() => {
-    if (!gameId) return
-
-    let pollInterval: NodeJS.Timeout | null = null
-
-    const channel = supabase
-      .channel(`leaderboard_${gameId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "teams", filter: `game_id=eq.${gameId}` },
-        () => fetchLeaderboard()
-      )
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          // Realtime working — clear fallback polling
-          if (pollInterval) {
-            clearInterval(pollInterval)
-            pollInterval = null
-          }
-        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          // Realtime failed — start fallback polling every 5s
-          if (!pollInterval) {
-            pollInterval = setInterval(fetchLeaderboard, 5000)
-          }
-        }
-      })
-
-    // Start fallback polling as safety net (cleared once realtime connects)
-    pollInterval = setInterval(fetchLeaderboard, 10000)
-
-    return () => {
-      supabase.removeChannel(channel)
-      if (pollInterval) clearInterval(pollInterval)
+    if (stopped) return
+    void fetchLeaderboard()
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") void fetchLeaderboard()
+    }, 4000)
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void fetchLeaderboard()
     }
-  }, [gameId, supabase, fetchLeaderboard])
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [stopped, fetchLeaderboard])
 
   if (loading) {
     return (
@@ -201,7 +155,7 @@ export default function LeaderboardPage() {
           </div>
           <div className="flex items-center justify-center gap-1 mt-1">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-xs text-muted-foreground">Atnaujinama realiu laiku</span>
+            <span className="text-xs text-muted-foreground">Atnaujinama kas kelias sekundes</span>
           </div>
         </div>
 
@@ -246,10 +200,10 @@ export default function LeaderboardPage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {new Set((team.submissions ?? []).map((s) => s.challenge_id)).size} užd. išspręsta
+                            {team.solved} užd. išspręsta
                           </p>
                           {(() => {
-                            const achievements = teamAchievements[team.id] ?? []
+                            const achievements = team.achievements
                             const MAX_VISIBLE = 4
                             const visible = achievements.slice(0, MAX_VISIBLE)
                             const overflow = achievements.length - visible.length

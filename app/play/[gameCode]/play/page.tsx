@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import type { PlayerSession, GameSettings, AchievementType } from "@/types/game"
@@ -10,7 +9,7 @@ import { getPlayerSession, clearPlayerSession, savePlayerSession } from "@/lib/g
 import { type GameClock, secondsLeft } from "@/lib/game/clock"
 import { remapTaskIndex } from "@/lib/game/tasks-version"
 import { normalizeNumericAnswer, openedHintCount, sheetKey } from "@/lib/game/play-format"
-import { AnnouncementBanner } from "@/components/player/announcement-banner"
+import { AnnouncementBanner, type AnnouncementItem } from "@/components/player/announcement-banner"
 import { AchievementToast } from "@/components/player/achievement-toast"
 import { ChallengeGrid } from "@/components/player/challenge-grid"
 import { ChallengeDetailModal } from "@/components/player/challenge-detail-modal"
@@ -68,9 +67,6 @@ export default function PlayPage() {
   // Live game status: paused shows a full-screen overlay, finished ends the
   // game even mid-play (teacher-ended)
   const [gameStatus, setGameStatus] = useState<string>("active")
-  // Bumped on every realtime status event, so a status poll that started
-  // earlier can tell its answer is older and must not overwrite it.
-  const statusVersionRef = useRef(0)
   // Marker of the tasks on screen (lib/game/tasks-version.ts): when the
   // status poll reports another one, the facilitator changed a task and the
   // tasks reload in place.
@@ -93,6 +89,8 @@ export default function PlayPage() {
   const [pathMode, setPathMode] = useState<"linear" | "free">("linear")
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState<number | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
+  // The facilitator's latest fresh announcement, from the status poll.
+  const [announcement, setAnnouncement] = useState<AnnouncementItem | null>(null)
 
   // Achievement state
   const [achievementQueue, setAchievementQueue] = useState<{ type: AchievementType; metadata?: Record<string, unknown> }[]>([])
@@ -490,44 +488,9 @@ export default function PlayPage() {
     }
   }, [])
 
-  // Subscribe to game setting changes (time extensions, status changes)
-  useEffect(() => {
-    if (!gameId) return
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`game_settings_${gameId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "games", filter: `id=eq.${gameId}` },
-        (payload) => {
-          const updated = payload.new as {
-            settings?: GameSettings
-            status?: string
-            paused_ms?: number | string | null
-            paused_at?: string | null
-          }
-          applyClock({
-            time_limit_minutes: updated.settings ? (updated.settings.time_limit_minutes ?? null) : undefined,
-            paused_ms: updated.paused_ms,
-            paused_at: updated.paused_at,
-          })
-          if (updated.status) {
-            statusVersionRef.current += 1
-            setGameStatus(updated.status)
-            if (updated.status === "finished") {
-              setEndedByTeacher(true)
-              setGameFinished(true)
-            }
-          }
-        }
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [gameId, gameCode, applyClock])
-
-  // Status polling safety net: paused games may be invisible to anon realtime
-  // (RLS), so realtime alone cannot be trusted to deliver pause events.
+  // Status polling: participants cannot read the activity with the anon key
+  // (20261107120000), so pauses, more time, task edits and announcements
+  // reach the page through /api/play/status.
   // 5 s keeps a teacher's pause visible to participants almost at once;
   // the request is a tiny status read, and it also re-runs when the tab
   // becomes visible again (phones suspend timers in the background).
@@ -544,7 +507,6 @@ export default function PlayPage() {
     const checkStatus = async () => {
       if (inFlight) return
       inFlight = true
-      const startedAt = statusVersionRef.current
       const sentAt = Date.now()
       try {
         const res = await fetch(
@@ -564,6 +526,7 @@ export default function PlayPage() {
           paused_at?: string | null
           now?: string
           tasks_version?: string | null
+          announcement?: AnnouncementItem | null
         }
         if (disposed || !data.status) return
         // Clock correction: the server's time is compared with the middle of
@@ -574,10 +537,10 @@ export default function PlayPage() {
         if (Number.isFinite(serverNow) && receivedAt - sentAt < 2000) {
           skewMsRef.current = serverNow - (sentAt + receivedAt) / 2
         }
-        if (statusVersionRef.current !== startedAt) return
         applyClock(data)
         setGameStatus(data.status)
         if (typeof data.allow_access_requests === "boolean") setAllowAccessRequests(data.allow_access_requests)
+        if (data.announcement !== undefined) setAnnouncement(data.announcement)
         if (data.status === "finished") {
           setEndedByTeacher(true)
           setGameFinished(true)
@@ -838,7 +801,7 @@ export default function PlayPage() {
 
   // Paused by the teacher — full-screen overlay until the game resumes
   if (gameStatus === "paused" && !gameFinished) {
-    return <PlayPaused gameId={gameId} totalPoints={totalPoints} teamName={session.team_name} />
+    return <PlayPaused gameId={gameId} announcement={announcement} totalPoints={totalPoints} teamName={session.team_name} />
   }
 
   const endProps = {
@@ -890,7 +853,7 @@ export default function PlayPage() {
   const banners = (
     <>
       {/* Announcement banner */}
-      {gameId && <AnnouncementBanner gameId={gameId} />}
+      {gameId && <AnnouncementBanner gameId={gameId} latest={announcement} />}
 
       {/* Achievement toast */}
       {pendingAchievement && (
