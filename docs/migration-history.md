@@ -365,6 +365,72 @@ Tikimasi: `cols` 2, `anon_hashes` `false`, `auth_hashes` `false`,
 
 Pritaikyta produkcijoje 2026-11-07 apie 08:52 UTC (patvirtino Vytis; SQL Editor, visas failas, kontrolinė suma sutapo; prieš tai 0 vykstančių veiklų, 114 užduočių). Patikra po taikymo: `cols` 2, `anon_hashes` `false`, `auth_hashes` `false`, `auth_count` `true`, `anon_count` `false`, `with_extras` 0.
 
+## 2026-11-07: vykstančių veiklų kodų nebegalima išvardyti
+
+Failas `supabase/migrations/20261107120000_close_active_code_listing.sql`,
+grąžinimas `supabase/rollback/20261107120000_close_active_code_listing.sql`.
+
+Problema: su viešu `anon` raktu `SELECT game_code, title FROM games` grąžino
+visas vykstančias, pristabdytas ir baigtas veiklas, o `teams`, `submissions`,
+`challenges`, `announcements` ir `achievements` buvo skaitomi taip pat (jų
+`game_id` vedė atgal į kodą). Tos pačios `public` politikos leido bet kuriam
+prisijungusiam vedėjui matyti kitų vedėjų vykstančias veiklas. Atsakymų
+stulpeliai buvo ir lieka uždaryti.
+
+Pakeitimas: šešios atviros skaitymo politikos pašalinamos, `anon` netenka
+`SELECT` teisės šiose lentelėse. Vedėjas mato savo veiklas kaip anksčiau
+(savininko politikos, realaus laiko atnaujinimai), papildomai gauna savo
+veiklų ženklelius. Administratoriai mato visų veiklų komandas, rezultatus,
+skelbimus ir ženklelius. Dalyvio puslapiai skaito per serverį su veiklos
+kodu: `/api/play/status` (būsena, laikas, užduočių žymė, naujausias
+skelbimas), `/api/play/state`, `/api/play/leaderboard`.
+
+Taikymo tvarka: pirma kodas (PR su šiuo failu), tada migracija. Naujas kodas
+anon raktu šių lentelių nebeskaito, todėl veikia ir su sena, ir su nauja
+schema. Taikyti, kai nevyksta veiklos: per diegimą atidaryti seni dalyvio
+puslapiai iki perkrovimo nematytų rezultatų lentelės.
+
+Atsarginė kopija: duomenys nekeičiami, keičiamos tik politikos ir teisės.
+Prieš taikymą išsaugoti dabartines politikas ir teises (užklausa žemiau), kad
+būtų galima palyginti su grąžinimo failu.
+
+```sql
+select 'pol' k, tablename||'.'||policyname n, roles::text||' '||cmd||' '||coalesce(qual,'') v
+  from pg_policies where schemaname = 'public'
+   and tablename in ('games','challenges','teams','submissions','announcements','achievements')
+union all
+select 'rel', relname, relacl::text from pg_class
+ where relnamespace = 'public'::regnamespace
+   and relname in ('games','challenges','teams','submissions','announcements','achievements')
+union all
+select 'col', c.relname||'.'||a.attname, a.attacl::text
+  from pg_attribute a join pg_class c on c.oid = a.attrelid
+ where c.relnamespace = 'public'::regnamespace and a.attacl::text like '%anon%'
+   and c.relname in ('games','challenges','teams','submissions','announcements','achievements')
+order by 1, 2;
+```
+
+Patikra po taikymo:
+
+```sql
+select
+  has_table_privilege('anon', 'public.games', 'SELECT') as anon_games,
+  has_column_privilege('anon', 'public.teams', 'name', 'SELECT') as anon_teams,
+  has_table_privilege('anon', 'public.achievements', 'SELECT') as anon_achievements,
+  (select count(*) from pg_policies where schemaname = 'public' and policyname in (
+     'Anyone can read active games', 'Anyone can read challenges for active games',
+     'Read teams in active games', 'Read submissions in active games',
+     'Anyone can read announcements', 'Anyone can read achievements')) as open_policies,
+  (select count(*) from pg_policies where schemaname = 'public' and policyname in (
+     'Teachers read own game achievements', 'admins_read_all_teams', 'admins_read_all_submissions',
+     'admins_read_all_achievements', 'admins_read_all_announcements')) as new_policies;
+```
+
+Tikimasi: `anon_games`, `anon_teams`, `anon_achievements` `false`,
+`open_policies` 0, `new_policies` 5.
+
+Būsena: produkcijoje dar netaikyta.
+
 ## Konvencija toliau
 
 Naujas migracijas kurti tik per CLI, kad versijos būtų unikalios ir
