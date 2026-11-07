@@ -492,7 +492,7 @@ export function LessonPlanDetail({ plan: initialPlan, openConvert = false }: Les
       {editing ? (
         <div className="space-y-1 mb-6">
           <Label htmlFor="plan-note" className="text-xs text-muted-foreground">
-            Metodinė pastaba mokytojui
+            Metodinė pastaba vedėjui
           </Label>
           <Textarea
             id="plan-note"
@@ -507,7 +507,7 @@ export function LessonPlanDetail({ plan: initialPlan, openConvert = false }: Les
             <CardContent className="p-4">
               <p className="text-xs font-medium text-highlight-ink mb-1 flex items-center gap-1">
                 <BookOpen className="h-3 w-3" aria-hidden="true" />
-                Metodinė pastaba mokytojui
+                Metodinė pastaba vedėjui
               </p>
               <p className="text-sm text-muted-foreground">{plan.teacher_methodical_note}</p>
             </CardContent>

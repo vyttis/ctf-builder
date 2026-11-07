@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     const userMessage = `Veiklos pavadinimas: ${parsed.data.game_title}
 ${parsed.data.game_description ? `Veiklos aprašymas: ${parsed.data.game_description}` : ""}
 
-Mokytojas įkėlė dokumentą su mokomąja medžiaga. Pagal šį turinį sugeneruok ${parsed.data.count} edukacines CTF užduotis.
+Vedėjas įkėlė dokumentą su mokomąja medžiaga. Pagal šį turinį sugeneruok ${parsed.data.count} komandinės edukacinės veiklos užduotis.
 
 DOKUMENTO TURINYS:
 ---

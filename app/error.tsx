@@ -4,15 +4,15 @@ import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, RefreshCw } from "lucide-react"
 
-export default function GlobalError({
+export default function ErrorPage({
   error,
-  reset,
+  retry,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: unknown
+  retry: () => void
 }) {
   useEffect(() => {
-    console.error("Global error:", error)
+    console.error("Page error:", error)
   }, [error])
 
   return (
@@ -25,9 +25,9 @@ export default function GlobalError({
           Įvyko klaida
         </h1>
         <p className="text-muted-foreground mb-6">
-          Atsiprašome, kažkas nepavyko. Bandykite atnaujinti puslapį.
+          Puslapio nepavyko parodyti. Bandykite dar kartą.
         </p>
-        <Button onClick={reset} className="gap-2">
+        <Button onClick={() => retry()} className="gap-2">
           <RefreshCw className="h-4 w-4" />
           Bandyti dar kartą
         </Button>

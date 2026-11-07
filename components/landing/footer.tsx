@@ -17,7 +17,7 @@ export function Footer() {
             </span>
           </div>
           <p className="text-3xl md:text-5xl font-display italic text-steam-dark/85 leading-[1.1] max-w-3xl text-pretty">
-            Pamoka, kurioje mokiniai galvoja kartu.
+            Pamoka, kurioje visi galvoja kartu.
           </p>
         </div>
 

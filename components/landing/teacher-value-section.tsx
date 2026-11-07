@@ -8,18 +8,18 @@ const stats = [
   },
   {
     metric: "Be",
-    label: "Mokinių registracijos",
-    detail: "Mokiniai prisijungia per QR kodą, be paskyrų, elektroninio pašto ar slaptažodžių. Tinka pradinukams, gimnazistams ir tarp jų.",
+    label: "Dalyvių registracijos",
+    detail: "Dalyviai prisijungia per QR kodą, be paskyrų, elektroninio pašto ar slaptažodžių. Tinka pradinukams, gimnazistams ir tarp jų.",
   },
   {
     metric: "100 %",
-    label: "Mokytojo sprendimas",
-    detail: "Dirbtinis intelektas teikia pasiūlymus, bet galutinį užduočių turinį visada peržiūri ir patvirtina pedagogas.",
+    label: "Vedėjo sprendimas",
+    detail: "Dirbtinis intelektas teikia pasiūlymus, bet galutinį užduočių turinį visada peržiūri ir patvirtina vedėjas.",
   },
   {
     metric: "Reali",
     label: "Pamokos eiga",
-    detail: "Komandų progresas ir mokinių atsakymai matomi realiu laiku, todėl galima reaguoti dar pamokos metu.",
+    detail: "Komandų progresas ir dalyvių atsakymai matomi realiu laiku, todėl galima reaguoti dar pamokos metu.",
   },
 ] as const
 

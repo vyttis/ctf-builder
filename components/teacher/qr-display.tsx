@@ -72,7 +72,7 @@ export function QRDisplay({ gameCode, size = 200 }: QRDisplayProps) {
       ctx.fillText(gameCode, qrSize / 2, qrSize + 35)
 
       const link = document.createElement("a")
-      link.download = `ctf-${gameCode}.png`
+      link.download = `veikla-${gameCode}.png`
       link.href = canvas.toDataURL("image/png")
       link.click()
     }
