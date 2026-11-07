@@ -101,6 +101,35 @@ describe("multiple-choice answers keep Lithuanian letters", () => {
   })
 })
 
+describe("long answers are compared in full", () => {
+  // bcrypt reads only 72 bytes; Lithuanian letters take two.
+  const start = "Fotosintezės metu augalai sugeria anglies dioksidą ir išskiria į aplinką "
+  const right = start + "deguonį"
+  const wrong = start + "azotą"
+
+  it("tells apart two long choices that start the same", async () => {
+    expect(Buffer.byteLength(start.toLowerCase(), "utf8")).toBeGreaterThan(72)
+    const rules = { type: "multiple_choice", options: [right, wrong] }
+    const hash = await hashAnswer(right, "multiple_choice")
+    expect(hash.endsWith(":sha")).toBe(true)
+    await expect(verifyAnswer(right, hash, rules)).resolves.toBe(true)
+    await expect(verifyAnswer(wrong, hash, rules)).resolves.toBe(false)
+  })
+
+  it("does the same for typed text, folding letters as before", async () => {
+    const hash = await hashAnswer(right, "text")
+    await expect(verifyAnswer(right.toUpperCase() + ".", hash, TEXT)).resolves.toBe(true)
+    await expect(verifyAnswer(wrong, hash, TEXT)).resolves.toBe(false)
+  })
+
+  it("still reads hashes stored before the digest", async () => {
+    const old = await bcrypt.hash(normalizeAnswer("Vilnius"), 4)
+    await expect(verifyAnswer("vilnius", old, TEXT)).resolves.toBe(true)
+    const oldChoice = await bcrypt.hash(normalizeAnswerLegacy("kąsti"), 4)
+    await expect(verifyAnswer("kąsti", oldChoice, { type: "multiple_choice", options: ["kasti", "kąsti"] })).resolves.toBe(true)
+  })
+})
+
 describe("number answers", () => {
   it("compare the exact form", async () => {
     const hash = await hashAnswer("3.5", "number")

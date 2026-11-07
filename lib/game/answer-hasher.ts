@@ -20,6 +20,15 @@ export const MAX_ANSWER_LENGTH = 500
 const NUMBER_VALUE_SUFFIX = ":num"
 
 /**
+ * A text or choice answer hashed from a SHA-256 digest of its form has this
+ * suffix. bcrypt reads only the first 72 bytes (about 40 Lithuanian
+ * letters), so two long choices that start the same would otherwise both
+ * be accepted. Hashes without it (stored before 2026-11-07) are compared
+ * the old way.
+ */
+const TEXT_DIGEST_SUFFIX = ":sha"
+
+/**
  * bcrypt reads only the first 72 bytes of its input, so a value hash is made
  * from a SHA-256 digest of the canonical number: two long numbers that share
  * their first 72 digits stay different answers.
@@ -129,7 +138,7 @@ export async function hashAnswer(answer: string, type: string | null | undefined
   if (canonical !== null) {
     return (await bcrypt.hash(valueDigest(canonical), BCRYPT_ROUNDS)) + NUMBER_VALUE_SUFFIX
   }
-  return bcrypt.hash(storedForm(answer, type), BCRYPT_ROUNDS)
+  return (await bcrypt.hash(valueDigest(storedForm(answer, type)), BCRYPT_ROUNDS)) + TEXT_DIGEST_SUFFIX
 }
 
 function plaintextEquals(candidate: string, stored: string): boolean {
@@ -151,6 +160,14 @@ export async function verifyAnswer(
   }
 
   const forms = candidateForms(submitted, rules)
+
+  if (storedHash.startsWith("$2") && storedHash.endsWith(TEXT_DIGEST_SUFFIX)) {
+    const hash = storedHash.slice(0, -TEXT_DIGEST_SUFFIX.length)
+    for (const form of forms) {
+      if (await bcrypt.compare(valueDigest(form), hash)) return true
+    }
+    return false
+  }
 
   // Support legacy plaintext hashes (migration path)
   // Use constant-time comparison to prevent timing attacks
@@ -177,14 +194,6 @@ export const MAX_ACCEPTED_ANSWERS = 5
  * five of them add about as much as one main-answer comparison.
  */
 const ACCEPTED_BCRYPT_ROUNDS = 8
-
-/**
- * Text extra answers are hashed from a SHA-256 digest of their form, marked
- * by this suffix, so an answer longer than bcrypt's 72 bytes is compared in
- * full. (A hash without it is the plain form, from the first hours of the
- * feature.)
- */
-const TEXT_DIGEST_SUFFIX = ":sha"
 
 /**
  * The one form an extra accepted answer is stored and compared in: text
