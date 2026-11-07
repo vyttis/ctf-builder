@@ -179,6 +179,14 @@ export const MAX_ACCEPTED_ANSWERS = 5
 const ACCEPTED_BCRYPT_ROUNDS = 8
 
 /**
+ * Text extra answers are hashed from a SHA-256 digest of their form, marked
+ * by this suffix, so an answer longer than bcrypt's 72 bytes is compared in
+ * full. (A hash without it is the plain form, from the first hours of the
+ * feature.)
+ */
+const TEXT_DIGEST_SUFFIX = ":sha"
+
+/**
  * The one form an extra accepted answer is stored and compared in: text
  * folded and without trailing punctuation, a number by its value. null when
  * a number answer is not a number.
@@ -186,21 +194,30 @@ const ACCEPTED_BCRYPT_ROUNDS = 8
 function acceptedForm(answer: string, type: string | null | undefined): { text: string; number: boolean } | null {
   if (type === "number") {
     const canonical = canonicalNumber(answer)
-    return canonical === null ? null : { text: valueDigest(canonical), number: true }
+    return canonical === null ? null : { text: canonical, number: true }
   }
   return { text: withoutTrailingPunctuation(normalizeAnswer(answer)), number: false }
 }
 
-/** The key two accepted answers are the same by (for removing repeats). */
+/** The key two extra accepted answers are the same by (for removing repeats). */
 export function acceptedAnswerKey(answer: string, type: string | null | undefined): string | null {
   return acceptedForm(answer, type)?.text ?? null
+}
+
+/**
+ * True when an extra answer adds nothing to the main one: it is the main
+ * answer in its stored form. "JAV" next to a main "JAV." is kept, because
+ * the main answer does not accept "JAV".
+ */
+export function sameAsMainAnswer(extra: string, main: string, type: string | null | undefined): boolean {
+  return storedForm(extra, type) === storedForm(main, type)
 }
 
 export async function hashAcceptedAnswer(answer: string, type: string | null | undefined): Promise<string> {
   const form = acceptedForm(answer, type)
   if (!form) throw new Error("not a number")
-  const hash = await bcrypt.hash(form.text, ACCEPTED_BCRYPT_ROUNDS)
-  return form.number ? hash + NUMBER_VALUE_SUFFIX : hash
+  const hash = await bcrypt.hash(valueDigest(form.text), ACCEPTED_BCRYPT_ROUNDS)
+  return hash + (form.number ? NUMBER_VALUE_SUFFIX : TEXT_DIGEST_SUFFIX)
 }
 
 /** True when the answer matches one of the task's extra accepted answers. */
@@ -216,8 +233,12 @@ export async function verifyAcceptedAnswers(
     if (!stored.startsWith("$2")) continue
     const isNumber = stored.endsWith(NUMBER_VALUE_SUFFIX)
     if (isNumber !== form.number) continue
-    const hash = isNumber ? stored.slice(0, -NUMBER_VALUE_SUFFIX.length) : stored
-    if (await bcrypt.compare(form.text, hash)) return true
+    if (isNumber || stored.endsWith(TEXT_DIGEST_SUFFIX)) {
+      const suffixLength = isNumber ? NUMBER_VALUE_SUFFIX.length : TEXT_DIGEST_SUFFIX.length
+      if (await bcrypt.compare(valueDigest(form.text), stored.slice(0, -suffixLength))) return true
+    } else if (await bcrypt.compare(form.text, stored)) {
+      return true
+    }
   }
   return false
 }

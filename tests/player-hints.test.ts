@@ -158,8 +158,24 @@ describe("choice options in each team's own order", () => {
     }
   })
 
-  it("does not mistake a word that only starts the same way", () => {
+  it("keeps the order for compound letter references", () => {
+    for (const extra of ["A ir B atsakymai teisingi", "A, B ir C", "Tik B arba C"]) {
+      expect(optionsReferToEachOther([...options, extra])).toBe(true)
+    }
+  })
+
+  it("does not mistake ordinary words for a reference to other options", () => {
     expect(optionsReferToEachOther(["Visiškai sutinku", "Abejoju", "Nesutinku"])).toBe(false)
+    expect(optionsReferToEachOther(["Visi vaikai turi šią teisę", "Tik suaugusieji", "Niekas"])).toBe(false)
+    expect(optionsReferToEachOther(["Temperatūra pakilo aukščiau nulio", "Nukrito", "Nepakito"])).toBe(false)
+    expect(optionsReferToEachOther(["Abi rankos", "Viena ranka", "Kojos"])).toBe(false)
+    expect(optionsReferToEachOther(["Vitaminas C", "Vitaminas D", "Geležis"])).toBe(false)
+  })
+
+  it("still keeps the order for a bare quantifier option", () => {
+    for (const extra of ["Visi", "Abu.", "Nė vienas", "Visi atsakymai teisingi", "Nė viena iš jų", "Joks iš jų"]) {
+      expect(optionsReferToEachOther([...options, extra])).toBe(true)
+    }
   })
 
   it("is applied to a team's choice tasks only", () => {

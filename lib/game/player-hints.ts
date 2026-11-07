@@ -43,13 +43,23 @@ export function orderForTeam<T extends { id: string }>(challenges: T[], teamId: 
 }
 
 // An option that points at the others ("Visi išvardyti", "Nė vienas iš
-// jų", "A ir B") only makes sense in the order the facilitator wrote.
-const REFERS_TO_OTHER_OPTIONS =
-  /(^|[\s,.(])(visi|visos|visa tai|abu|abi|nė vienas|nė viena|nei vienas|nei viena|joks|jokia|aukščiau)(?=$|[\s,.!?)])|anksčiau minėt/iu
-const LETTER_PAIR = /^\s*[a-f]\s*(ir|bei|,)\s*[a-f]\s*$/iu
+// jų", "A ir B atsakymai teisingi") only makes sense in the order the
+// facilitator wrote. Phrases, not single words: "Visi vaikai turi šią
+// teisę" or "pakilo aukščiau nulio" do not refer to other options.
+const REFERS_TO_OTHER_OPTIONS = [
+  /\b(visi|visos|visa)\s+(išvard|aukščiau|anksčiau|pateikt|nurodyt|minėt|atsakym|variant)/iu,
+  /\b(aukščiau|anksčiau)\s+(išvard|minėt|pateikt|nurodyt)/iu,
+  /\b(nė|nei)\s+vien(as|a)\s+(iš|atsakym|variant|nėra)/iu,
+  /\b(abu|abi)\s+(atsakym|variant|teising|aukščiau|anksčiau)/iu,
+  /\b(joks|jokia)\s+(iš|atsakym|variant)/iu,
+  // The whole option is one such word: "Visi", "Abu", "Nė vienas".
+  /^\s*(visi|visos|abu|abi|joks|jokia|(nė|nei)\s+vien(as|a))\s*[.!]?\s*$/iu,
+  // Option letters as the participant sees them: "A ir B", "A, B ir C".
+  /(^|[^\p{L}])[A-F]\s*(,|ir|bei|arba)\s*[A-F](?![\p{L}])/u,
+]
 
 export function optionsReferToEachOther(options: readonly string[]): boolean {
-  return options.some((o) => REFERS_TO_OTHER_OPTIONS.test(o) || LETTER_PAIR.test(o))
+  return options.some((o) => REFERS_TO_OTHER_OPTIONS.some((re) => re.test(o)))
 }
 
 /**
