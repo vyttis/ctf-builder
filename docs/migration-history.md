@@ -450,7 +450,17 @@ select count(*) as n, md5(string_agg(k||'|'||n||'|'||v, '/' order by k, n)) as f
 Produkcijoje prieš taikymą ir lokaliai po grąžinimo: `82 | fd39b8eca6104db93c12a722beee8a7c`.
 Po migracijos laukiama: `28 | 03de43e87dedd1ca5202b57f295d6d7e`.
 
-Būsena: produkcijoje dar netaikyta.
+Pritaikyta produkcijoje 2026-11-07 apie 10:30 UTC (patvirtino Vytis; SQL
+Editor, visas failas, SHA-256 sutapo; prieš tai 0 vykstančių veiklų; kodas
+PR #101 jau buvo produkcijoje). Patikra po taikymo: `anon_games`,
+`anon_teams`, `anon_achievements` `false`, `open_policies` 0, `new_policies`
+5, atspaudas `28 | 03de43e87dedd1ca5202b57f295d6d7e` (kaip laukta). Iš
+išorės viešu anon raktu `games`, `teams`, `challenges`, `submissions`,
+`announcements`, `achievements` grąžina 401 (42501). Vedėjo skydelis,
+vedėjo ekranas, ženklelių ir statistikos API savo veiklai veikia, dalyvio
+rezultatų lentelė ir būsena per serverį veikia, Vercel klaidų nėra.
+Produkcijoje nepatikrinta: naujas prisijungimas prie vykstančios veiklos ir
+vedėjo realaus laiko atnaujinimai (reikia bandomosios veiklos).
 
 ## Konvencija toliau
 
