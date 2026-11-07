@@ -57,11 +57,12 @@ const REFERS_TO_OTHER_OPTIONS = [
   /\b(joks|jokia)\s+(iš|atsakym|variant)/iu,
   // The whole option is one such word: "Visi", "Abu", "Nė vienas".
   /^\s*(visi|visos|abu|abi|joks|jokia|(nė|nei)\s+vien(as|a))\s*[.!]?\s*$/iu,
-  // Option letters as the participant sees them, in any case: the whole
-  // option ("A ir B", "a, b ir c", "Tik B arba C"), or letters next to a
-  // word about answers ("A ir B atsakymai teisingi", "Teisingi variantai A
-  // ir C"). "Vitaminai B ir C" is about vitamins and is shuffled.
-  new RegExp(`^\\s*(tik\\s+)?${LETTERS}\\s*[.!]?\\s*$`, "iu"),
+  // Option letters as the participant sees them, in any case: at the start
+  // of the option ("A ir B", "a, b ir c", "Tik B arba C", "A ir B yra
+  // teisingi", "A ir B – teisingi atsakymai"), or next to a word about
+  // answers ("Teisingi variantai A ir C"). "Vitaminai B ir C" is about
+  // vitamins and is shuffled.
+  new RegExp(`^\\s*(tik\\s+)?${LETTERS}(?![\\p{L}])`, "iu"),
   new RegExp(`(^|\\s)${LETTERS}\\s+(atsakym|variant|teising)`, "iu"),
   new RegExp(`(atsakym|variant)\\p{L}*\\s+${LETTERS}(?![\\p{L}])`, "iu"),
 ]

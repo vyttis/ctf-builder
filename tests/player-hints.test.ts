@@ -167,6 +167,8 @@ describe("choice options in each team's own order", () => {
       "A IR B",
       "a ir b atsakymai teisingi",
       "Teisingi atsakymai A ir C",
+      "A ir B yra teisingi",
+      "A ir B – teisingi atsakymai",
     ]) {
       expect(optionsReferToEachOther([...options, extra])).toBe(true)
     }
