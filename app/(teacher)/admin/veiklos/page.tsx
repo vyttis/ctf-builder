@@ -121,7 +121,8 @@ export default async function AdminActivitiesPage(props: {
 
       <h1 className="text-2xl font-bold text-steam-dark">Visos veiklos</h1>
       <p className="text-muted-foreground text-sm mt-1 mb-6">
-        Visų vedėjų veiklos. Po pamokos palikta vykti veikla baigiama mygtuku „Baigti“, rezultatai išlieka.
+        Visų vedėjų veiklos. Po pamokos palikta vykti veikla baigiama mygtuku „Baigti“, rezultatai išlieka. Kas naktį
+        automatiškai baigiamos veiklos, kurios prasidėjo prieš 6 val. ir kuriose 2 val. nieko nevyko.
       </p>
 
       <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between">
