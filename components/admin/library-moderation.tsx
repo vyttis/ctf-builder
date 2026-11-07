@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
   BookOpen,
@@ -73,6 +74,7 @@ const uzduotis = (n: number) => `${n} ${pluralizeLt(n, "užduotis", "užduotys",
  */
 export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
   const { toast } = useToast()
+  const router = useRouter()
   const [tab, setTab] = useState<LibraryItemStatus>("pending_review")
   const [lists, setLists] = useState<Record<LibraryItemStatus, ListState>>(() => ({
     pending_review: { items: [], total: 0, page: 0, loading: true, error: null },
@@ -136,6 +138,8 @@ export function LibraryModeration({ canDelete }: { canDelete: boolean }) {
   function moved(from: LibraryItemStatus, to: LibraryItemStatus | null) {
     void load(from, 1)
     if (to) void load(to, 1)
+    // The "laukia" count in the admin menu is rendered by the server layout.
+    router.refresh()
   }
 
   async function review(item: LibraryItem, status: LibraryItemStatus, reviewNote?: string) {
