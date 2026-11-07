@@ -10,12 +10,12 @@ const useCases = [
   {
     when: "Pagrindinė pamoka",
     what: "Komandinė veikla",
-    body: "Mokiniai dirba komandose, diskutuoja ir sprendžia užduotis kartu. Mokytojas mato kiekvienos komandos eigą realiu laiku.",
+    body: "Dalyviai dirba komandose, diskutuoja ir sprendžia užduotis kartu. Vedėjas mato kiekvienos komandos eigą realiu laiku.",
   },
   {
     when: "Projektinė veikla",
     what: "Tyrimo užduotys",
-    body: "Etapinė užduotis, kuria mokiniai analizuoja informaciją, kelia hipotezes ir formuluoja išvadas pagal pateiktus duomenis.",
+    body: "Etapinė užduotis, kuria dalyviai analizuoja informaciją, kelia hipotezes ir formuluoja išvadas pagal pateiktus duomenis.",
   },
   {
     when: "Integruota pamoka",
@@ -25,7 +25,7 @@ const useCases = [
   {
     when: "Kartojimo pamoka",
     what: "Pasiekimų peržiūra",
-    body: "Įvairios užduotys padeda mokiniams patiems įvertinti, ką jau supranta, o ką dar reikia pakartoti prieš pasiekimų patikrinimą.",
+    body: "Įvairios užduotys padeda dalyviams patiems įvertinti, ką jau supranta, o ką dar reikia pakartoti prieš pasiekimų patikrinimą.",
   },
 ] as const
 

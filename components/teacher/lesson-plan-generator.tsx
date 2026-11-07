@@ -925,7 +925,7 @@ export function LessonPlanGenerator({ userId }: { userId: string }) {
         <CardContent className="p-4 space-y-2">
           <Label className="text-xs text-highlight-ink flex items-center gap-1">
             <BookOpen className="h-3 w-3" />
-            Metodinė pastaba mokytojui
+            Metodinė pastaba vedėjui
           </Label>
           <Textarea
             value={editTeacherNote}

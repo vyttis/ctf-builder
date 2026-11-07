@@ -24,16 +24,16 @@ const steps = [
   },
   {
     number: "04",
-    title: "Mokiniai prisijungia",
+    title: "Dalyviai prisijungia",
     description:
-      "Per QR kodą arba 6 simbolių prisijungimo kodą. Mokiniams nereikia paskyrų ar elektroninio pašto, prisijungimas trunka kelias sekundes.",
+      "Per QR kodą arba 6 simbolių prisijungimo kodą. Dalyviams nereikia paskyrų ar elektroninio pašto, prisijungimas trunka kelias sekundes.",
     accent: "accent",
   },
   {
     number: "05",
     title: "Stebėkite eigą",
     description:
-      "Komandų progresas ir mokinių atsakymai matomi realiu laiku. Pamoką galite pristabdyti paaiškinimui arba pratęsti laiką prireikus.",
+      "Komandų progresas ir dalyvių atsakymai matomi realiu laiku. Pamoką galite pristabdyti paaiškinimui arba pratęsti laiką prireikus.",
     accent: "primary",
   },
 ] as const
@@ -79,7 +79,7 @@ export function HowItWorksSection() {
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
           Pamokai paruošti nereikia papildomos technikos ar IT specialisto. Visą eigą
-          mokytojas suvaldo savarankiškai.
+          vedėjas suvaldo savarankiškai.
         </p>
       </div>
 

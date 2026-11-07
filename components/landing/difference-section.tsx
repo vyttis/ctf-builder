@@ -30,7 +30,7 @@ const rows = [
   {
     label: "Užduočių kūrimas",
     quiz: "Visi klausimai rašomi ranka",
-    platform: "Dirbtinis intelektas teikia siūlymus mokytojui",
+    platform: "Dirbtinis intelektas teikia siūlymus vedėjui",
   },
 ] as const
 

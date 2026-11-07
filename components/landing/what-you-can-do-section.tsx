@@ -16,25 +16,25 @@ const capabilities = [
   {
     label: "DI",
     title: "Dirbtinis intelektas kaip pagalbininkas",
-    body: "Dirbtinis intelektas siūlo užduočių idėjas pagal LT BUP. Galutinį turinį visada peržiūri ir patvirtina mokytojas.",
+    body: "Dirbtinis intelektas siūlo užduočių idėjas pagal LT BUP. Galutinį turinį visada peržiūri ir patvirtina vedėjas.",
     accent: "highlight",
   },
   {
-    label: "Realtime",
+    label: "Gyvai",
     title: "Pamokos eiga realiu laiku",
-    body: "Komandų progresas, mokinių atsakymai ir sudėtingos vietos matomi iškart. Galite reaguoti per pamoką, o ne po jos.",
+    body: "Komandų progresas, dalyvių atsakymai ir sudėtingos vietos matomi iškart. Galite reaguoti per pamoką, o ne po jos.",
     accent: "accent",
   },
   {
     label: "Komandos",
     title: "Komandinis arba individualus darbas",
-    body: "Mokiniai prisijungia per QR kodą, be paskyrų ar elektroninio pašto. Vienas kodas visai klasei.",
+    body: "Dalyviai prisijungia per QR kodą, be paskyrų ar elektroninio pašto. Vienas kodas visai klasei.",
     accent: "secondary",
   },
   {
     label: "Refleksija",
     title: "Pedagoginė pamokos analizė",
-    body: "Po pamokos matote, kurios užduotys buvo sudėtingiausios ir kuriose temose mokiniams reikia papildomo paaiškinimo.",
+    body: "Po pamokos matote, kurios užduotys buvo sudėtingiausios ir kuriose temose dalyviams reikia papildomo paaiškinimo.",
     accent: "primary",
   },
 ] as const
@@ -63,7 +63,7 @@ export function WhatYouCanDoSection() {
           galimybės.
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed text-pretty">
-          Visi pagrindiniai pamokos kūrimo įrankiai vienoje platformoje. Mokytojas
+          Visi pagrindiniai pamokos kūrimo įrankiai vienoje platformoje. Vedėjas
           paruošia ir veda pamoką savarankiškai, be papildomos technikos.
         </p>
       </div>

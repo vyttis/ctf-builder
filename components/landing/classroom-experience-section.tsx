@@ -20,7 +20,7 @@ function TeacherViewMock() {
             <Settings className="h-3 w-3 text-primary-ink" />
           </div>
           <span className="text-[10px] font-semibold text-steam-dark">
-            Mokytojo aplinka
+            Vedėjo aplinka
           </span>
         </div>
         <div className="flex gap-1">
@@ -89,7 +89,7 @@ function StudentViewMock() {
             <Puzzle className="h-3 w-3 text-secondary-ink" />
           </div>
           <span className="text-[10px] font-semibold text-steam-dark">
-            Mokinio vaizdas
+            Dalyvio vaizdas
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -160,19 +160,19 @@ export function ClassroomExperienceSection() {
           pamokos.
         </h2>
         <p className="text-base md:text-lg text-muted-foreground mt-6 max-w-xl mx-auto leading-relaxed text-pretty">
-          Mokytojas mato visos klasės progresą vienu žvilgsniu. Mokinys mato savo
+          Vedėjas mato visų komandų progresą vienu žvilgsniu. Dalyvis mato savo
           užduotis, komandos rezultatus ir asmeninį progresą.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        {/* Teacher view */}
+        {/* Facilitator view */}
         <div
         >
           <div className="mb-4 flex items-center gap-2">
             <Monitor className="h-4 w-4 text-primary-ink" />
             <span className="text-sm font-semibold text-steam-dark">
-              Mokytojo aplinka
+              Vedėjo aplinka
             </span>
           </div>
           <div className="relative group">
@@ -198,13 +198,13 @@ export function ClassroomExperienceSection() {
           </p>
         </div>
 
-        {/* Student view */}
+        {/* Participant view */}
         <div
         >
           <div className="mb-4 flex items-center gap-2">
             <Smartphone className="h-4 w-4 text-secondary-ink" />
             <span className="text-sm font-semibold text-steam-dark">
-              Mokinio vaizdas
+              Dalyvio vaizdas
             </span>
           </div>
           <div className="relative group">
@@ -226,7 +226,7 @@ export function ClassroomExperienceSection() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-4 text-center font-medium">
-            Mokiniai sprendžia užduotis ir stebi savo progresą
+            Dalyviai sprendžia užduotis ir stebi savo progresą
           </p>
         </div>
       </div>
