@@ -3,91 +3,29 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
-import { motion, AnimatePresence } from "framer-motion"
-import {
-  Send,
-  Loader2,
-  Trophy,
-  CheckCircle2,
-  XCircle,
-  Star,
-  BarChart3,
-  Clock,
-  Play,
-  AlertTriangle,
-  LogOut,
-  BookOpen,
-  ChevronRight,
-} from "lucide-react"
-import type { PlayerSession, SubmissionResult, ChallengeType, GameSettings, AchievementType } from "@/types/game"
+import type { PlayerSession, GameSettings, AchievementType } from "@/types/game"
 import { getPlayerSession, clearPlayerSession, savePlayerSession } from "@/lib/game/session"
-import { AnswerInput } from "@/components/player/answer-input"
 import { type GameClock, secondsLeft } from "@/lib/game/clock"
 import { remapTaskIndex } from "@/lib/game/tasks-version"
-import { pluralizeLt } from "@/lib/utils"
-import { MapsEmbed } from "@/components/shared/maps-embed"
-import { ReflectionForm } from "@/components/player/reflection-form"
-import { FinishRequestCard } from "@/components/access/finish-request-card"
-import { TaskImage } from "@/components/player/task-image"
+import { normalizeNumericAnswer, openedHintCount, sheetKey } from "@/lib/game/play-format"
 import { AnnouncementBanner } from "@/components/player/announcement-banner"
 import { AchievementToast } from "@/components/player/achievement-toast"
 import { ChallengeGrid } from "@/components/player/challenge-grid"
 import { ChallengeDetailModal } from "@/components/player/challenge-detail-modal"
-import { HintList } from "@/components/player/hint-list"
-import Link from "next/link"
-import Image from "next/image"
-import { TimerAnnouncer } from "@/components/player/timer-announcer"
-import { LeaveTeamButton } from "@/components/player/leave-team-button"
-
-interface PlayerChallenge {
-  id: string
-  title: string
-  description: string | null
-  type: ChallengeType
-  points: number
-  // null: a hint the team has not opened yet (its text comes from /api/play/hint)
-  hints: (string | null)[]
-  options: string[] | null
-  order_index: number
-  image_url: string | null
-  maps_url: string | null
-  hint_penalty: number
-  prerequisites: string[]
-}
-
-interface ExtendedSubmissionResult extends SubmissionResult {
-  explanation?: string | null
-}
-
-function openedHintCount(challenge: { hints?: (string | null)[] } | undefined): number {
-  return (challenge?.hints ?? []).filter((hint) => hint !== null).length
-}
-
-// The free-mode sheet starts clean for another task, and when the open task
-// changes what an answer looks like (type or choices).
-function sheetKey(challenge: { id: string; type: string; options: string[] | null } | undefined): string {
-  return challenge ? `${challenge.id}:${challenge.type}:${JSON.stringify(challenge.options)}` : "none"
-}
-
-function formatTime(seconds: number): string {
-  if (seconds <= 0) return "00:00"
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  const mmss = `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
-  return h > 0 ? `${h}:${mmss}` : mmss
-}
-
-// Number challenges accept both decimal separators — Lithuanian mobile
-// keypads type "3,14", teachers hash "3.14".
-function normalizeNumericAnswer(value: string): string {
-  return value.trim().replace(",", ".")
-}
+import { LinearTask, type ExtendedSubmissionResult, type PlayerChallenge } from "@/components/player/linear-task"
+import {
+  PlayEnd,
+  PlayHeader,
+  PlayLoadError,
+  PlayLoading,
+  PlayNotReady,
+  PlayPaused,
+  PlayPreparing,
+  PlayReadyToStart,
+  TeamFooter,
+} from "@/components/player/play-screens"
 
 // Stamp the team's server-side start (idempotent) and return it with the
 // pause offset, so the countdown runs on the same deadline the server
@@ -871,366 +809,107 @@ export default function PlayPage() {
     }
   }
 
+  const rejoin = () => {
+    clearPlayerSession(gameCode)
+    router.replace(`/play/${gameCode}`)
+  }
+
   // Load error state (network failure or game unavailable)
   if (loadError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-sm text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
-            <AlertTriangle className="h-8 w-8 text-accent-ink" />
-          </div>
-          <h1 className="text-xl font-bold text-steam-dark mb-2">
-            Nepavyko įkelti veiklos
-          </h1>
-          <p className="text-sm text-muted-foreground mb-6">
-            Patikrinkite interneto ryšį arba paklauskite vedėjo, ar veikla
-            vis dar vyksta.
-          </p>
-          <Button
-            onClick={() => session && loadChallenges(session)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            Bandyti dar kartą
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              clearPlayerSession(gameCode)
-              router.replace(`/play/${gameCode}`)
-            }}
-            className="w-full mt-2 text-muted-foreground gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Prisijungti iš naujo
-          </Button>
-        </div>
-      </div>
-    )
+    return <PlayLoadError onRetry={() => session && loadChallenges(session)} onRejoin={rejoin} />
   }
 
   // Loading state
   if (!session || !stateLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
-      </div>
-    )
+    return <PlayLoading />
   }
 
   // "Pradėti" pressed, the tasks are on their way (they follow the server's
   // start; the page keeps asking until it has it).
   if (awaitingStart && gameStarted && gameStatus !== "draft") {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-4" role="status">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-ink" aria-hidden="true" />
-        <p className="text-sm text-muted-foreground">Ruošiamos užduotys...</p>
-      </div>
-    )
+    return <PlayPreparing />
   }
 
   // The game was reverted to draft, or has no challenges (e.g. the teacher
   // deleted them mid-game) — an explicit message instead of a forever-spinner.
   if (gameStatus === "draft" || (challenges.length === 0 && !gameFinished && !awaitingStart)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-sm text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-highlight/10 flex items-center justify-center">
-            <Clock className="h-8 w-8 text-highlight-ink" />
-          </div>
-          <h1 className="text-xl font-bold text-steam-dark mb-2">
-            {gameStatus === "draft"
-              ? "Veikla dar neprasidėjo"
-              : "Veikloje dar nėra užduočių"}
-          </h1>
-          <p className="text-sm text-muted-foreground mb-6">
-            {gameStatus === "draft"
-              ? "Palaukite, kol vedėjas pradės veiklą, ir bandykite dar kartą."
-              : "Paklauskite vedėjo, ar veikla paruošta, ir bandykite dar kartą."}
-          </p>
-          <Button
-            onClick={() => session && loadChallenges(session)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            Atnaujinti
-          </Button>
-        </div>
-      </div>
-    )
+    return <PlayNotReady draft={gameStatus === "draft"} onRefresh={() => session && loadChallenges(session)} />
   }
 
   // Paused by the teacher — full-screen overlay until the game resumes
   if (gameStatus === "paused" && !gameFinished) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-steam-dark">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm text-center text-white"
-          role="status"
-          aria-live="polite"
-        >
-          {/* An announcement sent during the pause reaches the team here too. */}
-          {gameId && <AnnouncementBanner gameId={gameId} />}
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
-            <Clock className="h-10 w-10 text-highlight" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Veikla pristabdyta</h1>
-          <p className="text-white/70 mb-6">
-            Palaukite, kol vedėjas tęs veiklą. Jūsų taškai išsaugoti.
-          </p>
-          <div className="bg-white/5 rounded-2xl p-4 mb-2">
-            <p className="text-2xl font-bold">{totalPoints} tšk.</p>
-            <p className="text-sm text-white/60">
-              Komanda: {session.team_name}
-            </p>
-          </div>
-          <div className="flex items-center justify-center gap-1.5 mt-4 text-xs text-white/50">
-            <div className="w-2 h-2 rounded-full bg-highlight animate-pulse" />
-            Laukiama tęsimo...
-          </div>
-        </motion.div>
-      </div>
-    )
+    return <PlayPaused gameId={gameId} totalPoints={totalPoints} teamName={session.team_name} />
+  }
+
+  const endProps = {
+    solved: solvedIds.size,
+    total: challenges.length,
+    totalPoints,
+    teamName: session.team_name,
+    gameCode,
+    sessionToken: session.session_token,
+    challenges: challenges.map((c) => ({ id: c.id, title: c.title })),
+    showLeaderboard,
+    showReflection: !reflectionDone,
+    onReflectionDone: () => setReflectionDone(true),
+    allowAccessRequests,
   }
 
   // Time expired screen
   if (timeExpired && !gameFinished) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md text-center"
-        >
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center">
-            <AlertTriangle className="h-10 w-10 text-accent-ink" />
-          </div>
-          <h1 className="text-2xl font-bold text-steam-dark mb-2">
-            Laikas baigėsi!
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            Veiklai skirtas laikas baigėsi. Jūsų rezultatai buvo išsaugoti.
-          </p>
-
-          <div className="bg-primary/5 rounded-2xl p-6 mb-6">
-            <Trophy className="h-8 w-8 text-highlight-ink mx-auto mb-2" />
-            <p className="text-3xl font-bold text-steam-dark">{totalPoints}</p>
-            <p className="text-sm text-muted-foreground">surinktų taškų</p>
-          </div>
-
-          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-6">
-            <span>{solvedIds.size} iš {challenges.length} išspręsta</span>
-          </div>
-
-          <p className="text-sm font-medium text-steam-dark mb-1">
-            Komanda: {session.team_name}
-          </p>
-
-          {showLeaderboard && (
-            <Link href={`/play/${gameCode}/leaderboard`}>
-              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Rezultatų lentelė
-              </Button>
-            </Link>
-          )}
-
-          {!reflectionDone && (
-            <ReflectionForm
-              challenges={challenges.map(c => ({ id: c.id, title: c.title }))}
-              sessionToken={session.session_token}
-              gameCode={gameCode}
-              onDone={() => setReflectionDone(true)}
-            />
-          )}
-
-          {allowAccessRequests && (
-            <FinishRequestCard gameCode={gameCode} sessionToken={session.session_token} />
-          )}
-        </motion.div>
-      </div>
-    )
+    return <PlayEnd reason="time_up" {...endProps} />
   }
 
   // "Ready to start?" screen (only when time limit exists and not yet started)
   if (timeLimitMinutes && !gameStarted) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm text-center"
-        >
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-            <Clock className="h-10 w-10 text-primary-ink" />
-          </div>
-
-          <h1 className="text-2xl font-bold text-steam-dark mb-2">
-            Pasiruošę?
-          </h1>
-          <p className="text-muted-foreground mb-2">
-            Ši veikla turi laiko limitą.
-          </p>
-
-          <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 mb-6">
-            <p className="text-lg font-bold text-steam-dark">
-              {timeLimitMinutes} min.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Paspaudus „Pradėti“, laikas pradės skaičiuotis atgal.
-            </p>
-          </div>
-
-          <div className="space-y-3 text-left mb-6 text-sm text-muted-foreground">
-            <div className="flex items-start gap-2">
-              <span className="text-primary-ink font-bold mt-0.5">•</span>
-              <span>Užduočių skaičius: <strong className="text-steam-dark">{taskCount}</strong></span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary-ink font-bold mt-0.5">•</span>
-              <span>Pasibaigus laikui, atsakymai nebebus priimami</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary-ink font-bold mt-0.5">•</span>
-              <span>Jūsų rezultatai bus išsaugoti</span>
-            </div>
-          </div>
-
-          <Button
-            size="lg"
-            onClick={handleStart}
-            className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg shadow-lg shadow-primary/25 gap-3"
-          >
-            <Play className="h-6 w-6" />
-            Pradėti
-          </Button>
-
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            Komanda: <span className="font-medium text-steam-dark">{session.team_name}</span>
-          </p>
-        </motion.div>
-      </div>
+      <PlayReadyToStart
+        minutes={timeLimitMinutes}
+        taskCount={taskCount}
+        teamName={session.team_name}
+        onStart={handleStart}
+      />
     )
   }
 
   // Game finished screen
   if (gameFinished) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md text-center"
-        >
-          <Image src="/illustrations/celebration.svg" alt="" width={192} height={192} className="mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-steam-dark mb-2">
-            {endedByTeacher && solvedIds.size < challenges.length
-              ? "Veikla baigta!"
-              : "Sveikiname! 🎉"}
-          </h1>
-          <p className="text-muted-foreground mb-4">
-            {endedByTeacher && solvedIds.size < challenges.length
-              ? `Vedėjas užbaigė veiklą. Išsprendėte ${solvedIds.size} iš ${challenges.length} užduočių.`
-              : "Jūs išsprendėte visas užduotis!"}
-          </p>
-
-          <div className="bg-primary/5 rounded-2xl p-6 mb-6">
-            <Trophy className="h-8 w-8 text-highlight-ink mx-auto mb-2" />
-            <p className="text-3xl font-bold text-steam-dark">{totalPoints}</p>
-            <p className="text-sm text-muted-foreground">surinktų taškų</p>
-          </div>
-
-          <p className="text-sm font-medium text-steam-dark mb-1">
-            Komanda: {session.team_name}
-          </p>
-
-          {showLeaderboard && (
-            <Link href={`/play/${gameCode}/leaderboard`}>
-              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Rezultatų lentelė
-              </Button>
-            </Link>
-          )}
-
-          {!reflectionDone && (
-            <ReflectionForm
-              challenges={challenges.map(c => ({ id: c.id, title: c.title }))}
-              sessionToken={session.session_token}
-              gameCode={gameCode}
-              onDone={() => setReflectionDone(true)}
-            />
-          )}
-
-          {allowAccessRequests && (
-            <FinishRequestCard gameCode={gameCode} sessionToken={session.session_token} />
-          )}
-        </motion.div>
-      </div>
-    )
+    const reason = endedByTeacher && solvedIds.size < challenges.length ? "ended_by_facilitator" : "all_solved"
+    return <PlayEnd reason={reason} {...endProps} />
   }
+
+  const header = (
+    <PlayHeader
+      gameCode={gameCode}
+      totalPoints={totalPoints}
+      timeLimitMinutes={timeLimitMinutes}
+      remainingSeconds={remainingSeconds}
+      showLeaderboard={showLeaderboard}
+    />
+  )
+  const banners = (
+    <>
+      {/* Announcement banner */}
+      {gameId && <AnnouncementBanner gameId={gameId} />}
+
+      {/* Achievement toast */}
+      {pendingAchievement && (
+        <AchievementToast
+          achievement={pendingAchievement}
+          onDismiss={dismissAchievement}
+        />
+      )}
+    </>
+  )
 
   // Free mode: show challenge grid
   if (pathMode === "free") {
+    const selected = selectedChallengeIndex !== null ? challenges[selectedChallengeIndex] : undefined
     return (
       <div className="min-h-screen p-4 pb-8">
         <div className="max-w-2xl mx-auto">
-          {/* Announcement banner */}
-          {gameId && <AnnouncementBanner gameId={gameId} />}
-
-          {/* Achievement toast */}
-          {pendingAchievement && (
-            <AchievementToast
-              achievement={pendingAchievement}
-              onDismiss={dismissAchievement}
-            />
-          )}
-
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="font-mono text-xs tracking-wider">
-                {gameCode}
-              </Badge>
-              <Badge variant="secondary" className="gap-1">
-                <Star className="h-3 w-3 text-highlight-ink" />
-                {totalPoints} tšk.
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              {timeLimitMinutes && remainingSeconds > 0 && (
-                <Badge
-                  variant={
-                    remainingSeconds <= 60
-                      ? "destructive"
-                      : remainingSeconds <= 300
-                        ? "default"
-                        : "outline"
-                  }
-                  className={`gap-1 font-mono text-xs tabular-nums ${
-                    remainingSeconds <= 60 ? "animate-pulse" : ""
-                  } ${
-                    remainingSeconds > 60 && remainingSeconds <= 300
-                      ? "bg-highlight text-highlight-foreground"
-                      : ""
-                  }`}
-                  aria-label={`Liko laiko ${formatTime(remainingSeconds)}`}
-                >
-                  <Clock className="h-3 w-3" aria-hidden="true" />
-                  {formatTime(remainingSeconds)}
-                </Badge>
-              )}
-              {timeLimitMinutes && <TimerAnnouncer seconds={remainingSeconds} />}
-              {showLeaderboard && (
-                <Link href={`/play/${gameCode}/leaderboard`}>
-                  <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                    <BarChart3 className="h-3.5 w-3.5" />
-                    Lentelė
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
+          {banners}
+          {header}
 
           <ChallengeGrid
             challenges={challenges}
@@ -1239,25 +918,16 @@ export default function PlayPage() {
           />
 
           <ChallengeDetailModal
-            key={sheetKey(selectedChallengeIndex !== null ? challenges[selectedChallengeIndex] : undefined)}
-            challenge={selectedChallengeIndex !== null ? challenges[selectedChallengeIndex] : null}
+            key={sheetKey(selected)}
+            challenge={selected ?? null}
             open={selectedChallengeIndex !== null}
             onOpenChange={(open) => { if (!open) setSelectedChallengeIndex(null) }}
             onSubmit={handleFreeSubmit}
-            isSolved={selectedChallengeIndex !== null ? solvedIds.has(challenges[selectedChallengeIndex].id) : false}
-            onRevealHint={(idx) =>
-              selectedChallengeIndex !== null
-                ? revealHint(challenges[selectedChallengeIndex].id, idx)
-                : Promise.resolve(false)
-            }
+            isSolved={selected ? solvedIds.has(selected.id) : false}
+            onRevealHint={(idx) => (selected ? revealHint(selected.id, idx) : Promise.resolve(false))}
           />
 
-          <div className="text-center text-sm text-muted-foreground mt-4">
-            <span>Komanda: </span>
-            <span className="font-medium text-steam-dark">{session.team_name}</span>
-            <span className="mx-2">&middot;</span>
-            <LeaveTeamButton onLeave={() => { clearPlayerSession(gameCode); router.replace(`/play/${gameCode}`) }} />
-          </div>
+          <TeamFooter teamName={session.team_name} onLeave={rejoin} className="mt-4" />
         </div>
       </div>
     )
@@ -1265,59 +935,12 @@ export default function PlayPage() {
 
   const currentChallenge = challenges[currentIndex]
   const progressValue = (solvedIds.size / challenges.length) * 100
-  const isTimerCritical = timeLimitMinutes && remainingSeconds > 0 && remainingSeconds <= 60
-  const isTimerWarning = timeLimitMinutes && remainingSeconds > 0 && remainingSeconds <= 300 // 5 min
 
   return (
     <div className="min-h-screen p-4 pb-8">
       <div className="max-w-lg mx-auto">
-        {/* Announcement banner */}
-        {gameId && <AnnouncementBanner gameId={gameId} />}
-
-        {/* Achievement toast */}
-        {pendingAchievement && (
-          <AchievementToast
-            achievement={pendingAchievement}
-            onDismiss={dismissAchievement}
-          />
-        )}
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono text-xs tracking-wider">
-              {gameCode}
-            </Badge>
-            <Badge variant="secondary" className="gap-1">
-              <Star className="h-3 w-3 text-highlight-ink" />
-              {totalPoints} tšk.
-            </Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Timer badge — outline > 5min, highlight ≤5min, destructive ≤60s (pulsing) */}
-            {timeLimitMinutes && remainingSeconds > 0 && (
-              <Badge
-                variant={isTimerCritical ? "destructive" : isTimerWarning ? "default" : "outline"}
-                className={`gap-1 font-mono text-xs tabular-nums ${
-                  isTimerCritical ? "animate-pulse" : ""
-                } ${isTimerWarning && !isTimerCritical ? "bg-highlight text-highlight-foreground" : ""}`}
-                aria-label={`Liko laiko ${formatTime(remainingSeconds)}`}
-              >
-                <Clock className="h-3 w-3" aria-hidden="true" />
-                {formatTime(remainingSeconds)}
-              </Badge>
-            )}
-            {timeLimitMinutes && <TimerAnnouncer seconds={remainingSeconds} />}
-            {showLeaderboard && (
-              <Link href={`/play/${gameCode}/leaderboard`}>
-                <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                  <BarChart3 className="h-3.5 w-3.5" />
-                  Lentelė
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
+        {banners}
+        {header}
 
         {/* Progress */}
         <div className="mb-6">
@@ -1328,185 +951,25 @@ export default function PlayPage() {
           <Progress value={Math.round(progressValue)} className="h-2" aria-label="Išspręstos užduotys" />
         </div>
 
-        {/* Challenge card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentChallenge.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-          >
-            <Card className="border-border/50 bg-white shadow-lg mb-4">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary-ink shrink-0">
-                    {currentIndex + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-lg font-bold text-steam-dark leading-tight break-words">
-                      {currentChallenge.title}
-                    </h2>
-                    <Badge variant="outline" className="text-xs mt-1">
-                      {currentChallenge.points}{" "}
-                      {pluralizeLt(currentChallenge.points, "taškas", "taškai", "taškų")}
-                    </Badge>
-                  </div>
-                </div>
+        <LinearTask
+          challenge={currentChallenge}
+          index={currentIndex}
+          answer={answer}
+          onAnswerChange={setAnswer}
+          loading={loading}
+          feedback={feedback}
+          explanation={showExplanation ? currentExplanation : null}
+          onSubmit={handleSubmit}
+          onRevealHint={(index) => revealHint(currentChallenge.id, index)}
+          onNext={() => {
+            setFeedback(null)
+            setShowExplanation(false)
+            setCurrentExplanation(null)
+            goToNextTask()
+          }}
+        />
 
-                {currentChallenge.description && (
-                  <div className="bg-muted/30 rounded-lg p-4 mb-4 text-sm text-steam-dark leading-relaxed">
-                    {currentChallenge.description}
-                  </div>
-                )}
-
-                {/* Paveiksliukas */}
-                {currentChallenge.image_url && (
-                  <TaskImage src={currentChallenge.image_url} title={currentChallenge.title} />
-                )}
-
-                {/* Google Maps */}
-                {currentChallenge.maps_url && (
-                  <div className="mb-4">
-                    <MapsEmbed url={currentChallenge.maps_url} className="rounded-xl overflow-hidden" />
-                  </div>
-                )}
-
-                {/* Hints: the text arrives when the team opens one */}
-                <HintList
-                  key={currentChallenge.id}
-                  hints={currentChallenge.hints ?? []}
-                  penalty={currentChallenge.hint_penalty}
-                  points={currentChallenge.points}
-                  onReveal={(index) => revealHint(currentChallenge.id, index)}
-                />
-
-                {!feedback?.is_correct && (
-                <form onSubmit={handleSubmit} className="space-y-3" aria-label="Atsakymo forma">
-                  {currentChallenge.type === "multiple_choice" && currentChallenge.options ? (
-                    <div className="space-y-2">
-                      {(currentChallenge.options as string[]).map((option, i) => (
-                        <Button
-                          key={i}
-                          type="button"
-                          variant={answer === option ? "default" : "outline"}
-                          className={`w-full justify-start items-start h-auto min-h-12 py-3 px-4 text-left whitespace-normal break-words ${
-                            answer === option ? "bg-primary text-primary-foreground" : ""
-                          }`}
-                          onClick={() => setAnswer(option)}
-                        >
-                          <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">
-                            {String.fromCharCode(65 + i)}
-                          </span>
-                          <span className="flex-1 leading-relaxed">{option}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  ) : (
-                    <AnswerInput type={currentChallenge.type} value={answer} onChange={setAnswer} />
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={loading || !answer.trim()}
-                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/25 gap-2"
-                  >
-                    {loading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4" />
-                        Pateikti atsakymą
-                      </>
-                    )}
-                  </Button>
-                </form>
-                )}
-
-                <AnimatePresence>
-                  {feedback && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="mt-4 space-y-3"
-                      role="alert"
-                      aria-live="assertive"
-                    >
-                      <div
-                        className={`p-4 rounded-lg flex items-center gap-3 ${
-                          feedback.is_correct
-                            ? "bg-primary/10 border border-primary/20"
-                            : "bg-accent/5 border border-accent/20"
-                        }`}
-                      >
-                        {feedback.is_correct ? (
-                          <CheckCircle2 className="h-6 w-6 text-primary-ink shrink-0" />
-                        ) : (
-                          <XCircle className="h-6 w-6 text-accent-ink shrink-0" />
-                        )}
-                        <div>
-                          <p className={`font-medium ${feedback.is_correct ? "text-primary-ink" : "text-accent-ink"}`}>
-                            {feedback.message}
-                          </p>
-                          {feedback.is_correct && !showExplanation && (
-                            <p className="text-sm text-muted-foreground mt-0.5">
-                              Pereinama prie kitos užduoties...
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Explanation after correct answer */}
-                      {showExplanation && currentExplanation && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="space-y-3"
-                        >
-                          <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
-                            <div className="flex items-center gap-2 mb-2">
-                              <BookOpen className="h-4 w-4 text-secondary-ink" />
-                              <p className="text-sm font-semibold text-secondary-ink">
-                                Ar žinojote?
-                              </p>
-                            </div>
-                            <p className="text-sm text-steam-dark/80 leading-relaxed">
-                              {currentExplanation}
-                            </p>
-                          </div>
-                          <Button
-                            onClick={() => {
-                              setFeedback(null)
-                              setShowExplanation(false)
-                              setCurrentExplanation(null)
-                              goToNextTask()
-                            }}
-                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
-                          >
-                            Toliau
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="text-center text-sm text-muted-foreground">
-          <span>Komanda: </span>
-          <span className="font-medium text-steam-dark">{session.team_name}</span>
-          <span className="mx-2">&middot;</span>
-          <LeaveTeamButton
-            onLeave={() => {
-              clearPlayerSession(gameCode)
-              router.replace(`/play/${gameCode}`)
-            }}
-          />
-        </div>
+        <TeamFooter teamName={session.team_name} onLeave={rejoin} />
       </div>
     </div>
   )
