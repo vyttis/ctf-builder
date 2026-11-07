@@ -499,6 +499,10 @@ export function ManualTaskEditor({
             <Plus className="h-3 w-3" />
             Pridėti variantą
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Kiekviena komanda variantus mato kita tvarka. Jei kuris nors variantas remiasi kitais (pvz. „Visi
+            išvardyti“), tvarka nekeičiama.
+          </p>
         </div>
       )}
 

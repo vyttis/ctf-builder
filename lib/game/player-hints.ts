@@ -42,6 +42,41 @@ export function orderForTeam<T extends { id: string }>(challenges: T[], teamId: 
     .map(({ c }) => c)
 }
 
+// An option that points at the others ("Visi išvardyti", "Nė vienas iš
+// jų", "A ir B") only makes sense in the order the facilitator wrote.
+const REFERS_TO_OTHER_OPTIONS =
+  /(^|[\s,.(])(visi|visos|visa tai|abu|abi|nė vienas|nė viena|nei vienas|nei viena|joks|jokia|aukščiau)(?=$|[\s,.!?)])|anksčiau minėt/iu
+const LETTER_PAIR = /^\s*[a-f]\s*(ir|bei|,)\s*[a-f]\s*$/iu
+
+export function optionsReferToEachOther(options: readonly string[]): boolean {
+  return options.some((o) => REFERS_TO_OTHER_OPTIONS.test(o) || LETTER_PAIR.test(o))
+}
+
+/**
+ * Choice options in an order of the team's own, the same on every reload
+ * and device. A generated task often lists the right answer first, and
+ * neighbouring teams cannot pass on "it's B". The answer is checked by the
+ * option's text, so the order does not affect checking.
+ */
+export function optionsForTeam(options: readonly string[], teamId: string, challengeId: string): string[] {
+  if (options.length < 2 || optionsReferToEachOther(options)) return [...options]
+  return options
+    .map((o, i) => ({ o, key: fnv1a(`${teamId}:${challengeId}:${i}:${o}`) }))
+    .sort((a, b) => a.key - b.key)
+    .map(({ o }) => o)
+}
+
+function withTeamOptionOrder<T extends { id: string; type?: unknown; options?: unknown }>(
+  challenges: T[],
+  teamId: string
+): T[] {
+  return challenges.map((c) =>
+    c.type === "multiple_choice" && Array.isArray(c.options) && c.options.every((o) => typeof o === "string")
+      ? { ...c, options: optionsForTeam(c.options as string[], teamId, c.id) }
+      : c
+  )
+}
+
 /** When the team pressed "Pradėti" (null: not yet), read on the server. */
 export interface TeamStart {
   startedAt: string | null
@@ -80,10 +115,13 @@ export function forParticipant(
     challenges?: unknown
     game?: { status?: unknown; settings?: unknown } | null
   }
-  const challenges = Array.isArray(s.challenges) ? (s.challenges as { id: string; hints?: unknown }[]) : []
+  const challenges = Array.isArray(s.challenges)
+    ? (s.challenges as { id: string; hints?: unknown; type?: unknown; options?: unknown }[])
+    : []
   const teamId = s.team && typeof s.team.id === "string" ? s.team.id : null
   const settings = (s.game?.settings ?? null) as { shuffle_challenges?: unknown } | null
-  const ordered = teamId && settings?.shuffle_challenges === true ? orderForTeam(challenges, teamId) : challenges
+  const inTeamOrder = teamId && settings?.shuffle_challenges === true ? orderForTeam(challenges, teamId) : challenges
+  const ordered = teamId ? withTeamOptionOrder(inTeamOrder, teamId) : inTeamOrder
   const waiting = waitsForStart(s, start)
   return {
     ...s,
