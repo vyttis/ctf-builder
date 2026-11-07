@@ -46,7 +46,7 @@ export function AcceptedAnswersField({
 
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-medium" id={`${fieldId}-accepted-label`}>
+      <Label className="block text-xs font-medium" id={`${fieldId}-accepted-label`}>
         Kiti priimami atsakymai (neprivaloma)
       </Label>
       {savedNote && (
