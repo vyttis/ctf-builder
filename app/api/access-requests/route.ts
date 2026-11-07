@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 import { accessRequestSchema } from "@/lib/access/profile-fields"
 import { resolveRequestSource, saveAccessRequest } from "@/lib/access/requests"
-import { clientIp } from "@/lib/access/admin-guard"
+import { clientKey } from "@/lib/client-address"
 import { findSchoolByCode } from "@/lib/access/schools"
 import { notifyNewRequest } from "@/lib/access/notify"
 
@@ -14,8 +14,8 @@ import { notifyNewRequest } from "@/lib/access/notify"
 export async function POST(request: Request) {
   // A whole room of teachers often shares one school or venue Wi-Fi
   // address, so the limit is per address but generous.
-  const ip = clientIp(request)
-  if (!(await checkAiRateLimitAsync("access-request", ip, 40, 10 * 60_000))) {
+  const client = clientKey(request)
+  if (!(await checkAiRateLimitAsync("access-request", client, 40, 10 * 60_000))) {
     return NextResponse.json({ error: "Per daug bandymų. Palaukite kelias minutes." }, { status: 429 })
   }
 

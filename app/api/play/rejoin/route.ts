@@ -3,6 +3,7 @@ import { z } from "zod"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 import { verifyRejoinToken } from "@/lib/game/rejoin-token"
+import { clientKey } from "@/lib/client-address"
 
 const rejoinSchema = z.object({
   game_code: z.string().length(6),
@@ -15,8 +16,8 @@ const rejoinSchema = z.object({
  * must still exist and its activity must still run.
  */
 export async function POST(request: Request) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-  if (!(await checkAiRateLimitAsync("rejoin-ip", ip, 60, 60_000))) {
+  const client = clientKey(request)
+  if (!(await checkAiRateLimitAsync("rejoin-ip", client, 60, 60_000))) {
     return NextResponse.json({ error: "Per daug bandymų. Palaukite minutę." }, { status: 429 })
   }
 
