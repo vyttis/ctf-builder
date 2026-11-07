@@ -50,9 +50,14 @@ export async function GET(request: Request) {
   const overBudget = () => Date.now() - now > TIME_BUDGET_MS
 
   // Candidates in id order, a page at a time, so every one is seen even
-  // when there are many. The time budget is checked before each activity,
-  // so near the limit the rest waits a night instead of being cut off.
+  // when there are many. The time budget is checked before each page and
+  // each activity, so near the limit the rest waits a night instead of
+  // being cut off.
   pages: for (;;) {
+    if (cursor && overBudget()) {
+      stopped = "time_budget"
+      break
+    }
     let query = admin
       .from("games")
       .select("id, title, status, teacher_id, starts_at, created_at, updated_at")
