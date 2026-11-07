@@ -3,6 +3,7 @@ import { generateSessionToken } from "@/lib/game/code-generator"
 import { checkAiRateLimitAsync } from "@/lib/ai/rate-limit"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { clientKey } from "@/lib/client-address"
 
 const createTeamSchema = z.object({
   game_code: z.string().length(6),
@@ -19,11 +20,11 @@ const RATE_WINDOW = 60_000
 
 export async function POST(request: Request) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+    const client = clientKey(request)
 
     // The wide per-IP ceiling counts every request, also malformed ones,
     // so it runs before the body is read.
-    if (!(await checkAiRateLimitAsync("teams-ip", ip, RATE_PER_IP, RATE_WINDOW))) {
+    if (!(await checkAiRateLimitAsync("teams-ip", client, RATE_PER_IP, RATE_WINDOW))) {
       return NextResponse.json(
         { error: "Per daug bandymų prisijungti. Palaukite minutę." },
         { status: 429 }
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const gameKey = `${ip}:${parsed.data.game_code.toUpperCase()}`
+    const gameKey = `${client}:${parsed.data.game_code.toUpperCase()}`
     if (!(await checkAiRateLimitAsync("teams", gameKey, RATE_PER_GAME, RATE_WINDOW))) {
       return NextResponse.json(
         { error: "Per daug bandymų prisijungti. Palaukite minutę." },
