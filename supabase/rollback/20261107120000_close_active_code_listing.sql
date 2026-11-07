@@ -1,9 +1,14 @@
 -- Rollback for 20261107120000_close_active_code_listing.
--- Reopens the anon reads of running activities exactly as they were before
--- (policies from 00011, 00012, 00020, 20261106120000; anon grants as listed
--- by pg_class.relacl and pg_attribute.attacl), and removes the admin and
--- achievement policies the migration added. The app from the same release
--- works either way: it no longer reads these tables with the anon key.
+-- Reopens the anon reads of running activities exactly as production had
+-- them on 2026-11-07 before the migration (checked in the SQL Editor), and
+-- removes the admin and achievement policies the migration added. The app
+-- from the same release works either way: it no longer reads these tables
+-- with the anon key.
+--
+-- Production differs from the migration files here: the games, teams and
+-- submissions read policies are the 00014 versions (active and finished;
+-- 00020 never replaced them there), and anon has no grant on
+-- challenges.generated_by_di.
 
 BEGIN;
 
@@ -16,7 +21,7 @@ DROP POLICY IF EXISTS admins_read_all_announcements ON public.announcements;
 DROP POLICY IF EXISTS "Anyone can read active games" ON public.games;
 CREATE POLICY "Anyone can read active games" ON public.games
   FOR SELECT
-  USING (status IN ('active', 'paused', 'finished'));
+  USING (status IN ('active', 'finished'));
 
 DROP POLICY IF EXISTS "Anyone can read challenges for active games" ON public.challenges;
 CREATE POLICY "Anyone can read challenges for active games" ON public.challenges
@@ -36,7 +41,7 @@ CREATE POLICY "Read teams in active games" ON public.teams
     EXISTS (
       SELECT 1 FROM public.games
       WHERE games.id = teams.game_id
-        AND games.status IN ('active', 'paused', 'finished')
+        AND games.status IN ('active', 'finished')
     )
   );
 
@@ -48,7 +53,7 @@ CREATE POLICY "Read submissions in active games" ON public.submissions
       SELECT 1 FROM public.teams t
       JOIN public.games g ON g.id = t.game_id
       WHERE t.id = submissions.team_id
-        AND g.status IN ('active', 'paused', 'finished')
+        AND g.status IN ('active', 'finished')
     )
   );
 
@@ -68,7 +73,7 @@ CREATE POLICY "Anyone can read achievements"
 
 GRANT SELECT ON public.games, public.announcements, public.achievements TO anon;
 GRANT SELECT (id, game_id, title, description, type, options, points, order_index,
-  image_url, maps_url, prerequisites, generated_by_di, created_at, updated_at)
+  image_url, maps_url, prerequisites, created_at, updated_at)
   ON public.challenges TO anon;
 GRANT SELECT (id, game_id, name, total_points, current_challenge_index, joined_at, updated_at)
   ON public.teams TO anon;
