@@ -429,6 +429,27 @@ select
 Tikimasi: `anon_games`, `anon_teams`, `anon_achievements` `false`,
 `open_policies` 0, `new_policies` 5.
 
+Būsena prieš taikymą (2026-11-07, tik skaitymo užklausos SQL Editor): 0
+vykstančių veiklų. Produkcija skyrėsi nuo migracijų failų: `games`, `teams`,
+`submissions` skaitymo politikos yra 00014 versijos (`active`, `finished`, be
+`paused`; 00020 jų ten nepakeitė), o `anon` neturi teisės į
+`challenges.generated_by_di`. Grąžinimo failas atkuria būtent tokią būseną.
+
+Atspaudas (politikų apibrėžimai ir `anon` skaitymo teisės):
+
+```sql
+with t as (select oid, relname from pg_class where relnamespace='public'::regnamespace and relname in ('games','challenges','teams','submissions','announcements','achievements')),
+x as (
+  select 'pol' k, tablename||'.'||policyname n, md5(roles::text||' '||cmd||' '||coalesce(regexp_replace(qual,'\s+',' ','g'),'')) v from pg_policies where schemaname='public' and tablename in ('games','challenges','teams','submissions','announcements','achievements')
+  union all select 'tab', relname, has_table_privilege('anon', oid, 'SELECT')::text from t
+  union all select 'col', t.relname||'.'||a.attname, 'y' from pg_attribute a join t on t.oid=a.attrelid where a.attnum>0 and not a.attisdropped and has_column_privilege('anon', t.oid, a.attnum, 'SELECT')
+)
+select count(*) as n, md5(string_agg(k||'|'||n||'|'||v, '/' order by k, n)) as fp from x;
+```
+
+Produkcijoje prieš taikymą ir lokaliai po grąžinimo: `82 | fd39b8eca6104db93c12a722beee8a7c`.
+Po migracijos laukiama: `28 | 03de43e87dedd1ca5202b57f295d6d7e`.
+
 Būsena: produkcijoje dar netaikyta.
 
 ## Konvencija toliau
