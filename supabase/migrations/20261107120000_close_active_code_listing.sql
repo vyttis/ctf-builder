@@ -78,6 +78,24 @@ CREATE POLICY admins_read_all_announcements ON public.announcements
 REVOKE SELECT ON public.games, public.challenges, public.teams, public.submissions,
   public.announcements, public.achievements FROM anon;
 
+-- The migration stops if anon can still read any column of these tables
+-- (table or column grant, directly or through PUBLIC).
+DO $$
+DECLARE
+  left_open text;
+BEGIN
+  SELECT string_agg(c.relname || '.' || a.attname, ', ') INTO left_open
+  FROM pg_attribute a
+  JOIN pg_class c ON c.oid = a.attrelid
+  WHERE c.relnamespace = 'public'::regnamespace
+    AND c.relname IN ('games', 'challenges', 'teams', 'submissions', 'announcements', 'achievements')
+    AND a.attnum > 0 AND NOT a.attisdropped
+    AND has_column_privilege('anon', c.oid, a.attnum, 'SELECT');
+  IF left_open IS NOT NULL THEN
+    RAISE EXCEPTION 'anon can still read: %', left_open;
+  END IF;
+END $$;
+
 COMMENT ON TABLE public.games IS
   'Not readable by anon (20261107120000): participants reach an activity only with its code, through the server.';
 
