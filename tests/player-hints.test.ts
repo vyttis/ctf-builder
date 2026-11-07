@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { forParticipant, hideUnopenedHints, orderForTeam, waitsForStart } from "@/lib/game/player-hints"
+import {
+  forParticipant,
+  hideUnopenedHints,
+  optionsForTeam,
+  optionsReferToEachOther,
+  orderForTeam,
+  waitsForStart,
+} from "@/lib/game/player-hints"
 
 const task = (id: string, hints: unknown) => ({ id, title: id, hints })
 
@@ -124,5 +131,48 @@ describe("orderForTeam and shuffling", () => {
     const ids = (s: unknown) => (s as { challenges: { id: string }[] }).challenges.map((c) => c.id)
     expect(ids(forParticipant(state(false), [], null))).toEqual(tasks.map((t) => t.id))
     expect(ids(forParticipant(state(true), [], null))).toEqual(orderForTeam(tasks, "team-a").map((t) => t.id))
+  })
+})
+
+describe("choice options in each team's own order", () => {
+  const options = ["Vanduo", "Ugnis", "Žemė", "Oras"]
+  const teams = Array.from({ length: 12 }, (_, i) => `team-${i}`)
+
+  it("keeps the same options, the same order on every call", () => {
+    const once = optionsForTeam(options, "team-1", "c1")
+    expect([...once].sort()).toEqual([...options].sort())
+    expect(optionsForTeam(options, "team-1", "c1")).toEqual(once)
+  })
+
+  it("differs between teams, so the first option is not always first", () => {
+    const orders = new Set(teams.map((t) => optionsForTeam(options, t, "c1").join("|")))
+    expect(orders.size).toBeGreaterThan(3)
+    const firsts = new Set(teams.map((t) => optionsForTeam(options, t, "c1")[0]))
+    expect(firsts.size).toBeGreaterThan(1)
+  })
+
+  it("keeps the facilitator's order when an option points at the others", () => {
+    for (const extra of ["Visi išvardyti", "Nė vienas iš jų", "Abu atsakymai teisingi", "A ir B", "Visi aukščiau"]) {
+      expect(optionsReferToEachOther([...options, extra])).toBe(true)
+      for (const t of teams) expect(optionsForTeam([...options, extra], t, "c1")).toEqual([...options, extra])
+    }
+  })
+
+  it("does not mistake a word that only starts the same way", () => {
+    expect(optionsReferToEachOther(["Visiškai sutinku", "Abejoju", "Nesutinku"])).toBe(false)
+  })
+
+  it("is applied to a team's choice tasks only", () => {
+    const state = {
+      game: { id: "g", status: "active" },
+      team: { id: "team-3" },
+      challenges: [
+        { id: "c1", type: "multiple_choice", options, hints: [] },
+        { id: "c2", type: "text", options: null, hints: [] },
+      ],
+    }
+    const out = forParticipant(state, [], null) as { challenges: { options: string[] | null }[] }
+    expect(out.challenges[0].options).toEqual(optionsForTeam(options, "team-3", "c1"))
+    expect(out.challenges[1].options).toBeNull()
   })
 })
