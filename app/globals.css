@@ -37,7 +37,9 @@
     /* Darker amber for yellow-tinted text on light surfaces (5.7:1 on white). */
     --highlight-ink: 36 90% 30%;
 
-    --destructive: 343 95% 57%;
+    /* Errors and destructive actions: a red of their own, apart from the
+       pink CTA accent (6.5:1 with white text, 6.2:1 on the muted surface). */
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 214 32% 91%;
@@ -124,15 +126,15 @@
   }
 
   .gradient-primary {
-    @apply bg-gradient-to-r from-steam-green to-steam-blue;
+    @apply bg-gradient-to-r from-primary to-secondary;
   }
 
   .gradient-accent {
-    @apply bg-gradient-to-r from-steam-pink to-steam-yellow;
+    @apply bg-gradient-to-r from-accent to-highlight;
   }
 
   .gradient-hero {
-    @apply bg-gradient-to-br from-steam-dark via-steam-dark to-steam-blue/30;
+    @apply bg-gradient-to-br from-steam-dark via-steam-dark to-secondary/30;
   }
 
   /* Editorial primitives — display serif italic for inline emphasis */

@@ -25,7 +25,7 @@ export function TaskImage({ src, title, className = "" }: { src: string; title: 
         </button>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute right-2 top-2 flex items-center gap-1 rounded-full bg-steam-dark/75 px-2 py-1 text-[11px] font-medium text-white"
+          className="pointer-events-none absolute right-2 top-2 flex items-center gap-1 rounded-full bg-steam-dark/75 px-2 py-1 text-xs font-medium text-white"
         >
           <Maximize2 className="h-3 w-3" />
           Padidinti

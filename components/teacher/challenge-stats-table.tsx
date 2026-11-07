@@ -178,7 +178,7 @@ export function ChallengeStatsTable({ stats, detailedStats }: ChallengeStatsTabl
                         {autoDiff ? (
                           <Badge
                             variant="outline"
-                            className={`text-[10px] ${autoDiff.className}`}
+                            className={`text-xs ${autoDiff.className}`}
                           >
                             {autoDiff.label}
                           </Badge>

@@ -41,7 +41,7 @@ export function DifferenceSection() {
       <div className="max-w-3xl mb-16">
         <div className="flex items-center gap-3 mb-5">
           <span className="inline-flex h-px w-10 bg-accent" />
-          <span className="text-[11px] uppercase tracking-[0.22em] text-accent-ink font-semibold">
+          <span className="text-xs uppercase tracking-[0.22em] text-accent-ink font-semibold">
             §7 · Skirtumas
           </span>
         </div>
@@ -64,7 +64,7 @@ export function DifferenceSection() {
         <div className="bg-muted/30 p-8 md:p-10">
           <div className="flex items-center gap-2 mb-1">
             <X className="h-4 w-4 text-muted-foreground" strokeWidth={2.5} />
-            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-muted-foreground">
+            <span className="text-xs uppercase tracking-[0.18em] font-bold text-muted-foreground">
               Testų įrankis
             </span>
           </div>
@@ -74,7 +74,7 @@ export function DifferenceSection() {
           <dl className="space-y-4">
             {rows.map((row) => (
               <div key={row.label} className="border-t border-border/40 pt-3">
-                <dt className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold mb-1">
+                <dt className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">
                   {row.label}
                 </dt>
                 <dd className="text-sm text-muted-foreground leading-snug">
@@ -92,7 +92,7 @@ export function DifferenceSection() {
           </div>
           <div className="flex items-center gap-2 mb-1">
             <Check className="h-4 w-4 text-primary-ink" strokeWidth={2.5} />
-            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-primary-ink">
+            <span className="text-xs uppercase tracking-[0.18em] font-bold text-primary-ink">
               Šis įrankis
             </span>
           </div>
@@ -102,7 +102,7 @@ export function DifferenceSection() {
           <dl className="space-y-4">
             {rows.map((row) => (
               <div key={row.label} className="border-t border-primary/15 pt-3">
-                <dt className="text-[10px] uppercase tracking-wider text-primary-ink/80 font-bold mb-1">
+                <dt className="text-xs uppercase tracking-wider text-primary-ink/80 font-bold mb-1">
                   {row.label}
                 </dt>
                 <dd className="text-sm font-medium text-steam-dark leading-snug">

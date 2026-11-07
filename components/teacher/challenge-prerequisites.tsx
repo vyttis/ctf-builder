@@ -115,7 +115,7 @@ export function ChallengePrerequisites({
   return (
     <div className="space-y-2" ref={containerRef}>
       <Label className="flex items-center gap-1.5 text-sm font-medium">
-        <Link2 className="h-3.5 w-3.5 text-steam-blue" />
+        <Link2 className="h-3.5 w-3.5 text-secondary-ink" />
         Prieš tai reikia išspręsti:
       </Label>
 
@@ -126,16 +126,16 @@ export function ChallengePrerequisites({
             <Badge
               key={c.id}
               variant="outline"
-              className="gap-1 pr-1 bg-steam-blue/5 text-steam-blue border-steam-blue/20 text-xs"
+              className="gap-1 pr-1 bg-secondary/5 text-secondary-ink border-secondary/20 text-xs"
             >
-              <span className="font-mono text-[10px] text-steam-dark/50">
+              <span className="font-mono text-xs text-muted-foreground">
                 #{c.order_index + 1}
               </span>
               <span className="max-w-[140px] truncate">{c.title}</span>
               <button
                 type="button"
                 onClick={() => removePrerequisite(c.id)}
-                className="ml-0.5 rounded-full p-0.5 hover:bg-steam-pink/10 hover:text-steam-pink transition-colors"
+                className="ml-0.5 rounded-full p-0.5 hover:bg-accent/10 hover:text-accent-ink transition-colors"
                 aria-label={`Pašalinti ${c.title}`}
               >
                 <X className="h-3 w-3" />
@@ -204,7 +204,7 @@ export function ChallengePrerequisites({
                         isBlocked
                           ? "opacity-40 cursor-not-allowed"
                           : isSelected
-                          ? "bg-steam-green/5"
+                          ? "bg-primary/5"
                           : "hover:bg-muted"
                       }`}
                       title={
@@ -217,7 +217,7 @@ export function ChallengePrerequisites({
                       <div
                         className={`shrink-0 flex items-center justify-center w-4 h-4 rounded border transition-colors ${
                           isSelected
-                            ? "bg-steam-green border-steam-green text-primary-foreground"
+                            ? "bg-primary border-primary text-primary-foreground"
                             : "border-gray-300"
                         }`}
                       >
@@ -225,7 +225,7 @@ export function ChallengePrerequisites({
                       </div>
 
                       {/* Challenge info */}
-                      <span className="font-mono text-[10px] text-steam-dark/40 shrink-0">
+                      <span className="font-mono text-xs text-muted-foreground shrink-0">
                         #{c.order_index + 1}
                       </span>
                       <span className="truncate text-steam-dark">
@@ -234,7 +234,7 @@ export function ChallengePrerequisites({
 
                       {/* Blocked indicator */}
                       {isBlocked && (
-                        <AlertTriangle className="h-3 w-3 text-steam-yellow shrink-0 ml-auto" />
+                        <AlertTriangle className="h-3 w-3 text-highlight-ink shrink-0 ml-auto" />
                       )}
                     </button>
                   )

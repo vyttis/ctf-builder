@@ -187,12 +187,12 @@ export function LessonActivityCard({
         {!expanded && (activity.bloom_level || (activity.competencies?.length ?? 0) > 0) && (
           <div className="px-3 pb-2 flex flex-wrap gap-1">
             {activity.bloom_level && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+              <Badge variant="secondary" className="text-xs px-1.5 py-0">
                 {BLOOM_LABELS[activity.bloom_level]}
               </Badge>
             )}
             {(activity.competencies ?? []).slice(0, 2).map((c) => (
-              <Badge key={c} variant="outline" className="text-[10px] px-1.5 py-0">
+              <Badge key={c} variant="outline" className="text-xs px-1.5 py-0">
                 {COMPETENCY_LABELS[c]} kompetencija
               </Badge>
             ))}

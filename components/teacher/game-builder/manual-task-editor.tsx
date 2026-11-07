@@ -524,7 +524,7 @@ export function ManualTaskEditor({
                 : "border-primary/30 focus:border-primary"
             }`}
           />
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {type === "number"
               ? "Dalyvis turi įvesti tą patį skaičių."
               : "Tikrinant nesvarbu didžiosios raidės, lietuviškos raidės (š = s) ir nereikalingi tarpai. Žodžio forma ir tarpai tarp žodžių turi sutapti."}

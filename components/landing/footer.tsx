@@ -12,7 +12,7 @@ export function Footer() {
         <div className="mb-16 md:mb-24">
           <div className="flex items-center gap-3 mb-5">
             <span className="inline-flex h-px w-10 bg-steam-dark/30" />
-            <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/70 font-semibold">
+            <span className="text-xs uppercase tracking-[0.22em] text-steam-dark/70 font-semibold">
               KU STEAM
             </span>
           </div>
@@ -39,7 +39,7 @@ export function Footer() {
 
           {/* Navigate */}
           <div className="lg:col-span-2">
-            <h2 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
+            <h2 className="text-xs uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
               Apie įrankį
             </h2>
             <ul className="space-y-2.5">
@@ -78,7 +78,7 @@ export function Footer() {
 
           {/* Institution */}
           <div className="lg:col-span-3">
-            <h2 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
+            <h2 className="text-xs uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
               Institucija
             </h2>
             <ul className="space-y-2.5">
@@ -109,7 +109,7 @@ export function Footer() {
 
           {/* Contact */}
           <div className="lg:col-span-3">
-            <h2 className="text-[10px] uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
+            <h2 className="text-xs uppercase tracking-[0.22em] font-bold text-steam-dark/75 mb-4">
               Kontaktai
             </h2>
             <ul className="space-y-3">
@@ -141,7 +141,7 @@ export function Footer() {
           <p className="text-xs text-muted-foreground font-mono">
             © {new Date().getFullYear()} Klaipėdos universitetas · STEAM metodinis centras
           </p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
             kusteam.app · v1.0
           </p>
         </div>

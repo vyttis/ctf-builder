@@ -309,7 +309,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
             {" "}išsprendė{" "}
             <span className="font-medium">{event.challenge_title}</span>
             {event.points && !hidePoints ? (
-              <Badge variant="outline" className="ml-1.5 text-[10px] py-0 px-1.5 text-primary-ink border-primary/30">
+              <Badge variant="outline" className="ml-1.5 text-xs py-0 px-1.5 text-primary-ink border-primary/30">
                 +{event.points} tšk.
               </Badge>
             ) : null}
@@ -413,7 +413,7 @@ export function LiveActivityFeed({ gameId, variant = "default", hidePoints = fal
                     <div className="flex-1 min-w-0 text-sm text-muted-foreground leading-snug">
                       {getMessage(event)}
                     </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums mt-0.5">
+                    <span className="text-xs text-muted-foreground shrink-0 tabular-nums mt-0.5">
                       {formatTimestamp(event.timestamp)}
                     </span>
                   </motion.div>

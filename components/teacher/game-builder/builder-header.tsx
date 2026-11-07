@@ -76,7 +76,7 @@ export function BuilderHeader({
                 </h1>
                 <Badge
                   variant="outline"
-                  className={`shrink-0 text-[10px] ${statusColors[game.status]}`}
+                  className={`shrink-0 text-xs ${statusColors[game.status]}`}
                 >
                   {statusLabels[game.status]}
                 </Badge>

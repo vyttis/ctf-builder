@@ -53,7 +53,7 @@ export function WhatYouCanDoSection() {
       <div className="max-w-3xl mb-16 md:mb-24">
         <div className="flex items-center gap-3 mb-5">
           <span className="inline-flex h-px w-10 bg-steam-dark/40" />
-          <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
+          <span className="text-xs uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
             §3 · Galimybės
           </span>
         </div>
@@ -79,7 +79,7 @@ export function WhatYouCanDoSection() {
             >
               <div className="flex items-center gap-2 mb-5">
                 <span className={`h-px w-6 ${colors.bar}`} />
-                <span className={`text-[10px] uppercase tracking-[0.22em] font-bold ${colors.tag}`}>
+                <span className={`text-xs uppercase tracking-[0.22em] font-bold ${colors.tag}`}>
                   {item.label}
                 </span>
               </div>

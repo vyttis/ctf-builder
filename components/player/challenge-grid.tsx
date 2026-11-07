@@ -93,7 +93,7 @@ export function ChallengeGrid({
         </p>
         <div className="h-2 flex-1 max-w-[160px] ml-3 rounded-full bg-muted overflow-hidden">
           <motion.div
-            className="h-full rounded-full bg-steam-green"
+            className="h-full rounded-full bg-primary"
             initial={{ width: 0 }}
             animate={{
               width: totalCount > 0 ? `${(solvedCount / totalCount) * 100}%` : "0%",
@@ -146,10 +146,10 @@ function ChallengeCard({
       <Card
         className={`relative overflow-hidden transition-all duration-200 ${
           isLocked
-            ? "bg-gray-50 border-gray-200 cursor-not-allowed opacity-60"
+            ? "bg-gray-50 border-gray-200 cursor-not-allowed"
             : isSolved
-            ? "bg-steam-green/5 border-steam-green/30 cursor-default"
-            : "bg-white border-l-4 border-l-steam-green border-t border-r border-b border-gray-200 cursor-pointer hover:shadow-md hover:border-l-steam-green hover:-translate-y-0.5"
+            ? "bg-primary/5 border-primary/30 cursor-default"
+            : "bg-white border-l-4 border-l-primary border-t border-r border-b border-gray-200 cursor-pointer hover:shadow-md hover:border-l-primary hover:-translate-y-0.5"
         }`}
         onClick={isUnlocked ? onSelect : undefined}
         role={isUnlocked ? "button" : undefined}
@@ -174,7 +174,7 @@ function ChallengeCard({
       >
         <CardHeader className="pb-2 pt-4 px-4">
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-sm font-semibold leading-tight line-clamp-2">
+            <CardTitle className={`text-sm font-semibold leading-tight line-clamp-2 ${isLocked ? "text-muted-foreground" : ""}`}>
               {challenge.title}
             </CardTitle>
             <StatusIcon status={status} />
@@ -184,22 +184,22 @@ function ChallengeCard({
           <div className="flex items-center gap-2 flex-wrap">
             <Badge
               variant="outline"
-              className={`text-[10px] font-bold tabular-nums ${
+              className={`text-xs font-bold tabular-nums ${
                 isSolved
-                  ? "bg-steam-green/10 text-steam-green border-steam-green/20"
+                  ? "bg-primary/10 text-primary-ink border-primary/20"
                   : isLocked
-                  ? "bg-gray-100 text-gray-400 border-gray-200"
-                  : "bg-steam-yellow/10 text-steam-dark border-steam-yellow/30"
+                  ? "bg-gray-100 text-muted-foreground border-gray-200"
+                  : "bg-highlight/10 text-steam-dark border-highlight/30"
               }`}
             >
               {challenge.points} tšk.
             </Badge>
             <Badge
               variant="outline"
-              className={`text-[10px] gap-1 ${
+              className={`text-xs gap-1 ${
                 isLocked
-                  ? "text-gray-400 border-gray-200"
-                  : "text-steam-blue border-steam-blue/20"
+                  ? "text-muted-foreground border-gray-200"
+                  : "text-secondary-ink border-secondary/20"
               }`}
             >
               {typeIcons[challenge.type]}
@@ -209,7 +209,7 @@ function ChallengeCard({
 
           {/* Locked tooltip */}
           {isLocked && (
-            <p className="mt-2 text-[10px] text-gray-400 leading-tight">
+            <p className="mt-2 text-xs text-muted-foreground leading-tight">
               Pirmiausia išspręskite reikalingas užduotis
             </p>
           )}
@@ -217,7 +217,7 @@ function ChallengeCard({
 
         {/* Solved overlay */}
         {isSolved && (
-          <div className="absolute inset-0 bg-steam-green/[0.03] pointer-events-none" />
+          <div className="absolute inset-0 bg-primary/[0.03] pointer-events-none" />
         )}
       </Card>
     </motion.div>
@@ -229,19 +229,19 @@ function StatusIcon({ status }: { status: ChallengeStatus }) {
     case "locked":
       return (
         <div className="shrink-0 rounded-full bg-gray-100 p-1.5">
-          <Lock className="h-3.5 w-3.5 text-gray-400" />
+          <Lock className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
       )
     case "solved":
       return (
-        <div className="shrink-0 rounded-full bg-steam-green/10 p-1.5">
-          <CheckCircle2 className="h-3.5 w-3.5 text-steam-green" />
+        <div className="shrink-0 rounded-full bg-primary/10 p-1.5">
+          <CheckCircle2 className="h-3.5 w-3.5 text-primary-ink" />
         </div>
       )
     case "unlocked":
       return (
-        <div className="shrink-0 rounded-full bg-steam-green/10 p-1.5">
-          <Unlock className="h-3.5 w-3.5 text-steam-green" />
+        <div className="shrink-0 rounded-full bg-primary/10 p-1.5">
+          <Unlock className="h-3.5 w-3.5 text-primary-ink" />
         </div>
       )
   }

@@ -36,7 +36,7 @@ export function SteamTemplatesShowcase() {
               <span className="text-sm font-semibold text-steam-dark">{t.title}</span>
             </div>
             <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{t.description}</p>
-            <div className="flex flex-wrap gap-1.5 text-[10px]">
+            <div className="flex flex-wrap gap-1.5 text-xs">
               <span className="rounded-full bg-secondary/10 px-2 py-0.5 font-medium text-secondary-ink">
                 {getSubjectLabel(t.subject)}
               </span>

@@ -30,7 +30,7 @@ export function TeacherValueSection() {
       <div className="max-w-3xl mb-16 md:mb-20">
         <div className="flex items-center gap-3 mb-5">
           <span className="inline-flex h-px w-10 bg-steam-dark/40" />
-          <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
+          <span className="text-xs uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
             §6 · Mokytojui
           </span>
         </div>
@@ -54,7 +54,7 @@ export function TeacherValueSection() {
             <div className="numeral-display font-medium text-5xl lg:text-6xl text-steam-dark leading-none tabular-nums">
               {stat.metric}
             </div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-primary-ink font-bold mt-3">
+            <div className="text-xs uppercase tracking-[0.18em] text-primary-ink font-bold mt-3">
               {stat.label}
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mt-2 max-w-xs text-pretty">

@@ -21,7 +21,7 @@ export function FinalCtaSection() {
         <div className="max-w-4xl">
           <div className="flex items-center gap-3 mb-5">
             <span className="inline-flex h-px w-10 bg-primary/60" />
-            <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-semibold">
+            <span className="text-xs uppercase tracking-[0.22em] text-primary font-semibold">
               §10 · Pradėti
             </span>
           </div>
@@ -71,7 +71,7 @@ export function FinalCtaSection() {
                 <div className="numeral-display text-3xl font-medium text-white tabular-nums">
                   {stat.num}
                 </div>
-                <div className="text-[11px] uppercase tracking-wider text-white/50 mt-1.5">
+                <div className="text-xs uppercase tracking-wider text-white/50 mt-1.5">
                   {stat.label}
                 </div>
               </div>

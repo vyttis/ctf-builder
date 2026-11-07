@@ -100,7 +100,7 @@ export function SortableTaskCard({
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {challenge.needs_answer && (
                   <Badge
-                    className="text-[10px] px-1.5 py-0 bg-accent/10 text-accent-ink border-accent/40 hover:bg-accent/15 gap-0.5"
+                    className="text-xs px-1.5 py-0 bg-accent/10 text-accent-ink border-accent/40 hover:bg-accent/15 gap-0.5"
                     onClick={(e) => {
                       e.stopPropagation()
                       onSelect(challenge)
@@ -116,16 +116,16 @@ export function SortableTaskCard({
                     challenge.verification_verdict === "fail") && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-highlight/50 bg-highlight/10 text-steam-dark"
+                      className="text-xs px-1.5 py-0 border-highlight/50 bg-highlight/10 text-steam-dark"
                       title="DI patikra abejoja šia užduotimi. Atidarykite, peržiūrėkite ir išsaugokite."
                     >
                       Reikia peržiūros
                     </Badge>
                   )}
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                <Badge variant="outline" className="text-xs px-1.5 py-0">
                   {challenge.points} tšk.
                 </Badge>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                <Badge variant="secondary" className="text-xs px-1.5 py-0">
                   {challenge.type === "text"
                     ? "Tekstas"
                     : challenge.type === "number"
@@ -135,7 +135,7 @@ export function SortableTaskCard({
                 {difficultyLabel && (
                   <Badge
                     variant="outline"
-                    className={`text-[10px] px-1.5 py-0 ${
+                    className={`text-xs px-1.5 py-0 ${
                       challenge.difficulty === "easy"
                         ? "text-primary-ink border-primary/30"
                         : challenge.difficulty === "hard"

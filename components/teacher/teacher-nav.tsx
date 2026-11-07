@@ -29,7 +29,7 @@ function PendingBadge({ count }: { count: number }) {
   if (count <= 0) return null
   return (
     <span
-      className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-semibold leading-5 text-white"
+      className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold leading-5 text-white"
       aria-label={`${count} nauji paskyrų prašymai`}
     >
       {count}

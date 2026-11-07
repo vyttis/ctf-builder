@@ -61,7 +61,7 @@ export function AchievementToast({
         className="relative z-[60] mb-3 w-full sm:fixed sm:right-4 sm:top-4 sm:mb-0 sm:w-auto sm:max-w-sm"
       >
         <div
-          className="flex items-start gap-3 rounded-xl border border-steam-yellow/30 bg-gradient-to-r from-steam-yellow/15 to-steam-yellow/5 px-4 py-3 shadow-lg backdrop-blur-sm"
+          className="flex items-start gap-3 rounded-xl border border-highlight/30 bg-gradient-to-r from-highlight/15 to-highlight/5 px-4 py-3 shadow-lg backdrop-blur-sm"
         >
           <div
             className="flex shrink-0 items-center justify-center rounded-full"

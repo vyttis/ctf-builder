@@ -104,7 +104,7 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
     <Card className="border-border/50 bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Megaphone className="h-4 w-4 text-steam-blue" />
+          <Megaphone className="h-4 w-4 text-secondary-ink" />
           Pranešimai
         </CardTitle>
       </CardHeader>
@@ -123,7 +123,7 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
             <span
               className={`text-xs ${
                 message.length >= MAX_CHARS
-                  ? "text-steam-pink"
+                  ? "text-accent-ink"
                   : "text-muted-foreground"
               }`}
             >
@@ -133,7 +133,7 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
               size="sm"
               onClick={handleSend}
               disabled={!message.trim() || sending}
-              className="bg-steam-blue hover:bg-steam-blue/90"
+              className="bg-secondary hover:bg-secondary/90"
             >
               {sending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -152,7 +152,7 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
             <button
               type="button"
               onClick={fetchAnnouncements}
-              className="text-steam-blue hover:underline font-medium"
+              className="text-secondary-ink hover:underline font-medium"
             >
               Bandyti dar kartą
             </button>
@@ -167,12 +167,12 @@ export function AnnouncementPanel({ gameId }: AnnouncementPanelProps) {
                 key={a.id}
                 className="flex items-start gap-2.5 text-sm group"
               >
-                <Megaphone className="h-3.5 w-3.5 text-steam-blue/50 mt-0.5 shrink-0" />
+                <Megaphone className="h-3.5 w-3.5 text-secondary-ink/50 mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-steam-dark leading-snug break-words">
                     {a.message}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {formatRelativeTime(a.created_at)}
                   </p>
                 </div>

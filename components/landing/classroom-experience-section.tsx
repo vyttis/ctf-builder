@@ -149,7 +149,7 @@ export function ClassroomExperienceSection() {
       <div className="max-w-3xl mb-16 md:mb-20 text-center mx-auto">
         <div className="flex items-center justify-center gap-3 mb-5">
           <span className="inline-flex h-px w-10 bg-steam-dark/40" />
-          <span className="text-[11px] uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
+          <span className="text-xs uppercase tracking-[0.22em] text-steam-dark/60 font-semibold">
             §4 · Pamokoje
           </span>
           <span className="inline-flex h-px w-10 bg-steam-dark/40" />
@@ -177,7 +177,7 @@ export function ClassroomExperienceSection() {
           </div>
           <div className="relative group">
             <div className="absolute -inset-3 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
-            <div className="relative rounded-xl border border-border/50 bg-white overflow-hidden shadow-lg shadow-steam-dark/5 transition-shadow group-hover:shadow-xl">
+            <div role="img" aria-label="Vedėjo aplinkos pavyzdys: trys komandos, aštuonios užduotys ir kiekvienos komandos progresas" className="relative rounded-xl border border-border/50 bg-white overflow-hidden shadow-lg shadow-steam-dark/5 transition-shadow group-hover:shadow-xl">
               <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-border/30 bg-[#F6F8FA]">
                 <div className="flex gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-accent/30" />
@@ -209,7 +209,7 @@ export function ClassroomExperienceSection() {
           </div>
           <div className="relative group">
             <div className="absolute -inset-3 bg-gradient-to-br from-secondary/10 via-transparent to-highlight/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
-            <div className="relative rounded-xl border border-border/50 bg-white overflow-hidden shadow-lg shadow-steam-dark/5 transition-shadow group-hover:shadow-xl">
+            <div role="img" aria-label="Dalyvio vaizdo pavyzdys: komandos taškai ir užduočių sąrašas su pažymėtomis išspręstomis" className="relative rounded-xl border border-border/50 bg-white overflow-hidden shadow-lg shadow-steam-dark/5 transition-shadow group-hover:shadow-xl">
               <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-border/30 bg-[#F6F8FA]">
                 <div className="flex gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-accent/30" />

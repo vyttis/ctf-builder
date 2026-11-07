@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MapsEmbed } from "@/components/shared/maps-embed"
 import { HintList } from "@/components/player/hint-list"
-import { pluralizeLt } from "@/lib/utils"
 
 interface ChallengeDetailModalProps {
   challenge: {
@@ -142,7 +141,7 @@ export function ChallengeDetailModal({
             </div>
             <Badge
               variant="outline"
-              className="shrink-0 bg-steam-yellow/10 text-steam-dark border-steam-yellow/30 font-bold text-xs"
+              className="shrink-0 bg-highlight/10 text-steam-dark border-highlight/30 font-bold text-xs"
             >
               {challenge.points} tšk.
             </Badge>
@@ -154,10 +153,10 @@ export function ChallengeDetailModal({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 rounded-lg bg-steam-green/10 border border-steam-green/20 flex items-center gap-2"
+            className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-2"
           >
-            <CheckCircle2 className="h-5 w-5 text-steam-green shrink-0" />
-            <p className="text-sm font-medium text-steam-green">
+            <CheckCircle2 className="h-5 w-5 text-primary-ink shrink-0" />
+            <p className="text-sm font-medium text-primary-ink">
               Ši užduotis jau išspręsta
             </p>
           </motion.div>
@@ -206,7 +205,7 @@ export function ChallengeDetailModal({
                     variant={answer === option ? "default" : "outline"}
                     className={`w-full justify-start items-start h-auto min-h-12 py-3 px-4 text-left whitespace-normal break-words ${
                       answer === option
-                        ? "bg-steam-green text-primary-foreground hover:bg-steam-green/90"
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
                         : ""
                     }`}
                     onClick={() => setAnswer(option)}
@@ -226,7 +225,7 @@ export function ChallengeDetailModal({
             <Button
               type="submit"
               disabled={loading || !answer.trim()}
-              className="w-full h-12 bg-steam-green hover:bg-steam-green/90 text-primary-foreground font-semibold shadow-lg shadow-steam-green/25 gap-2"
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/25 gap-2"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -254,31 +253,25 @@ export function ChallengeDetailModal({
               <div
                 className={`p-4 rounded-lg flex items-center gap-3 ${
                   feedback.is_correct
-                    ? "bg-steam-green/10 border border-steam-green/20"
-                    : "bg-steam-pink/5 border border-steam-pink/20"
+                    ? "bg-primary/10 border border-primary/20"
+                    : "bg-accent/5 border border-accent/20"
                 }`}
               >
                 {feedback.is_correct ? (
-                  <CheckCircle2 className="h-6 w-6 text-steam-green shrink-0" />
+                  <CheckCircle2 className="h-6 w-6 text-primary-ink shrink-0" />
                 ) : (
-                  <XCircle className="h-6 w-6 text-steam-pink shrink-0" />
+                  <XCircle className="h-6 w-6 text-accent-ink shrink-0" />
                 )}
                 <div>
                   <p
                     className={`font-medium ${
                       feedback.is_correct
-                        ? "text-steam-green"
-                        : "text-steam-pink"
+                        ? "text-primary-ink"
+                        : "text-accent-ink"
                     }`}
                   >
                     {feedback.message}
                   </p>
-                  {feedback.is_correct && feedback.points_awarded > 0 && (
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      +{feedback.points_awarded}{" "}
-                      {pluralizeLt(feedback.points_awarded, "taškas", "taškai", "taškų")}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -289,10 +282,10 @@ export function ChallengeDetailModal({
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-3"
                 >
-                  <div className="p-4 rounded-lg bg-steam-blue/5 border border-steam-blue/20">
+                  <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
                     <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="h-4 w-4 text-steam-blue" />
-                      <p className="text-sm font-semibold text-steam-blue">
+                      <BookOpen className="h-4 w-4 text-secondary-ink" />
+                      <p className="text-sm font-semibold text-secondary-ink">
                         Ar žinojote?
                       </p>
                     </div>
@@ -302,7 +295,7 @@ export function ChallengeDetailModal({
                   </div>
                   <Button
                     onClick={handleClose}
-                    className="w-full bg-steam-green hover:bg-steam-green/90 text-primary-foreground gap-2"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
                   >
                     Grįžti
                     <ArrowLeft className="h-4 w-4" />
@@ -314,7 +307,7 @@ export function ChallengeDetailModal({
               {feedback.is_correct && !feedback.explanation && (
                 <Button
                   onClick={handleClose}
-                  className="w-full bg-steam-green hover:bg-steam-green/90 text-primary-foreground gap-2"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
                 >
                   Grįžti
                   <ArrowLeft className="h-4 w-4" />
